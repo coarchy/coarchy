@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- No copyright or license for configuration file, details here are not considered a creative work. -->
+<moqui-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/moqui-conf-3.xsd">
+    <webapp-list>
+        <!-- NOTES:
+            - this configuration increases the session timeout to 2 weeks
+            - WARNING: do not deploy in the same Moqui instance (webapp) as applications that need to be
+              PCI compliant or otherwise more secure (generally 15 or 30 minute session timeout)
+            - to avoid logout on browser close:
+              - this will happen with default cookie 'max age' in embedded Jetty (cookie expire of 'Session')
+              - with embedded Jetty (from MoquiStart.java) set the environment variable
+                'webapp_session_cookie_max_age' to something like '1209600' which is 14 days in seconds
+              - for other app servers use the setting for the max age or expire time of the session cookie
+        -->
+        <webapp name="webroot">
+            <!-- timeout session in 2 weeks without a request -->
+            <session-config timeout="20160"/>
+            <!-- cache static assets for 1 year without a request -->
+            <response-header type="web-resource-inline" name="Cache-Control" value="max-age=31536000, must-revalidate, public"/>
+            <response-header type="screen-resource-text" name="Cache-Control" value="max-age=1209600, must-revalidate, public"/>
+        </webapp>
+    </webapp-list>
+
+    <screen-facade>
+        <screen location="component://webroot/screen/webroot.xml" default-subscreen="r">
+            <subscreens-item name="coapp" menu-include="false" location="component://coarchy/screen/coapp.xml"/>
+            <subscreens-item name="cointernal" menu-include="false" location="component://coarchy/screen/cointernal.xml"/>
+            <subscreens-item name="costatic" menu-include="false" location="component://coarchy/screen/costatic.xml"/>
+        </screen>
+    </screen-facade>
+</moqui-conf>

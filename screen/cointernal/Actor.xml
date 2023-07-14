@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Actor" default-menu-index="99" menu-image="/ssstatic/images/project-business120.png" default-menu-include="true" >
+
+
+    <transition name="createActor"><actions>
+        <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+            <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
+            <order-by field-name="^name"/>
+        </entity-find>
+        <log level="warn" message="actorList ${actorList}"/>
+        <if condition="actorList?.size() &gt; 0"><return type="warning" message="Actor ${actorList?.getFirst()?.name} is already created"/></if>
+
+        <service-call name="create#coarchy.Actor" in-map="[name:name,description:description]"/>
+        </actions><default-response></default-response></transition>
+
+    <transition name="updateActor"><actions>
+        <service-call name="update#coarchy.Actor" in-map="[actorId:actorId, name:name,description:description]"/>
+    </actions><default-response></default-response></transition>
+
+    <actions>
+        <entity-find entity-name="coarchy.Actor" list="actorList">
+            <order-by field-name="-lastUpdatedStamp"/></entity-find>
+    </actions>
+
+    <widgets>
+        <text><![CDATA[<q-page-container class="q-ma-sm"><q-page>]]></text>
+        <link url="../ProcessStory" text="Process Story"/>
+
+        <!-- TODO: See if last row in form-list will work -->
+        <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor">
+            <field name="actorId"><default-field><hidden/></default-field></field>
+            <field name="name"><default-field><text-line/></default-field></field>
+            <field name="description"><default-field><text-area rows="3"/></default-field></field>
+            <field name="submit"><default-field><submit/></default-field></field>
+        </form-list>
+        <form-single name="CreateActor" transition="createActor">
+            <field name="name"><default-field><text-line/></default-field></field>
+            <field name="description"><default-field><text-area rows="3"/></default-field></field>
+            <field name="submit"><default-field><submit/></default-field></field>
+
+            <field-layout>
+                <field-row-big><field-ref name="name"/><field-ref name="description"/><field-ref name="submit"/></field-row-big>
+            </field-layout>
+        </form-single>
+        <text><![CDATA[</q-page></q-page-container>]]></text>
+    </widgets>
+</screen>

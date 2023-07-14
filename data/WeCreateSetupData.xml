@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!-- TODO: split into Seed/seed and Setup/install files -->
+<entity-facade-xml type="seed">
+
+    <!-- ========== User Groups ========== -->
+    <!-- NOTE: see SimpleScreensSetupData.xml for Artifact Groups for parts of SimpleScreens -->
+    <moqui.basic.Enumeration description="Coarchy App" enumId="UgtCoarchyApp" enumTypeId="UserGroupType"/>
+    <userGroups userGroupId="COARCHY_USERS" description="Coarchy Users" groupTypeEnumId="UgtCoarchyApp"/>
+
+    <!-- Artifact group and authz for Coarchy App -->
+    <artifactGroups artifactGroupId="COARCHY" description="Coarchy App (via root screen)">
+        <artifacts artifactName="component://coarchy/screen/cointernal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+        <authz artifactAuthzId="COARCHY_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
+        <authz artifactAuthzId="COARCHY_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
+    </artifactGroups>
+</entity-facade-xml>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Process Story" default-menu-index="99" menu-image="/ssstatic/images/project-business120.png" default-menu-include="true" >
+
+    <parameter name="processStoryId" from="processStoryId ?: null"/>
+
+    <transition name="createActivity">
+        <actions><service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action]" out-map="newActivity"/>
+
+            <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
+                <order-by field-name="-sequenceNum"/></entity-find>
+            <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:processStoryActivityList?.getFirst()?.sequenceNum ? processStoryActivityList?.getFirst()?.sequenceNum + 1 : 0]"/>
+
+<!--            <log level="warn" message="actorIdList ${actorIdList.getClass()}"/>-->
+            <if condition="actorIdList instanceof String">
+                <then>
+<!--                    <log level="warn" message="status is null"/>-->
+                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList]"/>
+                </then>
+                <else>
+<!--                    <log level="warn" message="status is not null"/>-->
+                    <iterate list="actorIdList" entry="actorId">
+<!--                        <log level="warn" message="actorId ${actorId}"/>-->
+                        <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId]"/>
+                    </iterate>
+                </else>
+            </if>
+        </actions>
+        <default-response url="."/></transition>
+
+    <transition name="getActorList">
+        <actions>
+            <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+                <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
+                <order-by field-name="^name"/>
+            </entity-find>
+            <script>
+                def outList = []
+                for (def actor in actorList)
+                    outList.add([value:actor.actorId, label:"${actor.name}".toString()])
+                ec.web.sendJsonResponse(outList)
+            </script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <actions>
+        <!-- MVP Phase One: Only allow one processStory per User -->
+        <if condition="processStoryId == null">
+            <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="1">
+                <order-by field-name="-lastUpdatedStamp"/></entity-find>
+            <if condition="processStoryList?.getFirst()?.processStoryId == null">
+                <then><service-call name="create#coarchy.ProcessStory" out-map="newProcessStory"/><set field="processStoryId" from="newProcessStory.processStoryId"/></then>
+                <else><set field="processStoryId" from="processStoryList.getFirst().processStoryId"/></else>
+            </if>
+        </if>
+        <entity-find entity-name="coarchy.ProcessStoryActivity" list="processStoryActivityList">
+            <order-by field-name="sequenceId"/>
+        </entity-find>
+
+        <log level="warn" message="processStoryActivityList ${processStoryActivityList}"/>
+    </actions>
+
+    <widgets>
+        <text><![CDATA[<q-page-container class="q-ma-sm"><q-page>]]></text>
+        <link url="../Actor" text="Actor"/>
+
+        <!-- TODO: See if last row in form-list will work -->
+        <form-list name="ProcessStory" paginate="false" skip-header="false" list="processStoryActivityList" list-entry="processStoryActivity" multi="true">
+            <row-actions>
+                <log level="warn" message="processStoryActivity.activity.actors ${processStoryActivity.activity.actors}"/>
+                <set field="actorList" from="[]"/>
+                <iterate list="processStoryActivity.activity.actors?.actorId" entry="actorId">
+                    <entity-find-one entity-name="coarchy.Actor" value-field="actor" auto-field-map="[actorId:actorId]"/>
+                    <script>actorList.add([actorId:actorId,name:actor.name])</script>
+                </iterate>
+                <log level="warn" message="actorList ${actorList}"/>
+            </row-actions>
+            <field name="condition" from="processStoryActivity.activity.condition"><default-field><text-area rows="3"/></default-field></field>
+            <field name="actor"><default-field><drop-down allow-empty="true" allow-multiple="true" >
+                <dynamic-options server-search="true" transition="getActorList"/> </drop-down></default-field></field>
+            <field name="action" from="processStoryActivity.activity.action"><default-field><text-area rows="3"/></default-field></field>
+        </form-list>
+        <form-single name="CreateActivity" transition="createActivity">
+            <field name="condition"><default-field><text-area rows="3"/></default-field></field>
+            <field name="actorIdList"><default-field><drop-down allow-empty="true" allow-multiple="true">
+                <!-- TODO: Allow creating an actor in the find field with a modified DropDown vue component -->
+                <dynamic-options server-search="true" transition="getActorList"/>
+            </drop-down></default-field></field>
+            <field name="action"><default-field><text-area rows="3"/></default-field></field>
+            <field name="submit"><default-field><submit/></default-field></field>
+            <field name="createNewParagraph"><default-field><submit/></default-field></field>
+
+            <field-layout>
+                <field-row-big><field-ref name="condition"/><field-ref name="actorIdList"/><field-ref name="action"/><field-ref name="submit"/><field-ref
+                        name="createNewParagraph"/></field-row-big>
+            </field-layout>
+        </form-single>
+        <text><![CDATA[</q-page></q-page-container>]]></text>
+    </widgets>
+</screen>
