@@ -17,8 +17,12 @@ along with this software (see the LICENSE.md file). If not, see
 
     <parameter name="processStoryId" from="processStoryId ?: null"/>
 
-    <transition name="createActivity">
-        <actions><service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action]" out-map="newActivity"/>
+    <transition name="newParagraph"><service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:processStoryActivityList?.getFirst()?.sequenceNum ? processStoryActivityList?.getFirst()?.sequenceNum + 1 : 0]"/>
+        <default-response></default-response>
+    </transition>
+
+    <transition name="createActivity"><actions>
+            <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action]" out-map="newActivity"/>
 
             <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
                 <order-by field-name="-sequenceNum"/></entity-find>
@@ -38,25 +42,54 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
                 </else>
             </if>
-        </actions>
-        <default-response url="."/></transition>
+            </actions><default-response url="."/></transition>
+
+    <transition name="updateActivity"><service-call name="update#coarchy.Activity"/><actions>
+        <entity-find entity-name="coarchy.ActivityActor" list="activityActorList">
+            <econdition field-name="activityId"/></entity-find>
+<!--        <if condition="activityActorList">-->
+<!--            <set field="actorIdDeleteList" from="activityActorList*.actorId - actorIdList?:[]"/>-->
+<!--            &lt;!&ndash;        <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>&ndash;&gt;-->
+<!--            <iterate list="actorIdDeleteList" entry="actorIdDelete">-->
+<!--                <set field="activityActorIdDelete" from="activityActorList.find{it.actorId == actorIdDelete}?.activityActorId"/>-->
+<!--                &lt;!&ndash;            <log level="warn" message="activityActorIdDelete ${activityActorIdDelete}"/>&ndash;&gt;-->
+<!--                <service-call name="delete#coarchy.ActivityActor" in-map="[activityActorId:activityActorIdDelete]"/>-->
+<!--            </iterate>-->
+<!--        </if>-->
+
+        <if condition="actorIdList instanceof String">
+            <then>
+                <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdList]"/></then>
+            <else>
+                <iterate list="actorIdList" entry="actorId">
+                    <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
+                </iterate>
+            </else>
+        </if>
+
+        </actions><default-response url="."/></transition>
 
     <transition name="getActorList">
         <actions>
-            <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
-                <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
-                <order-by field-name="^name"/>
-            </entity-find>
+            <set field="actorList" from="[]"/>
+            <if condition="term == null &amp;&amp; actorIdList ? actorIdList?.size() &gt; 0 : false"><then>
+                <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+                    <econdition field-name="actorId" operator="in" from="actorIdList"/>
+                    <order-by field-name="^name"/></entity-find>
+            </then><else>
+                <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+                    <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
+                    <order-by field-name="^name"/></entity-find>
+            </else></if>
             <script>
                 def outList = []
                 for (def actor in actorList)
-                    outList.add([value:actor.actorId, label:"${actor.name}".toString()])
+                    outList.add([value:actor?.actorId, label:"${actor?.name}".toString()])
                 ec.web.sendJsonResponse(outList)
             </script>
         </actions>
         <default-response type="none"/>
     </transition>
-
     <actions>
         <!-- MVP Phase One: Only allow one processStory per User -->
         <if condition="processStoryId == null">
@@ -71,7 +104,7 @@ along with this software (see the LICENSE.md file). If not, see
             <order-by field-name="sequenceId"/>
         </entity-find>
 
-        <log level="warn" message="processStoryActivityList ${processStoryActivityList}"/>
+<!--        <log level="warn" message="processStoryActivityList ${processStoryActivityList}"/>-->
     </actions>
 
     <widgets>
@@ -79,20 +112,32 @@ along with this software (see the LICENSE.md file). If not, see
         <link url="../Actor" text="Actor"/>
 
         <!-- TODO: See if last row in form-list will work -->
-        <form-list name="ProcessStory" paginate="false" skip-header="false" list="processStoryActivityList" list-entry="processStoryActivity" multi="true">
+        <form-list name="ProcessStory" paginate="false" skip-header="true" list="processStoryActivityList" list-entry="processStoryActivity" transition="updateActivity">
             <row-actions>
-                <log level="warn" message="processStoryActivity.activity.actors ${processStoryActivity.activity.actors}"/>
-                <set field="actorList" from="[]"/>
-                <iterate list="processStoryActivity.activity.actors?.actorId" entry="actorId">
-                    <entity-find-one entity-name="coarchy.Actor" value-field="actor" auto-field-map="[actorId:actorId]"/>
-                    <script>actorList.add([actorId:actorId,name:actor.name])</script>
-                </iterate>
-                <log level="warn" message="actorList ${actorList}"/>
+                <set field="actorIdList" from="processStoryActivity?.activity?.actors?.actor?.actorId"/>
+<!--                <log level="warn" message="actorIdList ${actorIdList}"/>-->
             </row-actions>
-            <field name="condition" from="processStoryActivity.activity.condition"><default-field><text-area rows="3"/></default-field></field>
-            <field name="actor"><default-field><drop-down allow-empty="true" allow-multiple="true" >
-                <dynamic-options server-search="true" transition="getActorList"/> </drop-down></default-field></field>
-            <field name="action" from="processStoryActivity.activity.action"><default-field><text-area rows="3"/></default-field></field>
+            <field name="activityId"><default-field><hidden/></default-field></field>
+
+            <field name="condition" from="processStoryActivity?.activity.condition"><default-field><text-area rows="3"/></default-field></field>
+            <!-- TODO: Autofill in previous parameters in a dropdown with dynamic options and server search -->
+            <field name="actorNameList">
+                <conditional-field condition="processStoryActivity?.activity?.actors?.size() &lt;= 2">
+                    <display text="${processStoryActivity?.activity?.actors?.actor?.name?.join(' and ')}"/></conditional-field>
+                <default-field><display text="${processStoryActivity?.activity?.actors?.actor?.name?.join(', ')}"/></default-field>
+            </field>
+            <!-- TODO: Add submit-on-select to make it easier to select. Right now a bug that doesn't show the transitions text when that is toggled on -->
+            <field name="actorIdList"><default-field title="Add Actor"><drop-down allow-empty="true" allow-multiple="true">
+                <dynamic-options server-search="true" transition="getActorList" parameter-map="[actorIdList:actorIdList]"/> </drop-down></default-field></field>
+            <field name="action" from="processStoryActivity?.activity.action"><default-field><text-area rows="3"/></default-field></field>
+            <field name="submit"><default-field><submit/></default-field></field>
+
+            <columns>
+                <column><field-ref name="condition"/></column>
+                <column><field-ref name="actorNameList"/><field-ref name="actorIdList"/></column>
+                <column><field-ref name="action"/></column>
+                <column><field-ref name="submit"/></column>
+            </columns>
         </form-list>
         <form-single name="CreateActivity" transition="createActivity">
             <field name="condition"><default-field><text-area rows="3"/></default-field></field>
@@ -102,11 +147,10 @@ along with this software (see the LICENSE.md file). If not, see
             </drop-down></default-field></field>
             <field name="action"><default-field><text-area rows="3"/></default-field></field>
             <field name="submit"><default-field><submit/></default-field></field>
-            <field name="createNewParagraph"><default-field><submit/></default-field></field>
+            <field name="newParagraph"><default-field><link url="" url-type="transition"/></default-field></field>
 
             <field-layout>
-                <field-row-big><field-ref name="condition"/><field-ref name="actorIdList"/><field-ref name="action"/><field-ref name="submit"/><field-ref
-                        name="createNewParagraph"/></field-row-big>
+                <field-row-big><field-ref name="condition"/><field-ref name="actorIdList"/><field-ref name="action"/><field-ref name="submit"/></field-row-big>
             </field-layout>
         </form-single>
         <text><![CDATA[</q-page></q-page-container>]]></text>
