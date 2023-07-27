@@ -55,6 +55,14 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="actorId"/></relationship>
     </entity>
 
+    <view-entity entity-name="ActivityActorDetail" package="coarchy">
+        <member-entity entity-alias="ACAC" entity-name="coarchy.ActivityActor"/>
+        <member-relationship entity-alias="ACT" join-from-alias="ACAC" relationship="actor"/>
+
+        <alias-all entity-alias="ACAC"/>
+        <alias-all entity-alias="ACT"/>
+    </view-entity>
+
     <entity entity-name="ProcessStory" package="coarchy">
         <field name="processStoryId" type="id" is-pk="true"/>
     </entity>
@@ -72,4 +80,12 @@ along with this software (see the LICENSE.md file). If not, see
 
         <!-- TODO: Perhaps add an index for sequenceNum here -->
     </entity>
+
+    <view-entity entity-name="ProcessStoryActivityDetail" package="coarchy">
+        <member-entity entity-alias="PSA" entity-name="coarchy.ProcessStoryActivity"/>
+        <member-relationship entity-alias="ACT" join-from-alias="PSA" relationship="activity"/>
+
+        <alias-all entity-alias="PSA"/>
+        <alias-all entity-alias="ACT"/>
+    </view-entity>
 </entities>

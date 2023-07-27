@@ -40,11 +40,14 @@ along with this software (see the LICENSE.md file). If not, see
         <link url="../ProcessStory" text="Process Story"/>
 
         <!-- TODO: See if last row in form-list will work -->
-        <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor" multi="true">
+        <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor" transition-last-row="createActor" multi="true">
             <field name="actorId"><default-field><hidden/></default-field></field>
-            <field name="name"><default-field><text-line/></default-field></field>
-            <field name="description"><default-field><text-area rows="3"/></default-field></field>
-            <field name="submit"><default-field><submit/></default-field></field>
+            <field name="name"><default-field><text-line/></default-field>
+                <last-row-field><text-line/></last-row-field></field>
+            <field name="description"><default-field><text-area rows="2" cols="80"/></default-field>
+                <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
+            <field name="submit"><default-field><submit/></default-field>
+                <last-row-field><submit/></last-row-field></field>
         </form-list>
         <form-single name="CreateActor" transition="createActor">
             <field name="name"><default-field><text-line/></default-field></field>

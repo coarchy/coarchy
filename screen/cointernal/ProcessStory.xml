@@ -75,11 +75,11 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="term == null &amp;&amp; actorIdList ? actorIdList?.size() &gt; 0 : false"><then>
                 <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
                     <econdition field-name="actorId" operator="in" from="actorIdList"/>
-                    <order-by field-name="^name"/></entity-find>
+                    <order-by field-name="name"/></entity-find>
             </then><else>
                 <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
                     <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
-                    <order-by field-name="^name"/></entity-find>
+                    <order-by field-name="name"/></entity-find>
             </else></if>
             <script>
                 def outList = []
@@ -100,41 +100,52 @@ along with this software (see the LICENSE.md file). If not, see
                 <else><set field="processStoryId" from="processStoryList.getFirst().processStoryId"/></else>
             </if>
         </if>
-        <entity-find entity-name="coarchy.ProcessStoryActivity" list="processStoryActivityList">
-            <order-by field-name="sequenceId"/>
-        </entity-find>
 
 <!--        <log level="warn" message="processStoryActivityList ${processStoryActivityList}"/>-->
     </actions>
 
     <widgets>
+        <!-- TODO: get rid of this next line and replace it with the format from https://github.com/jonesde/moqui-quasar-custom -->
         <text><![CDATA[<q-page-container class="q-ma-sm"><q-page>]]></text>
         <link url="../Actor" text="Actor"/>
 
-        <!-- TODO: See if last row in form-list will work -->
-        <form-list name="ProcessStory" paginate="false" skip-header="true" list="processStoryActivityList" list-entry="processStoryActivity" transition="updateActivity">
+        <form-list name="ProcessStory" paginate="false" skip-header="true" list="processStoryActivityList"
+                transition="updateActivity" transition-last-row="createActivity">
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                <order-by field-name="sequenceNum"/></entity-find>
+
             <row-actions>
-                <set field="actorIdList" from="processStoryActivity?.activity?.actors?.actor?.actorId"/>
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                    <econdition field-name="activityId"/>
+                    <order-by field-name="name"/></entity-find>
+                <set field="actorIdList" from="activityActorList*.actorId"/>
 <!--                <log level="warn" message="actorIdList ${actorIdList}"/>-->
             </row-actions>
             <field name="activityId"><default-field><hidden/></default-field></field>
 
-            <field name="condition" from="processStoryActivity?.activity.condition"><default-field><text-area rows="3"/></default-field></field>
+            <field name="condition"><default-field><text-area rows="2" cols="60"/></default-field>
+                <last-row-field><text-area rows="2" cols="60"/></last-row-field></field>
             <!-- TODO: Autofill in previous parameters in a dropdown with dynamic options and server search -->
-            <field name="actorNameList">
-                <conditional-field condition="processStoryActivity?.activity?.actors?.size() &lt;= 2">
-                    <display text="${processStoryActivity?.activity?.actors?.actor?.name?.join(' and ')}"/></conditional-field>
-                <default-field><display text="${processStoryActivity?.activity?.actors?.actor?.name?.join(', ')}"/></default-field>
-            </field>
             <!-- TODO: Add submit-on-select to make it easier to select. Right now a bug that doesn't show the transitions text when that is toggled on -->
-            <field name="actorIdList"><default-field title="Add Actor"><drop-down allow-empty="true" allow-multiple="true">
-                <dynamic-options server-search="true" transition="getActorList" parameter-map="[actorIdList:actorIdList]"/> </drop-down></default-field></field>
-            <field name="action" from="processStoryActivity?.activity.action"><default-field><text-area rows="3"/></default-field></field>
-            <field name="submit"><default-field><submit/></default-field></field>
+            <field name="actorIdList">
+                <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
+                    <list-options list="activityActorList" key="${actorId}" text="${name}"/>
+                    <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
+                </drop-down></default-field>
+                <last-row-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
+                    <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
+                </drop-down></last-row-field>
+            </field>
+            <field name="action"><default-field><text-area rows="2" cols="80"/></default-field>
+                <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
+            <field name="submit"><default-field><submit text="Update"/></default-field>
+                <last-row-field><submit text="Create"/></last-row-field></field>
+
+
 
             <columns>
                 <column><field-ref name="condition"/></column>
-                <column><field-ref name="actorNameList"/><field-ref name="actorIdList"/></column>
+                <column><field-ref name="actorIdList"/></column>
                 <column><field-ref name="action"/></column>
                 <column><field-ref name="submit"/></column>
             </columns>
@@ -146,7 +157,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <dynamic-options server-search="true" transition="getActorList"/>
             </drop-down></default-field></field>
             <field name="action"><default-field><text-area rows="3"/></default-field></field>
-            <field name="submit"><default-field><submit/></default-field></field>
+            <field name="submit"><default-field><submit text="Create"/></default-field></field>
             <field name="newParagraph"><default-field><link url="" url-type="transition"/></default-field></field>
 
             <field-layout>
