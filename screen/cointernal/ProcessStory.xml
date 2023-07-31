@@ -18,7 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="processStoryId" from="processStoryId ?: null"/>
 
     <transition name="newParagraph"><service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:processStoryActivityList?.getFirst()?.sequenceNum ? processStoryActivityList?.getFirst()?.sequenceNum + 1 : 0]"/>
-        <default-response></default-response>
+        <default-response/>
     </transition>
 
     <transition name="createActivity"><actions>
@@ -27,17 +27,13 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
                 <order-by field-name="-sequenceNum"/></entity-find>
             <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:processStoryActivityList?.getFirst()?.sequenceNum ? processStoryActivityList?.getFirst()?.sequenceNum + 1 : 0]"/>
-
-<!--            <log level="warn" message="actorIdList ${actorIdList.getClass()}"/>-->
-            <if condition="actorIdList instanceof String">
+<!--            <log level="warn" message="context.toString() ${context.toString()}"/>-->
+            <if condition="actorIdList != null &amp;&amp; actorIdList instanceof String">
                 <then>
-<!--                    <log level="warn" message="status is null"/>-->
                     <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList]"/>
                 </then>
                 <else>
-<!--                    <log level="warn" message="status is not null"/>-->
                     <iterate list="actorIdList" entry="actorId">
-<!--                        <log level="warn" message="actorId ${actorId}"/>-->
                         <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId]"/>
                     </iterate>
                 </else>
@@ -45,28 +41,29 @@ along with this software (see the LICENSE.md file). If not, see
             </actions><default-response url="."/></transition>
 
     <transition name="updateActivity"><service-call name="update#coarchy.Activity"/><actions>
-        <entity-find entity-name="coarchy.ActivityActor" list="activityActorList">
-            <econdition field-name="activityId"/></entity-find>
-<!--        <if condition="activityActorList">-->
-<!--            <set field="actorIdDeleteList" from="activityActorList*.actorId - actorIdList?:[]"/>-->
-<!--            &lt;!&ndash;        <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>&ndash;&gt;-->
-<!--            <iterate list="actorIdDeleteList" entry="actorIdDelete">-->
-<!--                <set field="activityActorIdDelete" from="activityActorList.find{it.actorId == actorIdDelete}?.activityActorId"/>-->
-<!--                &lt;!&ndash;            <log level="warn" message="activityActorIdDelete ${activityActorIdDelete}"/>&ndash;&gt;-->
-<!--                <service-call name="delete#coarchy.ActivityActor" in-map="[activityActorId:activityActorIdDelete]"/>-->
-<!--            </iterate>-->
-<!--        </if>-->
+        <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+            <econdition field-name="activityId"/>
+            <order-by field-name="name"/></entity-find>
+        <set field="actorIdServerList" from="activityActorList*.actorId"/>
+        <if condition="actorIdServerList">
+            <set field="actorIdDeleteList" from="actorIdServerList - actorIdList?:[]"/>
+<!--                    <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>-->
+            <iterate list="actorIdDeleteList" entry="actorIdDelete">
+                <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId,actorId:actorIdDelete]"/>
+            </iterate>
+        </if>
 
-        <if condition="actorIdList instanceof String">
+        <set field="actorIdCreateList" from="actorIdList?:[] - actorIdDeleteList?:[]"/>
+<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
+        <if condition="actorIdCreateList instanceof String">
             <then>
-                <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdList]"/></then>
+                <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdCreateList]"/></then>
             <else>
-                <iterate list="actorIdList" entry="actorId">
+                <iterate list="actorIdCreateList" entry="actorId">
                     <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
                 </iterate>
             </else>
         </if>
-
         </actions><default-response url="."/></transition>
 
     <transition name="getActorList">
@@ -100,19 +97,16 @@ along with this software (see the LICENSE.md file). If not, see
                 <else><set field="processStoryId" from="processStoryList.getFirst().processStoryId"/></else>
             </if>
         </if>
-
-<!--        <log level="warn" message="processStoryActivityList ${processStoryActivityList}"/>-->
     </actions>
 
     <widgets>
-        <!-- TODO: get rid of this next line and replace it with the format from https://github.com/jonesde/moqui-quasar-custom -->
-        <text><![CDATA[<q-page-container class="q-ma-sm"><q-page>]]></text>
         <link url="../Actor" text="Actor"/>
 
-        <form-list name="ProcessStory" paginate="false" skip-header="true" list="processStoryActivityList"
-                transition="updateActivity" transition-last-row="createActivity">
+        <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList"
+                transition="updateActivity" transition-last-row="createActivity" >
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
-                <order-by field-name="sequenceNum"/></entity-find>
+                <search-form-inputs default-order-by="sequenceNum"/>
+                </entity-find>
 
             <row-actions>
                 <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
@@ -125,10 +119,9 @@ along with this software (see the LICENSE.md file). If not, see
 
             <field name="condition"><default-field><text-area rows="2" cols="60"/></default-field>
                 <last-row-field><text-area rows="2" cols="60"/></last-row-field></field>
-            <!-- TODO: Autofill in previous parameters in a dropdown with dynamic options and server search -->
             <!-- TODO: Add submit-on-select to make it easier to select. Right now a bug that doesn't show the transitions text when that is toggled on -->
             <field name="actorIdList">
-                <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
+                <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
                     <list-options list="activityActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></default-field>
@@ -140,9 +133,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
             <field name="submit"><default-field><submit text="Update"/></default-field>
                 <last-row-field><submit text="Create"/></last-row-field></field>
-
-
-
+            
             <columns>
                 <column><field-ref name="condition"/></column>
                 <column><field-ref name="actorIdList"/></column>
@@ -150,20 +141,5 @@ along with this software (see the LICENSE.md file). If not, see
                 <column><field-ref name="submit"/></column>
             </columns>
         </form-list>
-        <form-single name="CreateActivity" transition="createActivity">
-            <field name="condition"><default-field><text-area rows="3"/></default-field></field>
-            <field name="actorIdList"><default-field><drop-down allow-empty="true" allow-multiple="true">
-                <!-- TODO: Allow creating an actor in the find field with a modified DropDown vue component -->
-                <dynamic-options server-search="true" transition="getActorList"/>
-            </drop-down></default-field></field>
-            <field name="action"><default-field><text-area rows="3"/></default-field></field>
-            <field name="submit"><default-field><submit text="Create"/></default-field></field>
-            <field name="newParagraph"><default-field><link url="" url-type="transition"/></default-field></field>
-
-            <field-layout>
-                <field-row-big><field-ref name="condition"/><field-ref name="actorIdList"/><field-ref name="action"/><field-ref name="submit"/></field-row-big>
-            </field-layout>
-        </form-single>
-        <text><![CDATA[</q-page></q-page-container>]]></text>
     </widgets>
 </screen>

@@ -34,9 +34,8 @@ along with this software (see the LICENSE.md file). If not, see
     <#-- to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder -->
     <q-layout view="hHh LpR fFf">
         <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px;">
-            <r-toolbar-left></r-toolbar-left>
 
-            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>
+<#--            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>-->
             <#if headerLogoList?has_content>
                 <m-link href="/copps"><div class="q-mx-md q-mt-sm">
                     <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="32">
@@ -73,7 +72,9 @@ along with this software (see the LICENSE.md file). If not, see
 
         </q-toolbar></q-header>
 
-        <m-subscreens-active></m-subscreens-active>
+        <q-page-container class="q-ma-sm"><q-page>
+            <m-subscreens-active></m-subscreens-active>
+        </q-page></q-page-container>
 
         <#-- <r-menu></r-menu> -->
     </q-layout>
@@ -107,7 +108,6 @@ along with this software (see the LICENSE.md file). If not, see
 </div>
 
 <script>
-
     window.quasarConfig = {
         brand: { // this will NOT work on IE 11
             // primary: '#e46262',

@@ -22,7 +22,7 @@
     </webapp-list>
 
     <screen-facade>
-        <screen location="component://webroot/screen/webroot.xml" default-subscreen="r">
+        <screen location="component://webroot/screen/webroot.xml" default-subscreen="coapp">
             <subscreens-item name="coapp" menu-include="false" location="component://coarchy/screen/coapp.xml"/>
             <subscreens-item name="cointernal" menu-include="false" location="component://coarchy/screen/cointernal.xml"/>
             <subscreens-item name="costatic" menu-include="false" location="component://coarchy/screen/costatic.xml"/>

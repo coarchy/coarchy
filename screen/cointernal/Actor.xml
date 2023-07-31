@@ -21,25 +21,22 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
             <order-by field-name="^name"/>
         </entity-find>
-<!--        <log level="warn" message="actorList ${actorList}"/>-->
         <if condition="actorList?.size() &gt; 0"><return type="warning" message="Actor ${actorList?.getFirst()?.name} is already created"/></if>
 
         <service-call name="create#coarchy.Actor" in-map="[name:name,description:description]"/>
-        </actions><default-response></default-response></transition>
+        </actions><default-response/></transition>
 
     <transition name="updateActor"><service-call name="update#coarchy.Actor"/>
-        <default-response></default-response></transition>
+        <default-response/></transition>
 
     <actions>
         <entity-find entity-name="coarchy.Actor" list="actorList">
-            <order-by field-name="-lastUpdatedStamp"/></entity-find>
+            <order-by field-name="lastUpdatedStamp"/></entity-find>
     </actions>
 
     <widgets>
-        <text><![CDATA[<q-page-container class="q-ma-sm"><q-page>]]></text>
         <link url="../ProcessStory" text="Process Story"/>
 
-        <!-- TODO: See if last row in form-list will work -->
         <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor" transition-last-row="createActor" multi="true">
             <field name="actorId"><default-field><hidden/></default-field></field>
             <field name="name"><default-field><text-line/></default-field>
@@ -49,15 +46,5 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="submit"><default-field><submit/></default-field>
                 <last-row-field><submit/></last-row-field></field>
         </form-list>
-        <form-single name="CreateActor" transition="createActor">
-            <field name="name"><default-field><text-line/></default-field></field>
-            <field name="description"><default-field><text-area rows="3"/></default-field></field>
-            <field name="submit"><default-field><submit/></default-field></field>
-
-            <field-layout>
-                <field-row-big><field-ref name="name"/><field-ref name="description"/><field-ref name="submit"/></field-row-big>
-            </field-layout>
-        </form-single>
-        <text><![CDATA[</q-page></q-page-container>]]></text>
     </widgets>
 </screen>
