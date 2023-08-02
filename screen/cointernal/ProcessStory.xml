@@ -17,28 +17,28 @@ along with this software (see the LICENSE.md file). If not, see
 
     <parameter name="processStoryId" from="processStoryId ?: null"/>
 
-    <transition name="newParagraph"><service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:processStoryActivityList?.getFirst()?.sequenceNum ? processStoryActivityList?.getFirst()?.sequenceNum + 1 : 0]"/>
-        <default-response/>
-    </transition>
-
     <transition name="createActivity"><actions>
-            <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action]" out-map="newActivity"/>
+        <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
+        <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action]" out-map="newActivity"/>
 
-            <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
-                <order-by field-name="-sequenceNum"/></entity-find>
-            <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:processStoryActivityList?.getFirst()?.sequenceNum ? processStoryActivityList?.getFirst()?.sequenceNum + 1 : 0]"/>
-<!--            <log level="warn" message="context.toString() ${context.toString()}"/>-->
-            <if condition="actorIdList != null &amp;&amp; actorIdList instanceof String">
-                <then>
-                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList]"/>
-                </then>
-                <else>
-                    <iterate list="actorIdList" entry="actorId">
-                        <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId]"/>
-                    </iterate>
-                </else>
-            </if>
-            </actions><default-response url="."/></transition>
+        <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
+            <order-by field-name="-sequenceNum"/></entity-find>
+        <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
+        <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
+        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum]"/>
+<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
+
+        <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
+            <then>
+                <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList]"/>
+            </then>
+            <else>
+                <iterate list="actorIdList" entry="actorId">
+                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId]"/>
+                </iterate>
+            </else>
+        </if>
+        </actions><default-response url="."/></transition>
 
     <transition name="updateActivity"><service-call name="update#coarchy.Activity"/><actions>
         <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
@@ -57,14 +57,51 @@ along with this software (see the LICENSE.md file). If not, see
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
         <if condition="actorIdCreateList instanceof String">
             <then>
-                <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdCreateList]"/></then>
+                <service-call name="update#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdCreateList]"/></then>
             <else>
                 <iterate list="actorIdCreateList" entry="actorId">
-                    <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
+                    <service-call name="update#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
                 </iterate>
             </else>
         </if>
         </actions><default-response url="."/></transition>
+
+    <transition name="activityMoveUp"><actions>
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
+            <econdition field-name="sequenceNum" operator="less" from="sequenceNum"/>
+            <select-field field-name="processStoryActivityId,sequenceNum"/>
+            <order-by field-name="-sequenceNum"/></entity-find>
+
+        <set field="processStoryActivity" from="processStoryActivityList?.getFirst()"/>
+        <if condition="processStoryActivity?.sequenceNum != null">
+            <then>
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:sequenceNum]"/>
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum]"/>
+            </then><else>
+                <return type="warning" message="Cannot move activity up"/>
+            </else>
+        </if>
+    </actions><default-response url="."/></transition>
+
+    <transition name="activityMoveDown"><actions>
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
+            <econdition field-name="sequenceNum" operator="greater" from="sequenceNum"/>
+            <select-field field-name="processStoryActivityId,sequenceNum"/>
+            <order-by field-name="sequenceNum"/></entity-find>
+
+        <set field="processStoryActivity" from="processStoryActivityList?.getFirst()"/>
+        <if condition="processStoryActivity?.sequenceNum != null">
+            <then>
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:sequenceNum]"/>
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum]"/>
+            </then><else>
+            <return type="warning" message="Cannot move activity down"/>
+        </else>
+        </if>
+    </actions><default-response url="."/></transition>
+
+    <transition name="deleteActivity"><service-call name="delete#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId]"/>
+        <default-response url="."/></transition>
 
     <transition name="getActorList">
         <actions>
@@ -87,6 +124,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
         <default-response type="none"/>
     </transition>
+
     <actions>
         <!-- MVP Phase One: Only allow one processStory per User -->
         <if condition="processStoryId == null">
@@ -100,27 +138,44 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <link url="../Actor" text="Actor"/>
+        <link url="../Actor" text="Go to Actors"/>
+        <label text="The Process Story" type="h2"/>
 
         <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList"
-                transition="updateActivity" transition-last-row="createActivity" >
+                transition="updateActivity" transition-last-row="createActivity" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
                 <search-form-inputs default-order-by="sequenceNum"/>
+                <select-field field-name="activity,action,processStoryActivityId,condition,sequenceNum"/>
                 </entity-find>
 
             <row-actions>
+                <set field="activityActorList" from="[]"/>
                 <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
                     <econdition field-name="activityId"/>
                     <order-by field-name="name"/></entity-find>
+<!--                <if condition="actorIdList != null &amp;&amp; actorIdList.size() &gt; 0 &amp;&amp; !activityActorList*.actorId.any{ actorIdList.contains(it) }">-->
+<!--                <log level="warn" message="!activityActorList*.actorId.any{ ec.logger.warn(actorIdList.split(',').contains(it).toString()) } ${!activityActorList*.actorId.any{ actorIdList.split(',').contains(it) }}"/>-->
+<!--                <if condition="!activityActorList*.actorId.any{ ec.logger.warn(actorIdList.split(',').contains(it).toString()) }">-->
+<!--                    <log level="warn" message="context.toString() ${context.toString()}"/>-->
+<!--                    <then><script>processStoryActivityList.</script></then>-->
+<!--                    <else><log level="warn" message="noooooooooooooooooooooo"/></else>-->
+<!--                </if>-->
                 <set field="actorIdList" from="activityActorList*.actorId"/>
-<!--                <log level="warn" message="actorIdList ${actorIdList}"/>-->
             </row-actions>
             <field name="activityId"><default-field><hidden/></default-field></field>
 
-            <field name="condition"><default-field><text-area rows="2" cols="60"/></default-field>
+            <!-- TODO: Make reordering drag and drop instead of arrows -->
+            <field name="moveUp"><default-field title=""><link url="activityMoveUp" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_index != 0" icon="fa fa-angle-up" text=" "/></default-field></field>
+            <field name="moveDown"><default-field title=""><link url="activityMoveDown" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_has_next" icon="fa fa-angle-down" text=" "/></default-field></field>
+            <field name="condition"><header-field title="Condition" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
+                <default-field title="Condition"><text-area rows="2" cols="60"/></default-field>
                 <last-row-field><text-area rows="2" cols="60"/></last-row-field></field>
             <!-- TODO: Add submit-on-select to make it easier to select. Right now a bug that doesn't show the transitions text when that is toggled on -->
             <field name="actorIdList">
+                <header-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
+<!--                    <list-options list="activityActorList" key="${actorId}" text="${name}"/>-->
+                    <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
+                </drop-down></header-field>
                 <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
                     <list-options list="activityActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
@@ -129,17 +184,27 @@ along with this software (see the LICENSE.md file). If not, see
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></last-row-field>
             </field>
-            <field name="action"><default-field><text-area rows="2" cols="80"/></default-field>
+            <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
+                <default-field title="Action"><text-area rows="2" cols="80"/></default-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="submit"><default-field><submit text="Update"/></default-field>
+            <field name="delete"><default-field title=""><link url="deleteActivity" parameter-map="[processStoryActivityId:processStoryActivityId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Delete Activity"/></default-field></field>
+            <field name="submit"><header-field title="Find"><submit/></header-field>
+                <default-field title=""><submit text="Update All"/></default-field>
                 <last-row-field><submit text="Create"/></last-row-field></field>
-            
+
+            <form-list-column><field-ref name="condition"/></form-list-column>
+            <form-list-column><field-ref name="actorIdList"/></form-list-column>
+            <form-list-column><field-ref name="action"/></form-list-column>
+            <form-list-column><field-ref name="submit"/></form-list-column>
+
             <columns>
+                <column><field-ref name="moveUp"/><field-ref name="moveDown"/></column>
                 <column><field-ref name="condition"/></column>
                 <column><field-ref name="actorIdList"/></column>
                 <column><field-ref name="action"/></column>
-                <column><field-ref name="submit"/></column>
+                <column><field-ref name="submit"/><field-ref name="delete"/></column>
             </columns>
+
         </form-list>
     </widgets>
 </screen>
