@@ -17,6 +17,17 @@ along with this software (see the LICENSE.md file). If not, see
 
     <parameter name="processStoryId" from="processStoryId ?: null"/>
 
+    <transition name="newParagraph"><actions>
+        <service-call name="create#coarchy.Activity" out-map="newActivity"/>
+
+        <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
+            <order-by field-name="-sequenceNum"/></entity-find>
+        <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
+        <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
+        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum]"/>
+
+    </actions><default-response url="."/></transition>
+
     <transition name="createActivity"><actions>
         <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
         <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action]" out-map="newActivity"/>
@@ -81,7 +92,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <return type="warning" message="Cannot move activity up"/>
             </else>
         </if>
-    </actions><default-response url="."/></transition>
+        </actions><default-response url="."/></transition>
 
     <transition name="activityMoveDown"><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
@@ -153,18 +164,15 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="name"/></entity-find>
         </if>
 
-
-<!--        <entity-find-count entity-name="coarchy.ProcessStoryActivityDetail" count-field="originalProcessStoryActivityCount">-->
-<!--            <econdition field-name="processStoryId"/></entity-find-count>-->
         <set field="showMoveUpDown" from="!actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
-        <log level="warn" message="context.toString() ${context.toString()}"/>
+<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
         <link url="../Actor" text="Go to Actors"/>
-        <label text="The Process Story" type="h2"/>
-
-        <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList"
+        <label text="Process Story" type="h2"/>
+        <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]"/>
+        <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
                 transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
                 <search-form-inputs default-order-by="sequenceNum"/>
@@ -186,30 +194,32 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- TODO: Make reordering drag and drop instead of arrows -->
             <field name="moveUp"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveUp" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_index != 0" icon="fa fa-angle-up" text=" "/></conditional-field></field>
             <field name="moveDown"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveDown" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_has_next" icon="fa fa-angle-down" text=" "/></conditional-field></field>
+            <!-- TODO: Fix allowing < and > tags in to prevent attacks -->
             <field name="condition"><header-field title="Condition" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
-                <default-field title="Condition"><text-area rows="2" cols="60"/></default-field>
+                <conditional-field condition="action" title="Condition"><text-area rows="2" cols="60"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="60"/></last-row-field></field>
-            <!-- TODO: Add submit-on-select to make it easier to select. Right now a bug that doesn't show the transitions text when that is toggled on -->
             <field name="actorIdList">
                 <header-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <list-options list="headerActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></header-field>
-                <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
+                <conditional-field condition="action" title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
                     <list-options list="activityActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
-                </drop-down></default-field>
+                </drop-down></conditional-field>
                 <last-row-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></last-row-field>
             </field>
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
-                <default-field title="Action"><text-area rows="2" cols="80"/></default-field>
+                <conditional-field condition="action" title="Action"><text-area rows="2" cols="80"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="delete"><default-field title=""><link url="deleteActivity" parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Delete Activity"/></default-field></field>
+            <field name="delete"><conditional-field condition="true" title=""><link url="deleteActivity" parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></conditional-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
                 <default-field title=""><submit text="Update All"/></default-field>
                 <last-row-field><submit text="Create"/></last-row-field></field>
+            <field name="newParagraph"><conditional-field condition="false" title=""><label text=" "/></conditional-field>
+                <last-row-field><link url="newParagraph" text="⏎" tooltip="New Paragraph"/></last-row-field></field>
 
             <form-list-column><field-ref name="condition"/></form-list-column>
             <form-list-column><field-ref name="actorIdList"/></form-list-column>
@@ -222,6 +232,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <column><field-ref name="actorIdList"/></column>
                 <column><field-ref name="action"/></column>
                 <column><field-ref name="submit"/><field-ref name="delete"/></column>
+                <column><field-ref name="newParagraph"/></column>
             </columns>
 
         </form-list>

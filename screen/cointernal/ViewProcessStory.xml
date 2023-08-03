@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Process Story" default-menu-index="99" menu-image="/ssstatic/images/project-business120.png" default-menu-include="true" >
+
+    <parameter name="processStoryId" required="true"/>
+
+    <actions>
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupProcessStoryActivityList">
+            <econdition field-name="processStoryId"/>
+            <order-by field-name="sequenceNum"/></entity-find>
+        <set field="processStoryActivityList" from="[]"/>
+        <iterate list="setupProcessStoryActivityList" entry="processStoryActivity">
+            <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                <econdition field-name="activityId" from="processStoryActivity.activityId"/>
+                <order-by field-name="name"/></entity-find>
+
+            <script>processStoryActivityList.add([sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,actorNames:activityActorList*.name,action:processStoryActivity.action])</script>
+        </iterate>
+
+        <log level="warn" message="context.toString() ${context.toString()}"/>
+    </actions>
+
+    <widgets>
+        <link url="../ProcessStory" text="Go Back to Process Story" parameter-map="[processStoryId:processStoryId]"/>
+        <label text="View Process Story" type="h2"/>
+
+        <!-- TODO: Add filter parameters for the activity -->
+        <render-mode><text><![CDATA[<h4>]]></text></render-mode>
+        <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ProcessStory.html.ftl"/></render-mode>
+        <render-mode><text><![CDATA[</h4>]]></text></render-mode>
+
+    </widgets>
+</screen>

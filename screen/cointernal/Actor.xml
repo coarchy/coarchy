@@ -45,7 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <link url="../ProcessStory" text="Go to The Process Story"/>
+        <link url="../ProcessStory" text="Go to Process Story"/>
 
         <label text="Actors" type="h2"/>
 
