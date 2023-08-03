@@ -100,8 +100,19 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
     </actions><default-response url="."/></transition>
 
-    <transition name="deleteActivity"><service-call name="delete#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId]"/>
-        <default-response url="."/></transition>
+    <transition name="deleteActivity"><actions>
+        <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
+            <then>
+                <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdList]"/>
+            </then>
+            <else>
+                <iterate list="actorIdList" entry="actorId">
+                    <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
+                </iterate>
+            </else>
+        </if>
+        <service-call name="delete#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId]"/>
+        </actions><default-response url="."/></transition>
 
     <transition name="getActorList">
         <actions>
@@ -161,13 +172,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
                     <econdition field-name="activityId"/>
                     <order-by field-name="name"/></entity-find>
-<!--                <if condition="actorIdList != null &amp;&amp; actorIdList.size() &gt; 0 &amp;&amp; !activityActorList*.actorId.any{ actorIdList.contains(it) }">-->
-<!--                <log level="warn" message="!activityActorList*.actorId.any{ ec.logger.warn(actorIdList.split(',').contains(it).toString()) } ${!activityActorList*.actorId.any{ actorIdList.split(',').contains(it) }}"/>-->
-<!--                <if condition="!activityActorList*.actorId.any{ ec.logger.warn(actorIdList.split(',').contains(it).toString()) }">-->
-<!--                    <log level="warn" message="context.toString() ${context.toString()}"/>-->
-<!--                    <then><script>processStoryActivityList.</script></then>-->
-<!--                    <else><log level="warn" message="noooooooooooooooooooooo"/></else>-->
-<!--                </if>-->
                 <set field="actorIdList" from="activityActorList*.actorId"/>
             </row-actions>
             <field name="activityId"><default-field><hidden/></default-field></field>
@@ -195,7 +199,7 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
                 <default-field title="Action"><text-area rows="2" cols="80"/></default-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="delete"><default-field title=""><link url="deleteActivity" parameter-map="[processStoryActivityId:processStoryActivityId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Delete Activity"/></default-field></field>
+            <field name="delete"><default-field title=""><link url="deleteActivity" parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Delete Activity"/></default-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
                 <default-field title=""><submit text="Update All"/></default-field>
                 <last-row-field><submit text="Create"/></last-row-field></field>

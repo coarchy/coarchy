@@ -28,8 +28,16 @@ along with this software (see the LICENSE.md file). If not, see
     <transition name="updateActor"><service-call name="update#coarchy.Actor"/>
         <default-response/></transition>
 
-    <transition name="deleteActor"><service-call name="delete#coarchy.Actor"/>
-        <default-response/></transition>
+    <transition name="deleteActor"><actions>
+        <entity-find-count entity-name="coarchy.ActivityActor" count-field="activityActorCount">
+            <econdition field-name="actorId"/></entity-find-count>
+
+        <if condition="activityActorCount &gt; 0">
+            <return type="warning" message="You can't delete an Actor with any Activities"/>
+        </if>
+
+        <service-call name="delete#coarchy.Actor" in-map="[actorId:actorId]"/>
+        </actions><default-response/></transition>
 
     <actions>
         <entity-find entity-name="coarchy.Actor" list="actorList">
