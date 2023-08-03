@@ -135,6 +135,12 @@ along with this software (see the LICENSE.md file). If not, see
                 <else><set field="processStoryId" from="processStoryList.getFirst().processStoryId"/></else>
             </if>
         </if>
+
+        <if condition="actorIdList">
+            <entity-find entity-name="coarchy.Actor" list="headerActorList">
+                <econdition field-name="actorId" operator="in" from="actorIdList"/>
+                <order-by field-name="name"/></entity-find>
+        </if>
     </actions>
 
     <widgets>
@@ -142,10 +148,12 @@ along with this software (see the LICENSE.md file). If not, see
         <label text="The Process Story" type="h2"/>
 
         <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList"
-                transition="updateActivity" transition-last-row="createActivity" multi="true">
+                transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
                 <search-form-inputs default-order-by="sequenceNum"/>
-                <select-field field-name="activity,action,processStoryActivityId,condition,sequenceNum"/>
+                <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
+                <!-- Don't select fields from activityactor (actorId) -->
+                <select-field field-name="processStoryActivityId,sequenceNum"/>
                 </entity-find>
 
             <row-actions>
@@ -173,7 +181,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- TODO: Add submit-on-select to make it easier to select. Right now a bug that doesn't show the transitions text when that is toggled on -->
             <field name="actorIdList">
                 <header-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
-<!--                    <list-options list="activityActorList" key="${actorId}" text="${name}"/>-->
+                    <list-options list="headerActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></header-field>
                 <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">

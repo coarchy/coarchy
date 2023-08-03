@@ -15,7 +15,6 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Actor" default-menu-index="99" menu-image="/ssstatic/images/project-business120.png" default-menu-include="true">
 
-
     <transition name="createActor"><actions>
         <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
             <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
