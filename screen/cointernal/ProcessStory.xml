@@ -152,6 +152,12 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="actorId" operator="in" from="actorIdList"/>
                 <order-by field-name="name"/></entity-find>
         </if>
+
+
+<!--        <entity-find-count entity-name="coarchy.ProcessStoryActivityDetail" count-field="originalProcessStoryActivityCount">-->
+<!--            <econdition field-name="processStoryId"/></entity-find-count>-->
+        <set field="showMoveUpDown" from="!actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
+        <log level="warn" message="context.toString() ${context.toString()}"/>
     </actions>
 
     <widgets>
@@ -162,6 +168,7 @@ along with this software (see the LICENSE.md file). If not, see
                 transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
                 <search-form-inputs default-order-by="sequenceNum"/>
+                <econdition field-name="processStoryId"/>
                 <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
                 <!-- Don't select fields from activityactor (actorId) -->
                 <select-field field-name="processStoryActivityId,sequenceNum"/>
@@ -177,8 +184,8 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="activityId"><default-field><hidden/></default-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
-            <field name="moveUp"><default-field title=""><link url="activityMoveUp" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_index != 0" icon="fa fa-angle-up" text=" "/></default-field></field>
-            <field name="moveDown"><default-field title=""><link url="activityMoveDown" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_has_next" icon="fa fa-angle-down" text=" "/></default-field></field>
+            <field name="moveUp"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveUp" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_index != 0" icon="fa fa-angle-up" text=" "/></conditional-field></field>
+            <field name="moveDown"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveDown" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_has_next" icon="fa fa-angle-down" text=" "/></conditional-field></field>
             <field name="condition"><header-field title="Condition" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
                 <default-field title="Condition"><text-area rows="2" cols="60"/></default-field>
                 <last-row-field><text-area rows="2" cols="60"/></last-row-field></field>
