@@ -46,6 +46,29 @@ along with this software (see the LICENSE.md file). If not, see
             <q-toolbar-title>${ec.resource.expand(headerTitleList?first, "")}</q-toolbar-title>
             </#if>
 
+            <#-- NOTE: tried using q-breadcrumbs but last item with q-breadcrumbs--last class makes never clickable! -->
+            <template v-for="(navMenuItem, menuIndex) in navMenuList"><template v-if="menuIndex < (navMenuList.length - 1)">
+                    <m-link v-if="navMenuItem.hasTabMenu" :href="getNavHref(menuIndex)" class="gt-xs">{{navMenuItem.title}}</m-link>
+                    <div v-else-if="navMenuItem.subscreens && navMenuItem.subscreens.length" class="cursor-pointer gt-xs">
+                        {{navMenuItem.title}}
+                        <q-menu anchor="bottom left" self="top left"><q-list dense style="min-width: 200px">
+                                <q-item v-for="subscreen in navMenuItem.subscreens" :key="subscreen.name" :class="{'bg-primary':subscreen.active, 'text-white':subscreen.active}" clickable v-close-popup><q-item-section>
+                                        <m-link :href="subscreen.pathWithParams">
+                                            <template v-if="subscreen.image">
+                                                <i v-if="subscreen.imageType === 'icon'" :class="subscreen.image" style="padding-right: 4px;"></i>
+                                                <img v-else :src="subscreen.image" :alt="subscreen.title" width="18" class="invertible" style="padding-right: 4px;">
+                                            </template>
+                                            <i v-else class="fa fa-link" style="padding-right: 8px;"></i>
+                                            {{subscreen.title}}
+                                        </m-link></li>
+                                    </q-item-section></q-item>
+                            </q-list></q-menu>
+                    </div>
+                    <m-link v-else :href="getNavHref(menuIndex)" class="gt-xs">{{navMenuItem.title}}</m-link>
+                    <q-icon size="1.5em" name="chevron_right" color="grey" class="gt-xs"></q-icon>
+                </template></template>
+            <m-link v-if="navMenuList.length > 0" :href="getNavHref(navMenuList.length - 1)" class="gt-xs">{{navMenuList[navMenuList.length - 1].title}}</m-link>
+
             <q-space></q-space>
 
             <#-- spinner, usually hidden -->
@@ -70,7 +93,23 @@ along with this software (see the LICENSE.md file). If not, see
 
             <#-- screen history menu See in root CoarchyVue.qvt.ftl -->
 
-        </q-toolbar></q-header>
+<#--            <q-btn push icon="account_circle">-->
+<#--                <q-tooltip>${(ec.user.userAccount.userFullName)!ec.l10n.localize("Account")}</q-tooltip>-->
+<#--                <q-menu><q-card flat bordered>&lt;#&ndash; always matching header (dark): class="${headerClass}" &ndash;&gt;-->
+<#--                        <q-card-section horizontal class="q-pa-md">-->
+<#--                            <q-card-actions vertical class="justify-around q-px-md">-->
+                                <#-- logout button -->
+                                <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"
+                                       onclick="return confirm('${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}?')">
+                                    <q-tooltip>${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}</q-tooltip></q-btn>
+                                <#-- dark/light switch -->
+                                <#-- re-login button -->
+<#--                                <q-btn flat dense icon="autorenew" color="negative" @click="reLoginShowDialog"><q-tooltip>Re-Login</q-tooltip></q-btn>-->
+<#--                            </q-card-actions>-->
+<#--                        </q-card-section>-->
+<#--                    </q-card></q-menu>-->
+<#--            </q-btn>-->
+            </q-toolbar></q-header>
 
         <q-page-container class="q-ma-sm"><q-page>
             <m-subscreens-active></m-subscreens-active>
