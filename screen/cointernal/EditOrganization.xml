@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Organizations" default-menu-index="99" menu-image="/ssstatic/images/Sales.png" default-menu-include="true">
+
+    <parameter name="partyId" required="true"/>
+
+    <transition name="createActor"><actions>
+        <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+            <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
+            <order-by field-name="^name"/>
+        </entity-find>
+        <if condition="actorList?.size() &gt; 0"><return type="warning" message="Actor ${actorList?.getFirst()?.name} is already created"/></if>
+
+        <service-call name="create#coarchy.Actor" in-map="[name:name,description:description]"/>
+    </actions><default-response/></transition>
+
+    <transition name="updateActor"><service-call name="update#coarchy.Actor"/>
+        <default-response/></transition>
+
+    <transition name="deleteActor"><actions>
+        <entity-find-count entity-name="coarchy.ActivityActor" count-field="activityActorCount">
+            <econdition field-name="actorId"/></entity-find-count>
+
+        <if condition="activityActorCount &gt; 0">
+            <return type="warning" message="You can't delete an Actor with any Activities"/>
+        </if>
+
+        <service-call name="delete#coarchy.Actor" in-map="[actorId:actorId]"/>
+    </actions><default-response/></transition>
+
+    <transition-include name="inviteUser" location="component://coarchy/screen/cointernal/FindOrganization.xml"/>
+
+    <actions>
+        <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:partyId]"/>
+    </actions>
+
+    <widgets>
+        <label text="Edit${organization?.organizationName?' '+organization.organizationName:''} Organization" type="h2"/>
+
+        <container-dialog id="InviteUser" button-text="Invite User">
+            <form-single name="InviteUser" transition="inviteUser">
+                <field name="partyId"><default-field><hidden/></default-field></field>
+                <field name="emailAddress"><default-field><text-line/></default-field></field>
+                <field name="firstName"><default-field><text-line/></default-field></field>
+                <field name="lastName"><default-field><text-line/></default-field></field>
+                <field name="submit"><default-field><submit/></default-field></field>
+
+                <field-layout>
+                    <field-row-big><field-ref name="partyId"/></field-row-big>
+                    <field-row-big><field-ref name="emailAddress"/></field-row-big>
+                    <field-row-big><field-ref name="firstName"/><field-ref name="lastName"/></field-row-big>
+                    <field-row-big><field-ref name="submit"/></field-row-big>
+                </field-layout>
+            </form-single>
+        </container-dialog>
+
+    </widgets>
+</screen>

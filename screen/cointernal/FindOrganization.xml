@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Organizations" default-menu-index="99" menu-image="/ssstatic/images/Sales.png" default-menu-include="true">
+
+    <transition name="createActor"><actions>
+        <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+            <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
+            <order-by field-name="^name"/>
+        </entity-find>
+        <if condition="actorList?.size() &gt; 0"><return type="warning" message="Actor ${actorList?.getFirst()?.name} is already created"/></if>
+
+        <service-call name="create#coarchy.Actor" in-map="[name:name,description:description]"/>
+    </actions><default-response/></transition>
+
+    <transition name="updateOrganization"><service-call name="update#mantle.party.Organization" in-map="[partyId:partyId,organizationName:organizationName]"/>
+        <default-response/></transition>
+
+    <transition name="inviteUser"><actions>
+    </actions><default-response url="../EditOrganization" parameter-map="[partyId:partyId]"/></transition>
+
+    <actions>
+
+    </actions>
+
+    <widgets>
+        <label text="Organizations" type="h2"/>
+
+        <container-dialog id="InviteUser" button-text="Invite User">
+            <form-single name="InviteUser" transition="inviteUser">
+                <field name="partyId"><default-field title="Organization"><drop-down><entity-options text="${organizationName}" key="${partyId}">
+                    <entity-find entity-name="mantle.party.PartyDetail">
+                        <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                        <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                    </entity-find></entity-options> </drop-down></default-field></field>
+                <field name="emailAddress"><default-field><text-line/></default-field></field>
+                <field name="firstName"><default-field><text-line/></default-field></field>
+                <field name="lastName"><default-field><text-line/></default-field></field>
+                <field name="submit"><default-field><submit/></default-field></field>
+
+                <field-layout>
+                    <field-row-big><field-ref name="partyId"/></field-row-big>
+                    <field-row-big><field-ref name="emailAddress"/></field-row-big>
+                    <field-row-big><field-ref name="firstName"/><field-ref name="lastName"/></field-row-big>
+                    <field-row-big><field-ref name="submit"/></field-row-big>
+                </field-layout>
+            </form-single>
+        </container-dialog>
+
+        <form-list name="Organization" paginate="false" skip-header="false" list="organizationList" transition="updateOrganization">
+            <entity-find entity-name="mantle.party.PartyDetail" list="organizationList" distinct="true">
+                <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                <order-by field-name="-lastUpdatedStamp"/></entity-find>
+
+            <field name="partyId"><default-field><hidden/></default-field></field>
+            <field name="organizationName"><default-field title="Name"><text-line/></default-field></field>
+            <field name="update"><default-field><submit text="Update"/></default-field></field>
+            <field name="edit"><default-field title=""><link url="../EditOrganization" text="Edit Organization" parameter-map="[partyId:partyId]" tooltip="Invite Users"/></default-field></field>
+            <field name="go"><default-field title=""><link url="../Actor" text="Go to Application" parameter-map="[partyId:partyId]" tooltip="Create Process Stories"/></default-field></field>
+
+        </form-list>
+
+    </widgets>
+</screen>

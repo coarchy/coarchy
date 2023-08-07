@@ -174,7 +174,7 @@ along with this software (see the LICENSE.md file). If not, see
         <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]"/>
         <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
                 transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
-            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum"/>
                 <econdition field-name="processStoryId"/>
                 <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
