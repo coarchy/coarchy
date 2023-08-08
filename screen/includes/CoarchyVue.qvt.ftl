@@ -88,6 +88,7 @@ along with this software (see the LICENSE.md file). If not, see
             </q-btn>
 
             <#-- nav plugins See in root CoarchyVue.qvt.ftl -->
+            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>
 
             <#-- notify history See in root CoarchyVue.qvt.ftl -->
 

@@ -35,16 +35,24 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="condition" type="text-intermediate"/>
         <field name="action" type="text-intermediate"/>
 
+        <field name="organizationId" type="id"/>
+
         <relationship type="many" related="ActivityActor" short-alias="actors">
             <key-map field-name="activityId"/></relationship>
+
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId"/></relationship>
     </entity>
 
     <entity entity-name="Actor" package="coarchy">
         <field name="actorId" type="id" is-pk="true"/>
         <field name="name" type="text-short"/>
         <field name="description" type="text-medium"/>
-    </entity>
+        <field name="organizationId" type="id"/>
 
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId"/></relationship>
+    </entity>
 
     <entity entity-name="ActivityActor" package="coarchy">
         <field name="activityId" type="id" is-pk="true"/>
@@ -66,6 +74,11 @@ along with this software (see the LICENSE.md file). If not, see
 
     <entity entity-name="ProcessStory" package="coarchy">
         <field name="processStoryId" type="id" is-pk="true"/>
+        <field name="name" type="text-short"/>
+        <field name="organizationId" type="id"/>
+
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId"/></relationship>
     </entity>
     
     <entity entity-name="ProcessStoryActivity" package="coarchy">
