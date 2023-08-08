@@ -18,19 +18,18 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="processStoryId" from="processStoryId ?: null"/>
 
     <transition name="newParagraph"><actions>
-        <service-call name="create#coarchy.Activity" out-map="newActivity"/>
+        <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
 
         <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
             <order-by field-name="-sequenceNum"/></entity-find>
         <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
         <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
         <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum]"/>
-
-    </actions><default-response url="."/></transition>
+        </actions><default-response url="."/></transition>
 
     <transition name="createActivity"><actions>
         <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
-        <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action]" out-map="newActivity"/>
+        <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action, organizationId:activeOrgId]" out-map="newActivity"/>
 
         <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
             <order-by field-name="-sequenceNum"/></entity-find>
@@ -109,7 +108,7 @@ along with this software (see the LICENSE.md file). If not, see
             <return type="warning" message="Cannot move activity down"/>
         </else>
         </if>
-    </actions><default-response url="."/></transition>
+        </actions><default-response url="."/></transition>
 
     <transition name="deleteActivity"><actions>
         <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
@@ -153,7 +152,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="1">
                 <order-by field-name="-lastUpdatedStamp"/></entity-find>
             <if condition="processStoryList?.getFirst()?.processStoryId == null">
-                <then><service-call name="create#coarchy.ProcessStory" out-map="newProcessStory"/><set field="processStoryId" from="newProcessStory.processStoryId"/></then>
+                <then><service-call name="create#coarchy.ProcessStory" in-map="[organizationId:activeOrgId]" out-map="newProcessStory"/><set field="processStoryId" from="newProcessStory.processStoryId"/></then>
                 <else><set field="processStoryId" from="processStoryList.getFirst().processStoryId"/></else>
             </if>
         </if>
@@ -165,7 +164,6 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
 
         <set field="showMoveUpDown" from="!actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
@@ -180,7 +178,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
                 <!-- Don't select fields from activityactor (actorId) -->
                 <select-field field-name="processStoryActivityId,sequenceNum"/>
-                </entity-find>
+            </entity-find>
 
             <row-actions>
                 <set field="activityActorList" from="[]"/>

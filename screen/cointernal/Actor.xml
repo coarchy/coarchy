@@ -22,7 +22,7 @@ along with this software (see the LICENSE.md file). If not, see
         </entity-find>
         <if condition="actorList?.size() &gt; 0"><return type="warning" message="Actor ${actorList?.getFirst()?.name} is already created"/></if>
 
-        <service-call name="create#coarchy.Actor" in-map="[name:name,description:description]"/>
+        <service-call name="create#coarchy.Actor" in-map="[name:name,description:description,organizationId:activeOrgId]"/>
         </actions><default-response/></transition>
 
     <transition name="updateActor"><service-call name="update#coarchy.Actor"/>

@@ -23,7 +23,16 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- Artifact group and authz for Coarchy App -->
     <artifactGroups artifactGroupId="COARCHY" description="Coarchy App (via root screen)">
         <artifacts artifactName="component://coarchy/screen/cointernal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
-        <authz artifactAuthzId="COARCHY_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
-        <authz artifactAuthzId="COARCHY_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
+        <authz artifactAuthzId="COARCHY_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
+            <filters entityFilterSetId="MANTLE_ACTIVE_ORG"/></authz>
+        <authz artifactAuthzId="COARCHY_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
+            <filters entityFilterSetId="MANTLE_ACTIVE_ORG"/></authz>
     </artifactGroups>
+
+    <moqui.security.EntityFilterSet entityFilterSetId="MANTLE_ACTIVE_ORG">
+        <filters entityFilterId="MANTLE_ACTIVE_ORG_C1" entityName="coarchy.Activity" joinOr="Y" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="MANTLE_ACTIVE_ORG_C2" entityName="coarchy.Actor" joinOr="Y" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="MANTLE_ACTIVE_ORG_C3" entityName="coarchy.ProcessStory" joinOr="Y" filterMap="[organizationId:activeOrgId]"/>
+    </moqui.security.EntityFilterSet>
+
 </entity-facade-xml>
