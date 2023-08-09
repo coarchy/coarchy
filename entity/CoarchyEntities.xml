@@ -24,7 +24,6 @@ along with this software (see the LICENSE.md file). If not, see
     Programmer and Customer verifies issue is fixed.
     -->
     <!--
-
     <coarchy.Activity activityId="" condition="" action="verifies issue is fixed">
         <actors activityActorId="10000" actorId="Programmer"/>
         <actors activityActorId="10001" actorId="Customer"/>

@@ -12,7 +12,6 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<!-- TODO: split into Seed/seed and Setup/install files -->
 <entity-facade-xml type="seed">
 
     <!-- ========== User Groups ========== -->
@@ -36,6 +35,16 @@ along with this software (see the LICENSE.md file). If not, see
             <filters entityFilterSetId="COARCHY_FILTER"/></authz>
     </artifactGroups>
 
+    <!-- Theme Resources -->
     <moqui.screen.ScreenThemeResource screenThemeId="DEFAULT_QUASAR" sequenceNum="130" resourceTypeEnumId="STRT_HEADER_NAVBAR_COMP"
             resourceValue="/costatic/lib/ActiveOrgNav.qvue"/>
+
+    <!-- EmailTemplate for User Invite -->
+    <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE" description="User Invite" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/UserInviteEmail.xml" webappName="webroot"
+            fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+    <moqui.security.user.NotificationTopic topic="CoarchyUserInvite" description="Coarchy User Invite"
+            typeString="info" showAlert="N" persistOnSend="N" receiveNotifications="N" emailTemplateId="USER_INVITE"
+            linkTemplate="/Login?username=${username}&amp;oldPassword=${oldPassword}#change" emailMessageSave="N"/>
+
 </entity-facade-xml>
