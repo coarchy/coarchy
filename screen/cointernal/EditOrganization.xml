@@ -13,59 +13,64 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Organizations" default-menu-index="99" menu-image="/ssstatic/images/Sales.png" default-menu-include="true">
+        default-menu-title="Edit Organization" default-menu-index="99" menu-image="/ssstatic/images/Parties.png" default-menu-include="false">
 
     <parameter name="organizationId" required="true"/>
 
-    <transition name="createActor"><actions>
-        <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
-            <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
-            <order-by field-name="^name"/>
+    <transition name="removeUser"><actions>
+        <if condition="fromPartyId == ec.user.userAccount.partyId"><return/></if>
+
+        <entity-find entity-name="mantle.party.PartyRelationship" list="partyRelationshipList">
+            <econdition field-name="toPartyId"/>
+            <econdition field-name="fromPartyId"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <select-field field-name="partyRelationshipId"/>
         </entity-find>
-        <if condition="actorList?.size() &gt; 0"><return type="warning" message="Actor ${actorList?.getFirst()?.name} is already created"/></if>
 
-        <service-call name="create#coarchy.Actor" in-map="[name:name,description:description]"/>
-    </actions><default-response/></transition>
-
-    <transition name="updateActor"><service-call name="update#coarchy.Actor"/>
-        <default-response/></transition>
-
-    <transition name="deleteActor"><actions>
-        <entity-find-count entity-name="coarchy.ActivityActor" count-field="activityActorCount">
-            <econdition field-name="actorId"/></entity-find-count>
-
-        <if condition="activityActorCount &gt; 0">
-            <return type="warning" message="You can't delete an Actor with any Activities"/>
-        </if>
-
-        <service-call name="delete#coarchy.Actor" in-map="[actorId:actorId]"/>
+        <iterate list="partyRelationshipList" entry="partyRelationship">
+            <service-call name="delete#mantle.party.PartyRelationship" in-map="[partyRelationshipId:partyRelationship.partyRelationshipId]"/>
+        </iterate>
     </actions><default-response/></transition>
 
     <transition-include name="inviteUser" location="component://coarchy/screen/cointernal/FindOrganization.xml"/>
 
     <actions>
-        <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:partyId]"/>
+        <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:organizationId]"/>
     </actions>
 
     <widgets>
-        <label text="Edit${organization?.organizationName?' '+organization.organizationName:''} Organization" type="h2"/>
+        <label text="Edit ${organization?.organizationName?:' Organization'}" type="h2"/>
 
         <container-dialog id="InviteUser" button-text="Invite User">
             <form-single name="InviteUser" transition="inviteUser">
-                <field name="partyId"><default-field><hidden/></default-field></field>
+                <field name="partyId" from="organizationId"><default-field><hidden/></default-field></field>
                 <field name="emailAddress"><default-field><text-line/></default-field></field>
                 <field name="firstName"><default-field><text-line/></default-field></field>
                 <field name="lastName"><default-field><text-line/></default-field></field>
                 <field name="submit"><default-field><submit/></default-field></field>
-
-                <field-layout>
-                    <field-row-big><field-ref name="partyId"/></field-row-big>
-                    <field-row-big><field-ref name="emailAddress"/></field-row-big>
-                    <field-row-big><field-ref name="firstName"/><field-ref name="lastName"/></field-row-big>
-                    <field-row-big><field-ref name="submit"/></field-row-big>
-                </field-layout>
             </form-single>
         </container-dialog>
+
+        <form-list name="Users" paginate="false" skip-header="false" list="usersList">
+            <entity-find entity-name="mantle.party.PartyFromAndRelationship" list="usersList" distinct="true">
+                <econdition field-name="toPartyId" from="organizationId"/>
+                <select-field field-name="firstName,lastName"/>
+                <order-by field-name="-lastUpdatedStamp"/></entity-find>
+
+            <row-actions>
+                <!-- This assumes there are only one UserAccount per party in the application -->
+                <entity-find entity-name="moqui.security.UserAccount" list="userAccountList">
+                    <econdition field-name="partyId" from="fromPartyId"/>
+                    <select-field field-name="emailAddress"/>
+                    <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                <set field="userAccount" from="userAccountList?.getFirst()"/>
+            </row-actions>
+
+            <field name="fromPartyId"><default-field><hidden/></default-field></field>
+            <field name="name"><default-field><label text="${firstName} ${lastName}"/></default-field></field>
+            <field name="emailAddress" from="userAccount.emailAddress"><default-field><display/></default-field></field>
+            <field name="remove"><conditional-field condition="fromPartyId != ec.user.userAccount.partyId" title=""><link url="removeUser" parameter-map="[fromPartyId:fromPartyId,toPartyId:organizationId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Remove ${firstName} ${lastName} from ${organization?.organizationName?:' Organization'}"/></conditional-field></field>
+        </form-list>
 
     </widgets>
 </screen>

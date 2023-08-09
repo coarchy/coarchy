@@ -40,8 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions><default-response/></transition>
 
     <actions>
-        <entity-find entity-name="coarchy.Actor" list="actorList">
-            <order-by field-name="lastUpdatedStamp"/></entity-find>
+<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
@@ -50,6 +49,9 @@ along with this software (see the LICENSE.md file). If not, see
         <label text="Actors" type="h2"/>
 
         <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor" transition-last-row="createActor" multi="true">
+            <entity-find entity-name="coarchy.Actor" list="actorList">
+                <order-by field-name="lastUpdatedStamp"/></entity-find>
+
             <field name="actorId"><default-field><hidden/></default-field></field>
             <field name="name"><default-field><text-line/></default-field>
                 <last-row-field><text-line/></last-row-field></field>
