@@ -15,6 +15,19 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Organizations" default-menu-index="1" menu-image="/ssstatic/images/Parties.png" default-menu-include="true">
 
+    <always-actions>
+        <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <select-field field-name="toPartyId,ownerPartyId,organizationName"/>
+            <order-by field-name="-lastUpdatedStamp"/></entity-find>
+        <set field="ownerOfAnyOrganization" from="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)"/>
+        <if condition="!ownerOfAnyOrganization &amp;&amp; organizationList?.size() == 1">
+            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationList.getFirst().toPartyId]"/>
+            <message type="info">Redirected from Organizations</message>
+            <script>sri.sendRedirectAndStopRender('/coapp/Actor')</script>
+        </if>
+    </always-actions>
+
     <transition name="updateOrganization"><actions>
         <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
         <if condition="!organization || !organization.ownerPartyId"><return/></if>
@@ -45,27 +58,26 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'USER_INVITE',toAddresses:emailAddress,bodyParameters:[linkUrl:'https://coarchy.com/Login?username='+emailAddress+'&amp;oldPassword='+resetPassword+'#change',title:'You\'ve been invited to join Coarchy']]"/>
             <else><return type="danger" error="true" message="Not allowed"/></else>
         </if>
-    </actions><default-response url="../EditOrganization" parameter-map="[organizationId:partyId]"/></transition>
+        </actions><default-response url="../EditOrganization" parameter-map="[organizationId:partyId]"/></transition>
 
-    <transition name="goToApplication"><service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
-        <default-response url="../Actor"/></transition>
+    <transition name="goToApplication"><actions>
+        <entity-find-one entity-name="moqui.security.UserPreference" value-field="userPreference" auto-field-map="[userId:ec.user.userId,preferenceKey:'ACTIVE_ORGANIZATION']"/>
+        <if condition="partyId &amp;&amp; userPreference?.preferenceValue != partyId">
+            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
+        </if>
 
-    <pre-actions>
-        <!-- TODO: If user is not owner of an organization, and there is only one organization they are related to, redirect them to the application and add their preference. -->
-    </pre-actions>
+    </actions><default-response url="../Actor"/></transition>
 
     <actions>
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
-        <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
-            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
-            <select-field field-name="toPartyId,ownerPartyId,organizationName"/>
-            <order-by field-name="-lastUpdatedStamp"/></entity-find>
     </actions>
 
     <widgets>
         <label text="Organizations" type="h2"/>
 
-        <container-dialog id="InviteUser" button-text="Invite User" condition="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)">
+        <!-- TODO: Create the feature to transfer to another user -->
+
+        <container-dialog id="InviteUser" button-text="Invite User" condition="ownerOfAnyOrganization">
             <form-single name="InviteUser" transition="inviteUser">
                 <field name="partyId"><default-field title="Organization"><drop-down><entity-options text="${organizationName}" key="${partyId}">
                     <entity-find entity-name="mantle.party.PartyDetail">
@@ -76,12 +88,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="firstName"><default-field><text-line/></default-field></field>
                 <field name="lastName"><default-field><text-line/></default-field></field>
                 <field name="submit"><default-field><submit/></default-field></field>
-
             </form-single>
         </container-dialog>
 
         <form-list name="Organization" paginate="false" skip-header="false" list="organizationList" transition="updateOrganization">
-
             <field name="partyId"><default-field><hidden/></default-field></field>
             <field name="organizationName"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title="Name"><text-line/></conditional-field>
                 <default-field><display/></default-field></field>
@@ -89,6 +99,5 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="edit"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title=""><link url="../EditOrganization" text="Edit Organization" parameter-map="[organizationId:toPartyId]" tooltip="Invite Users"/></conditional-field></field>
             <field name="go"><default-field title=""><link url="goToApplication" text="Go to Application" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/></default-field></field>
         </form-list>
-
     </widgets>
 </screen>

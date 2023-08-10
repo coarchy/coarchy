@@ -29,6 +29,7 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- Artifact group and authz for Coarchy App -->
     <artifactGroups artifactGroupId="COARCHY" description="Coarchy App (via root screen)">
         <artifacts artifactName="component://coarchy/screen/cointernal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+        <artifacts artifactName="org.moqui.impl.UserServices.set#Preference" artifactTypeEnumId="AT_SERVICE" inheritAuthz="N" nameIsPattern="N"/>
         <authz artifactAuthzId="COARCHY_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
             <filters entityFilterSetId="COARCHY_FILTER"/></authz>
         <authz artifactAuthzId="COARCHY_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
@@ -43,8 +44,5 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE" description="User Invite" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/UserInviteEmail.xml" webappName="webroot"
             fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
-    <moqui.security.user.NotificationTopic topic="CoarchyUserInvite" description="Coarchy User Invite"
-            typeString="info" showAlert="N" persistOnSend="N" receiveNotifications="N" emailTemplateId="USER_INVITE"
-            linkTemplate="/Login?username=${username}&amp;oldPassword=${oldPassword}#change" emailMessageSave="N"/>
 
 </entity-facade-xml>

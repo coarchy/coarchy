@@ -15,6 +15,13 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Actor" default-menu-index="99" menu-image="/ssstatic/images/Sales.png" default-menu-include="true">
 
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/coapp/FindOrganization')</script>
+        </if>
+    </always-actions>
+
     <transition name="createActor"><actions>
         <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
             <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
@@ -38,6 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <service-call name="delete#coarchy.Actor" in-map="[actorId:actorId]"/>
         </actions><default-response/></transition>
+
 
     <actions>
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
