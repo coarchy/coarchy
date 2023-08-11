@@ -21,9 +21,9 @@ along with this software (see the LICENSE.md file). If not, see
 
     <!-- TODO: Add a filter for organizations so that owners can only see parties and relationships of the organizations they own. -->
     <moqui.security.EntityFilterSet entityFilterSetId="COARCHY_FILTER">
-        <filters entityFilterId="COARCHY_FILTER_C1" entityName="coarchy.Activity" joinOr="Y" filterMap="[organizationId:activeOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_C2" entityName="coarchy.Actor" joinOr="Y" filterMap="[organizationId:activeOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_C3" entityName="coarchy.ProcessStory" joinOr="Y" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C1" entityName="coarchy.Activity" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C2" entityName="coarchy.Actor" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C3" entityName="coarchy.ProcessStory" filterMap="[organizationId:activeOrgId]"/>
     </moqui.security.EntityFilterSet>
 
     <!-- Artifact group and authz for Coarchy App -->
