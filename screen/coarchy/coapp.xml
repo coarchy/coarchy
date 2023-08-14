@@ -102,7 +102,7 @@ along with this software (see the LICENSE.md file). If not, see
         <render-mode>
             <!-- for html just render the navbar (Vue page wrapper and nav component) -->
             <!-- ===== NOTE CHANGED: versus qapps.xml in moqui-quasar only the following line and the default-menu-title attribute changed ===== -->
-            <text type="html" location="component://coarchy/screen/includes/CoarchyVue.qvt.ftl"/>
+            <text type="html" location="component://coarchy/screen/coarchy/includes/CoarchyVue.qvt.ftl"/>
             <!-- not meant to be used for anything else, for all other render modes go directly through /apps -->
         </render-mode>
     </widgets>
