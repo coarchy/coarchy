@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Organizations" default-menu-index="1" menu-image="/ssstatic/images/Parties.png" default-menu-include="true">
+        default-menu-title="Organizations" default-menu-index="80" menu-image="/ssstatic/images/Parties.png" default-menu-include="true">
 
     <always-actions>
         <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
@@ -24,7 +24,7 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="!ownerOfAnyOrganization &amp;&amp; organizationList?.size() == 1">
             <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationList.getFirst().toPartyId]"/>
             <message type="info">Redirected from Organizations</message>
-            <script>sri.sendRedirectAndStopRender('/coapp/Actor')</script>
+            <script>sri.sendRedirectAndStopRender('/coapp/FindProcessStory')</script>
         </if>
     </always-actions>
 
@@ -66,7 +66,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
         </if>
 
-    </actions><default-response url="../Actor"/></transition>
+    </actions><default-response url="../FindProcessStory"/></transition>
 
     <actions>
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->

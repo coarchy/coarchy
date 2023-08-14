@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Process Stories" default-menu-index="90" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="true">
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/coapp/FindOrganization')</script>
+        </if>
+    </always-actions>
+
+    <transition name="createProcessStory"><actions>
+        <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="20">
+            <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
+            <order-by field-name="^name"/>
+        </entity-find>
+        <if condition="processStoryList?.size() &gt; 0"><return type="warning" message="Actor ${processStoryList?.getFirst()?.name} is already created"/></if>
+
+        <service-call name="create#coarchy.ProcessStory" in-map="[name:name,organizationId:activeOrgId]"/>
+        </actions><default-response/></transition>
+
+    <transition name="updateProcessStory"><service-call name="update#coarchy.ProcessStory"/>
+        <default-response/></transition>
+
+    <transition name="deleteProcessStory"><actions>
+<!--        <entity-find-count entity-name="coarchy.ProcessStory" count-field="processStoryCount">-->
+<!--            <econdition field-name="actorId"/></entity-find-count>-->
+
+<!--        <if condition="activityActorCount &gt; 0">-->
+<!--            <return type="warning" message="You can't delete an Actor with any Activities"/>-->
+<!--        </if>-->
+
+        <service-call name="delete#coarchy.ProcessStory" in-map="[processStoryId:processStoryId]"/>
+    </actions><default-response/></transition>
+
+    <actions>
+<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
+    </actions>
+
+    <widgets>
+        <label text="Process Stories" type="h2"/>
+
+        <form-list name="ProcessStory" paginate="false" skip-header="true" list="processStoryList" transition="updateProcessStory" transition-last-row="createProcessStory" multi="true">
+            <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
+                <order-by field-name="lastUpdatedStamp"/></entity-find>
+
+            <field name="processStoryId"><default-field><hidden/></default-field></field>
+            <field name="name"><default-field><text-line/></default-field>
+                <last-row-field><text-line/></last-row-field></field>
+<!--            <field name="delete"><default-field title=""><link url="deleteProcessStory" parameter-map="[processStoryId:processStoryId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Delete Process Story"/></default-field></field>-->
+            <field name="goToActors"><default-field><link url="../Actor" parameter-map="[processStoryId:processStoryId]" text="Go to Actors"/></default-field></field>
+            <field name="goToProcessStory"><default-field><link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Process Story"/></default-field></field>
+            <field name="submit"><default-field><submit text="Update All"/></default-field>
+                <last-row-field><submit text="Create"/></last-row-field></field>
+        </form-list>
+    </widgets>
+</screen>
