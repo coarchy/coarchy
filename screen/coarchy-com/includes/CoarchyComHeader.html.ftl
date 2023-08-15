@@ -1,30 +1,30 @@
 <!DOCTYPE HTML>
 <html>
-<head>
+<head lang="en-us" dir="ltr">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <#if html_keywords?has_content><meta name="keywords" content="${html_keywords}"></#if>
-    <#if html_description?has_content><meta name="description" content="${html_description}"></#if>
+<#--    <#if html_keywords?has_content><meta name="keywords" content="${html_keywords}"></#if>-->
+<#--    <#if html_description?has_content><meta name="description" content="${html_description}"></#if>-->
     <title><#if html_title?has_content>${html_title}<#else><#if parentMenuName?has_content>${ec.resource.expand(parentMenuName, "")} - </#if><#if defaultMenuName?has_content>${ec.resource.expand(defaultMenuName, "")}</#if></#if></title>
-    <link rel="apple-touch-icon" href="/MoquiLogo100.png"/>
+<#--    <link rel="apple-touch-icon" href="/MoquiLogo100.png"/>-->
     <#-- Style Sheets -->
 <#--    <#list sri.getThemeValues("STRT_STYLESHEET") as styleSheetLocation>-->
 <#--        <#assign hrefUrl = sri.buildUrl(styleSheetLocation).url>-->
 <#--        <link href="${hrefUrl}<#if !styleSheetLocation?starts_with("http") && !hrefUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" rel="stylesheet" type="text/css">-->
 <#--    </#list>-->
-<#--    <#list html_stylesheets?if_exists as styleSheetLocation>-->
-<#--        <#assign hrefUrl = sri.buildUrl(styleSheetLocation).url>-->
-<#--        <link href="${hrefUrl}<#if !styleSheetLocation?starts_with("http") && !hrefUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" rel="stylesheet" type="text/css">-->
-<#--    </#list>-->
+    <#list html_stylesheets?if_exists as styleSheetLocation>
+        <#assign hrefUrl = sri.buildUrl(styleSheetLocation).url>
+        <link href="${hrefUrl}<#if !styleSheetLocation?starts_with("http") && !hrefUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" rel="stylesheet" type="text/css">
+    </#list>
     <#-- JavaScript -->
     <#list html_scripts?if_exists as scriptLocation>
         <#assign srcUrl = sri.buildUrl(scriptLocation).url>
         <script src="${srcUrl}<#if !scriptLocation?starts_with("http") && !srcUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" type="text/javascript"></script>
     </#list>
-<#--    <#list sri.getThemeValues("STRT_SCRIPT") as scriptLocation>-->
-<#--        <#assign srcUrl = sri.buildUrl(scriptLocation).url>-->
-<#--        <script src="${srcUrl}<#if !scriptLocation?starts_with("http") && !srcUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" type="text/javascript"></script>-->
-<#--    </#list>-->
+    <#list sri.getThemeValues("STRT_SCRIPT") as scriptLocation>
+        <#assign srcUrl = sri.buildUrl(scriptLocation).url>
+        <script src="${srcUrl}<#if !scriptLocation?starts_with("http") && !srcUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" type="text/javascript"></script>
+    </#list>
     <script defer data-domain="coarchy.com" src="https://plausible.io/js/script.js"></script>
     <#-- Icon -->
     <#list sri.getThemeValues("STRT_SHORTCUT_ICON") as iconLocation>
@@ -36,7 +36,7 @@
 <body class="${instancePurpose}<#list bodyClassList as bodyClass> ${bodyClass}</#list> ${(sri.screenUrlInfo.targetScreen.screenName)!""}<#if hideNav! == "true"> hide-nav</#if>">
 
 <#--&lt;#&ndash; End of original Header &ndash;&gt;-->
-<#--<div id="apps-root" style="display:none;">&lt;#&ndash; NOTE: webrootVue component attaches here, uses this and below for template &ndash;&gt;-->
+<div id="apps-root" style=""><#-- NOTE: webrootVue component attaches here, uses this and below for template -->
 <#--    <input type="hidden" id="confMoquiSessionToken" value="${ec.web.sessionToken}">-->
 <#--    <input type="hidden" id="confAppHost" value="${ec.web.getHostName(true)}">-->
 <#--    <input type="hidden" id="confAppRootPath" value="${ec.web.servletContext.contextPath}">-->
@@ -52,14 +52,19 @@
 <#--    &lt;#&ndash;    <#assign accountCompList = sri.getThemeValues("STRT_HEADER_ACCOUNT_COMP")>&ndash;&gt;-->
 <#--    &lt;#&ndash;    <#list accountCompList! as accountCompUrl><input type="hidden" class="confAccountPluginUrl" value="${accountCompUrl}"></#list>&ndash;&gt;-->
 
-<#--    <#assign headerClass = "text-black bg-grey-1">-->
+    <#assign headerClass = "text-black bg-grey-3">
 
-<#--    &lt;#&ndash; for layout options see: https://quasar.dev/layout/layout &ndash;&gt;-->
-<#--    &lt;#&ndash; to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder &ndash;&gt;-->
-<#--    <q-layout view="hHh LpR fFf">-->
-<#--        <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px;">-->
+    <#-- for layout options see: https://quasar.dev/layout/layout -->
+    <#-- to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder -->
+    <q-layout view="hHh LpR fFf">
+        <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px;">
 
-<#--                <q-space></q-space>-->
+                <q-btn stretch flat label="Home" href="/"></q-btn>
+                <q-space></q-space>
+
+                <q-btn stretch flat label="Log In" href="/Login"></q-btn>
+                <q-separator dark vertical></q-separator>
+                <q-btn stretch flat label="Sign Up"></q-btn>
 
 <#--                &lt;#&ndash;            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>&ndash;&gt;-->
 <#--                <#if headerLogoList?has_content>-->
@@ -101,10 +106,6 @@
 <#--                &lt;#&ndash; QZ print options placeholder &ndash;&gt;-->
 <#--                &lt;#&ndash;            <component :is="qzVue" ref="qzVue"></component>&ndash;&gt;-->
 
-<#--                <a href="/Login" class="q-ml-sm text-body2 text-weight-bold items-center">Login</a>-->
-<#--                <a href="/Login" class="q-ml-sm text-body2 text-weight-bold items-center">Sign Up</a>-->
-
-<#--                <q-space></q-space>-->
 <#--                &lt;#&ndash; screen documentation/help &ndash;&gt;-->
 <#--                &lt;#&ndash;            <q-btn push icon="help_outline" color="info" :class="{hidden:!documentMenuList.length}">&ndash;&gt;-->
 <#--                &lt;#&ndash;                <q-tooltip>${ec.l10n.localize("Documentation")}</q-tooltip>&ndash;&gt;-->
@@ -138,6 +139,6 @@
 <#--                &lt;#&ndash;                        </q-card-section>&ndash;&gt;-->
 <#--                &lt;#&ndash;                    </q-card></q-menu>&ndash;&gt;-->
 <#--                &lt;#&ndash;            </q-btn>&ndash;&gt;-->
-<#--            </q-toolbar></q-header>-->
+            </q-toolbar></q-header>
 
-<#--        <q-page-container class="q-ma-sm"><q-page>-->
+        <q-page-container class="q-ma-sm"><q-page>

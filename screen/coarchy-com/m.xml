@@ -13,23 +13,28 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        require-authentication="anonymous-view" standalone="true" render-modes="qvt">
+        require-authentication="false" standalone="true" render-modes="qvt">
 
     <subscreens default-item="Home"/>
 
-    <pre-actions><script><![CDATA[
+    <pre-actions>
+
+        <script><![CDATA[
         // if user not logged in save current path and params then redirect to Login
-        html_scripts.add('/libs/moment.js/moment-with-locales.min.js')
-        html_scripts.add('/libs/jquery/jquery.min.js')
+//        html_scripts.add('/libs/moment.js/moment-with-locales.min.js')
+//        html_scripts.add('/libs/jquery/jquery.min.js')
+
+        html_stylesheets.add('/libs/quasar/quasar.min.css')
+        html_stylesheets.add('/css/WebrootVue.qvt.css')
 
         String instancePurpose = System.getProperty("instance_purpose")
         if (!instancePurpose || instancePurpose == 'production') {
             /* ========== Production Mode ========== */
-            html_scripts.add('/js/MoquiLib.min.js')
+//            html_scripts.add('/js/MoquiLib.min.js')
             // Vue JS
             footer_scripts.add('/libs/vue/vue.min.js')
             // http-vue-loader
-            footer_scripts.add('/js/http-vue-loader/httpVueLoader.js')
+//            footer_scripts.add('/js/http-vue-loader/httpVueLoader.js')
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
             // Vue Components for Coarchy
@@ -38,11 +43,11 @@ along with this software (see the LICENSE.md file). If not, see
             footer_scripts.add('/mstatic/WebrootVue.qvt.js')
         } else {
             /* ========== Dev Mode ========== */
-            html_scripts.add('/js/MoquiLib.js')
+//            html_scripts.add('/js/MoquiLib.js')
             // Vue JS
             footer_scripts.add('/libs/vue/vue.js')
             // http-vue-loader
-            footer_scripts.add('/js/http-vue-loader/httpVueLoader.js')
+//            footer_scripts.add('/js/http-vue-loader/httpVueLoader.js')
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
@@ -53,7 +58,7 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <render-mode><text type="html" location="component://coarchy/screen/coarchy-com/includes/CoarchyComHeader.html.ftl"/></render-mode>
 
-        <render-mode><text template="true">${sri.renderSubscreen()}</text></render-mode>
+        <subscreens-active/>
 
         <render-mode><text type="html" location="component://coarchy/screen/coarchy-com/includes/CoarchyComFooter.html.ftl"/></render-mode>
     </widgets>

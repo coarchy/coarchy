@@ -1,7 +1,7 @@
-<#--        </q-page></q-page-container>-->
+        </q-page></q-page-container>
 
 <#--        &lt;#&ndash; <r-menu></r-menu> &ndash;&gt;-->
-<#--    </q-layout>-->
+    </q-layout>
 
 <#--    &lt;#&ndash; re-login dialog &ndash;&gt;-->
 <#--    <m-dialog v-model="reLoginShow" width="375" title="${ec.l10n.localize("Re-Login")}">-->
@@ -29,34 +29,35 @@
 <#--            </q-form>-->
 <#--        </div>-->
 <#--    </m-dialog>-->
-<#--</div>-->
+</div>
 
-<script>
-    window.quasarConfig = {
-        brand: { // this will NOT work on IE 11
-            // primary: '#e46262',
-            info:'#1e7b8e'
-        },
-        notify: { progress:true, closeBtn:'X', position:'top-right' }, // default set of options for Notify Quasar plugin
-        // loading: {...}, // default set of options for Loading Quasar plugin
-        loadingBar: { color:'primary' }, // settings for LoadingBar Quasar plugin
-        // ..and many more (check Installation card on each Quasar component/directive/plugin)
-    }
-</script>
+<#--<script>-->
+<#--    window.quasarConfig = {-->
+<#--        brand: { // this will NOT work on IE 11-->
+<#--            // primary: '#e46262',-->
+<#--            info:'#1e7b8e'-->
+<#--        },-->
+<#--        notify: { progress:true, closeBtn:'X', position:'top-right' }, // default set of options for Notify Quasar plugin-->
+<#--        // loading: {...}, // default set of options for Loading Quasar plugin-->
+<#--        loadingBar: { color:'primary' }, // settings for LoadingBar Quasar plugin-->
+<#--        // ..and many more (check Installation card on each Quasar component/directive/plugin)-->
+<#--    }-->
+<#--</script>-->
 
-${sri.getAfterScreenWriterText()}
+<#--${sri.getAfterScreenWriterText()}-->
 
 <#-- Footer JavaScript -->
 <#list footer_scripts?if_exists as scriptLocation>
     <#assign srcUrl = sri.buildUrl(scriptLocation).url>
     <script src="${srcUrl}<#if !scriptLocation?starts_with("http") && !srcUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" type="text/javascript"></script>
 </#list>
-<#assign scriptText = sri.getScriptWriterText()>
-<#if scriptText?has_content>
-    <script>
-        ${scriptText}
-        $(window).on('unload', function(){}); // Does nothing but break the bfcache
-    </script>
-</#if>
+<#--<#assign scriptText = sri.getScriptWriterText()>-->
+<#--<#if scriptText?has_content>-->
+<#--    <script>-->
+<#--        ${scriptText}-->
+<#--        $(window).on('unload', function(){}); // Does nothing but break the bfcache-->
+<#--    </script>-->
+<#--</#if>-->
+
 </body>
 </html>

@@ -86,12 +86,12 @@ along with this software (see the LICENSE.md file). If not, see
                 </q-list></q-menu>
             </q-btn>
 
-            <#-- nav plugins See in root CoarchyVue.qvt.ftl -->
+            <#-- nav plugins See in root CoarchyComVue.qvt.ftl -->
             <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>
 
-            <#-- notify history See in root CoarchyVue.qvt.ftl -->
+            <#-- notify history See in root CoarchyComVue.qvt.ftl -->
 
-            <#-- screen history menu See in root CoarchyVue.qvt.ftl -->
+            <#-- screen history menu See in root CoarchyComVue.qvt.ftl -->
 
 <#--            <q-btn push icon="account_circle">-->
 <#--                <q-tooltip>${(ec.user.userAccount.userFullName)!ec.l10n.localize("Account")}</q-tooltip>-->

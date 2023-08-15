@@ -22,20 +22,32 @@ along with this software (see the LICENSE.md file). If not, see
     </pre-actions>
 
     <widgets>
-        <label text="Welcome to Coarchy!" type="h2"/>
-
         <render-mode>
             <text type="html"><![CDATA[
-                <div class="q-pa-md row justify-center">
-                    <div style="width: 100%; max-width: 400px">
-                        <q-chat-message
-                                :text="['hey, how are you?']"
-                                sent
+                <div class="q-pa-md">
+                    <q-card class="my-card">
+                        <q-parallax
+                                src="/mstatic/background.jpg"
+                                :height="500"
                         />
-                        <q-chat-message
-                                :text="['doing fine, how r you?']"
-                        />
-                    </div>
+
+                        <q-card-section>
+                            <div class="text-h1 text-white">Coarchy</div>
+                        </q-card-section>
+                    </q-card>
+                </div>
+
+                <div class="q-ma-md">
+                    Fork and make your own!
+                    Do NOT use self-closing tags here on Codepen.
+                </div>
+
+                <div class="q-ma-md">
+                    <q-btn label="Notify" color="primary" @click="notify"></q-btn>
+                </div>
+
+                <div class="q-ma-md">
+                    Running Quasar v{{ version }}
                 </div>
                 ]]></text>
         </render-mode>
