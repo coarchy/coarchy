@@ -35,6 +35,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions><default-response url="."/></transition>
 
     <transition name="createActivity"><actions>
+        <!-- TODO: migrate this to a service -->
         <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
         <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action, organizationId:activeOrgId]" out-map="newActivity"/>
 

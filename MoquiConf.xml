@@ -22,10 +22,17 @@
     </webapp-list>
 
     <screen-facade>
-        <screen location="component://webroot/screen/webroot.xml" default-subscreen="coapp">
-            <subscreens-item name="coapp" menu-include="false" location="component://coarchy/screen/coapp.xml"/>
-            <subscreens-item name="cointernal" menu-include="false" location="component://coarchy/screen/cointernal.xml"/>
-            <subscreens-item name="costatic" menu-include="false" location="component://coarchy/screen/costatic.xml"/>
+        <screen location="component://webroot/screen/webroot.xml" default-subscreen="c">
+            <!-- Public Ecommerce App -->
+            <subscreens-item name="c" menu-include="false" no-sub-path="true" location="component://coarchy/screen/coarchy-com/c.xml"/>
+<!--            <subscreens-item name="minternal" menu-include="false" no-sub-path="true" location="component://coarchy/screen/coarchy-com/minternal.xml"/>-->
+            <subscreens-item name="cstatic" menu-include="false" location="component://coarchy/screen/coarchy-com/cstatic.xml"/>
+
+            <!-- Coarchy Internal App -->
+            <subscreens-item name="coapp" menu-include="false" location="component://coarchy/screen/coarchy/coapp.xml"/>
+            <subscreens-item name="cointernal" menu-include="false" location="component://coarchy/screen/coarchy/cointernal.xml"/>
+            <subscreens-item name="costatic" menu-include="false" location="component://coarchy/screen/coarchy/costatic.xml"/>
         </screen>
+
     </screen-facade>
 </moqui-conf>

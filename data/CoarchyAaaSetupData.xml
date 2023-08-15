@@ -26,9 +26,9 @@ along with this software (see the LICENSE.md file). If not, see
         <filters entityFilterId="COARCHY_FILTER_C3" entityName="coarchy.ProcessStory" filterMap="[organizationId:activeOrgId]"/>
     </moqui.security.EntityFilterSet>
 
-    <!-- Artifact group and authz for Coarchy App -->
+    <!-- Artifact group and authz for Coarchy Apps -->
     <artifactGroups artifactGroupId="COARCHY" description="Coarchy App (via root screen)">
-        <artifacts artifactName="component://coarchy/screen/cointernal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+        <artifacts artifactName="component://coarchy/screen/coarchy/cointernal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
         <artifacts artifactName="org.moqui.impl.UserServices.set#Preference" artifactTypeEnumId="AT_SERVICE" inheritAuthz="N" nameIsPattern="N"/>
         <authz artifactAuthzId="COARCHY_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
             <filters entityFilterSetId="COARCHY_FILTER"/></authz>
