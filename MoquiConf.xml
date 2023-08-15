@@ -22,11 +22,11 @@
     </webapp-list>
 
     <screen-facade>
-        <screen location="component://webroot/screen/webroot.xml" default-subscreen="m">
+        <screen location="component://webroot/screen/webroot.xml" default-subscreen="c">
             <!-- Public Ecommerce App -->
-            <subscreens-item name="m" menu-include="false" no-sub-path="true" location="component://coarchy/screen/coarchy-com/m.xml"/>
+            <subscreens-item name="c" menu-include="false" no-sub-path="true" location="component://coarchy/screen/coarchy-com/c.xml"/>
 <!--            <subscreens-item name="minternal" menu-include="false" no-sub-path="true" location="component://coarchy/screen/coarchy-com/minternal.xml"/>-->
-            <subscreens-item name="mstatic" menu-include="false" location="component://coarchy/screen/coarchy-com/mstatic.xml"/>
+            <subscreens-item name="cstatic" menu-include="false" location="component://coarchy/screen/coarchy-com/cstatic.xml"/>
 
             <!-- Coarchy Internal App -->
             <subscreens-item name="coapp" menu-include="false" location="component://coarchy/screen/coarchy/coapp.xml"/>

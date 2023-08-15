@@ -62,9 +62,9 @@
                 <q-btn stretch flat label="Home" href="/"></q-btn>
                 <q-space></q-space>
 
-                <q-btn stretch flat label="Log In" href="/Login"></q-btn>
+                <q-btn stretch flat label="Log In" href="/m/Login#login"></q-btn>
                 <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Sign Up"></q-btn>
+                <q-btn stretch flat label="Sign Up" href="/m/Login#sign-up"></q-btn>
 
 <#--                &lt;#&ndash;            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>&ndash;&gt;-->
 <#--                <#if headerLogoList?has_content>-->

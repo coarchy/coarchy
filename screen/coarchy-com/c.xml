@@ -25,7 +25,7 @@ along with this software (see the LICENSE.md file). If not, see
 //        html_scripts.add('/libs/jquery/jquery.min.js')
 
         html_stylesheets.add('/libs/quasar/quasar.min.css')
-        html_stylesheets.add('/css/WebrootVue.qvt.css')
+//        html_stylesheets.add('/css/WebrootVue.qvt.css')
 
         String instancePurpose = System.getProperty("instance_purpose")
         if (!instancePurpose || instancePurpose == 'production') {
@@ -40,7 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
             // Vue Components for Coarchy
 //            footer_scripts.add('/costatic/js/CoarchyVue.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
-            footer_scripts.add('/mstatic/WebrootVue.qvt.js')
+            footer_scripts.add('/cstatic/WebrootVue.qvt.js')
         } else {
             /* ========== Dev Mode ========== */
 //            html_scripts.add('/js/MoquiLib.js')
@@ -51,7 +51,7 @@ along with this software (see the LICENSE.md file). If not, see
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
-            footer_scripts.add('/mstatic/WebrootVue.qvt.js')
+            footer_scripts.add('/cstatic/WebrootVue.qvt.js')
         }
     ]]></script></pre-actions>
 

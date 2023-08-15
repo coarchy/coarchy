@@ -21,7 +21,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <subscreens default-item="FindOrganization"/>
     <widgets>
-        <!-- just a placeholder screen, nothing here because rendering gets skipped by m.xml wrapper -->
+        <!-- just a placeholder screen, nothing here because rendering gets skipped by c.xml wrapper -->
         <label text="Go to /coapp" type="strong"/>
     </widgets>
 </screen>
