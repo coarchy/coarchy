@@ -37,16 +37,16 @@
 
 <#--&lt;#&ndash; End of original Header &ndash;&gt;-->
 <div id="apps-root" style=""><#-- NOTE: webrootVue component attaches here, uses this and below for template -->
-<#--    <input type="hidden" id="confMoquiSessionToken" value="${ec.web.sessionToken}">-->
-<#--    <input type="hidden" id="confAppHost" value="${ec.web.getHostName(true)}">-->
-<#--    <input type="hidden" id="confAppRootPath" value="${ec.web.servletContext.contextPath}">-->
-<#--    <input type="hidden" id="confBasePath" value="${ec.web.servletContext.contextPath}/minternal">-->
-<#--    <input type="hidden" id="confLinkBasePath" value="${ec.web.servletContext.contextPath}/">-->
-<#--    <input type="hidden" id="confUserId" value="${ec.user.userId!''}">-->
-<#--    <input type="hidden" id="confUsername" value="${ec.user.username!''}">-->
-<#--    <input type="hidden" id="confLocale" value="${ec.user.locale.toLanguageTag()}">-->
-<#--    <input type="hidden" id="confDarkMode" value="${ec.user.getPreference("QUASAR_DARK")!"false"}">-->
-<#--    <input type="hidden" id="confLeftOpen" value="${ec.user.getPreference("QUASAR_LEFT_OPEN")!"false"}">-->
+    <input type="hidden" id="confMoquiSessionToken" value="${ec.web.sessionToken}">
+    <input type="hidden" id="confAppHost" value="${ec.web.getHostName(true)}">
+    <input type="hidden" id="confAppRootPath" value="${ec.web.servletContext.contextPath}">
+    <input type="hidden" id="confBasePath" value="${ec.web.servletContext.contextPath}/minternal">
+    <input type="hidden" id="confLinkBasePath" value="${ec.web.servletContext.contextPath}/">
+    <input type="hidden" id="confUserId" value="${ec.user.userId!''}">
+    <input type="hidden" id="confUsername" value="${ec.user.username!''}">
+    <input type="hidden" id="confLocale" value="${ec.user.locale.toLanguageTag()}">
+    <input type="hidden" id="confDarkMode" value="${ec.user.getPreference("QUASAR_DARK")!"false"}">
+    <input type="hidden" id="confLeftOpen" value="${ec.user.getPreference("QUASAR_LEFT_OPEN")!"false"}">
 <#--    &lt;#&ndash;    <#assign navbarCompList = sri.getThemeValues("STRT_HEADER_NAVBAR_COMP")>&ndash;&gt;-->
 <#--    &lt;#&ndash;    <#list navbarCompList! as navbarCompUrl><input type="hidden" class="confNavPluginUrl" value="${navbarCompUrl}"></#list>&ndash;&gt;-->
 <#--    &lt;#&ndash;    <#assign accountCompList = sri.getThemeValues("STRT_HEADER_ACCOUNT_COMP")>&ndash;&gt;-->
@@ -142,3 +142,4 @@
             </q-toolbar></q-header>
 
         <q-page-container class="q-ma-sm"><q-page>
+<#--                <m-subscreens-active></m-subscreens-active>-->

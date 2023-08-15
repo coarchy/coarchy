@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-include="false" require-authentication="false" history="false" render-modes="vuet,qvt">
+
+    <transition name="login" require-session-token="false"><actions><script>ec.user.loginUser(username, password)</script></actions>
+        <default-response url="/coapp"/><error-response url="."/></transition>
+    <transition name="logout"><actions><script>ec.user.logoutUser()</script></actions>
+        <default-response url="/"/><error-response url="."/></transition>
+    <transition name="resetPassword"><service-call name="org.moqui.impl.UserServices.reset#Password"/>
+        <default-response url="."/></transition>
+    <transition name="changePassword"><service-call name="org.moqui.impl.UserServices.update#Password" in-map="[username:username,oldPassword:oldPassword,newPassword:newPassword,newPasswordVerify:newPassword]"/>
+        <default-response url="/coapp"/><error-response url="." save-current-screen="true" save-parameters="true"/></transition>
+    <transition name="createInitialAdminAccount"><service-call name="org.moqui.impl.UserServices.create#InitialAdminAccount"/>
+        <default-response url="../Login"/><error-response url="."/></transition>
+    <transition name="createAccount" require-session-token="false">
+        <actions>
+            <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
+                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,newPassword:newPassword,newPasswordVerify:newPassword]"/>
+            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
+
+            <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:partyId,partyTypeEnumId:'PtyOrganization']" out-map="organization"/>
+            <service-call name="create#mantle.party.Organization" in-map="[partyId:organization.partyId,organizationName:organizationName]"/>
+            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:partyId,toRoleTypeId:'OrgInternal',toPartyId:organization.partyId]"/>
+            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organization.partyId]"/>
+        </actions>
+        <default-response url="." parameter-map="[initialTab:'#sign-up']"/>
+    </transition>
+
+    <pre-actions><script>
+        // if user already logged in redirect to application
+//        if (ec.user.userId) sri.sendRedirectAndStopRender('/coapp')
+    </script></pre-actions>
+    <widgets>
+<!--        <label text="Enter your username and password to sign in" type="p" style="text-muted text-center"/>-->
+<!--        <form-single name="Login" transition="login">-->
+<!--            <field name="username"><default-field><text-line/></default-field></field>-->
+<!--            <field name="password"><default-field><password/></default-field></field>-->
+<!--            <field name="submit"><default-field><submit/></default-field></field>-->
+<!--        </form-single>-->
+        <render-mode><text type="html"><![CDATA[
+            <p class="text-inline text-muted text-center">Enter your username and password to sign in</p>
+            <!-- BEGIN form-single[@name=Login] -->
+            <div class="q-my-md"><m-form name="Login" id="Login" action="/Login/login"
+                                         v-slot:default="formProps" :fields-initial="{'moquiFormName':'Login','username':''}">
+
+                <div class="q-ma-sm">
+
+                    <m-text-line dense outlined stack-label label="Username" id="Login_username" type="text" name="username" v-model="formProps.fields.username" :fields="formProps.fields" style="width:100%;" class=""
+
+                    ></m-text-line>
+                </div>
+
+                <div class="q-ma-sm">
+
+                    <q-input dense outlined stack-label label="Password" type="password" name="password" id="Login_password" v-model="formProps.fields.password" class="form-control" size="25">
+                    </q-input>
+                </div>
+
+                <div class="q-ma-sm">
+
+                    <q-btn dense outline no-caps type="submit" name="submit" value="submit" id="Login_submit" color="primary" label="Submit">
+
+                    </q-btn>
+                </div>
+            </m-form></div
+]]></text></render-mode>
+
+<!--        <section name="TestLoginSection">-->
+<!--            <condition><expression>ec.entity.find('moqui.security.UserAccount').condition('userId', 'EX_JOHN_DOE')-->
+<!--                .condition('currentPassword', '16ac58bbfa332c1c55bd98b53e60720bfa90d394').disableAuthz().count()</expression></condition>-->
+<!--            <widgets><render-mode><text type="html"><![CDATA[-->
+<!--                <form method="post" action="${sri.buildUrl("login").url}" id="TestLoginLink">-->
+<!--                <input type="hidden" name="username" value="john.doe">-->
+<!--                <input type="hidden" name="password" value="moqui">-->
+<!--                <button class="btn btn-sm btn-primary" type="submit" id="TestLoginLink_button">Test Login (John Doe)</button>-->
+<!--                </form>-->
+<!--                <script type="application/javascript">$("#TestLoginLink_button").focus();</script>-->
+<!--                ]]></text></render-mode></widgets>-->
+<!--        </section>-->
+    </widgets>
+</screen>
