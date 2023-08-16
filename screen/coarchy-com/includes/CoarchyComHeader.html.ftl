@@ -30,6 +30,19 @@
     <#list sri.getThemeValues("STRT_SHORTCUT_ICON") as iconLocation>
         <link rel="shortcut icon" href="${sri.buildUrl(iconLocation).url}">
     </#list>
+    <style>
+        /* Inline CSS */
+        :root {
+            --desktop-font-size: 16px;
+            --mobile-font-size: 22px;
+        }
+        body {
+            font-family: sans-serif;
+            font-weight: 500;
+            margin: 10px 20px;
+        }
+        /* ... (rest of the CSS styles) ... */
+    </style>
 </head>
 <#assign bodyClassList = sri.getThemeValues("STRT_BODY_CLASS")>
 <#assign instancePurpose = Static["java.lang.System"].getProperty("instance_purpose")!"production">
