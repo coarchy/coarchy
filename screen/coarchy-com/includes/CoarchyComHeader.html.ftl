@@ -16,6 +16,7 @@
         <#assign hrefUrl = sri.buildUrl(styleSheetLocation).url>
         <link href="${hrefUrl}<#if !styleSheetLocation?starts_with("http") && !hrefUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" rel="stylesheet" type="text/css">
     </#list>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@quasar/extras/material-icons/material-icons.css">
     <#-- JavaScript -->
     <#list html_scripts?if_exists as scriptLocation>
         <#assign srcUrl = sri.buildUrl(scriptLocation).url>
