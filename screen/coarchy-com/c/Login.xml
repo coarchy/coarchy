@@ -15,45 +15,27 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-include="false" require-authentication="anonymous-view" history="false" render-modes="qvt">
 
-    <transition name="login" require-session-token="false"><actions><script>ec.user.loginUser(username, password)</script></actions>
-        <default-response url="/coapp"/><error-response url="."/></transition>
+    <transition-include name="login" location="component://webroot/screen/webroot/rest.xml" method="post"/>
     <transition name="logout"><actions><script>ec.user.logoutUser()</script></actions>
         <default-response url="/"/><error-response url="."/></transition>
-    <transition name="resetPassword"><service-call name="org.moqui.impl.UserServices.reset#Password"/>
-        <default-response url="."/></transition>
-    <transition name="changePassword"><service-call name="org.moqui.impl.UserServices.update#Password" in-map="[username:username,oldPassword:oldPassword,newPassword:newPassword,newPasswordVerify:newPassword]"/>
-        <default-response url="/coapp"/><error-response url="." save-current-screen="true" save-parameters="true"/></transition>
-    <transition name="createInitialAdminAccount"><service-call name="org.moqui.impl.UserServices.create#InitialAdminAccount"/>
-        <default-response url="../Login"/><error-response url="."/></transition>
-    <transition name="createAccount" require-session-token="false">
-        <actions>
-            <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
-                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,newPassword:newPassword,newPasswordVerify:newPassword]"/>
-            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
-
-            <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:partyId,partyTypeEnumId:'PtyOrganization']" out-map="organization"/>
-            <service-call name="create#mantle.party.Organization" in-map="[partyId:organization.partyId,organizationName:organizationName]"/>
-            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:partyId,toRoleTypeId:'OrgInternal',toPartyId:organization.partyId]"/>
-            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organization.partyId]"/>
-        </actions>
-        <default-response url="." parameter-map="[initialTab:'#sign-up']"/>
-    </transition>
 
     <pre-actions><script>
         // if user already logged in redirect to application
-//        if (ec.user.userId) sri.sendRedirectAndStopRender('/coapp')
+        if (ec.user.userId) sri.sendRedirectAndStopRender('/coapp')
     </script></pre-actions>
     <widgets>
-
-
 
     <render-mode>
             <text type="html"><![CDATA[
                 <div class="row">
                     <div class="col-md-4 offset-md-4 col-xs-12 offset-xs-0">
-                        <div class="column justify-center" style="height: 500px">
+                        <div class="column justify-center" style="height: 150px">
                             <div class="col-4">
                                 <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1">
+                                    <q-card-section>
+                                        <div class="text-h2">Log In</div>
+                                    </q-card-section>
+
                                     <q-card-section>
                                         <c-login></c-login>
                                     </q-card-section>
@@ -62,27 +44,6 @@ along with this software (see the LICENSE.md file). If not, see
                         </div>
                     </div>
                 </div>
-
             ]]></text></render-mode>
-<!--        <label text="Enter your username and password to sign in" type="p" style="text-muted text-center"/>-->
-<!--        <form-single name="Login" transition="login">-->
-<!--            <field name="username"><default-field><text-line/></default-field></field>-->
-<!--            <field name="password"><default-field><password/></default-field></field>-->
-<!--            <field name="submit"><default-field><submit/></default-field></field>-->
-<!--        </form-single>-->
-
-
-
-<!--        <section name="TestLoginSection">-->
-<!--            <condition><expression>ec.entity.find('moqui.security.UserAccount').condition('userId', 'EX_JOHN_DOE')-->
-<!--                .condition('currentPassword', '16ac58bbfa332c1c55bd98b53e60720bfa90d394').disableAuthz().count()</expression></condition>-->
-<!--            <widgets><render-mode><text type="html"><![CDATA[-->
-<!--                <form method="post" action="${sri.buildUrl("login").url}" id="TestLoginLink">-->
-<!--                <input type="hidden" name="username" value="john.doe">-->
-<!--                <input type="hidden" name="password" value="moqui">-->
-<!--                <button class="btn btn-sm btn-primary" type="submit" id="TestLoginLink_button">Test Login (John Doe)</button>-->
-<!--                </form>-->
-<!--                <script type="application/javascript">$("#TestLoginLink_button").focus();</script>-->
-<!--        </section>-->
     </widgets>
 </screen>

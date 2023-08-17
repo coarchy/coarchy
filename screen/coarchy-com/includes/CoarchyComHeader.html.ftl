@@ -31,19 +31,6 @@
     <#list sri.getThemeValues("STRT_SHORTCUT_ICON") as iconLocation>
         <link rel="shortcut icon" href="${sri.buildUrl(iconLocation).url}">
     </#list>
-    <style>
-        /* Inline CSS */
-        :root {
-            --desktop-font-size: 16px;
-            --mobile-font-size: 22px;
-        }
-        body {
-            font-family: sans-serif;
-            font-weight: 500;
-            margin: 10px 20px;
-        }
-        /* ... (rest of the CSS styles) ... */
-    </style>
 </head>
 <#assign bodyClassList = sri.getThemeValues("STRT_BODY_CLASS")>
 <#assign instancePurpose = Static["java.lang.System"].getProperty("instance_purpose")!"production">
@@ -78,7 +65,7 @@
 
                 <q-btn stretch flat label="Log In" href="/Login"></q-btn>
                 <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Sign Up" href="/m/Login#sign-up"></q-btn>
+                <q-btn stretch flat label="Sign Up" href="/SignUp"></q-btn>
 
 <#--                &lt;#&ndash;            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>&ndash;&gt;-->
 <#--                <#if headerLogoList?has_content>-->
@@ -156,4 +143,5 @@
             </q-toolbar></q-header>
 
         <q-page-container class="q-ma-sm"><q-page>
+<#-- NOTE: Could use the Vue router for this -->
 <#--                <m-subscreens-active></m-subscreens-active>-->
