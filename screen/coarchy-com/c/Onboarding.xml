@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-include="false" require-authentication="true">
+
+    <transition name="createOrganization"><actions>
+            <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,partyTypeEnumId:'PtyOrganization']" out-map="organization"/>
+            <service-call name="create#mantle.party.Organization" in-map="[partyId:organization.partyId,organizationName:organizationName]"/>
+            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:organization.partyId]"/>
+            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organization.partyId]"/>
+
+        </actions><default-response type="none"/>
+    </transition>
+
+    <pre-actions><script>
+        // if user already logged in redirect to application
+//        if (ec.user.userId) sri.sendRedirectAndStopRender('/coapp')
+    </script></pre-actions>
+    <widgets>
+        <render-mode>
+            <text type="html"><![CDATA[
+                <div class="row">
+                    <div class="col-md-4 offset-md-4 col-xs-12 offset-xs-0">
+                        <div class="column justify-center" style="height: 150px">
+                            <div class="col-4">
+                                <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1">
+                                    <q-card-section>
+                                        <div class="text-h2">Welcome to Coarchy!</div>
+                                    </q-card-section>
+                                    <q-card-section>
+                                        <c-onboarding></c-onboarding>
+                                    </q-card-section>
+                                </q-card>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ]]></text></render-mode>
+    </widgets>
+</screen>
