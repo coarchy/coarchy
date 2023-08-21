@@ -31,7 +31,7 @@ along with this software (see the LICENSE.md file). If not, see
         if (!instancePurpose || instancePurpose == 'production') {
             /* ========== Production Mode ========== */
 //            // jQuery
-//            html_scripts.add('/libs/jquery/jquery.min.js')
+            html_scripts.add('/libs/jquery/jquery.min.js')
 //            // Bootstrap
 //            html_scripts.add('/libs/twitter-bootstrap/js/bootstrap.min.js')
 //            // Form Validation and AJAX (jquery-validation, jquery-form)
@@ -44,14 +44,14 @@ along with this software (see the LICENSE.md file). If not, see
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
 
-//            html_scripts.add('/js/MoquiLib.min.js')
+            html_scripts.add('/js/MoquiLib.min.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
             footer_scripts.add('/cstatic/CoarchyComVue.qvt.js')
 
         } else {
             /* ========== Dev Mode ========== */
 //            // jQuery
-//            html_scripts.add('/libs/jquery/jquery.min.js')
+            html_scripts.add('/libs/jquery/jquery.min.js')
 //            // Bootstrap
 //            html_scripts.add('/libs/twitter-bootstrap/js/bootstrap.min.js')
 //            // Form Validation and AJAX (jquery-validation, jquery-form)
@@ -64,7 +64,7 @@ along with this software (see the LICENSE.md file). If not, see
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
 
-//            html_scripts.add('/js/MoquiLib.js')
+            html_scripts.add('/js/MoquiLib.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
             footer_scripts.add('/cstatic/CoarchyComVue.qvt.js')
         }

@@ -34,13 +34,13 @@ along with this software (see the LICENSE.md file). If not, see
 <!--            <log level="warn" message="end context.toString() ${context.toString()}"/>-->
 
         </actions>
-        <default-response url="/Onboarding"/>
+        <default-response url="/Organizations"/><error-response url="."/>
 <!--        <default-response type="none"/>-->
     </transition>
 
     <pre-actions><script>
         // if user already logged in redirect to application
-        if (ec.user.userId) sri.sendRedirectAndStopRender('/Onboarding')
+        if (ec.user.userId) sri.sendRedirectAndStopRender('/Organizations')
     </script></pre-actions>
     <widgets>
         <render-mode>

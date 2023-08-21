@@ -1,11 +1,11 @@
-// Util
+Vue.prototype.moqui = moqui;
 
 // Components
 // TODO: Make it so that login form covers these guidelines: https://web.dev/sign-in-form-best-practices/ (while still using quasar)
 Vue.component('c-login', {
     name: "cLogin",
     template:
-        // Could include type="email" for email, but then wouldn't allow john.doe to login
+    // Could include type="email" for email, but then wouldn't allow john.doe to login
         '<q-form @submit="onSubmit" class="q-gutter-md" >\n' +
         '    <q-input filled v-model="username" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input v-model="password" filled label="Password" :type="isPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\']">\n' +
@@ -25,25 +25,8 @@ Vue.component('c-login', {
         }
     },
     methods: {
-        async doTheDataThing(url = "", data = URLSearchParams) {
-            // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
-            const response = await fetch(url, {
-                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-                credentials: "same-origin", // include, *same-origin, omit
-                method: 'post',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                redirect: "follow",
-                referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                body: data // See: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
-            })
-
-            return response.json();
-        },
         onSubmit () {
-            this.doTheDataThing('/c/Login/login', new URLSearchParams(this._data).toString())
+            this.moqui.webrootVue.doTheDataThing('/c/Login/login', new URLSearchParams(this._data).toString())
                 .then((data) => {
                     // console.log(data);
 
@@ -88,7 +71,6 @@ Vue.component('c-sign-up', {
         '</q-form>',
     data () {
         return {
-            organizationName: null,
             emailAddress: null,
             firstName: null,
             lastName: null,
@@ -97,63 +79,10 @@ Vue.component('c-sign-up', {
         }
     },
     methods: {
-        async doTheDataThing(url = "", data = URLSearchParams) {
-            // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
-            const response = await fetch(url, {
-                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-                credentials: "same-origin", // include, *same-origin, omit
-                method: 'post',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                redirect: "follow",
-                referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                body: data // See: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
-            })
-
-            return response.json();
-        },
         onSubmit () {
-            this.doTheDataThing('/c/SignUp/createAccount', new URLSearchParams(this._data).toString())
+            this.moqui.webrootVue.doTheDataThing('/c/SignUp/createAccount', new URLSearchParams(this._data).toString())
                 .then((data) => {
-                    console.log(data);
-
-                    // Show the errors from the server
-                    if (data.errors != null && data.errors.length > 0) {
-                        for (const error of data.errors) {
-                            // console.log(error)
-                            this.$q.notify({
-                                color: 'red-5',
-                                textColor: 'white',
-                                icon: 'warning',
-                                message: error
-                            })
-                        }
-                    }
-
-                    // Show the messages from the server
-                    if (data.messageInfos != null && data.messageInfos.length > 0) {
-                        for (const message of data.messageInfos) {
-                            // console.log(message)
-                            if (message.type == "warning") {
-                                this.$q.notify({
-                                    color: 'yellow-5',
-                                    textColor: 'black',
-                                    icon: 'warning',
-                                    message: message.message
-                                })
-                            } else if (message.type = "success") {
-                                this.$q.notify({
-                                    color: 'green-4',
-                                    textColor: 'white',
-                                    icon: 'cloud_done',
-                                    message: message.message
-                                })
-                            }
-                        }
-                    }
-
+                    this.moqui.webrootVue.handleNotification(data)
                     const paths = window.location.href.split("/").filter(entry => entry !== "")
                     if (data.screenPathList.at(data.screenPathList.length-1) !== paths[paths.length - 1] && data.screenUrl != "") {
                         // redirect https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#javascript_redirections
@@ -165,42 +94,89 @@ Vue.component('c-sign-up', {
 
     }
 });
-Vue.component('c-onboarding', {
-    name: "cOnboarding",
+Vue.component('c-create-organization', {
+    name: "cCreateOrganization",
     template:
     // Could include type="email" for email, but then wouldn't allow john.doe to login
-        '<q-stepper v-model="step" header-nav ref="stepper" color="primary" animated>\n' +
-        '    <q-step :name="1" title="Create your Organization" icon="settings" :done="done1">\n' +
-        '         <div class="test-body1 q-pb-md">Let\'s create the Organization that you will design.</div>\n' +
+        '<q-btn push color="secondary" label="Create Organization">\n' +
+        '    <q-popup-proxy v-model="popupModel">\n' +
+        '       <div class="q-pa-md">\n' +
         '         <q-form @submit="createOrganization">\n' +
         '             <q-input filled v-model="organizationName" label="Organization Name" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
-        '             <div>\n' +
-        '                 <q-stepper-navigation><q-btn type="submit" color="primary" label="Create and Continue" /></q-stepper-navigation>\n' +
-        '             </div>\n' +
+        '             <q-btn type="submit" color="primary" label="Create"/>\n' +
         '         </q-form>' +
-        '    </q-step>\n' +
-        '    <q-step :name="2" title="Create an ad group" caption="Optional" icon="create_new_folder" :done="done2">An ad group contains one or more ads which target a shared set of keywords.\n' +
-        '        <q-stepper-navigation><q-btn @click="() => { done2 = true; step = 3 }" color="primary" label="Continue" /><q-btn flat @click="step = 1" color="primary" label="Back" class="q-ml-sm" /></q-stepper-navigation>\n' +
-        '    </q-step>\n' +
-        '    <q-step :name="3" title="Create an ad" icon="add_comment" :done="done3">\n' +
-        '        Try out different ad text to see what brings in the most customers, and learn how to enhance your ads using features like ad extensions. If you run into any problems with your ads, find out how to tell if they\'re running and how to resolve approval issues.\n' +
-        '        <q-stepper-navigation>\n' +
-        '            <q-btn color="primary" @click="done3 = true" label="Finish" />\n' +
-        '            <q-btn flat @click="step = 2" color="primary" label="Back" class="q-ml-sm" />\n' +
-        '        </q-stepper-navigation>\n' +
-        '    </q-step>\n' +
-        '</q-stepper>\n',
+        '       </div>\n' +
+        '    </q-popup-proxy>\n' +
+        '</q-btn>',
     data () {
         return {
             organizationName: null,
-            step: 1,
-            done1: false,
-            done2: false,
-            done3: false
+            popupModel: null
         }
     },
     methods: {
+        createOrganization () {
+            this.moqui.webrootVue.doTheDataThing('/c/Organizations/createOrganization', new URLSearchParams(this._data).toString())
+                .then((data) => {
+                    this.moqui.webrootVue.handleNotification(data)
+                    this.organizationName=null
+                    this.popupModel=false
+                })
+        },
+    }
+});
+Vue.component('c-invite-people', {
+    name: "cInvitePeople",
+    template:
+    // Could include type="email" for email, but then wouldn't allow john.doe to login
+        '<q-btn push color="primary" label="Invite People">\n' +
+        '    <q-popup-proxy v-model="popupModel">\n' +
+        '       <div class="q-pa-md">\n' +
+        '         <div class="text-h6 q-pb-md">Invite a Person to join your Organization</div>\n' +
+        '         <div class="text-body1 q-pb-md">This will email them and give them access to edit in the application, but not manage the organization.</div>\n' +
+        '         <q-form @submit="invitePeople">\n' +
+        '             <q-input filled v-model="emailAddress" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
+        '             <q-input filled v-model="firstName" label="First Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
+        '             <q-input filled v-model="lastName" label="Last Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
+        '             <q-btn type="submit" color="primary" label="Invite"/>\n' +
+        '         </q-form>' +
+        '       </div>\n' +
+        '    </q-popup-proxy>\n' +
+        '</q-btn>',
+    data () {
+        return {
+            emailAddress: null,
+            firstName: null,
+            lastName: null,
+            popupModel: null
+        }
+    },
+    methods: {
+        invitePeople () {
+            this.moqui.webrootVue.doTheDataThing('/c/Organizations/invitePeople', new URLSearchParams(this._data).toString())
+                .then((data) => {
+                    this.moqui.webrootVue.handleNotification(data)
+                    emailAddress=null
+                    firstName=null
+                    lastName=null
+                    this.popupModel=false
+                })
+        },
+    }
+});
+// App
+moqui.webrootVue = new Vue({
+    el: '#apps-root',
+    created: function() {
+        this.moquiSessionToken = $("#confMoquiSessionToken").val();
+    },
+    methods: {
         async doTheDataThing(url = "", data = URLSearchParams) {
+            console.log(this.moquiSessionToken)
+
+            let _data = new URLSearchParams(data)
+            _data.append("moquiSessionToken", this.moquiSessionToken)
+            console.log(_data.toString())
             // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
             const response = await fetch(url, {
                 cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
@@ -212,38 +188,50 @@ Vue.component('c-onboarding', {
                 },
                 redirect: "follow",
                 referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                body: data // See: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+                body: _data // See: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
             })
 
             return response.json();
         },
-        createOrganization () {
-            this.doTheDataThing('/c/Onboarding/createOrganization', new URLSearchParams(this._data).toString())
-                .then((data) => {
-                    console.log(data);
+        handleNotification(data) {
+            // console.log(data);
+            // console.log(this);
 
-                    // Show the errors from the server
-                    if (data.errors != null && data.errors.length > 0) {
-                        const errorList = data.errors.split('/n')
-                        for (const error of errorList) {
-                            // console.log(error)
-                            this.$q.notify({
-                                color: 'red-5',
-                                textColor: 'white',
-                                icon: 'warning',
-                                message: error
-                            })
-                        }
+            // Show the messages from the server
+            if (data.messageInfos != null && data.messageInfos.length > 0) {
+                for (const message of data.messageInfos) {
+                    // console.log(message)
+                    if (message.type == "warning") {
+                        this.$q.notify({
+                            color: 'yellow-5',
+                            textColor: 'black',
+                            icon: 'warning',
+                            message: message.message
+                        })
+                    } else if (message.type = "success") {
+                        this.$q.notify({
+                            color: 'green-4',
+                            textColor: 'white',
+                            icon: 'cloud_done',
+                            message: message.message
+                        })
                     }
+                }
+            }
 
-                    this.done1 = true; this.step = 2;
-                })
-
+            // Show the errors from the server
+            if (data.errors != null && data.errors.length > 0) {
+                const errorList = data.errors.split('/n')
+                for (const error of errorList) {
+                    // console.log(error)
+                    this.$q.notify({
+                        color: 'red-5',
+                        textColor: 'white',
+                        icon: 'warning',
+                        message: error
+                    })
+                }
+            }
         },
     }
-});
-
-// App
-webrootVue = new Vue({
-    el: '#apps-root',
 });
