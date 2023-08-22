@@ -20,7 +20,7 @@ along with this software (see the LICENSE.md file). If not, see
     <always-actions>
         <if condition="!activeOrgId">
             <message type="info">Select an Organization before moving forward.</message>
-            <script>sri.sendRedirectAndStopRender('/coapp/FindOrganization')</script>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
     </always-actions>
 
@@ -47,7 +47,6 @@ along with this software (see the LICENSE.md file). If not, see
 
         <service-call name="delete#coarchy.Actor" in-map="[actorId:actorId]"/>
         </actions><default-response/></transition>
-
 
     <actions>
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->

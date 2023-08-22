@@ -18,7 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <always-actions>
         <if condition="!activeOrgId">
             <message type="info">Select an Organization before moving forward.</message>
-            <script>sri.sendRedirectAndStopRender('/coapp/FindOrganization')</script>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
     </always-actions>
 
