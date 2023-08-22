@@ -15,16 +15,6 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-include="false" require-authentication="true">
 
-    <transition name="createOrganization">
-        <actions>
-            <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,partyTypeEnumId:'PtyOrganization']" out-map="organization"/>
-            <service-call name="create#mantle.party.Organization" in-map="[partyId:organization.partyId,organizationName:organizationName]"/>
-            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:organization.partyId]"/>
-            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organization.partyId]"/>
-
-            <message type="success">Successfully created Organization!</message>
-        </actions><default-response url="."/>
-    </transition>
 
     <transition name="findOrganizationUsers">
         <actions>

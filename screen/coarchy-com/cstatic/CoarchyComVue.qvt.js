@@ -31,7 +31,7 @@ Vue.component('c-login', {
                     this.moqui.webrootVue.handleNotification(data)
 
                     if (data.loggedIn) {
-                        window.location = '/Organizations';
+                        window.location = '/settings';
                     }
                 })
 
@@ -68,7 +68,7 @@ Vue.component('c-sign-up', {
         onSubmit () {
             this.moqui.webrootVue.postData('/c/SignUp/createAccount', new URLSearchParams(this._data).toString())
                 .then((data) => {
-                    this.moqui.webrootVue.handleNotification(data)
+                    this.moqui.webrootVue.handleNotificationOther(data)
                     const paths = window.location.href.split("/").filter(entry => entry !== "")
                     if (data.screenPathList.at(data.screenPathList.length-1) !== paths[paths.length - 1] && data.screenUrl != "") {
                         // redirect https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#javascript_redirections
@@ -79,6 +79,54 @@ Vue.component('c-sign-up', {
         },
 
     }
+});
+Vue.component('c-change-password', {
+    name: "cChangePassword",
+    template:
+    // Could include type="email" for email, but then wouldn't allow john.doe to login
+        '<q-form @submit="onSubmit" class="q-gutter-md" >\n' +
+        '    <q-input filled v-model="username" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
+        '    <q-input filled v-model="oldPassword" label="Reset Password" :type="isOldPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\']">' +
+        '        <template v-slot:append>\n' +
+        '            <q-icon :name="isOldPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isOldPwd = !isOldPwd"/>\n' +
+        '        </template>\n' +
+        '    </q-input>\n' +
+        '    <q-input v-model="newPassword" filled label="New Password" :type="isNewPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\', val => val.length >= 8 || \'Please use minimum of 8 characters\', val => /\\d/.test(val) || \'Please use at least 1 number\', val => /[^0-9a-zA-Z]/.test(val) || \'Please use at least 1 special character\' ]">\n' +
+        '        <template v-slot:append>\n' +
+        '            <q-icon :name="isNewPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isNewPwd = !isNewPwd"/>\n' +
+        '        </template>\n' +
+        '    </q-input>\n' +
+        '    <div>\n' +
+        '        <q-btn label="Create Account" type="submit" color="primary"/>\n' +
+        '    </div>\n' +
+        '</q-form>',
+    data () {
+        return {
+            username: null,
+            oldPassword: null,
+            newPassword: null,
+            isOldPwd: true,
+            isNewPwd: true,
+        }
+    },
+    methods: {
+        onSubmit () {
+            this.moqui.webrootVue.postData('/c/ChangePassword/changePassword', new URLSearchParams(this._data).toString())
+                .then((data) => {
+                    this.moqui.webrootVue.handleNotificationOther(data)
+                    const paths = window.location.href.split("/").filter(entry => entry !== "")
+                    if (data.screenPathList.at(data.screenPathList.length-1) !== paths[paths.length - 1] && data.screenUrl != "") {
+                        // redirect https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#javascript_redirections
+                        window.location = data.screenUrl;
+                    }
+                })
+        },
+    },
+    mounted: function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('username')) this.username = urlParams.get('username')
+        if (urlParams.get('oldPassword')) this.oldPassword = urlParams.get('oldPassword')
+    },
 });
 Vue.component('c-create-organization', {
     name: "cCreateOrganization",

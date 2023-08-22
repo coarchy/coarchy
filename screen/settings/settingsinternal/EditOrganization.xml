@@ -32,7 +32,7 @@ along with this software (see the LICENSE.md file). If not, see
         </iterate>
     </actions><default-response/></transition>
 
-    <transition-include name="inviteUser" location="component://coarchy/screen/cointernal/FindOrganization.xml"/>
+    <transition-include name="inviteUser" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
 
     <actions>
         <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:organizationId]"/>
@@ -71,6 +71,5 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="emailAddress" from="userAccount.emailAddress"><default-field><display/></default-field></field>
             <field name="remove"><conditional-field condition="fromPartyId != ec.user.userAccount.partyId" title=""><link url="removeUser" parameter-map="[fromPartyId:fromPartyId,toPartyId:organizationId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Remove ${firstName} ${lastName} from ${organization?.organizationName?:' Organization'}"/></conditional-field></field>
         </form-list>
-
     </widgets>
 </screen>
