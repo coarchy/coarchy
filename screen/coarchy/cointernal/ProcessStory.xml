@@ -161,14 +161,17 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="actorId" operator="in" from="actorIdList"/>
                 <order-by field-name="name"/></entity-find>
         </if>
+        <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="activityCount">
+            <econdition field-name="processStoryId"/></entity-find-count>
 
         <set field="showMoveUpDown" from="!actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
     </actions>
 
     <widgets>
+        <link url="../FindProcessStory" text="Find Process Stories"/>
         <link url="../Actor" text="Go to Actors"/>
         <label text="Process Story" type="h2"/>
-        <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]"/>
+        <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]" condition="activityCount &gt; 0"/>
         <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
                 transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">

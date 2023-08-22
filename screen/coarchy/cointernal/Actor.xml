@@ -49,17 +49,17 @@ along with this software (see the LICENSE.md file). If not, see
         </actions><default-response/></transition>
 
     <actions>
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
+        <entity-find entity-name="coarchy.Actor" list="actorList">
+            <order-by field-name="lastUpdatedStamp"/></entity-find>
     </actions>
 
     <widgets>
-        <link url="../ProcessStory" text="Go to Process Story"/>
+        <link url="../FindProcessStory" text="Find Process Stories"/>
+        <link url="../ProcessStory" text="Go to Process Story" condition="actorList?.size() &gt; 0"/>
 
         <label text="Actors" type="h2"/>
 
         <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor" transition-last-row="createActor" multi="true">
-            <entity-find entity-name="coarchy.Actor" list="actorList">
-                <order-by field-name="lastUpdatedStamp"/></entity-find>
 
             <field name="actorId"><default-field><hidden/></default-field></field>
             <field name="name"><default-field><text-line/></default-field>
