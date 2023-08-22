@@ -18,7 +18,8 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="organizationId" required="true"/>
 
     <transition name="removeUser"><actions>
-        <if condition="fromPartyId == ec.user.userAccount.partyId"><return/></if>
+        <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:organizationId]"/>
+        <if condition="fromPartyId == ec.user.userAccount.partyId || organization.ownerPartyId != ec.user.userAccount.partyId"><return message="Cannot remove user" type="warning"/></if>
 
         <entity-find entity-name="mantle.party.PartyRelationship" list="partyRelationshipList">
             <econdition field-name="toPartyId"/>
@@ -59,17 +60,19 @@ along with this software (see the LICENSE.md file). If not, see
 
             <row-actions>
                 <!-- This assumes there are only one UserAccount per party in the application -->
-                <entity-find entity-name="moqui.security.UserAccount" list="userAccountList">
-                    <econdition field-name="partyId" from="fromPartyId"/>
-                    <select-field field-name="emailAddress"/>
-                    <order-by field-name="-lastUpdatedStamp"/></entity-find>
-                <set field="userAccount" from="userAccountList?.getFirst()"/>
+                <if condition="fromPartyId != ec.user.userAccount.partyId &amp;&amp; organization.ownerPartyId == ec.user.userAccount.partyId">
+                    <entity-find entity-name="moqui.security.UserAccount" list="userAccountList">
+                        <econdition field-name="partyId" from="fromPartyId"/>
+                        <select-field field-name="emailAddress"/>
+                        <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                    <set field="userAccount" from="userAccountList?.getFirst()"/>
+                </if>
             </row-actions>
 
             <field name="fromPartyId"><default-field><hidden/></default-field></field>
             <field name="name"><default-field><label text="${firstName} ${lastName}"/></default-field></field>
-            <field name="emailAddress" from="userAccount.emailAddress"><default-field><display/></default-field></field>
-            <field name="remove"><conditional-field condition="fromPartyId != ec.user.userAccount.partyId" title=""><link url="removeUser" parameter-map="[fromPartyId:fromPartyId,toPartyId:organizationId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Remove ${firstName} ${lastName} from ${organization?.organizationName?:' Organization'}"/></conditional-field></field>
+            <field name="emailAddress" from="userAccount?.emailAddress ?: 'Not Authorized'"><default-field><display/></default-field></field>
+            <field name="remove"><conditional-field condition="fromPartyId != ec.user.userAccount.partyId &amp;&amp; organization.ownerPartyId == ec.user.userAccount.partyId" title=""><link url="removeUser" parameter-map="[fromPartyId:fromPartyId,toPartyId:organizationId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Remove ${firstName} ${lastName} from ${organization?.organizationName?:' Organization'}"/></conditional-field></field>
         </form-list>
     </widgets>
 </screen>
