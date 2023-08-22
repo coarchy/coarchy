@@ -49,7 +49,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <!-- EmailTemplate for User Invite -->
     <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE" description="User Invite" emailServerId="SYSTEM"
-            emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/UserInviteEmail.xml" webappName="webroot"
+            emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteEmail.xml" webappName="webroot"
             fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
 
 </entity-facade-xml>

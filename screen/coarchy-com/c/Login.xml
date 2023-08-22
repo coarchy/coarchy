@@ -24,8 +24,7 @@ along with this software (see the LICENSE.md file). If not, see
         if (ec.user.userId) sri.sendRedirectAndStopRender('/Organizations')
     </script></pre-actions>
     <widgets>
-
-    <render-mode>
+        <render-mode>
             <text type="html"><![CDATA[
                 <div class="row">
                     <div class="col-md-4 offset-md-4 col-xs-12 offset-xs-0">

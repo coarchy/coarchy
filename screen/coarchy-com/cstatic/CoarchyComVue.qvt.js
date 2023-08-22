@@ -26,26 +26,12 @@ Vue.component('c-login', {
     },
     methods: {
         onSubmit () {
-            this.moqui.webrootVue.doTheDataThing('/c/Login/login', new URLSearchParams(this._data).toString())
+            this.moqui.webrootVue.postData('/c/Login/login', new URLSearchParams(this._data).toString())
                 .then((data) => {
-                    // console.log(data);
-
-                    // Show the errors from the server
-                    if (data.errors != null && data.errors.length > 0) {
-                        const errorList = data.errors.split('/n')
-                        for (const error of errorList) {
-                            // console.log(error)
-                            this.$q.notify({
-                                color: 'red-5',
-                                textColor: 'white',
-                                icon: 'warning',
-                                message: error
-                            })
-                        }
-                    }
+                    this.moqui.webrootVue.handleNotification(data)
 
                     if (data.loggedIn) {
-                        window.location = '/coapp';
+                        window.location = '/Organizations';
                     }
                 })
 
@@ -80,7 +66,7 @@ Vue.component('c-sign-up', {
     },
     methods: {
         onSubmit () {
-            this.moqui.webrootVue.doTheDataThing('/c/SignUp/createAccount', new URLSearchParams(this._data).toString())
+            this.moqui.webrootVue.postData('/c/SignUp/createAccount', new URLSearchParams(this._data).toString())
                 .then((data) => {
                     this.moqui.webrootVue.handleNotification(data)
                     const paths = window.location.href.split("/").filter(entry => entry !== "")
@@ -116,7 +102,7 @@ Vue.component('c-create-organization', {
     },
     methods: {
         createOrganization () {
-            this.moqui.webrootVue.doTheDataThing('/c/Organizations/createOrganization', new URLSearchParams(this._data).toString())
+            this.moqui.webrootVue.postData('/c/Organizations/createOrganization', new URLSearchParams(this._data).toString())
                 .then((data) => {
                     this.moqui.webrootVue.handleNotification(data)
                     this.organizationName=null
@@ -143,6 +129,9 @@ Vue.component('c-invite-people', {
         '       </div>\n' +
         '    </q-popup-proxy>\n' +
         '</q-btn>',
+    props: {
+        toPartyId: String,
+    },
     data () {
         return {
             emailAddress: null,
@@ -153,17 +142,110 @@ Vue.component('c-invite-people', {
     },
     methods: {
         invitePeople () {
-            this.moqui.webrootVue.doTheDataThing('/c/Organizations/invitePeople', new URLSearchParams(this._data).toString())
+            let inviteData = new URLSearchParams(this._data)
+            inviteData.append("toPartyId",this._props.toPartyId)
+            this.moqui.webrootVue.postData('/c/Organizations/invitePeople', inviteData)
                 .then((data) => {
-                    this.moqui.webrootVue.handleNotification(data)
+                    this.moqui.webrootVue.handleNotificationOther(data)
                     emailAddress=null
                     firstName=null
                     lastName=null
                     this.popupModel=false
                 })
         },
+    },
+});
+Vue.component('c-list-organizations', {
+    name: "cListOrganizations",
+    template:
+    // Could include type="email" for email, but then wouldn't allow john.doe to login
+    //     '<div class="q-pt-md"><q-table :data="data" :columns="columns" title="Organizations" :rows-per-page-options="[]" row-key="name">\n' +
+    //     '    <template v-slot:body="props">\n' +
+    //     '        <q-tr :props="props">\n' +
+    //     '            <q-td key="desc" :props="props">{{ props.row.name }}</q-td>\n' +
+    //     '            <q-td key="calories" :props="props">\n' +
+    //     '                {{ props.row.calories }}\n' +
+    //     '                <q-popup-edit v-model.number="props.row.calories" buttons label-set="Save" label-cancel="Close" :validate="caloriesRangeValidation" @hide="caloriesRangeValidation" v-slot="scope">\n' +
+    //     '                    <q-input type="number" v-model.number="scope.value" hint="Enter a number between 4 and 7" :error="errorCalories" :error-message="errorMessageCalories" dense autofocus @keyup.enter="scope.set"/>\n' +
+    //     '                </q-popup-edit>\n' +
+    //     '            </q-td>\n' +
+    //     '            <q-td key="fat" :props="props"><div class="text-pre-wrap">{{ props.row.fat }}</div></q-td>\n' +
+    //     '            <q-td key="carbs" :props="props">{{ props.row.carbs }}</q-td>\n' +
+    //     '            <q-td key="protein" :props="props">{{ props.row.protein }}</q-td>\n' +
+    //     '        </q-tr>\n' +
+    //     '    </template>\n' +
+    //     '</q-table>\n' +
+
+        '<div class="q-pt-md"><q-table :data="organizationList" :columns="organizationListColumns" title="Organizations" :rows-per-page-options="[0]" row-key="toPartyId" hide-header :filter="filter" :loading="loading" :expanded.sync="expanded">\n' +
+        '    <template v-slot:body="props">\n' +
+        '        <q-tr :props="props">\n' +
+        '            <q-td auto-width><q-toggle v-model="props.expand" checked-icon="add" unchecked-icon="remove" /></q-td>\n' +
+        '            <q-td key="organizationName" :props="props">{{ props.row.organizationName }}' +
+        '               <q-popup-edit v-model="props.row.organizationName" buttons v-slot="scope">\n' +
+        '                   <q-input v-model="scope.value" autofocus counter @keyup.enter="scope.set" />\n' +
+        '               </q-popup-edit>\n' +
+        '            </q-td>\n' +
+        '            <q-td auto-width><c-invite-people v-bind:toPartyId="props.row.toPartyId"></c-invite-people></q-td>\n' +
+        '        </q-tr>' +
+        '        <q-tr v-show="props.expand" :props="props">\n' +
+        '          <q-td colspan="100%">\n' +
+        '            <div class="text-left">This is expand slot for row above: {{ props.row.organizationName }}.</div>\n' +
+        '          </q-td>\n' +
+        '        </q-tr>\n' +
+        '    </template>\n' +
+        '    <template v-slot:top-right>\n' +
+        '        <q-input borderless dense debounce="100" v-model="filter" placeholder="Search">\n' +
+        '            <template v-slot:append><q-icon name="search" /></template>\n' +
+        '        </q-input>\n' +
+        '    </template>' +
+        '    <template v-slot:loading>\n' +
+        '        <q-inner-loading showing color="primary" />\n' +
+        '    </template>\n' +
+        '</q-table></div>\n' +
+        '',
+    data () {
+        return {
+            expanded: [],
+            filter: '',
+            loading: false,
+            organizationListColumns: [
+                { name: 'organizationName', align: 'left', label: 'Name', field: 'organizationName' }
+            ],
+            organizationList: [],
+        }
+    },
+    methods: {
+        async getData(url = "") {
+            // console.log(this.moquiSessionToken)
+
+            // console.log(_data.toString())
+            // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
+            const response = await fetch(url, {
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: "same-origin", // include, *same-origin, omit
+                method: 'get',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                redirect: "follow",
+                referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            })
+
+            return response.json();
+        },
+    },
+    mounted: function() {
+        this.getData("/c/Organizations/actions").then((response) => {
+            // console.log(response)
+            this.organizationList = response.organizationList
+
+            // console.log(response.organizationList)
+
+        })
     }
 });
+
 // App
 moqui.webrootVue = new Vue({
     el: '#apps-root',
@@ -171,12 +253,13 @@ moqui.webrootVue = new Vue({
         this.moquiSessionToken = $("#confMoquiSessionToken").val();
     },
     methods: {
-        async doTheDataThing(url = "", data = URLSearchParams) {
-            console.log(this.moquiSessionToken)
+        async postData(url = "", data = URLSearchParams) {
+            // console.log(this.moquiSessionToken)
 
             let _data = new URLSearchParams(data)
             _data.append("moquiSessionToken", this.moquiSessionToken)
-            console.log(_data.toString())
+            // console.log(_data.toString())
+
             // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
             const response = await fetch(url, {
                 cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
@@ -223,6 +306,52 @@ moqui.webrootVue = new Vue({
             if (data.errors != null && data.errors.length > 0) {
                 const errorList = data.errors.split('/n')
                 for (const error of errorList) {
+                    // console.log(error)
+                    this.$q.notify({
+                        color: 'red-5',
+                        textColor: 'white',
+                        icon: 'warning',
+                        message: error
+                    })
+                }
+            }
+        },
+        handleNotificationOther(data) {
+            console.log(data);
+            console.log(this);
+
+            // Show the messages from the server
+            if (data.messageInfos != null && data.messageInfos.length > 0) {
+                for (const message of data.messageInfos) {
+                    // console.log(message)
+                    if (message.type == "warning") {
+                        this.$q.notify({
+                            color: 'yellow-5',
+                            textColor: 'black',
+                            icon: 'warning',
+                            message: message.message
+                        })
+                    } else if (message.type = "info") {
+                        this.$q.notify({
+                            color: 'blue-grey-4',
+                            textColor: 'black',
+                            icon: 'info',
+                            message: message.message
+                        })
+                    } else if (message.type = "success") {
+                        this.$q.notify({
+                            color: 'green-4',
+                            textColor: 'white',
+                            icon: 'cloud_done',
+                            message: message.message
+                        })
+                    }
+                }
+            }
+
+            // Show the errors from the server
+            if (data.errors != null && data.errors.length > 0) {
+                for (const error of data.errors) {
                     // console.log(error)
                     this.$q.notify({
                         color: 'red-5',
