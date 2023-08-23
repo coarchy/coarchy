@@ -60,7 +60,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <row-actions>
                 <!-- This assumes there are only one UserAccount per party in the application -->
-                <if condition="fromPartyId != ec.user.userAccount.partyId &amp;&amp; organization.ownerPartyId == ec.user.userAccount.partyId">
+                <if condition="fromPartyId == ec.user.userAccount.partyId || (fromPartyId != ec.user.userAccount.partyId &amp;&amp; organization.ownerPartyId == ec.user.userAccount.partyId)">
                     <entity-find entity-name="moqui.security.UserAccount" list="userAccountList">
                         <econdition field-name="partyId" from="fromPartyId"/>
                         <select-field field-name="emailAddress"/>

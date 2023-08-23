@@ -18,31 +18,56 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="login" location="component://webroot/screen/webroot/rest.xml" method="post"/>
     <transition name="logout"><actions><script>ec.user.logoutUser()</script></actions>
         <default-response url="/"/><error-response url="."/></transition>
+    <transition name="createInitialAdminAccount">
+        <service-call name="org.moqui.impl.UserServices.create#InitialAdminAccount"/>
+        <default-response url="../Login"/>
+        <error-response url="."/>
+    </transition>
 
     <pre-actions><script>
         // if user already logged in redirect to application
         if (ec.user.userId) sri.sendRedirectAndStopRender('/settings')
     </script></pre-actions>
     <widgets>
-        <render-mode>
-            <text type="html"><![CDATA[
-                <div class="row">
-                    <div class="col-md-4 offset-md-4 col-xs-12 offset-xs-0">
-                        <div class="column justify-center" style="height: 150px">
-                            <div class="col-4">
-                                <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1">
-                                    <q-card-section>
-                                        <div class="text-h2">Log In</div>
-                                    </q-card-section>
+        <section name="NeedsSetupSection" condition="ec.entity.find('moqui.security.UserAccount').disableAuthz().count() > 1"><widgets>
+            <render-mode>
+                <text type="html"><![CDATA[
+                    <div class="row">
+                        <div class="col-md-4 offset-md-4 col-xs-12 offset-xs-0">
+                            <div class="column justify-center" style="height: 150px">
+                                <div class="col-4">
+                                    <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1">
+                                        <q-card-section>
+                                            <div class="text-h2">Log In</div>
+                                        </q-card-section>
 
-                                    <q-card-section>
-                                        <c-login></c-login>
-                                    </q-card-section>
-                                </q-card>
+                                        <q-card-section>
+                                            <c-login></c-login>
+                                        </q-card-section>
+                                    </q-card>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    ]]></text></render-mode>
+        </widgets><fail-widgets>
+            <!-- if there are no user accounts, other than the _NA_ UserAccount which is in seed data, show form to create admin account -->
+            <render-mode><text type="html"><![CDATA[
+                <div class="text-center">
+                    <h3>Welcome to your new system</h3>
+                    <form method="post" action="${sri.buildUrl("createInitialAdminAccount").url}" class="qa-ma-lg" id="InitialAdminForm">
+                    <p class="text-muted text-center">There are no user accounts, get started by creating an initial administrator account</p>
+                    <input type="hidden" name="moquiSessionToken" value="${ec.web.sessionToken}">
+                    <input type="text" name="username" value="${(ec.getWeb().getErrorParameters().get("username"))!""}" placeholder="Username" required="required" class="form-control top">
+                    <input type="password" name="newPassword" placeholder="New Password" required="required" class="form-control middle">
+                    <input type="password" name="newPasswordVerify" placeholder="New Password Verify" required="required" class="form-control middle">
+                    <input type="text" name="userFullName" value="${(ec.getWeb().getErrorParameters().get("userFullName"))!""}" placeholder="User Full Name" required="required" class="form-control middle">
+                    <input type="text" name="emailAddress" value="${(ec.getWeb().getErrorParameters().get("emailAddress"))!""}" placeholder="Email Address" required="required" class="form-control bottom">
+                    <button class="btn btn-lg btn-primary btn-block" type="submit">Create Initial Admin Account</button>
+                    </form>
                 </div>
-            ]]></text></render-mode>
+                ]]></text></render-mode>
+        </fail-widgets></section>
+
     </widgets>
 </screen>
