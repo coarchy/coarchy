@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-include="false" require-authentication="anonymous-all" history="false" render-modes="qvt">
+        require-authentication="anonymous-all" allow-extra-path="true">
 
     <!-- TODO: Change these to use ec.web.sendJsonResponse instead of the default response that leaks request input parameters back to the client. -->
     <transition name="createAccount" require-session-token="false">

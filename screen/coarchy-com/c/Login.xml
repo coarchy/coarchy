@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-include="false" require-authentication="anonymous-view" history="false" render-modes="qvt">
+        require-authentication="anonymous-view" allow-extra-path="true">
 
     <transition-include name="login" location="component://webroot/screen/webroot/rest.xml" method="post"/>
     <transition name="logout"><actions><script>ec.user.logoutUser()</script></actions>
