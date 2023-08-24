@@ -18,7 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <always-actions>
         <if condition="!activeOrgId">
             <message type="info">Select an Organization before moving forward.</message>
-            <script>sri.sendRedirectAndStopRender('/coapp/FindOrganization')</script>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
     </always-actions>
 
@@ -48,6 +48,8 @@ along with this software (see the LICENSE.md file). If not, see
 
     <actions>
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
+        <entity-find-count entity-name="coarchy.Actor" count-field="actorCount"/>
+
     </actions>
 
     <widgets>
@@ -62,7 +64,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <last-row-field><text-line/></last-row-field></field>
 <!--            <field name="delete"><default-field title=""><link url="deleteProcessStory" parameter-map="[processStoryId:processStoryId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Delete Process Story"/></default-field></field>-->
             <field name="goToActors"><default-field><link url="../Actor" parameter-map="[processStoryId:processStoryId]" text="Go to Actors"/></default-field></field>
-            <field name="goToProcessStory"><default-field><link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Process Story"/></default-field></field>
+            <field name="goToProcessStory"><default-field><link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Process Story" condition="actorCount"/></default-field></field>
             <field name="submit"><default-field><submit text="Update All"/></default-field>
                 <last-row-field><submit text="Create"/></last-row-field></field>
         </form-list>

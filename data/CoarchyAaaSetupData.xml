@@ -36,13 +36,70 @@ along with this software (see the LICENSE.md file). If not, see
             <filters entityFilterSetId="COARCHY_FILTER"/></authz>
     </artifactGroups>
 
+    <artifactGroups artifactGroupId="COARCHY_COM" description="Coarchy.com (via root screen)">
+        <artifacts artifactName="component://coarchy/screen/coarchy-com/c.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+        <artifacts artifactName="org.moqui.impl.UserServices.set#Preference" artifactTypeEnumId="AT_SERVICE" inheritAuthz="N" nameIsPattern="N"/>
+        <authz artifactAuthzId="COARCHY_COM_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"></authz>
+        <authz artifactAuthzId="COARCHY_COM_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"></authz>
+    </artifactGroups>
+
+    <artifactGroups artifactGroupId="COARCHY_SETTINGS" description="Coarchy Settings (via root screen)">
+        <artifacts artifactName="component://coarchy/screen/settings/settingsinternal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+        <authz artifactAuthzId="COARCHY_SETTINGS_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"></authz>
+        <authz artifactAuthzId="COARCHY_SETTINGS_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"></authz>
+    </artifactGroups>
+
     <!-- Theme Resources -->
     <moqui.screen.ScreenThemeResource screenThemeId="DEFAULT_QUASAR" sequenceNum="130" resourceTypeEnumId="STRT_HEADER_NAVBAR_COMP"
             resourceValue="/costatic/lib/ActiveOrgNav.qvue"/>
 
     <!-- EmailTemplate for User Invite -->
     <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE" description="User Invite" emailServerId="SYSTEM"
-            emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/UserInviteEmail.xml" webappName="webroot"
+            emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteEmail.xml" webappName="webroot"
             fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
 
+    <!-- Data Documents -->
+    <dataDocuments dataDocumentId="MantleParty">
+        <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
+    </dataDocuments>
+
+    <dataDocuments dataDocumentId="MantleProcessStory" indexName="mantle" documentName="Process Story"
+            primaryEntityName="coarchy.ProcessStory" documentTitle="${organizationId}:${processStoryId}">
+        <fields fieldSeqId="01" fieldPath="processStoryId"/>
+        <fields fieldSeqId="02" fieldPath="name"/>
+
+        <fields fieldSeqId="10" fieldPath="organizationId"/>
+
+        <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
+    </dataDocuments>
+
+    <dataDocuments dataDocumentId="MantleActor" indexName="mantle" documentName="Actor"
+            primaryEntityName="coarchy.Actor" documentTitle="${organizationId}:${actorId}">
+        <fields fieldSeqId="01" fieldPath="actorId"/>
+        <fields fieldSeqId="02" fieldPath="name"/>
+        <fields fieldSeqId="03" fieldPath="description"/>
+
+        <fields fieldSeqId="10" fieldPath="organizationId"/>
+
+        <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
+    </dataDocuments>
+
+    <dataDocuments dataDocumentId="MantleActivity" indexName="mantle" documentName="Activity"
+            primaryEntityName="coarchy.Activity" documentTitle="${organizationId}:${activityId}">
+        <fields fieldSeqId="01" fieldPath="activityId"/>
+        <fields fieldSeqId="02" fieldPath="condition"/>
+        <fields fieldSeqId="03" fieldPath="action"/>
+
+        <fields fieldSeqId="10" fieldPath="organizationId"/>
+
+        <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
+    </dataDocuments>
+
+    <!-- ================ -->
+    <!-- Search Data Feed -->
+    <moqui.entity.feed.DataFeed dataFeedId="MantleSearch">
+        <documents dataDocumentId="MantleProcessStory"/>
+        <documents dataDocumentId="MantleActor"/>
+        <documents dataDocumentId="MantleActivity"/>
+    </moqui.entity.feed.DataFeed>
 </entity-facade-xml>

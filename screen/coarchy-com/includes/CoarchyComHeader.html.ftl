@@ -3,8 +3,8 @@
 <head lang="en-us" dir="ltr">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-<#--    <#if html_keywords?has_content><meta name="keywords" content="${html_keywords}"></#if>-->
-<#--    <#if html_description?has_content><meta name="description" content="${html_description}"></#if>-->
+    <#if html_keywords?has_content><meta name="keywords" content="${html_keywords}"></#if>
+    <#if html_description?has_content><meta name="description" content="${html_description}"></#if>
     <title><#if html_title?has_content>${html_title}<#else><#if parentMenuName?has_content>${ec.resource.expand(parentMenuName, "")} - </#if><#if defaultMenuName?has_content>${ec.resource.expand(defaultMenuName, "")}</#if></#if></title>
 <#--    <link rel="apple-touch-icon" href="/MoquiLogo100.png"/>-->
     <#-- Style Sheets -->
@@ -16,6 +16,7 @@
         <#assign hrefUrl = sri.buildUrl(styleSheetLocation).url>
         <link href="${hrefUrl}<#if !styleSheetLocation?starts_with("http") && !hrefUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" rel="stylesheet" type="text/css">
     </#list>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@quasar/extras/material-icons/material-icons.css">
     <#-- JavaScript -->
     <#list html_scripts?if_exists as scriptLocation>
         <#assign srcUrl = sri.buildUrl(scriptLocation).url>
@@ -37,16 +38,16 @@
 
 <#--&lt;#&ndash; End of original Header &ndash;&gt;-->
 <div id="apps-root" style=""><#-- NOTE: webrootVue component attaches here, uses this and below for template -->
-<#--    <input type="hidden" id="confMoquiSessionToken" value="${ec.web.sessionToken}">-->
-<#--    <input type="hidden" id="confAppHost" value="${ec.web.getHostName(true)}">-->
-<#--    <input type="hidden" id="confAppRootPath" value="${ec.web.servletContext.contextPath}">-->
-<#--    <input type="hidden" id="confBasePath" value="${ec.web.servletContext.contextPath}/minternal">-->
-<#--    <input type="hidden" id="confLinkBasePath" value="${ec.web.servletContext.contextPath}/">-->
-<#--    <input type="hidden" id="confUserId" value="${ec.user.userId!''}">-->
-<#--    <input type="hidden" id="confUsername" value="${ec.user.username!''}">-->
-<#--    <input type="hidden" id="confLocale" value="${ec.user.locale.toLanguageTag()}">-->
-<#--    <input type="hidden" id="confDarkMode" value="${ec.user.getPreference("QUASAR_DARK")!"false"}">-->
-<#--    <input type="hidden" id="confLeftOpen" value="${ec.user.getPreference("QUASAR_LEFT_OPEN")!"false"}">-->
+    <input type="hidden" id="confMoquiSessionToken" value="${ec.web.sessionToken}">
+    <input type="hidden" id="confAppHost" value="${ec.web.getHostName(true)}">
+    <input type="hidden" id="confAppRootPath" value="${ec.web.servletContext.contextPath}">
+    <input type="hidden" id="confBasePath" value="${ec.web.servletContext.contextPath}/minternal">
+    <input type="hidden" id="confLinkBasePath" value="${ec.web.servletContext.contextPath}/">
+    <input type="hidden" id="confUserId" value="${ec.user.userId!''}">
+    <input type="hidden" id="confUsername" value="${ec.user.username!''}">
+    <input type="hidden" id="confLocale" value="${ec.user.locale.toLanguageTag()}">
+    <input type="hidden" id="confDarkMode" value="${ec.user.getPreference("QUASAR_DARK")!"false"}">
+    <input type="hidden" id="confLeftOpen" value="${ec.user.getPreference("QUASAR_LEFT_OPEN")!"false"}">
 <#--    &lt;#&ndash;    <#assign navbarCompList = sri.getThemeValues("STRT_HEADER_NAVBAR_COMP")>&ndash;&gt;-->
 <#--    &lt;#&ndash;    <#list navbarCompList! as navbarCompUrl><input type="hidden" class="confNavPluginUrl" value="${navbarCompUrl}"></#list>&ndash;&gt;-->
 <#--    &lt;#&ndash;    <#assign accountCompList = sri.getThemeValues("STRT_HEADER_ACCOUNT_COMP")>&ndash;&gt;-->
@@ -62,9 +63,9 @@
                 <q-btn stretch flat label="Home" href="/"></q-btn>
                 <q-space></q-space>
 
-                <q-btn stretch flat label="Log In" href="/m/Login#login"></q-btn>
+                <q-btn stretch flat label="Log In" href="/Login"></q-btn>
                 <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Sign Up" href="/m/Login#sign-up"></q-btn>
+                <q-btn stretch flat label="Sign Up" href="/SignUp"></q-btn>
 
 <#--                &lt;#&ndash;            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>&ndash;&gt;-->
 <#--                <#if headerLogoList?has_content>-->
@@ -142,3 +143,5 @@
             </q-toolbar></q-header>
 
         <q-page-container class="q-ma-sm"><q-page>
+<#-- NOTE: Could use the Vue router for this -->
+<#--                <m-subscreens-active></m-subscreens-active>-->

@@ -24,8 +24,11 @@
     <screen-facade>
         <screen location="component://webroot/screen/webroot.xml" default-subscreen="c">
             <!-- Public Ecommerce App -->
+            <subscreens-item name="settings" menu-include="false" location="component://coarchy/screen/settings/settings.xml"/>
+            <subscreens-item name="settingsinternal" menu-include="false" location="component://coarchy/screen/settings/settingsinternal.xml"/>
+
+            <!-- Public Website -->
             <subscreens-item name="c" menu-include="false" no-sub-path="true" location="component://coarchy/screen/coarchy-com/c.xml"/>
-<!--            <subscreens-item name="minternal" menu-include="false" no-sub-path="true" location="component://coarchy/screen/coarchy-com/minternal.xml"/>-->
             <subscreens-item name="cstatic" menu-include="false" location="component://coarchy/screen/coarchy-com/cstatic.xml"/>
 
             <!-- Coarchy Internal App -->

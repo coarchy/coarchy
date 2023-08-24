@@ -13,11 +13,14 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        require-authentication="false" standalone="true" render-modes="qvt">
+        require-authentication="false" standalone="true" allow-extra-path="true">
 
-    <subscreens default-item="Home"/>
+    <subscreens default-item="Home" always-use-full-path="true"/>
 
     <pre-actions>
+        <set field="html_keywords" value="coarchy"/>
+        <set field="html_title" value="Coarchy"/>
+        <set field="html_description" value="Coarchy helps entrepreneurs rewrite their business"/>
 
         <script><![CDATA[
         // if user not logged in save current path and params then redirect to Login
@@ -30,28 +33,43 @@ along with this software (see the LICENSE.md file). If not, see
         String instancePurpose = System.getProperty("instance_purpose")
         if (!instancePurpose || instancePurpose == 'production') {
             /* ========== Production Mode ========== */
-//            html_scripts.add('/js/MoquiLib.min.js')
+//            // jQuery
+            html_scripts.add('/libs/jquery/jquery.min.js')
+//            // Bootstrap
+//            html_scripts.add('/libs/twitter-bootstrap/js/bootstrap.min.js')
+//            // Form Validation and AJAX (jquery-validation, jquery-form)
+//            html_scripts.add('/libs/jquery-validate/jquery.validate.min.js')
+
             // Vue JS
             footer_scripts.add('/libs/vue/vue.min.js')
             // http-vue-loader
 //            footer_scripts.add('/js/http-vue-loader/httpVueLoader.js')
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
-            // Vue Components for Coarchy
-//            footer_scripts.add('/costatic/js/CoarchyVue.js')
+
+            html_scripts.add('/js/MoquiLib.min.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
-            footer_scripts.add('/cstatic/WebrootVue.qvt.js')
+            footer_scripts.add('/cstatic/CoarchyComVue.qvt.js')
+
         } else {
             /* ========== Dev Mode ========== */
-//            html_scripts.add('/js/MoquiLib.js')
+//            // jQuery
+            html_scripts.add('/libs/jquery/jquery.min.js')
+//            // Bootstrap
+//            html_scripts.add('/libs/twitter-bootstrap/js/bootstrap.min.js')
+//            // Form Validation and AJAX (jquery-validation, jquery-form)
+//            html_scripts.add('/libs/jquery-validate/jquery.validate.min.js')
+
             // Vue JS
             footer_scripts.add('/libs/vue/vue.js')
             // http-vue-loader
 //            footer_scripts.add('/js/http-vue-loader/httpVueLoader.js')
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
+
+            html_scripts.add('/js/MoquiLib.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
-            footer_scripts.add('/cstatic/WebrootVue.qvt.js')
+            footer_scripts.add('/cstatic/CoarchyComVue.qvt.js')
         }
     ]]></script></pre-actions>
 

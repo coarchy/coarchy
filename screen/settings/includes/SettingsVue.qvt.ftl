@@ -15,8 +15,8 @@ along with this software (see the LICENSE.md file). If not, see
     <input type="hidden" id="confMoquiSessionToken" value="${ec.web.sessionToken}">
     <input type="hidden" id="confAppHost" value="${ec.web.getHostName(true)}">
     <input type="hidden" id="confAppRootPath" value="${ec.web.servletContext.contextPath}">
-    <input type="hidden" id="confBasePath" value="${ec.web.servletContext.contextPath}/cointernal">
-    <input type="hidden" id="confLinkBasePath" value="${ec.web.servletContext.contextPath}/coapp">
+    <input type="hidden" id="confBasePath" value="${ec.web.servletContext.contextPath}/settingsinternal">
+    <input type="hidden" id="confLinkBasePath" value="${ec.web.servletContext.contextPath}/settings">
     <input type="hidden" id="confUserId" value="${ec.user.userId!''}">
     <input type="hidden" id="confUsername" value="${ec.user.username!''}">
     <input type="hidden" id="confLocale" value="${ec.user.locale.toLanguageTag()}">
@@ -42,7 +42,7 @@ along with this software (see the LICENSE.md file). If not, see
 
 <#--            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>-->
             <#if headerLogoList?has_content>
-                <m-link href="/copps"><div class="q-mx-md q-mt-sm">
+                <m-link href="/settings"><div class="q-mx-md q-mt-sm">
                     <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="32">
                 </div></m-link>
             </#if>
@@ -93,7 +93,7 @@ along with this software (see the LICENSE.md file). If not, see
             </q-btn>
 
             <#-- nav plugins See in root CoarchyComVue.qvt.ftl -->
-            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>
+<#--            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>-->
 
             <#-- notify history See in root CoarchyComVue.qvt.ftl -->
 
@@ -102,31 +102,28 @@ along with this software (see the LICENSE.md file). If not, see
                 <q-btn color="secondary" class="text-black" label="${(ec.user.userAccount.userFullName)!'Account'}">
                     <q-menu auto-close>
                         <q-list dense style="min-width: 100px">
-                            <q-item clickable>
-                                <q-item-section><q-btn flat label="Settings" type="a" href="${sri.buildUrl("/settings").url}">
-                                        <q-tooltip>Go to Settings</q-tooltip></q-btn>
-                                </q-item-section>
-                            </q-item>
+<#--                            <q-item clickable>-->
+<#--                                <q-item-section><q-btn flat label="Application" type="a" href="${sri.buildUrl("/coapp/FindProcessStory").url}">-->
+<#--                                        <q-tooltip>Go to Application</q-tooltip></q-btn>-->
+<#--                                </q-item-section>-->
+<#--                            </q-item>-->
                             <q-item clickable>
                                 <q-item-section>
                                     <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"
-                                           onclick="return confirm('${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}?')">
+                                                       onclick="return confirm('${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}?')">
                                         <q-tooltip>${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}</q-tooltip></q-btn>
                                 </q-item-section>
                             </q-item>
                         </q-list>
                     </q-menu>
                 </q-btn>
-
-                <#--            <q-btn push icon="account_circle">-->
+<#--            <q-btn push icon="account_circle">-->
 <#--                <q-tooltip>${(ec.user.userAccount.userFullName)!ec.l10n.localize("Account")}</q-tooltip>-->
 <#--                <q-menu><q-card flat bordered>&lt;#&ndash; always matching header (dark): class="${headerClass}" &ndash;&gt;-->
 <#--                        <q-card-section horizontal class="q-pa-md">-->
 <#--                            <q-card-actions vertical class="justify-around q-px-md">-->
                                 <#-- logout button -->
-<#--                                <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"-->
-<#--                                       onclick="return confirm('${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}?')">-->
-<#--                                    <q-tooltip>${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}</q-tooltip></q-btn>-->
+
                                 <#-- dark/light switch -->
                                 <#-- re-login button -->
 <#--                                <q-btn flat dense icon="autorenew" color="negative" @click="reLoginShowDialog"><q-tooltip>Re-Login</q-tooltip></q-btn>-->

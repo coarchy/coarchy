@@ -20,7 +20,7 @@ along with this software (see the LICENSE.md file). If not, see
     <always-actions>
         <if condition="!activeOrgId">
             <message type="info">Select an Organization before moving forward.</message>
-            <script>sri.sendRedirectAndStopRender('/coapp/FindOrganization')</script>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
     </always-actions>
 
@@ -86,7 +86,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="activityMoveUp"><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
-            <econdition field-name="sequenceNum" operator="less" from="sequenceNum"/>
+            <econdition field-name="sequenceNum" operator="less" from="sequenceNum.toInteger()"/>
             <select-field field-name="processStoryActivityId,sequenceNum"/>
             <order-by field-name="-sequenceNum"/></entity-find>
 
@@ -103,7 +103,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="activityMoveDown"><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
-            <econdition field-name="sequenceNum" operator="greater" from="sequenceNum"/>
+            <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
             <select-field field-name="processStoryActivityId,sequenceNum"/>
             <order-by field-name="sequenceNum"/></entity-find>
 
@@ -161,14 +161,17 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="actorId" operator="in" from="actorIdList"/>
                 <order-by field-name="name"/></entity-find>
         </if>
+        <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="activityCount">
+            <econdition field-name="processStoryId"/></entity-find-count>
 
         <set field="showMoveUpDown" from="!actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
     </actions>
 
     <widgets>
+        <link url="../FindProcessStory" text="Find Process Stories"/>
         <link url="../Actor" text="Go to Actors"/>
         <label text="Process Story" type="h2"/>
-        <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]"/>
+        <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]" condition="activityCount &gt; 0"/>
         <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
                 transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
