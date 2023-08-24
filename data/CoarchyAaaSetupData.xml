@@ -58,4 +58,48 @@ along with this software (see the LICENSE.md file). If not, see
             emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteEmail.xml" webappName="webroot"
             fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
 
+    <!-- Data Documents -->
+    <dataDocuments dataDocumentId="MantleParty">
+        <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
+    </dataDocuments>
+
+    <dataDocuments dataDocumentId="MantleProcessStory" indexName="mantle" documentName="Process Story"
+            primaryEntityName="coarchy.ProcessStory" documentTitle="${organizationId}:${processStoryId}">
+        <fields fieldSeqId="01" fieldPath="processStoryId"/>
+        <fields fieldSeqId="02" fieldPath="name"/>
+
+        <fields fieldSeqId="10" fieldPath="organizationId"/>
+
+        <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
+    </dataDocuments>
+
+    <dataDocuments dataDocumentId="MantleActor" indexName="mantle" documentName="Actor"
+            primaryEntityName="coarchy.Actor" documentTitle="${organizationId}:${actorId}">
+        <fields fieldSeqId="01" fieldPath="actorId"/>
+        <fields fieldSeqId="02" fieldPath="name"/>
+        <fields fieldSeqId="03" fieldPath="description"/>
+
+        <fields fieldSeqId="10" fieldPath="organizationId"/>
+
+        <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
+    </dataDocuments>
+
+    <dataDocuments dataDocumentId="MantleActivity" indexName="mantle" documentName="Activity"
+            primaryEntityName="coarchy.Activity" documentTitle="${organizationId}:${activityId}">
+        <fields fieldSeqId="01" fieldPath="activityId"/>
+        <fields fieldSeqId="02" fieldPath="condition"/>
+        <fields fieldSeqId="03" fieldPath="action"/>
+
+        <fields fieldSeqId="10" fieldPath="organizationId"/>
+
+        <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
+    </dataDocuments>
+
+    <!-- ================ -->
+    <!-- Search Data Feed -->
+    <moqui.entity.feed.DataFeed dataFeedId="MantleSearch">
+        <documents dataDocumentId="MantleProcessStory"/>
+        <documents dataDocumentId="MantleActor"/>
+        <documents dataDocumentId="MantleActivity"/>
+    </moqui.entity.feed.DataFeed>
 </entity-facade-xml>
