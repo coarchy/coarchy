@@ -25,9 +25,9 @@ along with this software (see the LICENSE.md file). If not, see
                                 :height="500"
                         />
 
-                        <q-card-section class="text-center">
+                        <q-card-section class="text-center bg-secondary q-pa-md shadow-10">
                             <div class="text-h1 text-white">Coarchy</div>
-                            <div class="text-h3 text-grey-6">Design Your Organization</div>
+                            <div class="text-h3 text-white">Design Your Organization</div>
                         </q-card-section>
                     </q-card>
 
