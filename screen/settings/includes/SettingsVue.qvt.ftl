@@ -32,7 +32,13 @@ along with this software (see the LICENSE.md file). If not, see
     <#-- for layout options see: https://quasar.dev/layout/layout -->
     <#-- to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder -->
     <q-layout view="hHh LpR fFf">
-        <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px;">
+        <q-header class="${headerClass}" id="top">
+
+            <q-bar class="bg-secondary text-black">
+                <div class="justify-center text-bold">For feedback or support, text or call our founder Michael at <a href="sms:+18019958124">(801) 995-8124</a></div>
+            </q-bar>
+
+            <q-toolbar style="font-size:15px;">
 
 <#--            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>-->
             <#if headerLogoList?has_content>
@@ -87,21 +93,37 @@ along with this software (see the LICENSE.md file). If not, see
             </q-btn>
 
             <#-- nav plugins See in root CoarchyComVue.qvt.ftl -->
-            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>
+<#--            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>-->
 
             <#-- notify history See in root CoarchyComVue.qvt.ftl -->
 
             <#-- screen history menu See in root CoarchyComVue.qvt.ftl -->
 
+                <q-btn color="secondary" class="text-black" label="${(ec.user.userAccount.userFullName)!'Account'}">
+                    <q-menu auto-close>
+                        <q-list dense style="min-width: 100px">
+<#--                            <q-item clickable>-->
+<#--                                <q-item-section><q-btn flat label="Application" type="a" href="${sri.buildUrl("/coapp/FindProcessStory").url}">-->
+<#--                                        <q-tooltip>Go to Application</q-tooltip></q-btn>-->
+<#--                                </q-item-section>-->
+<#--                            </q-item>-->
+                            <q-item clickable>
+                                <q-item-section>
+                                    <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"
+                                                       onclick="return confirm('${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}?')">
+                                        <q-tooltip>${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}</q-tooltip></q-btn>
+                                </q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-menu>
+                </q-btn>
 <#--            <q-btn push icon="account_circle">-->
 <#--                <q-tooltip>${(ec.user.userAccount.userFullName)!ec.l10n.localize("Account")}</q-tooltip>-->
 <#--                <q-menu><q-card flat bordered>&lt;#&ndash; always matching header (dark): class="${headerClass}" &ndash;&gt;-->
 <#--                        <q-card-section horizontal class="q-pa-md">-->
 <#--                            <q-card-actions vertical class="justify-around q-px-md">-->
                                 <#-- logout button -->
-                                <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"
-                                       onclick="return confirm('${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}?')">
-                                    <q-tooltip>${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}</q-tooltip></q-btn>
+
                                 <#-- dark/light switch -->
                                 <#-- re-login button -->
 <#--                                <q-btn flat dense icon="autorenew" color="negative" @click="reLoginShowDialog"><q-tooltip>Re-Login</q-tooltip></q-btn>-->
