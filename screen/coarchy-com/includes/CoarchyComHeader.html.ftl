@@ -3,8 +3,8 @@
 <head lang="en-us" dir="ltr">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-<#--    <#if html_keywords?has_content><meta name="keywords" content="${html_keywords}"></#if>-->
-<#--    <#if html_description?has_content><meta name="description" content="${html_description}"></#if>-->
+    <#if html_keywords?has_content><meta name="keywords" content="${html_keywords}"></#if>
+    <#if html_description?has_content><meta name="description" content="${html_description}"></#if>
     <title><#if html_title?has_content>${html_title}<#else><#if parentMenuName?has_content>${ec.resource.expand(parentMenuName, "")} - </#if><#if defaultMenuName?has_content>${ec.resource.expand(defaultMenuName, "")}</#if></#if></title>
 <#--    <link rel="apple-touch-icon" href="/MoquiLogo100.png"/>-->
     <#-- Style Sheets -->
