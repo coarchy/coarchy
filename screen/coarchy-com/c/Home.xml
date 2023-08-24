@@ -31,10 +31,40 @@ along with this software (see the LICENSE.md file). If not, see
                                 :height="500"
                         />
 
-                        <q-card-section>
+                        <q-card-section class="text-center">
                             <div class="text-h1 text-white">Coarchy</div>
+                            <div class="text-h3 text-grey-6">Design Your Organization</div>
                         </q-card-section>
                     </q-card>
+
+                    <div class="q-pa-md row items-start justify-center q-gutter-md">
+                        <q-card dark bordered class="bg-grey-9" style="max-width:300px;">
+                          <q-card-section>
+                            <div class="text-h6">Design</div>
+                          </q-card-section>
+
+                          <q-separator dark inset></q-separator>
+
+                          <q-card-section>The core principle of Coarchy is <strong>design</strong> based on <strong>requirements</strong>.</q-card-section>
+                          <q-separator dark inset></q-separator>
+                          <q-card-section>The <i>requirements</i> for an organization are its <strong>origin, vision, and values</strong>.</q-card-section>
+                          <q-card-section class="q-pt-none">The <i>design</i> based on these are <strong>process stories</strong> with <u>activities</u> that organize roles and responsibilities.</q-card-section>
+                        </q-card>
+
+                        <q-card dark bordered class="bg-grey-9" style="max-width:300px;">
+                          <q-card-section>
+                            <div class="text-h6">Implement</div>
+                          </q-card-section>
+
+                          <q-separator dark inset></q-separator>
+
+                          <q-card-section>The <i>design</i> of your organization is used as <i>requirements</i> for implementing your organization, for:
+                            <ul>
+                              <li>people in their roles</li> <li>software to manage and track</li> <li>mechanization</li>
+                            </ul>
+                          </q-card-section>
+                        </q-card>
+                    </div>
                 </div>
                 ]]></text>
         </render-mode>
