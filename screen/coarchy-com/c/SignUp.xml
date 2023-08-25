@@ -26,6 +26,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
                     in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,newPassword:newPassword,newPasswordVerify:newPassword]"/>
+            <service-call name="update#mantle.party.Party" in-map="[partyId:partyId,visibilityEnumId:'PvOrganization']"/>
 <!--            <log level="warn" message="after context.toString() ${context.toString()}"/>-->
             <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
 

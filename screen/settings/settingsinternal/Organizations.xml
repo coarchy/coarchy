@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Organizations" default-menu-index="80" menu-image="/ssstatic/images/Parties.png" default-menu-include="true">
+        default-menu-title="Organizations" default-menu-index="80" menu-image="/ssstatic/images/Parties.png">
 
     <always-actions>
         <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
@@ -30,10 +30,55 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="createOrganization">
         <actions>
-            <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,partyTypeEnumId:'PtyOrganization']" out-map="organization"/>
-            <service-call name="create#mantle.party.Organization" in-map="[partyId:organization.partyId,organizationName:organizationName]"/>
-            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:organization.partyId]"/>
-            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organization.partyId]"/>
+            <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,partyTypeEnumId:'PtyOrganization',visibilityEnumId:'PvOrganization']" out-map="newOrganization"/>
+            <service-call name="create#mantle.party.Organization" in-map="[partyId:newOrganization.partyId,organizationName:organizationName]"/>
+            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:newOrganization.partyId]"/>
+            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:newOrganization.partyId]"/>
+
+            <entity-find-one entity-name="mantle.party.Party" value-field="oldOrganization" auto-field-map="[partyId:organizationId]"/>
+            <if condition="organizationId &amp;&amp; (oldOrganization.visibilityEnumId||oldOrganization.ownerPartyId==ec.user.userAccount.partyId||organizationList*.toPartyId.contains(organizationId))">
+
+                <set field="processStoryIdMap" from="[:]"/>
+                <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="processStoryList" entry="processStory">
+                    <service-call name="create#coarchy.ProcessStory" in-map="[name:processStory.name,organizationId:newOrganization.partyId]" out-map="processStoryContext"/>
+                    <script>processStoryIdMap.put(processStory.processStoryId,processStoryContext.processStoryId)</script>
+                </iterate>
+
+                <set field="actorIdMap" from="[:]"/>
+                <entity-find entity-name="coarchy.Actor" list="actorList">
+                    <econdition field-name="organizationId"/>
+                </entity-find>
+                <iterate list="actorList" entry="actor">
+                    <service-call name="create#coarchy.Actor" in-map="[name:actor.name,description:actor.description,organizationId:newOrganization.partyId]" out-map="actorContext"/>
+                    <script>actorIdMap.put(actor.actorId,actorContext.actorId)</script>
+                </iterate>
+
+                <set field="activityIdMap" from="[:]"/>
+                <entity-find entity-name="coarchy.Activity" list="activityList">
+                <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="activityList" entry="activity">
+                    <service-call name="create#coarchy.Activity" in-map="[condition:activity.condition,action:activity.action,organizationId:newOrganization.partyId]" out-map="activityContext"/>
+                    <script>activityIdMap.put(activity.activityId,activityContext.activityId)</script>
+                </iterate>
+
+                <entity-find entity-name="coarchy.ProcessStoryActivity" list="processStoryActivityList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="processStoryActivityList" entry="processStoryActivity">
+                    <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryIdMap[processStoryActivity.processStoryId],activityId:activityIdMap[processStoryActivity.activityId],sequenceNum:processStoryActivity.sequenceNum,organizationId:newOrganization.partyId]"/>
+                </iterate>
+
+                <entity-find entity-name="coarchy.ActivityActor" list="activityActorList">
+                <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="activityActorList" entry="activityActor">
+                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:activityIdMap[activityActor.activityId],actorId:actorIdMap[activityActor.actorId], organizationId:newOrganization.partyId]"/>
+                </iterate>
+            </if>
 
             <message type="success">Successfully created Organization!</message>
         </actions><default-response url="."/>
@@ -90,8 +135,21 @@ along with this software (see the LICENSE.md file). If not, see
 
         <!-- TODO: Create the feature to transfer to another user -->
 
-        <container-dialog id="CreateOrganization" button-text="Create Organization" type="primary">
+        <container-dialog id="CreateOrganization" button-text="Create Organization">
             <form-single name="CreateOrganization" transition="createOrganization">
+                <field name="organizationId"><default-field title="Clone from Organization (optional)"><drop-down allow-empty="true" required-manual-select="true">
+                    <entity-options text="${visibilityEnumId=='PvPublic'?organizationName+' - Template':organizationName}" key="${partyId}">
+                        <entity-find entity-name="mantle.party.PartyDetail">
+                            <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                            <econditions combine="or">
+                                <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                                <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                                <econdition field-name="partyId" operator="in" from="organizationList*.toPartyId"/>
+                            </econditions>
+                            <order-by field-name="-visibilityEnumId"/>
+                        </entity-find>
+                    </entity-options>
+                </drop-down></default-field></field>
                 <field name="organizationName"><default-field><text-line/></default-field></field>
                 <field name="create"><default-field><submit/></default-field></field>
             </form-single>
@@ -111,7 +169,7 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <form-list name="Organization" paginate="false" skip-header="false" list="organizationList" transition="updateOrganization">
+        <form-list name="Organization" paginate="false" list="organizationList" transition="updateOrganization">
             <field name="partyId" from="toPartyId"><default-field><hidden/></default-field></field>
             <field name="organizationName"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title="Name"><text-line/></conditional-field>
                 <default-field><display/></default-field></field>
