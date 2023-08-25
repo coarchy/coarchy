@@ -23,12 +23,6 @@ along with this software (see the LICENSE.md file). If not, see
     Programmer responds to issue.
     Programmer and Customer verifies issue is fixed.
     -->
-    <!--
-    <coarchy.Activity activityId="" condition="" action="verifies issue is fixed">
-        <actors activityActorId="10000" actorId="Programmer"/>
-        <actors activityActorId="10001" actorId="Customer"/>
-    </coarchy.Activity>
-    -->
     <entity entity-name="Activity" package="coarchy">
         <field name="activityId" type="id" is-pk="true"/>
         <field name="condition" type="text-intermediate"/>
@@ -47,7 +41,11 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="actorId" type="id" is-pk="true"/>
         <field name="name" type="text-short"/>
         <field name="description" type="text-medium"/>
+
         <field name="organizationId" type="id"/>
+
+        <relationship type="many" related="ActivityActor" short-alias="activities">
+            <key-map field-name="actorId"/></relationship>
 
         <relationship type="one" related="mantle.party.Organization" short-alias="organization">
             <key-map field-name="organizationId" related="partyId"/></relationship>
@@ -56,6 +54,8 @@ along with this software (see the LICENSE.md file). If not, see
     <entity entity-name="ActivityActor" package="coarchy">
         <field name="activityId" type="id" is-pk="true"/>
         <field name="actorId" type="id" is-pk="true"/>
+
+        <field name="organizationId" type="id"/>
 
         <!-- TODO: Perhaps have a sequenceId here -->
 
@@ -67,13 +67,16 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="ACAC" entity-name="coarchy.ActivityActor"/>
         <member-relationship entity-alias="ACT" join-from-alias="ACAC" relationship="actor"/>
 
-        <alias-all entity-alias="ACAC"/>
-        <alias-all entity-alias="ACT"/>
+        <alias-all entity-alias="ACAC"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="ACT"><exclude field="organizationId"/></alias-all>
+        <alias name="activityActorOrganizationId" entity-alias="ACAC" field="organizationId"/>
+        <alias name="actorOrganizationId" entity-alias="ACT" field="organizationId"/>
     </view-entity>
 
     <entity entity-name="ProcessStory" package="coarchy">
         <field name="processStoryId" type="id" is-pk="true"/>
         <field name="name" type="text-short"/>
+
         <field name="organizationId" type="id"/>
 
         <relationship type="one" related="mantle.party.Organization" short-alias="organization">
@@ -85,6 +88,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="processStoryId" type="id"/>
         <field name="activityId" type="id"/>
         <field name="sequenceNum" type="number-integer"/>
+
+        <field name="organizationId" type="id"/>
 
         <relationship type="one" related="coarchy.ProcessStory" short-alias="story">
             <key-map field-name="processStoryId"/></relationship>
@@ -102,8 +107,26 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- Never select actorId so you don't get multiple rows back, INSTEAD filter by actorId -->
         <member-relationship entity-alias="ACAC" join-from-alias="PSA" relationship="actors" join-optional="true"/>
 
-        <alias-all entity-alias="PSA"/>
-        <alias-all entity-alias="ACT"/>
-        <alias-all entity-alias="ACAC"/>
+        <alias-all entity-alias="PSA"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="ACT"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="ACAC"><exclude field="organizationId"/></alias-all>
+        <alias name="storyActivityOrganizationId" entity-alias="PSA" field="organizationId"/>
+        <alias name="activityOrganizationId" entity-alias="ACT" field="organizationId"/>
+        <alias name="activityActorOrganizationId" entity-alias="ACAC" field="organizationId"/>
     </view-entity>
+
+    <!-- Extend entities -->
+    <extend-entity entity-name="Party" package="mantle.party">
+        <field name="visibilityEnumId" type="id"/>
+        <relationship type="one" title="PartyVisibility" related="moqui.basic.Enumeration" short-alias="visibility">
+            <key-map field-name="visibilityEnumId"/></relationship>
+        <seed-data>
+            <!-- Party Visibility -->
+            <moqui.basic.EnumerationType description="Party Visibility" enumTypeId="PartyVisibility"/>
+            <!-- if set to all users then may show in organization lists to clone for all users -->
+            <moqui.basic.Enumeration description="Public" enumId="PvPublic" enumTypeId="PartyVisibility"/>
+            <!-- for these settings will show only if associated with something, but will have limited visibility based on this setting -->
+            <moqui.basic.Enumeration description="Organization Access" enumId="PvOrganization" enumTypeId="PartyVisibility"/>
+        </seed-data>
+    </extend-entity>
 </entities>

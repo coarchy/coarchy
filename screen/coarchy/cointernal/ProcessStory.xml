@@ -31,7 +31,7 @@ along with this software (see the LICENSE.md file). If not, see
             <order-by field-name="-sequenceNum"/></entity-find>
         <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
         <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
-        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum]"/>
+        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:activeOrgId]"/>
         </actions><default-response url="."/></transition>
 
     <transition name="createActivity"><actions>
@@ -43,16 +43,16 @@ along with this software (see the LICENSE.md file). If not, see
             <order-by field-name="-sequenceNum"/></entity-find>
         <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
         <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
-        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum]"/>
+        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:activeOrgId]"/>
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
 
         <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
             <then>
-                <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList]"/>
+                <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList, organizationId:activeOrgId]"/>
             </then>
             <else>
                 <iterate list="actorIdList" entry="actorId">
-                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId]"/>
+                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId, organizationId:activeOrgId]"/>
                 </iterate>
             </else>
         </if>
