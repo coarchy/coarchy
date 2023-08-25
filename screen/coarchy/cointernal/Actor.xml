@@ -22,9 +22,15 @@ along with this software (see the LICENSE.md file). If not, see
             <message type="info">Select an Organization before moving forward.</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
-    <transition name="createActor"><actions>
+    <transition name="createActor"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
             <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
             <order-by field-name="^name"/>
@@ -34,17 +40,15 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="create#coarchy.Actor" in-map="[name:name,description:description,organizationId:activeOrgId]"/>
         </actions><default-response/></transition>
 
-    <transition name="updateActor"><service-call name="update#coarchy.Actor"/>
+    <transition name="updateActor"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.Actor"/>
         <default-response/></transition>
 
-    <transition name="deleteActor"><actions>
+    <transition name="deleteActor"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find-count entity-name="coarchy.ActivityActor" count-field="activityActorCount">
             <econdition field-name="actorId"/></entity-find-count>
-
         <if condition="activityActorCount &gt; 0">
             <return type="warning" message="You can't delete an Actor with any Activities"/>
         </if>
-
         <service-call name="delete#coarchy.Actor" in-map="[actorId:actorId]"/>
         </actions><default-response/></transition>
 

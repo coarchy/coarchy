@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="get" noun="PartyOrganizationInfo">
+        <in-parameters><parameter name="partyId" default="ec.user.userAccount?.partyId"/></in-parameters>
+        <out-parameters>
+            <parameter name="activeOrgId"/>
+            <parameter name="userOrgIds" type="List"><parameter name="userOrgId"/></parameter>
+            <parameter name="filterOrgIds" type="List"><parameter name="userOrgId"/></parameter>
+        </out-parameters>
+        <actions>
+            <if condition="!partyId">
+                <set field="userOrgIds" from="[]"/><set field="filterOrgIds" from="[]"/>
+                <return/>
+            </if>
+
+            <!-- get user organizations data (agent/employee/member rel from member to org) -->
+            <entity-find entity-name="mantle.party.PartyToAndRelationship" list="userOrgRelList" cache="true">
+                <date-filter/>
+                <econditions combine="or">
+                    <econditions><econdition field-name="relationshipTypeEnumId" operator="in" value="PrtAgent,PrtEmployee,PrtMember"/>
+                        <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                        <econdition field-name="fromPartyId" from="partyId"/></econditions>
+                    <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                </econditions>
+            </entity-find>
+            <set field="userOrgIds" from="[]"/>
+            <iterate list="userOrgRelList" entry="userOrgRel">
+                <if condition="!userOrgIds.contains(userOrgRel.toPartyId)">
+                    <script>userOrgIds.add(userOrgRel.toPartyId)</script>
+                    <!-- look for direct child orgs and allow them too (rollup rel from child to parent) -->
+                    <!-- NOTE: consider making this recursive (inline method or other service) to walk down multiple levels -->
+                    <entity-find entity-name="mantle.party.PartyRelationship" list="childRelList" cache="true">
+                        <date-filter/>
+                        <econdition field-name="relationshipTypeEnumId" value="PrtOrgRollup"/>
+                        <econdition field-name="toPartyId" from="userOrgRel.toPartyId"/>
+                        <econdition field-name="fromPartyId" operator="is-not-null"/>
+                    </entity-find>
+                    <iterate list="childRelList" entry="childRel">
+                        <if condition="!userOrgIds.contains(childRel.fromPartyId)">
+                            <entity-find-one entity-name="mantle.party.PartyDetail" value-field="childOrg" cache="true">
+                                <field-map field-name="partyId" from="childRel.fromPartyId"/></entity-find-one>
+                            <script>userOrgIds.add(childRel.fromPartyId)</script>
+                        </if>
+                    </iterate>
+                </if>
+            </iterate>
+
+            <!-- active org -->
+            <set field="activeOrgId" from="ec.user.getPreference('ACTIVE_ORGANIZATION')"/>
+            <if condition="activeOrgId != null &amp;&amp; activeOrgId.length() == 0"><set field="activeOrgId" from="null"/></if>
+            <!-- if active org is not valid for the user ignore it -->
+            <if condition="activeOrgId &amp;&amp; !userOrgIds.contains(activeOrgId)">
+                <set field="activeOrgId" from="null"/>
+                <script>ec.user.setPreference('ACTIVE_ORGANIZATION', null)</script>
+            </if>
+
+            <!-- get org ids to filter by (for queries, etc) -->
+            <set field="filterOrgIds" from="activeOrgId ? [activeOrgId] : userOrgIds"/>
+        </actions>
+    </service>
+</services>

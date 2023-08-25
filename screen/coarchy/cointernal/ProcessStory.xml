@@ -22,9 +22,15 @@ along with this software (see the LICENSE.md file). If not, see
             <message>Select an Organization before moving forward.</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
-    <transition name="newParagraph"><actions>
+    <transition name="newParagraph"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
 
         <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
@@ -34,7 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:activeOrgId]"/>
         </actions><default-response url="."/></transition>
 
-    <transition name="createActivity"><actions>
+    <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <!-- TODO: migrate this to a service -->
         <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
         <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action, organizationId:activeOrgId]" out-map="newActivity"/>
@@ -58,7 +64,7 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="."/></transition>
 
-    <transition name="updateActivity"><service-call name="update#coarchy.Activity"/><actions>
+    <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.Activity"/><actions>
         <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
             <econdition field-name="activityId"/>
             <order-by field-name="name"/></entity-find>
@@ -84,7 +90,7 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="."/></transition>
 
-    <transition name="activityMoveUp"><actions>
+    <transition name="activityMoveUp"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
             <econdition field-name="sequenceNum" operator="less" from="sequenceNum.toInteger()"/>
             <select-field field-name="processStoryActivityId,sequenceNum"/>
@@ -101,7 +107,7 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="."/></transition>
 
-    <transition name="activityMoveDown"><actions>
+    <transition name="activityMoveDown"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
             <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
             <select-field field-name="processStoryActivityId,sequenceNum"/>
@@ -118,7 +124,7 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="."/></transition>
 
-    <transition name="deleteActivity"><actions>
+    <transition name="deleteActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
             <then>
                 <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdList]"/>
@@ -132,8 +138,7 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="delete#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId]"/>
         </actions><default-response url="."/></transition>
 
-    <transition name="getActorList">
-        <actions>
+    <transition name="getActorList"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
             <set field="actorList" from="[]"/>
             <if condition="term == null &amp;&amp; actorIdList ? actorIdList?.size() &gt; 0 : false"><then>
                 <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">

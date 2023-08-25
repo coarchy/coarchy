@@ -17,8 +17,12 @@ along with this software (see the LICENSE.md file). If not, see
 
     <always-actions>
         <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
-            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
-            <select-field field-name="toPartyId,ownerPartyId,organizationName"/>
+            <date-filter/>
+            <econditions combine="or">
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                <econdition field-name="visibilityEnumId" value="PvPublic"/>
+            </econditions>
+            <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
             <order-by field-name="-lastUpdatedStamp"/></entity-find>
         <set field="ownerOfAnyOrganization" from="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)"/>
 <!--        <if condition="!ownerOfAnyOrganization &amp;&amp; organizationList?.size() == 1">-->
@@ -37,7 +41,6 @@ along with this software (see the LICENSE.md file). If not, see
 
             <entity-find-one entity-name="mantle.party.Party" value-field="oldOrganization" auto-field-map="[partyId:organizationId]"/>
             <if condition="organizationId &amp;&amp; (oldOrganization.visibilityEnumId||oldOrganization.ownerPartyId==ec.user.userAccount.partyId||organizationList*.toPartyId.contains(organizationId))">
-
                 <set field="processStoryIdMap" from="[:]"/>
                 <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
                     <econdition field-name="organizationId" from="oldOrganization.partyId"/>
@@ -174,6 +177,12 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="organizationName"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title="Name"><text-line/></conditional-field>
                 <default-field><display/></default-field></field>
             <field name="update"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId"><submit text="Update"/></conditional-field></field>
+            <field name="clone"><default-field title=""><container-dialog id="CloneFrom" button-text="Clone From"><form-single name="CloneFromOrganization" transition="createOrganization">
+                <field name="organizationId" from="partyId"><default-field><hidden/></default-field></field>
+                <field name="organizationName" from="null"><default-field><text-line/></default-field></field>
+                <field name="clone"><default-field><submit/></default-field></field>
+            </form-single>
+            </container-dialog></default-field></field>
             <field name="edit"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title=""><link url="/settings/EditOrganization" text="Edit Organization" parameter-map="[organizationId:toPartyId]" tooltip="Invite Users"/></conditional-field></field>
             <field name="go"><default-field title=""><link url="goToApplication" text="Go to Application" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/></default-field></field>
         </form-list>

@@ -18,11 +18,18 @@ along with this software (see the LICENSE.md file). If not, see
     <always-actions>
         <if condition="!activeOrgId">
             <message type="info">Select an Organization before moving forward.</message>
+            <!-- TODO: Fix this redirect on this and other screens to not redirect to /coapp -->
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
-    <transition name="createProcessStory"><actions>
+    <transition name="createProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="20">
             <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
             <order-by field-name="^name"/>
@@ -32,10 +39,10 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="create#coarchy.ProcessStory" in-map="[name:name,organizationId:activeOrgId]"/>
         </actions><default-response/></transition>
 
-    <transition name="updateProcessStory"><service-call name="update#coarchy.ProcessStory"/>
+    <transition name="updateProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.ProcessStory"/>
         <default-response/></transition>
 
-    <transition name="deleteProcessStory"><actions>
+    <transition name="deleteProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
 <!--        <entity-find-count entity-name="coarchy.ProcessStory" count-field="processStoryCount">-->
 <!--            <econdition field-name="actorId"/></entity-find-count>-->
 
@@ -49,7 +56,6 @@ along with this software (see the LICENSE.md file). If not, see
     <actions>
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
         <entity-find-count entity-name="coarchy.Actor" count-field="actorCount"/>
-
     </actions>
 
     <widgets>
