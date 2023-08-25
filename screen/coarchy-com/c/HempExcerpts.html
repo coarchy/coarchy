@@ -1,0 +1,448 @@
+<div style="max-width:800px; margin:16px auto 32px auto;">
+
+
+<p class="text-h4">Introduction</p>
+
+<p>This page contains excerpts from the book "HEMP: An agile approach to analysis and design" by David E. Jones, an advising founder of Coarchy. HEMP is an acronym for <i>Holistic Enterprise Mechanization Process</i>, and a nod to the industrial plant that helped build the industrial era.</p>
+
+<p>HEMP is for people who create software, especially software used to automate and manage business operations and general activities that involve multiple people and systems. This includes those who play the roles of expert user, business analyst, user interface designer, system architect, software developer, and quality assurance technician.</p>
+
+<p>These excerpts are made available here to explain some ideas behind Process Stories and related artifacts. There are a number of general concepts, tips for productivity and efficacy, and the process story of HEMP itself as an applied example.</p>
+
+<p>Note that these excerpts are from a book about creating software for business where the requirements for the software, primarily the Process Story, is the design of the business. In the context of business automation software the design of the software is based on requirements, which are the design of the business or other type of organization. In other words, in this document requirements are requirements for software, and designs are designs for software.</p>
+
+<p class="text-h5">Requirements versus designs</p>
+
+<p>This is the most important principle of HEMP. Making a clear distinction between business requirements and system designs will make the biggest difference of anything you might do to improve success of software and other development projects.</p>
+
+<ul>
+    <li>Business requirements in their most basic form are business activities that fit into a process.</li>
+    <li>A business activity is an actor performing an action. It is described by specifying <span class="text-bold">who</span> the actor is and <span class="text-bold">what</span> the actor does to perform an action.</li>
+    <li>The position of a business activity within a process shows <span class="text-bold">when</span> the action is done.</li>
+    <li>Designs communicate <span class="text-bold text-italic">how</span> a user representing the actor will perform the action and <span class="text-bold text-italic">where</span> in the system it will be done.</li>
+    <li>Neither requirements nor designs should try to answer the “why” question.</li>
+</ul>
+
+<p style="border:black dotted 1px; padding:4px;"><span class="text-bold">Requirements</span> specify the <span class="text-bold">who</span>, <span class="text-bold">what</span>, and <span class="text-bold">when</span> whereas <span class="text-bold text-italic">designs</span> specify the <span class="text-bold text-italic">how</span> and <span class="text-bold text-italic">where</span>.</p>
+
+<p>When writing requirements it is common to discuss business strategy and the costs and benefits of a variety of approaches to achieve business objectives. Ultimately these discussions need to end with a decision on <span class="text-bold">what</span> will be done, and that decision is all that needs to be documented for building a system.</p>
+
+<p>Others involved may want to document the rationale behind these decisions, but that should be kept separate from requirement documentation. Including the why in requirements makes them very large, difficult to create and maintain, and is distracting or even confusing to designers and developers who will be working from these documents. If you want to document the <span class="text-italic">why</span> use a separate <span class="text-italic">business case</span> document to keep your requirements and designs as simple and clear as possible.</p>
+
+<p>It might seem difficult to distinguish a business requirement from a system design, especially if you are mostly familiar with system designs labeled as requirements and have never seen a pure business requirement that is system agnostic (i.e. does not bias the design of the system).</p>
+
+<p style="border:black dotted 1px; padding:4px;">Business requirements are about the business, not about the system. Designs are about the system.</p>
+
+<p>When writing business requirements it is well worth the effort to use whatever verbal acrobatics might be required to avoid describing the system to be built. </p>
+
+<p>For example, instead of writing: </p>
+
+<p class="text-italic">“When Customer submits order System sends Confirmation Email to Customer.”</p>
+
+<p>write: </p>
+
+<p class="text-italic">“When Customer submits order Company automatically notifies Customer.”</p>
+
+<p>Writing “<span class="text-italic">Company automatically</span>” keeps the focus on what is done, and leaves the how to the design. Note that the second sentence also leaves out the detail of how Company will notify Customer. This avoids biasing the design, but if all involved are sure that email will be the only way this is done that detail may be included without really crossing the line into design.</p>
+
+<p>Another example of a common business activity that is tempting to express in system terms is when a user enters data or views data from the system. We know this will be done with a computer system, but in business requirements it is helpful to describe the activity in a way that could lead to a pen and paper design just as well as a screen in an application. </p>
+
+<p>Instead of writing: </p>
+
+<p class="text-italic">“CSR types in Customer name, phone number, and address, and then submits the form.”</p>
+
+<p>simply write: </p>
+
+<p class="text-italic">“CSR records Customer name, phone number, and address.”</p>
+
+<p>The principle to keep in mind is that business requirements should be limited to the business domain to make them an effective basis for design. The requirement information will then be flexible enough to facilitate creative and efficient design constrained only by actual needs of the organization.</p>
+
+<p class="text-h5">Why bother with requirements?</p>
+
+<p>The act of gathering and documenting business requirements in business terms helps engage users and sponsors of a project, and provides a clear direction to drive design and implementation efforts. </p>
+
+<p>Engaging users and sponsors throughout the process improves alignment of the eventual system to the organization that will use it and sets the stage for satisfied acceptance, deployment, and long-term use of the new or improved system.</p>
+
+<p>When working on designs without discussed and documented requirements different people are often thinking of different aspects of the business, sometimes different business activities altogether, and often a different understanding of who should be doing what and when.</p>
+
+<p style="border:black dotted 1px; padding:4px;">The typical experience of creating designs without requirements involves a number of people collaborating on design details with uncommunicated requirements in their heads.</p>
+
+<p>The resulting designs are often poorly aligned with what the business needs. Getting to this false destination still involves long, frustrating discussions about details that seem irrelevant or nonsensical to others involved. </p>
+
+<p>For business users driving the system design it is also easy to think a bad design is a good idea without considering who will be using it and what they will be trying to do. </p>
+
+<p style="border:black dotted 1px; padding:4px;">Designing software is difficult and trying to design “cold” (without requirements) is a setup for failure.</p>
+
+<p>Even end-users who are very familiar with business activities often fail in cold-design efforts. Without a discussion of requirements that set the context and clarify the details needed for design, it is difficult to remember everything and easy to get hung up on design elements that won’t be used and may be expensive to build.</p>
+
+<p style="border:black dotted 1px; padding:4px;">An initial focus on the business and documentation of business activities helps everyone involved to understand the business. Action-oriented business process stories provide a perspective on the business that is usually missed or glossed over in business plans and operating policy. </p>
+
+<p>Writing process stories often involves uncovering details and prompting decisions that managers and executives have not addressed. The simple act of writing the story can tighten and clarify business operations, and involves a level of engagement and mutual understanding between those who run a business and those building software for it that is critical to the success and acceptance of the project. </p>
+
+<p>In nonbusiness situations a similar pattern applies. Even consumer oriented software has sponsors and experts that drive the design.</p>
+
+<p>Distinction between requirements and designs, and initial focus on business requirements is about building the right software and keeping everyone responsible engaged throughout the process.</p>
+
+<p>What about “<span class="text-bold">analysis paralysis</span>” (endless cycles of analysis never leading to design or implementation) and “<span class="text-bold">failure to launch</span>” (project dies during analysis or design due to lack of confidence)? Effectively gathering, documenting, and organizing business requirements is the best way to get early traction in a project.</p>
+
+<p style="border:black dotted 1px; padding:4px;">Quality requirements are immediately actionable for design efforts. Quality designs are immediately actionable for implementation.</p>
+
+<p>If a project stalls during requirements gathering or design it means the practices for gathering and artifacts for documenting them are poorly matched to the task at hand. </p>
+
+<p>This is a common problem because so many analysts are trained on dozens of diagrams and document structures that require significant effort but have minimal utility. By using HEMP and a focus on business process stories you’ll have the opposite experience: active engagement and actionable results.</p>
+
+<p>What about business users and sponsors who refuse to engage or aren’t capable of discussing the details needed to build a system? These are other symptoms of ineffective requirements gathering and documenting, or of skipping requirements and diving straight into designs. Business users and sponsors are often alienated early on by poor communication and a focus on details that have nothing to do with their day-to-day activities. The focus on business process stories keeps the early discussions in a domain they are comfortable with, and allows them to provide actionable details.</p>
+
+<p>The greatest resistance to HEMP usually comes from:</p>
+
+<ul>
+    <li>business analysts trained in other tools and practices</li>
+    <li>developers who have had bad experiences with ineffective and frequently changing designs</li>
+</ul>
+
+<p>Business users and sponsors who have been through failed projects may have light initial resistance, but quickly appreciate the early engagement and effective communication facilitated by business process story writing.</p>
+
+<p>Starting with requirements consisting of business activities is a way to begin with the end in mind and produce a system that will meet the needs of the organization.</p>
+
+<p style="border:black dotted 1px; padding:4px;">Eventually a system needs to be delivered. When it is delivered it will be subjected to the ultimate test of alignment with business activities: actual use. </p>
+
+<p class="text-h5">Planning for failure and change</p>
+
+<p>Software design and development are creative human efforts that stem from human strengths and are sensitive to human weaknesses. Some weaknesses are part of natural human tendencies, others are cultural, and others are learned as a side effect of education and other life experience. Unavoidable human weaknesses lead to failures during analysis, design, and implementation efforts.</p>
+
+<p>The more complex a project the more human weaknesses make things difficult. It is difficult for users to express what they need, and even remember and articulate everything they do. The leap between what they do (business activities) and what software might look like to help them do it is difficult, but at least manageable as long as what they do is effectively documented.</p>
+
+<p>Because it is easy to forget activities and not realize nuanced dependencies between activities, let alone create effective designs for those activities, changes are guaranteed during analysis, design, and development processes. Any methodology for these activities must be sufficiently adaptable to accommodate and minimize the impact of change.</p>
+
+<p>On top of human weakness, business environments and goals change over time and it is critical that the software systems an organization uses be able to support changes within the organization and externally from partners, suppliers, and customers.</p>
+
+<p>HEMP is a set of practices and artifacts for analysis and design that help keep changes earlier in the process where they require less effort to accommodate. This requires artifacts that are sufficient for capturing important details but simple enough for frequent change with minimal effort. The goal is the minimum effective set of artifacts, similar to the minimum effective dose principle in medicine. Beyond the minimum effective point come diminishing or negative returns.</p>
+
+<p>This is the reason for the focus on simple artifacts like business process stories for documenting requirements, and avoiding artifacts like diagrams that are laborious to change during conversations and require supplementary documentation to be interpreted consistently by both business analysts and expert users who must create them and understand them to ensure they are correct and consistent.</p>
+
+<p class="text-h5">Scaling complexity</p>
+
+<p>Humans are not good at scaling complexity. We can only fit so much in our mental models of the world. As complexity increases the dependencies and interactions increase non-linearly, but even more significantly the human effort required to understand and automate the complexity goes up dramatically. The curve seems to be an approximation of x<span style="vertical-align:super;font-size:66%;">2</span> so double complexity requires in four times the effort.</p>
+
+<p>Necessary complexity can be managed by:</p>
+
+<ul>
+    <li>refining and organizing requirements</li>
+    <li>thorough design so implementation scales more linearly as complexity scales</li>
+</ul>
+
+<p>Constraining complexity is easier to do during requirement analysis, especially when requirements are documented and organized according to business process. </p>
+
+<p>Communication about business needs using requirements in the form of business activities makes it easier for expert users and other stakeholders to identify those that are more frequent and critical, and warrant more investment in automation. Communication about business needs using system designs makes it difficult for stakeholders to look at them in the context of the organization and evaluate their importance.</p>
+
+<p>With requirements represented as business activities it is easy for stakeholders to understand the complexity they are requesting and give them a chance to simplify the business process or split activities into different phases to help prioritize and focus derivative efforts.</p>
+
+<p>Trimming scope early (during requirements gathering) avoids unnecessary design and development effort which are expensive and time-consuming.</p>
+
+<p>To effectively handle complexity in your project:</p>
+
+<ul>
+    <li>write comprehensive and inclusive business process stories</li>
+    <li class="text-bold">review the stories and find ways to simplify and streamline business activities</li>
+    <li>make sure business process stories are easy to understand and well organized</li>
+    <li>produce thorough, clear, and well organized system designs so they can be implemented literally</li>
+    <li>review designs to make them as small and simple as possible while still meeting business requirements</li>
+</ul>
+
+<p class="text-h5">Agile methodologies</p>
+
+<p>Agile methodologies focus on development and rely on an external source for designs that drive the software development. A comprehensive agile approach including management, practices and tools adapts well to changing requirements and designs.</p>
+
+<p>Agile methodologies prioritize frequent customer interaction and presenting results early and often. The biggest disconnect in the process is between requirements and design with a mix of both being presented to developers as a basis for their work. The customer is left on their own to make sure what they request of development is complete and will adequately satisfy organizational needs. The result is more difficulty for both customer and developer as they iterate toward what is hopefully a good result.</p>
+
+<p>The solution is to help the customer by communication with expert users in language they are comfortable with, and that contains the details needed for design and development. With a focus on requirements the communication remains clear and to the point, providing a strong and flexible foundation for design and implementation.</p>
+
+<p>The business process story and other HEMP artifacts can be used to drive a project that needs more predictive elements but the focus, as described in the last section, is on adaptability and works well feeding designs to a development team using agile methods.</p>
+
+<p>This is especially true for larger projects (such as ERP projects) where a minimum set of business activities must be supported before the software is of use to an organization. The temptation with agile development methods is to neglect analysis and design, even analysis as simple as documenting the business activities that need to be supported. The result is difficulty predicting the overall size of the project.</p>
+
+<p style="border:black dotted 1px; padding:4px;">HEMP shifts the focus toward analysis and design while remaining adaptive.</p>
+
+<p>To put HEMP in context it is similar to feature-driven development (FDD) with a focus on business activities and uses simplified artifacts to increase agility over the more complex and development oriented FDD. HEMP does not rely on object-oriented design and development and can be applied to a variety of architectures in existing systems and application development frameworks. </p>
+
+<p>HEMP makes the most difference in automation of enterprise operations in any sort of organization where the business process involves interactions and hand-offs among a number of actors. Agile methods are best for projects involving incremental improvements but for these using HEMP will improve design and implementation system by basing them on requirements representing business activities and needs.</p>
+
+<p class="text-h5">Diagrams</p>
+
+<p>Humans have a natural instinct for language and even the verbally weakest of us can express and understand a wide variety of subtle ideas using language. Even so, it can be ambiguous and requires care in writing and review, with discussion among multiple people to be sufficiently clear and disambiguate subtle ideas. It also requires domain knowledge to anticipate common alternatives that people might consider and explicate which of them is desired.</p>
+
+<p>Diagrams attempt to present a visual representation of ideas and disambiguate common ones with a variety of symbols. These symbol libraries are sometimes adequate for ideas of software structure and algorithms, but are rarely adequate for business ideas and the flow among the wide variety of activities necessary to operate organizations.</p>
+
+<p>Diagrams are a sort of subset of language designed to represent specific ideas. They are low-resolution and without supporting text are often misunderstood.</p>
+
+<p>Diagrams are cumbersome to maintain and keep consistent with supporting text and related artifacts, including other diagrams meant to represent different aspects of an idea or process. </p>
+
+<p>The result is that diagrams are often not maintained during the high-paced changes that are natural when gathering requirements. On many projects where diagrams are used early on they are eventually abandoned while business process stories and other HEMP artifacts remain useful from analysis and design all the way through implementation and quality assurance.</p>
+
+
+
+
+
+
+<p class="text-h4">The Story of HEMP</p>
+
+<p>The Story of HEMP is a business process story just like the ones you will use to gather and organize requirements. It describes activities that make up HEMP in terms of the actors and actions. This story will give you an idea of what business process stories look like and introduce you to the business context that HEMP is designed for.</p>
+
+<p>The bolded sentences are high-level activities made up of the more granular ones that follow. In large business process stories it is useful to create a summary story with just these high-level activities and links to the detailed stories that expand on them in separate documents.</p>
+
+<p><span class="text-bold">Business Analyst and Expert User gather and document requirements.</span> Expert User verbally describes business activities. Business Analyst documents activities in a business process story, asking questions as needed to clarify or expand on what Expert User described.</p>
+
+<p>If Expert User describes a high-level idea and not a specific business activity then Business Analyst records it as an “Idea to Incorporate”. If the idea is one that cannot be incorporated into the story then Business Analyst records it as a requirement statement. </p>
+
+<p>Once the basic structure of the process story is in place, Business Analyst and Expert User review the ideas to incorporate and make changes to the story, modifying each relevant activity and adding activities as needed to represent the idea throughout the business process.</p>
+
+<p>For critical system users Business Analyst optionally works with Expert User and actual users representing specific actors to write user experience stories. Business Analyst reviews user experience stories to ensure each activity is included in the business process story.</p>
+
+<p>Expert User or other stakeholders optionally write a business case document describing general business objectives and their financial impact. Business Analyst and Expert User review business process story against the business case details to ensure business objectives are achieved by the documented business activities.</p>
+
+<p>Expert User reviews the story and comments on incorrect or unclear wording, additional relevant details, and anything else that comes to mind while reading the document. Business Analyst revises the business process story until Expert User is satisfied that everything relevant is represented and Business Analyst is satisfied that the story is understandable and actionable.</p>
+
+<p><span class="text-bold">Business Analyst documents overlaps and gaps with an existing system.</span> If there is an existing system that will be modified or extended, Business Analyst reviews each activity in the business process story and documents it as representing an overlap or gap in the existing system.</p>
+
+<p>For each overlap Business Analyst documents how that activity is done in the existing system. For each gap Business Analyst documents any aspects of the existing system that are partial overlaps, and adds it to the list of gaps for design and implementation.</p>
+
+<p><span class="text-bold">UI Designer designs screens and reports.</span> Considering activities from the business process story and on gap descriptions (if available) UI Designer outlines the contents of screens and reports. UI Designer creates functional wireframes to accompany the screen and report outlines. UI Designer optionally creates screen flow diagram to show transitions between screens in each application.</p>
+
+<p>Business Analyst reviews outlines and wireframes to verify the designs against the requirements. Business Analyst asks questions to UI Designer as needed, and may do the entire review in conversation with UI Designer.</p>
+
+<p>UI Designer and Business Analyst review screen outlines and wireframes with Expert User by role playing. Expert User follows the business process story describing what they would do as each of the actors to perform each action. UI Designer plays the role of the system and describes how the system would respond to each user action, including changing from one wireframe to another as screens change.</p>
+
+<p>UI Designer updates outlines and wireframes based on comments from Business Analyst and Expert User. If comments from Expert User require business process changes Business Analyst updates relevant stories, and UI Designer updates design according to updated requirements.</p>
+
+<p><span class="text-bold">System Architect models data and defines system interfaces.</span> System Architect reviews each activity in business process stories and write data statements based on explicit or implied data to be recorded or reviewed by actors.</p>
+
+<p>System Architect reviews screen and report outlines and maps each field to a field in the existing data model. If there is no adequate field in the existing data model, System Architect records data statements describing the field and its relationship to other data concepts.</p>
+
+<p>System Architect reviews user interfaces and based on anticipated system architecture (especially for client applications on mobile or desktop devices) designs services and/or API for processing user input and preparing more complex data for presentation.</p>
+
+<p>System Architect reviews business process story to identify all system-system interactions (as opposed to user-system interactions) and identifies an existing system interface for each, or defines a system interface (web service, file drop, API call, etc). System Architect maps each field in system interfaces to the data model. For fields without an existing field in the data model, System Architect records data statements describing the field and its relationship to other data concepts.</p>
+
+<p>System Architect organizes data statements by data concept to group them for easier modeling and to remove redundant statements. System Architect maps each data statement to the data model and as needed extends data model based on data statements. System Architect updates user and system interface data mappings for relevant fields.</p>
+
+<p>System Architect defines initial and test data to demonstrate how data is structured and to use for testing.</p>
+
+<p><span class="text-bold">Software Developer implements user and system interface designs.</span>Software Developer reviews business process story to understand the context of what needs to be built. Software Developer implements software described in user interface designs and technical designs.</p>
+
+<p><span class="text-bold">System Architect, UI Designer, Business Analyst, and Expert User review implementation.</span> System Architect reviews implementation to ensure that data comes from and goes to the fields described in data mapping. System Architect reviews service and/or API implementations and other system interfaces for consistency with the technical designs.</p>
+
+<p>UI Designer reviews user interfaces and tests interactions against descriptions in the screen and report outlines, and layout against the wireframes.</p>
+
+<p>Business Analyst reviews implementation by performing business activities described in the business process story. Business Analyst hands off each activity that is functionally supported to the Expert User for final review and testing.</p>
+
+<p>If QA Technician is involved, QA Technician performs a comprehensive test of implementation against individual designs and end-to-end test based on the requirements in the business process story. QA Technician identifies and tests possible uses of the implementation that are not part of the business process story, and not an explicit part of the user and system interface designs.</p>
+
+<p>With comprehensive testing done by QA Technician, other roles can reduce their efforts to spot review and testing, except for the Expert User who should review everything from a user perspective for acceptance of delivery.</p>
+
+<p>This completes the story of HEMP. The activities described here tell you what to do (the requirements of HEMP), now we’ll go over how to do them (the design of HEMP).</p>
+
+
+
+
+
+
+<p class="text-h4">Gathering Requirements</p>
+
+<p>Gathering requirements is the primary place where the business, or more generally the future users of the system, influence what the software needs to do and make sure that it supports all activities that are needed for the organization to operate.</p>
+
+<p>Designs are always based on business activities, even if they are not articulated as requirements. This makes the leap to design without requirements difficult and error prone because different people involved may have different understandings of what the business does to operate, and may not realize it because discussions of designs are a poor way to communicate about business activities.</p>
+
+<p>The first step for building a system to help an organization operate is gathering and documenting details about what the organization does to operate. These are the business activities documented in a business process story. </p>
+
+<p>Other related artifacts that represent different perspectives of this big picture can be used to make sure that the process story is correct and complete. These include actor definitions, user experience stories, and a business case document.</p>
+
+<p>In rare cases there are requirements that don’t fit well into the context of business activities, and these can be documented as requirement statements and used along with the business process story as the basis for the design of the system.</p>
+
+<p>The requirements part of the process is the most important aspect of HEMP, and because of the nature of business activities and the people involved it is the least predictable and deterministic. </p>
+
+<p>There are many different approaches and structures of documents and standards for diagrams that are used to try to do this. Having a large number of diagrams and documents in different forms makes the requirements gathering process difficult and often contributes to its failure or long-term stall in the all too common “analysis paralysis.” </p>
+
+<p>The artifacts used to do this in HEMP are the minimum effective set based on years of experience trying different artifacts and methodologies for gathering and documenting requirements. They include:</p>
+
+<ul>
+    <li>business process story</li>
+    <li>requirement statement</li>
+    <li>idea to incorporate</li>
+    <li>actor definition</li>
+    <li>user experience story</li>
+    <li>business case</li>
+</ul>
+
+<p>These artifacts address all common concerns and perspectives that arise in analysis efforts and provide a place for everything along with structure to keep them organized.</p>
+
+<p>With that context in mind, let’s get started with the most important requirements document, and the primary one used to drive design efforts: the business process story.</p>
+
+<p class="text-h5">Business process story</p>
+
+<p>A business process story describes what an organization does to operate. It is written from the perspective of the organization and not of any individual actor, like a user experience story is. </p>
+
+<p>It is natural that business processes transition from actor to actor. Managing hand-off between actors is an important aspect of what enterprise automation systems do. This is critical information to represent in business requirements. Including all actors in one flow is the easiest way to do this. Business process stories naturally handle the flow between actors by naming the actor in each activity.</p>
+
+<p style="border:black dotted 1px; padding:4px;">Each sentence in a business process story represents a business activity. </p>
+
+<p>Each sentence should be structured as an active verb phrase with an action and the actor who performs the action. The opposite of an active verb phrases is a passive one where the actor is not identified. All passive sentences in a story should be changed to clearly identify the actor.</p>
+
+<p>An example of a passive sentence with the actor omitted is:</p>
+
+<p class="text-italic">“The picklist barcode is scanned.”</p>
+
+<p>To rephrase that in an active voice and specify the actor use:</p>
+
+<p class="text-italic">“Packer scans the picklist barcode.”</p>
+
+<p>Just as in traditional use cases an actor may be a person or a separate system. The system being built or customized should not be mentioned to avoid biasing the design that will be based on these requirements. The goal of a business process story is to be a pure requirement and not cross the line into design territory. Going back to the “Requirements versus designs” section in chapter 1, this means describing what each actor does, but not how the actor does it. That is part of the design.</p>
+
+<p>When something needs to be triggered automatically one way to avoid mentioning the system to be built is to write something like “Company automatically ...” instead of “System ....”</p>
+
+<p>Another thing to avoid in a story is describing <span class="text-bold">why</span> a business activity is done. This is important information for those specifying requirements, and is often a topic of conversation while writing stories and deciding what should be done, but it should not be included in the business process story. An effective place for “why” ideas if you want to record them is a separate business case document linked to from the relevant parts of a story. In a story they add bulk that makes maintenance more difficult and irrelevant detail that makes it more difficult to pick out details important during design and implementation.</p>
+
+<p>One thing to include in a story is conditional statements and alternate flows. Business operations are complex by nature, especially when business innovates to provide better offerings at lower prices, or to better serve stakeholders and customers. </p>
+
+<p>Alternate flows should stay close to the primary flow they branch from. The words that distinguish the alternative should be at the beginning of the first sentence in the paragraph for the alternate flow. This makes it easier to identify that a paragraph represents an alternate flow and not the next step in the primary flow. When going back to the main flow it is helpful to start the paragraph with a phrase that refers to the last point in the primary flow or how to make the decision to continue based on completion of one or more branches in the flow.</p>
+
+<p>How much detail should be included in a business process story? The level of detail can extend to listing fields recorded or reviewed by an actor. If the detail goes much beyond that it is best to put it in a <span class="text-bold">supporting document</span> linked to from the story. Some common supporting documents include:</p>
+
+<ul>
+    <li>specifications for communication with other systems (system actors in the story)</li>
+    <li>example reports and printed documents</li>
+    <li>existing paper or other forms</li>
+    <li>lists of fields along with definitions and constraints</li>
+</ul>
+
+<p>The result of story writing efforts is a document that describes what the business does in sufficient detail to provide what a designer needs and in a structure that makes the information readily available while designing for each user or system interaction. A business process story includes more detail than general requirements statements and inherently structures those details to help ensure they are considered during design.</p>
+
+<p class="text-h5">Requirement statement and idea to incorporate</p>
+
+<p>When writing stories it is common for ideas to come up that don’t easily fit in the story, but need to be represented somehow.</p>
+
+<p>These ideas are usually business rules or objectives that don’t represent an activity. Most are crosscutting concerns that influence a number of activities and can be represented in the business process story by making sure they are covered in each relevant activity. In other words they are high-level ideas that need to be broken down and detailed in the context of each relevant business activity to make the requirements more useful for design and implementation.</p>
+
+<p>An example of such a business rule is: </p>
+
+<p class="text-italic">“All user-entered postal addresses will be validated by an online service and the user allowed to select the corrected or originally entered address.”</p>
+
+<p>This should be broken down to describe the particular steps involved, and those steps should be mentioned with all relevant activities, in this case all activities that involve recording a postal address. One story section might look like:</p>
+
+<p class="text-italic">“Customer creates new profile. Customer enters postal address information including: address line, optional unit number, city, state and postal code. Company automatically sends address to USPS online address validation service. USPS returns a corrected address or error message if no matching valid address is found. Company presents corrected address or error message to Customer. If there is no error Customer reviews corrected and original addresses and records which one to use. If there is an error Customer may edit the address (going back to the address entry activity) or use the entered postal address as-is.”</p>
+
+<p>When an idea can be broken down in this way and covered in all relevant activities it is an <span class="text-bold">idea to incorporate</span> into the business process story. These may come up while writing stories and interrupt the flow of thought and conversation. It is best to make a note about the idea in an “Ideas to Incorporate” section (or separate document) and then move the conversation back to the story flow. Go back later and incorporate each idea into the story by breaking it down in the activities affected by it.</p>
+
+<p>People are good at thinking of activities as a sequence of events. Capturing this flow of thought in story form is a good way to leverage this strength. When thinking in a flow people remember more and leave out less than they would discussing general ideas without context and process.</p>
+
+<p>This is one reason for the focus on process stories and not on requirement statements. The other main reason is that when designing a system having details in order of sequence of activities is far more useful than activities or general statements structured in any other way.</p>
+
+<p>However, some ideas are not crosscutting concerns that can be incorporated into a process story and need to be tracked separately, or are most easily documented separately. </p>
+
+<p style="border:black dotted 1px; padding:4px;">One common type of idea to document separately is a system design constraint that needs to be documented but shouldn’t be part of a business process story.</p>
+
+<p>Business rules are a useful tool for expressing general requirements, and there is much good literature about gathering requirements as business rules. To be more easily actionable business rules should be broken down across relevant business activities and then designs based on those. Just like general ideas described above some business rules are best broken down and incorporated into process stories this way, and others are cumbersome to break down and should be listed along with general requirement statements. If a set of rules applies to a single activity record it in a supporting document linked to from that activity in the story.</p>
+
+<p>Localization in a specific set of languages is an example of this when any actor may interact with the system in any of the languages. If only certain actors or only certain activities will involve use of a specific language then it is best tracked as part of actor descriptions or as a constraint within the business process story.</p>
+
+<p>Another example of a crosscutting concern is storing credit card numbers in a separate system. There are a variety of activities involving both human and independent system actors that need to be added to different points in the business process story to cover this idea. In this example those would include a customer or CSR recording credit card information, the company requesting payment authorization from the payment gateway, and so on.</p>
+
+<p class="text-h5">Actor definition and experience story</p>
+
+<p>An actor definition describes the nature of the actor (person, system, etc) and its primary roles and responsibilities. The description should include overlaps and distinctions between this and other actors. </p>
+
+<p>An actor definition may summarize high-level activities or processes the actor is responsible for but should not try to include all activities for the actor. For critical actors, or specific processes that are most significant for the actor, you may want a narrative from the perspective of that actor and that is done with a user experience story.</p>
+
+<p>A user experience story is a sort of “day in the life of” narration. The purpose is to make sure that actor’s activities and concerns are represented in a way that is easiest to review by someone who plays the role of that actor or is familiar with the system representing the actor. By focusing on a single actor it is easier to make sure that everything the actor does is documented.</p>
+
+<p>This story is less formal than the business process story and because it is about what a single actor does there is no need to identify the actor for every activity. It is also more permissible to include some design elements in user experience stories with ideas about the system eventually being built. This should still be minimized as the purpose is to gather requirements and not to design the system.</p>
+
+<p>A user experience story can be used to clarify requirements, but should not be the basis of a design. All activities and relevant details from a user experience story should be incorporated into the business process story.</p>
+
+<p>In a way the user experience story is a crosscutting concern like the idea to incorporate concept described in the previous section. It is a focus on a certain aspect of the business that is easier to work with, but should be incorporated into the main business process stories to put the actor’s activities in context and make effective design easier.</p>
+
+<p>Some processes may seem to involve only a single actor, but it is rarely really the case. For example a customer placing an order on an eCommerce web site is just the customer actor interacting with the system to be built. Even in this case the organization automatically does various things and there are other actors such as payment processing, tax calculation, and shipping charge estimation systems that are involved in the process.</p>
+
+<p>An even better way to write the story of a customer placing an order is to write it more generally and not cross the line into design at all. In other words, you wouldn’t write the story of a customer placing an order on an eCommerce web site, you just write the story of a customer placing an order. </p>
+
+<p>An eCommerce web site is one design to accommodate this business process, but there may be others such as placing an order over the phone with a customer service rep or by mail with a paper form. If these are very different processes they should be different stories, but if they are similar in the organization a single story will do, with alternate flows for the customer communication with a CSR and so on.</p>
+
+<p>Writing a user experience story for the customer is a great way to start this process, and you’ll have multiple user experience stories for a customer placing an order through different means. Once these are written you can more easily decide how to organize them before you start incorporating the user stories into the business process story.</p>
+
+<p>This way of writing and using user experience stories is different from user stories and use cases that describe what the user does and how the system works in literal terms so that it can be used directly for software development efforts.</p>
+
+<p>The reason using them that way is not recommended in HEMP is that it does not separate business requirements and system designs. For all the reasons why this is important see the “Requirements versus designs” section in chapter 1. </p>
+
+<p>In HEMP the screen outline is similar in purpose to these user stories and use cases, though different in that screen outlines are designs based on requirements found in the business process story so descriptions of activities and context for them are separate.</p>
+
+<p class="text-h5">Business case</p>
+
+<p>A business case includes details about organizational objectives and their impact on revenue and expenses. The purpose of the document is to explain rationale behind decisions about activities in business process stories and help prioritize activities based on objectives and financial impact (if applicable).</p>
+
+<p>The document should be structured around general objectives of the organization with more detailed objectives broken down under each. This is a different structure than the business process story because it has a different purpose and the information in it has a different natural structure. Links in each document to relevant sections in the other should be used to correlate between them.</p>
+
+<p>In some organizations documents like this will already exist. They can be used as a starting point for the business case document, or if they are sufficiently close to what is described here they may be usable as-is. Whether existing documents are used or a new document is written it should be done in collaboration with executives of the organization and reviewed and approved by them.</p>
+
+<p style="border:black dotted 1px; padding:4px;">The information in this document should not include sensitive data such as budgets and expected ROI for the project. Everyone involved with the project will see this document.</p>
+
+<p>This document can be based on a business case used for funding, but with confidential details removed. It is similar in content but different in purpose.</p>
+
+<p class="text-h5">Writing and reviewing: the how</p>
+
+<p>The focus of this chapter so far has been what these artifacts are meant for and guidelines for how to structure them and constraints to make sure they stay close to their purpose. The major missing piece is how you go about gathering the information and documenting it using these artifacts.</p>
+
+<p>The highest level artifact is the business case document. This document is not necessary, but if it will be used it should be written first, or at least started immediately as progress begins on other artifacts. In order for organizational objectives and priorities to be most effectively represented the business process story and other artifacts need to be written with them in mind. The process story can be modified with some level of effectiveness to accommodate these objectives and priorities after they are written, but the result is better if they are understood and considered all along the way.</p>
+
+<p>In theory an expert user, or a group of expert users, can write a business process story for an analyst to review before handing it over for design. In practice this doesn’t work very well. Some people take to process story writing quickly and effectively, but most people have a hard time with it. </p>
+
+<p>Writing a business process story is best done by someone with experience doing it, and someone who understands the business domain and relevant business systems well enough to understand the difference between what is done and how it is done, and focus on what is done.</p>
+
+<p>For these reasons it works best if the expert user, or group of expert users, describes what the business does to operate and a business analyst records this as actor and action descriptions in a business process story. This approach also allows the business analyst to feedback what they understand in a form that is easy for all to understand, helping everyone involved to better communicate and have more confidence that the communication is successful.</p>
+
+<p>Writing the process story for an organization is easiest to do by starting with a single high-level story that covers the entire scope of operations. If there is a single person who understands most of what the business does they can provide the information for this story. In most larger organizations this will require a team of people that are responsible for different parts of the business.</p>
+
+<p>Once a high-level story is in place a business analyst can work with one or more representatives from each group in the organization to flesh out the details for the parts of the process they are responsible for or work with most.</p>
+
+<p>To separate parts of the process into other documents as the story grows: write a single sentence representing a high-level activity, put that sentence in the high-level story, create a new story document with that sentence as its title, and add details to that new story document. Here are some examples of high-level activity sentences:</p>
+
+<p class="text-italic">Warehouse fulfills sales order.</p>
+
+<p class="text-italic">Business Analyst and Expert User gather and document business requirements.</p>
+
+<p class="text-italic">Inventory Manager places purchase order.</p>
+
+<p class="text-italic">Project team plans upcoming sprint.</p>
+
+<p>The level of detail needed in each detailed process story before design begins should enough that user and system interfaces can be designed from them. This means that information to be recorded or reviewed should be enumerated and the activities should be granular enough that they can be the basis of specific interactions with the system. </p>
+
+<p>Enumerating information in most cases means literally listing fields that the actor will record or review (i.e. fields that the system will take as inputs and return as outputs). To avoid biasing design use verbs like “record” and “review” instead of verbs like “submit”, “enter”, and “display”, that are system-specific terms.</p>
+
+<p>If there is much field, rule or other detail for a certain activity or set of activities instead of cluttering the story with it put it in a separate <span class="text-bold">supporting document</span> and link to it from the story.</p>
+
+<p>Getting to this level of detail will require the analyst to think of eventually building a system, even if that system and how the actor performs each action should not be included in the process story.</p>
+
+<p>The high-level story will provide structure for most activities within an organization where the completion of one activity naturally leads to the next, but there are many that don’t happen as part of a single high-level flow. The main category of these is activities that are triggered on periods of time. Instead of incorporating these into the main process flow it is easier to organize and maintain time-based events in a time flow structured around fiscal and/or calendar time periods (years, months, weeks, quarters, seasons, etc).</p>
+
+<p>When writing the process story the business analyst will need to ask various questions to <span class="text-bold">get sufficient detail</span> and to <span class="text-bold">explore possible alternatives</span> for activities that achieve a business goal. This is where a good business analyst adds value and why it is important for the business analyst to understand both the business domain being documented and how systems in that domain usually work.</p>
+
+<p>If a base system to customize has already been chosen it is helpful if the business analyst is familiar with that system, or if someone familiar with it is present when writing the process stories. While the process stories should not include system and design details, a person familiar with the capabilities of the existing system can comment on whether each activity is supported in the system and recommend alternatives that would be at least partially supported to save effort later on.</p>
+
+<p>Throughout the story writing process ideas will come up that are important but don’t fit into the current process flow being discussed, or that are relevant to the flow but apply to many other parts of the stories as well. These are the “ideas to incorporate” mentioned above. To avoid interrupting the natural flow of the discussion: record these in a separate section of the document, write about any activities that apply to the current story section you are working on, and then go back to these ideas to incorporate them later on. </p>
+
+<p>In many cases one reason to do this is that other expert users and stakeholders need to be involved with the discussion so scheduling a separate meeting would be necessary. Either way, they often change the context of the discussion and more time and effort is required to get back into the flow, with increased chances that something is missed as people switch back and forth.</p>
+
+<p>If an idea comes up that does not fit naturally in a business activity, or is time based instead of fitting into the current flow, briefly add those to the documents they belong in and move back to the current process flow. The business analyst may be able to do this without interrupting or derailing the discussion.</p>
+
+<p>Once a first draft of a business process story is complete you can review and refine it with a different perspective by defining each actor mentioned in the process story, and optionally write user experience stories for actors with more complex or important involvement with the organization. </p>
+
+<p>This is often a good idea for customers and other actors external to the organization because they use the system infrequently and their interactions are sensitive and critical to meeting organizational objectives. Other types of actors to consider are heavy users of the system and those that have complex responsibilities spread across different parts of the overall business process.</p>
+
+<p>Defining actors mentioned in the process story is a useful exercise in identifying similarities and distinctions between them. A result of this effort is often redefining, merging, and splitting actors. As this is done make sure to update all the process stories for each actor change. While doing this also review the process stories to make sure actors are consistently referred to by the same name.</p>
+
+<p>As user experience stories are completed review each business activity mentioned in them and make sure it is represented completely in the business process story. Also make sure that the sequence of activities is consistent between the user experience story and the business process story. Other refinements to the business process story may come from this effort, but these two are the main objective for it.</p>
+
+<p>If a business case document is used it should be considered throughout the effort of writing both user experience and business process stories. At this point it is also a good idea to review the planned activities in the business process story against the business case to make sure that objectives are addressed and that priorities are identified (usually as comments inline within the story).</p>
+
+<p>Once the stories are in a final draft review them with other stakeholders including organization executives, general system users, UI designers, system architects, and developers. A business analyst should make changes to the stories based on comments from these other stakeholders. Changes based on feedback are not the only reason to do this. It is also critical for early business engagement, eventual acceptance, and successful deployment and use of the system.</p>
+
+<p>If a formal approval of requirements is desired by the organization before design begins that should be done at this point by the person or people with this responsibility. Then it’s time for design to begin...</p>
+
+</div>
