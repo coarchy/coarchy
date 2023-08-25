@@ -13,13 +13,13 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Process Story" default-menu-index="92" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="true" >
+        default-menu-title="Process Story" default-menu-index="92" menu-image="fa fa-file" menu-image-type="icon">
 
     <parameter name="processStoryId" required="true"/>
 
     <always-actions>
         <if condition="!activeOrgId">
-            <message type="info">Select an Organization before moving forward.</message>
+            <message>Select an Organization before moving forward.</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
     </always-actions>
@@ -196,8 +196,8 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="moveDown"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveDown" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_has_next" icon="fa fa-angle-down" text=" "/></conditional-field></field>
             <!-- TODO: Fix allowing < and > tags in to prevent attacks -->
             <field name="condition"><header-field title="Condition" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
-                <conditional-field condition="action" title="Condition"><text-area rows="2" cols="60"/></conditional-field>
-                <last-row-field><text-area rows="2" cols="60"/></last-row-field></field>
+                <conditional-field condition="action" title="Condition"><text-area rows="2"/></conditional-field>
+                <last-row-field><text-area rows="2"/></last-row-field></field>
             <field name="actorIdList">
                 <header-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <list-options list="headerActorList" key="${actorId}" text="${name}"/>

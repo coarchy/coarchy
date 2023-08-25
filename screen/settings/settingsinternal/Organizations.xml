@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Organizations" default-menu-index="80" menu-image="/ssstatic/images/Parties.png" default-menu-include="true">
+        default-menu-title="Organizations" default-menu-index="80" menu-image="/ssstatic/images/Parties.png">
 
     <always-actions>
         <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
@@ -135,7 +135,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <!-- TODO: Create the feature to transfer to another user -->
 
-        <container-dialog id="CreateOrganization" button-text="Create Organization" type="primary">
+        <container-dialog id="CreateOrganization" button-text="Create Organization">
             <form-single name="CreateOrganization" transition="createOrganization">
                 <field name="organizationId"><default-field title="Clone from Organization (optional)"><drop-down allow-empty="true" required-manual-select="true">
                     <entity-options text="${visibilityEnumId=='PvPublic'?organizationName+' - Template':organizationName}" key="${partyId}">
@@ -169,7 +169,7 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <form-list name="Organization" paginate="false" skip-header="false" list="organizationList" transition="updateOrganization">
+        <form-list name="Organization" paginate="false" list="organizationList" transition="updateOrganization">
             <field name="partyId" from="toPartyId"><default-field><hidden/></default-field></field>
             <field name="organizationName"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title="Name"><text-line/></conditional-field>
                 <default-field><display/></default-field></field>

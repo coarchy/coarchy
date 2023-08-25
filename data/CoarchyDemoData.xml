@@ -18,4 +18,103 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- Create a fromAddress for any email that you want to test -->
     <moqui.basic.email.EmailTemplate emailTemplateId="PASSWORD_RESET" fromAddress="test@localhost"/>
 
+    <parties pseudoId="_NA_" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="_NA_"/>
+    <parties pseudoId="100051" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100051"/>
+    <parties pseudoId="100102" ownerPartyId="100051" partyTypeEnumId="PtyOrganization" disabled="N" partyId="100102" visibilityEnumId="PvPublic"/>
+    <parties pseudoId="100104" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100104"/>
+    <parties pseudoId="100167" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100167"/>
+    <parties pseudoId="100169" ownerPartyId="100167" partyTypeEnumId="PtyOrganization" disabled="N" partyId="100169" visibilityEnumId="PvOrganization"/>
+    <parties pseudoId="100510" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100510"/>
+    <parties pseudoId="100511" ownerPartyId="100510" partyTypeEnumId="PtyOrganization" disabled="N" partyId="100511" visibilityEnumId="PvOrganization"/>
+    <parties pseudoId="100561" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100561"/>
+    <parties pseudoId="100562" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100562"/>
+    <parties pseudoId="100563" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100563"/>
+    <parties pseudoId="100612" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100612"/>
+    <parties pseudoId="100613" ownerPartyId="100612" partyTypeEnumId="PtyOrganization" disabled="N" partyId="100613" visibilityEnumId="PvOrganization"/>
+    <parties pseudoId="100614" ownerPartyId="_NA_" partyTypeEnumId="PtyPerson" disabled="N" partyId="100614"/>
+    <mantle.party.Organization organizationName="Coarchy" partyId="100102"/>
+    <mantle.party.Organization organizationName="John" partyId="100169"/>
+    <mantle.party.Organization organizationName="HH" partyId="100511"/>
+    <mantle.party.Organization organizationName="Resist Management" partyId="100613"/>
+    <mantle.party.PartyRelationship fromPartyId="100051" toRoleTypeId="OrgInternal" fromDate="1691687280000" partyRelationshipId="100000" relationshipTypeEnumId="PrtMember" toPartyId="100102"/>
+    <mantle.party.PartyRelationship fromPartyId="100167" toRoleTypeId="OrgInternal" partyRelationshipId="100051" relationshipTypeEnumId="PrtMember" toPartyId="100169"/>
+    <mantle.party.PartyRelationship fromPartyId="100510" toRoleTypeId="OrgInternal" partyRelationshipId="100102" relationshipTypeEnumId="PrtMember" toPartyId="100511"/>
+    <mantle.party.PartyRelationship fromPartyId="100612" toRoleTypeId="OrgInternal" partyRelationshipId="100153" relationshipTypeEnumId="PrtMember" toPartyId="100613"/>
+    <mantle.party.PartyRelationship fromPartyId="100614" toRoleTypeId="OrgInternal" partyRelationshipId="100154" relationshipTypeEnumId="PrtMember" toPartyId="100613"/>
+    <coarchy.ProcessStory processStoryId="100000"/>
+    <coarchy.ProcessStory name="Marketing" organizationId="100102" processStoryId="100051"/>
+    <coarchy.ProcessStory name="Product" organizationId="100102" processStoryId="100102"/>
+    <coarchy.ProcessStory name="New User" organizationId="100613" processStoryId="100153"/>
+    <coarchy.Actor name="Programmer" actorId="100051"/>
+    <coarchy.Actor name="System" organizationId="100102" actorId="100102"/>
+    <coarchy.Actor name="Customer" organizationId="100102" actorId="100103"/>
+    <coarchy.Actor name="Colleagues" organizationId="100102" actorId="100104"/>
+    <coarchy.Actor name="Managers" organizationId="100102" actorId="100105"/>
+    <coarchy.Actor name="Members of the Organization" organizationId="100102" actorId="100106"/>
+    <coarchy.Actor name="Management" organizationId="100613" description="Recruits, trains, manages talent scheduling, pays project distributions" actorId="100153"/>
+    <coarchy.Actor name="User" organizationId="100613" description="A person interacting with the company and systems, including Client, Talent , Facility Manager, Management, or company employees" actorId="100154"/>
+    <coarchy.Actor name="Talent" organizationId="100613" description="Has a skill, does work, gets paid" actorId="100155"/>
+    <coarchy.Actor name="Client" organizationId="100613" description="Has request, works with management to select talent, reviews work, pays management" actorId="100156"/>
+    <coarchy.Actor name="Payment Processor" organizationId="100613" description="Facilitates transfer of funds from one account to another" actorId="100157"/>
+    <coarchy.Actor name="Facility Manager" organizationId="100613" description="Provides physical space for event use, gets paid" actorId="100158"/>
+    <delete-coarchy.Activity activityId="100000" action="gathers requirements"/>
+    <delete-coarchy.Activity activityId="100054"/>
+    <coarchy.Activity organizationId="100102" activityId="100153" action="hears about Coarchy from a friend, colleague, or acquaintance."/>
+    <coarchy.Activity organizationId="100102" activityId="100154" action="finds out more information about Coarchy through Coarchy’s story, marketing messages, and product offering."/>
+    <coarchy.Activity organizationId="100102" activityId="100155" action="enters information to sign up for Coarchy."/>
+    <coarchy.Activity organizationId="100102" activityId="100156" action="creates an organization."/>
+    <coarchy.Activity organizationId="100102" activityId="100157"/>
+    <coarchy.Activity organizationId="100102" activityId="100158" action="invites users."/>
+    <coarchy.Activity organizationId="100102" activityId="100159"/>
+    <coarchy.Activity organizationId="100102" activityId="100160" action="invites their colleagues, managers, and other members of the organization, through the System’s communication method, to read the process story, edit it, and collect feedback on how they are designing their organization."/>
+    <coarchy.Activity organizationId="100102" activityId="100161" action="create accounts under the Customer’s organization."/>
+    <coarchy.Activity organizationId="100102" activityId="100162"/>
+    <coarchy.Activity organizationId="100102" activityId="100163" action="read the process story, edit it, and collect feedback on how they are designing their organization."/>
+    <coarchy.Activity organizationId="100102" activityId="100164" action="logs different types of messages"/>
+    <coarchy.Activity organizationId="100102" activityId="100165" action="keeps track of most common error messages."/>
+    <coarchy.Activity organizationId="100102" activityId="100204" action="keeps track of how long the pages of the application are used."/>
+    <coarchy.Activity organizationId="100102" activityId="100205" action="keeps track of goals like Users, Organizations, Process Stories, Actors, and Activities created."/>
+    <coarchy.Activity organizationId="100102" activityId="100206" action="allows Users to send feedback with additional information included in the feedback message." condition="As Users use the System,"/>
+    <coarchy.Activity organizationId="100613" activityId="100255" action="creates agreements for Client, Talent and Facility use"/>
+    <coarchy.Activity organizationId="100613" activityId="100256" action="maintains Talent Types with abilities and attributes"/>
+    <coarchy.Activity organizationId="100613" activityId="100257" action="signs up with Management"/>
+    <delete-coarchy.ProcessStoryActivity activityId="100000" sequenceNum="0" processStoryActivityId="100000"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100153" sequenceNum="1" processStoryActivityId="100153"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100154" sequenceNum="2" processStoryActivityId="100154"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100158" sequenceNum="6" processStoryActivityId="100158"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100159" sequenceNum="7" processStoryActivityId="100159"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100160" sequenceNum="8" processStoryActivityId="100160"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100161" sequenceNum="9" processStoryActivityId="100161"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100162" sequenceNum="10" processStoryActivityId="100162"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100102" activityId="100164" sequenceNum="12" processStoryActivityId="100164"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100102" activityId="100165" sequenceNum="13" processStoryActivityId="100165"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100102" activityId="100204" sequenceNum="14" processStoryActivityId="100204"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100102" activityId="100205" sequenceNum="15" processStoryActivityId="100205"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100102" activityId="100206" sequenceNum="16" processStoryActivityId="100206"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100156" sequenceNum="5" processStoryActivityId="100156"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100155" sequenceNum="4" processStoryActivityId="100155"/>
+    <coarchy.ProcessStoryActivity organizationId="100102" processStoryId="100051" activityId="100157" sequenceNum="3" processStoryActivityId="100157"/>
+    <coarchy.ProcessStoryActivity organizationId="100613" processStoryId="100153" activityId="100255" sequenceNum="17" processStoryActivityId="100255"/>
+    <coarchy.ProcessStoryActivity organizationId="100613" processStoryId="100153" activityId="100256" sequenceNum="18" processStoryActivityId="100256"/>
+    <coarchy.ProcessStoryActivity organizationId="100613" processStoryId="100153" activityId="100257" sequenceNum="19" processStoryActivityId="100257"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100153" actorId="100103"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100154" actorId="100103"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100155" actorId="100103"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100156" actorId="100103"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100158" actorId="100103"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100160" actorId="100103"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100161" actorId="100104"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100161" actorId="100105"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100161" actorId="100106"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100163" actorId="100104"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100163" actorId="100105"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100163" actorId="100106"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100164" actorId="100102"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100165" actorId="100102"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100204" actorId="100102"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100205" actorId="100102"/>
+    <coarchy.ActivityActor organizationId="100102" activityId="100206" actorId="100102"/>
+    <coarchy.ActivityActor organizationId="100613" activityId="100255" actorId="100153"/>
+    <coarchy.ActivityActor organizationId="100613" activityId="100256" actorId="100153"/>
+    <coarchy.ActivityActor organizationId="100613" activityId="100257" actorId="100154"/>
 </entity-facade-xml>
