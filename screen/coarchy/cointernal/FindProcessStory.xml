@@ -13,11 +13,11 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Process Stories" default-menu-index="90" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="true">
+        default-menu-title="Process Stories" default-menu-index="90" menu-image="fa fa-file" menu-image-type="icon">
 
     <always-actions>
         <if condition="!activeOrgId">
-            <message type="info">Select an Organization before moving forward.</message>
+            <message>Select an Organization before moving forward.</message>
             <!-- TODO: Fix this redirect on this and other screens to not redirect to /coapp -->
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
@@ -29,15 +29,9 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
-    <transition name="createProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
-        <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="20">
-            <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
-            <order-by field-name="^name"/>
-        </entity-find>
-        <if condition="processStoryList?.size() &gt; 0"><return type="warning" message="Actor ${processStoryList?.getFirst()?.name} is already created"/></if>
-
-        <service-call name="create#coarchy.ProcessStory" in-map="[name:name,organizationId:activeOrgId]"/>
-        </actions><default-response/></transition>
+    <transition name="createProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.create#ProcessStory" in-map="[name:name,organizationId:activeOrgId]"/>
+        <default-response/></transition>
 
     <transition name="updateProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.ProcessStory"/>
         <default-response/></transition>

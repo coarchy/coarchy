@@ -1,0 +1,1 @@
+<#if processStoryActivity.condition?hasContent>${processStoryActivity.condition?html?ensureEndsWith(",")} </#if><#list processStoryActivity.actorNames! as actorName>${actorName?html} <#sep>, </#list><#if processStoryActivity.action?hasContent>${processStoryActivity.action?html?removeEnding(".")?ensureEndsWith(".")}<#else></#if>

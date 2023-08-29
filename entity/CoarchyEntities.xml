@@ -75,12 +75,16 @@ along with this software (see the LICENSE.md file). If not, see
 
     <entity entity-name="ProcessStory" package="coarchy">
         <field name="processStoryId" type="id" is-pk="true"/>
-        <field name="name" type="text-short"/>
+        <field name="name" type="text-long"/>
 
         <field name="organizationId" type="id"/>
 
+        <relationship type="many" related="coarchy.ProcessStoryActivity" short-alias="activities">
+            <key-map field-name="processStoryId"/></relationship>
         <relationship type="one" related="mantle.party.Organization" short-alias="organization">
             <key-map field-name="organizationId" related="partyId"/></relationship>
+        <relationship type="many" related="coarchy.ProcessStoryActivity" short-alias="detailActivities">
+            <key-map field-name="processStoryId" related="detailProcessStoryId"/></relationship>
     </entity>
     
     <entity entity-name="ProcessStoryActivity" package="coarchy">
@@ -88,6 +92,7 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="processStoryId" type="id"/>
         <field name="activityId" type="id"/>
         <field name="sequenceNum" type="number-integer"/>
+        <field name="detailProcessStoryId" type="id"/>
 
         <field name="organizationId" type="id"/>
 
@@ -97,6 +102,8 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="activityId"/></relationship>
         <relationship type="many" related="coarchy.ActivityActor" short-alias="actors">
             <key-map field-name="activityId"/></relationship>
+        <relationship type="one" related="coarchy.ProcessStory" short-alias="detailStory">
+            <key-map field-name="detailProcessStoryId"/></relationship>
 
         <!-- TODO: Perhaps add an index for sequenceNum here -->
     </entity>

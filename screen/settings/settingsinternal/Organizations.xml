@@ -72,7 +72,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="organizationId" from="oldOrganization.partyId"/>
                 </entity-find>
                 <iterate list="processStoryActivityList" entry="processStoryActivity">
-                    <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryIdMap[processStoryActivity.processStoryId],activityId:activityIdMap[processStoryActivity.activityId],sequenceNum:processStoryActivity.sequenceNum,organizationId:newOrganization.partyId]"/>
+                    <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryIdMap[processStoryActivity.processStoryId],activityId:activityIdMap[processStoryActivity.activityId],sequenceNum:processStoryActivity.sequenceNum,detailProcessStoryId:processStoryIdMap[processStoryActivity.detailProcessStoryId],organizationId:newOrganization.partyId]"/>
                 </iterate>
 
                 <entity-find entity-name="coarchy.ActivityActor" list="activityActorList">
@@ -89,8 +89,6 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="updateOrganization"><actions>
         <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
-        <log level="warn" message="context.toString() ${context.toString()}"/>
-        <log level="warn" message="organization ${organization}"/>
         <if condition="!organization || !organization.ownerPartyId"><return type="warning" message="You can't change an organization you don't own"/></if>
         <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
             <service-call name="update#mantle.party.Organization" in-map="[partyId:partyId,organizationName:organizationName]"/>
