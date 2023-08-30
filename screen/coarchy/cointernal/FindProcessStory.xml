@@ -40,7 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <link url="../Actor" text="Go to Actors"/>
         <label text="Process Stories" type="h2"/>
-        <container-dialog id="CreateProcessStoryDialogue" button-text="Create Process Story">
+        <container-dialog id="CreateProcessStoryDialogue" button-text="Create Process Story" condition="partyRelationshipCount &gt; 0">
             <form-single name="CreateProcessStory" transition="createProcessStory">
                 <field name="name"><default-field><text-line/></default-field></field>
                 <field name="submit"><default-field><submit text="Create"/></default-field></field>

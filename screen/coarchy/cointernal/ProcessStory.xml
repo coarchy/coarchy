@@ -63,7 +63,8 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="."/></transition>
 
-    <transition name="updateActivity"><actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]" multi="true"/></actions>
+    <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]" multi="true"/></actions>
         <default-response url="."/></transition>
 
     <transition name="activityMoveUp"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
@@ -114,7 +115,7 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="delete#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId]"/>
         </actions><default-response url="."/></transition>
 
-    <transition name="getActorList"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
+    <transition name="getActorList"><actions>
             <set field="actorList" from="[]"/>
             <if condition="term == null &amp;&amp; actorIdList ? actorIdList?.size() &gt; 0 : false"><then>
                 <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
@@ -171,7 +172,7 @@ along with this software (see the LICENSE.md file). If not, see
             <field-layout><field-row><field-ref name="name"/><field-ref name="submit"/></field-row></field-layout>
         </form-single>
 
-        <container-dialog id="AddActorDialogue" button-text="Add Actor">
+        <container-dialog id="AddActorDialogue" button-text="Add Actor" condition="partyRelationshipCount &gt; 0">
             <form-single name="AddActor" transition="createActor">
                 <field name="processStoryId"><default-field><hidden/></default-field></field>
                 <field name="name"><default-field><text-line/></default-field></field>
