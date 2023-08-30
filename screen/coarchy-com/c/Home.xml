@@ -18,64 +18,101 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <render-mode>
             <text type="html"><![CDATA[
-                <div class="q-pa-md">
+                <div style="background: linear-gradient(#eeeeee, #707070);">
                     <q-card class="my-card">
                         <q-parallax src="/cstatic/background.jpg" :height="500"/>
 
-                        <q-card-section class="text-center bg-secondary q-pa-md shadow-10">
+                        <q-card-section class="text-center q-pa-md shadow-10" data-aos="fade-in" data-aos-easing="ease-in-out-cubic" style="background: rgba(100,100,100,.75)">
                             <div class="text-h1 text-white">Coarchy</div>
-                            <div class="text-h3 text-white">Design Your Organization</div>
+                            <div class="text-h2 text-white q-mt-md">Design Your Organization</div>
+                            <q-btn no-caps href="/SignUp" label="Sign Up" push color="primary" class="q-mt-lg" size="xl"/>
                         </q-card-section>
                     </q-card>
 
-                    <div class="q-pa-md row items-start justify-center q-gutter-md">
-                        <q-card dark bordered class="bg-grey-9" style="max-width:300px;">
-                          <q-card-section>
-                            <div class="text-h6">Design</div>
-                          </q-card-section>
-
-                          <q-separator dark inset></q-separator>
-
-                          <q-card-section>The core principle of Coarchy is <strong>design</strong> based on <strong>requirements</strong>.</q-card-section>
-                          <q-separator dark inset></q-separator>
-                          <q-card-section>The <i>requirements</i> for an organization are its <strong>origin, vision, and values</strong>.</q-card-section>
-                          <q-card-section class="q-pt-none">The <i>design</i> based on these are <strong>process stories</strong> with <u>activities</u> that organize roles and responsibilities.</q-card-section>
+                    <section data-aos="fade-in" data-aos-easing="ease-in-out-cubic">
+<!--                        <div class="text-h2 q-mt-xl">Design</div>-->
+                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                            <q-card-section>The core principle of Coarchy is <strong>design</strong> based on <strong>requirements</strong>.</q-card-section>
                         </q-card>
-
-                        <q-card dark bordered class="bg-grey-9" style="max-width:300px;">
-                          <q-card-section>
-                            <div class="text-h6">Implement</div>
-                          </q-card-section>
-
-                          <q-separator dark inset></q-separator>
-
-                          <q-card-section>The <i>design</i> of your organization is used as <i>requirements</i> for implementing your organization, for:
-                            <ul>
-                              <li>people in their roles</li> <li>software to manage and track</li> <li>mechanization</li>
-                            </ul>
-                          </q-card-section>
+                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                            <q-card-section>The <i>requirements</i> for an organization are its <strong>origin, vision, and values</q-card-section>
                         </q-card>
-
-                        <q-card dark bordered class="bg-grey-9" style="max-width:300px;">
-                          <q-card-section>
-                            <div class="text-h6">Concepts</div>
-                          </q-card-section>
-
-                          <q-separator dark inset></q-separator>
-
-                          <q-card-section>
-                            Coarchy is based on concepts from designing and building business automation software as described
-                            in the book <i>HEMP: An agile approach to analysis and design</i>. To help users of Coarchy get started
-                            some excerpts from the book are available here.
-                          </q-card-section>
-
-                          <q-separator dark inset></q-separator>
-
-                          <q-card-actions align="center">
-                            <q-btn flat no-caps color="blue-3" href="/HempExcerpts">HEMP Excerpts</q-btn>
-                          </q-card-actions>
+                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                            <q-card-section>The <i>design</i> based on these are <strong>process stories</strong> with <u>activities</u> that organize roles and responsibilities.</q-card-section>
                         </q-card>
-                    </div>
+                    </section>
+
+                    <section data-aos="slide-left" data-aos-easing="ease-in-out-cubic">
+                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
+                            <q-card-section data-aos="fade-in" data-aos-easing="ease-in-out-cubic"><div class="text-h2">Implement</div></q-card-section>
+                            <q-separator class="q-mt-md" dark inset data-aos="fade-in" data-aos-easing="ease-in-out-cubic"></q-separator>
+                            <q-card-section class="q-mt-md" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">The <i>design</i> of your organization is used as <i>requirements</i> for implementing your organization, for:</q-card-section>
+                            <q-separator class="q-mt-md" dark inset data-aos="fade-in" data-aos-easing="ease-in-out-cubic"></q-separator>
+                            <q-card-section><ul>
+                                <li class="q-mt-xl" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">people in their roles</li>
+                                <li class="q-mt-xl" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">software to manage and track</li>
+                                <li class="q-mt-xl" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">mechanization</li>
+                            </ul></q-card-section>
+                        </q-card>
+                    </section>
+
+                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
+                            <q-card-section data-aos="fade-in" data-aos-easing="ease-in-out-cubic"><div class="text-h2">Concepts</div></q-card-section>
+                            <q-separator class="q-mt-md" dark inset data-aos="fade-in" data-aos-easing="ease-in-out-cubic"></q-separator>
+                            <q-card-section class="q-mt-md" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Coarchy is based on concepts from designing and building business automation software as described
+                                in the book <i>HEMP: An agile approach to analysis and design</i>. To help users of Coarchy get started
+                                some excerpts from the book are available here.</q-card-section>
+                            <q-separator class="q-mt-md" dark inset data-aos="fade-in" data-aos-easing="ease-in-out-cubic"></q-separator>
+                            <q-card-section class="q-mt-md q-mb-md" data-aos="fade-in" data-aos-easing="ease-in-out-cubic" align="center">
+                                <q-btn no-caps href="/HempExcerpts" push color="primary" size="xl">HEMP Excerpts</q-btn></q-card-section>
+                        </q-card>
+                    </section>
+
+                    <section class="desktop-only" data-aos="slide-left" data-aos-easing="ease-in-out-cubic">
+                        <q-card dark bordered class="text-h6 bg-grey-9 q-mt-xl q-mb-xl" style="min-width:1000px;" flat bordered>
+                            <q-card-section horizontal>
+                                <q-card-section class="q-mt-md" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Manage Your Organizations</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Clone new organization from existing Organizations</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Invite your team members to join your Organization</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/EditOrganizationScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+                    </section>
+
+                    <section class="desktop-only" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                        <q-card dark bordered class="text-h6 bg-grey-9 q-mt-xl q-mb-xl" style="min-width:1000px;" flat bordered>
+                            <q-card-section horizontal>
+                                <q-card-section class="q-mt-md" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Write Your Process Stories</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Create activities and actors to write a process story</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Search for text or actors to find what you need</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Attach substories for managing large process stories</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/EditProcessStoryScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+                    </section>
+
+                    <section class="desktop-only" data-aos="slide-left" data-aos-easing="ease-in-out-cubic">
+                        <q-card dark bordered class="text-h6 bg-grey-9 q-mt-xl q-mb-xl" style="min-width:1000px;" flat bordered>
+                            <q-card-section horizontal>
+                                <q-card-section class="q-mt-md" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">View Your Process Stories</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Easily read the process stories you write</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Admire your work</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Export your process stories to csv or copy & paste</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/ViewProcessStoryScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+                    </section>
+
                 </div>
                 ]]></text>
         </render-mode>

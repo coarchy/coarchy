@@ -53,12 +53,12 @@
 <#--    &lt;#&ndash;    <#assign accountCompList = sri.getThemeValues("STRT_HEADER_ACCOUNT_COMP")>&ndash;&gt;-->
 <#--    &lt;#&ndash;    <#list accountCompList! as accountCompUrl><input type="hidden" class="confAccountPluginUrl" value="${accountCompUrl}"></#list>&ndash;&gt;-->
 
-    <#assign headerClass = "text-black bg-grey-3">
+    <#assign headerClass = "text-black">
 
     <#-- for layout options see: https://quasar.dev/layout/layout -->
     <#-- to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder -->
     <q-layout view="hHh LpR fFf">
-        <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px;">
+        <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px; background: #eeeeee;">
 
                 <q-btn stretch flat label="Home" href="/"></q-btn>
                 <q-space></q-space>

@@ -296,6 +296,10 @@ Vue.component('c-list-organizations', {
 
 // App
 moqui.webrootVue = new Vue({
+    // render: (h) => h(App),
+    // mounted() {
+    //     init()
+    // },
     el: '#apps-root',
     created: function() {
         this.moquiSessionToken = $("#confMoquiSessionToken").val();

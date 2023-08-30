@@ -60,5 +60,9 @@
 <#--    </script>-->
 <#--</#if>-->
 
+        <script>
+            AOS.init();
+        </script>
+
 </body>
 </html>

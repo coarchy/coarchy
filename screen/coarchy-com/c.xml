@@ -28,7 +28,8 @@ along with this software (see the LICENSE.md file). If not, see
 //        html_scripts.add('/libs/jquery/jquery.min.js')
 
         html_stylesheets.add('/libs/quasar/quasar.min.css')
-//        html_stylesheets.add('/css/WebrootVue.qvt.css')
+        html_stylesheets.add('/cstatic/style.css')
+        html_stylesheets.add('/cstatic/aos.css')
 
         String instancePurpose = System.getProperty("instance_purpose")
         if (!instancePurpose || instancePurpose == 'production') {
@@ -50,6 +51,7 @@ along with this software (see the LICENSE.md file). If not, see
             html_scripts.add('/js/MoquiLib.min.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
             footer_scripts.add('/cstatic/CoarchyComVue.qvt.js')
+            footer_scripts.add('/cstatic/aos.js')
 
         } else {
             /* ========== Dev Mode ========== */
@@ -70,6 +72,7 @@ along with this software (see the LICENSE.md file). If not, see
             html_scripts.add('/js/MoquiLib.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
             footer_scripts.add('/cstatic/CoarchyComVue.qvt.js')
+            footer_scripts.add('/cstatic/aos.js')
         }
     ]]></script></pre-actions>
 
