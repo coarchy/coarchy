@@ -31,4 +31,43 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="create#coarchy.ProcessStory" in-map="[name:name,organizationId:organizationId]" out-map="context"/>
         </actions>
     </service>
+
+    <service verb="update" noun="Activity">
+        <in-parameters>
+            <parameter name="activityId" required="true"/>
+            <parameter name="condition"/>
+            <parameter name="actorIdList" type="List"/>
+            <parameter name="action"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <actions>
+<!--            <log level="warn" message="update activity context.toString() ${context.toString()}"/>-->
+            <service-call name="update#coarchy.Activity" in-map="[activityId:activityId,condition:condition,action:action]"/>
+            <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                <econdition field-name="activityId"/>
+                <order-by field-name="name"/></entity-find>
+            <set field="actorIdServerList" from="activityActorList*.actorId"/>
+            <if condition="actorIdServerList">
+                <set field="actorIdDeleteList" from="actorIdServerList - actorIdList?:[]"/>
+<!--                                    <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>-->
+                <iterate list="actorIdDeleteList" entry="actorIdDelete">
+                    <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId,actorId:actorIdDelete]"/>
+                </iterate>
+            </if>
+
+            <set field="actorIdCreateList" from="actorIdList?:[] - actorIdDeleteList?:[]"/>
+                    <log level="warn" message="context.toString() ${context.toString()}"/>
+<!--            <log level="warn" message="actorIdCreateList instanceof String ${actorIdCreateList instanceof String}"/>-->
+<!--            <log level="warn" message="actorIdList instanceof String ${actorIdList instanceof String}"/>-->
+            <if condition="actorIdCreateList instanceof String">
+                <then>
+                    <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdCreateList, organizationId:organizationId]"/></then>
+                <else>
+                    <iterate list="actorIdCreateList" entry="actorIdCreate">
+                        <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdCreate, organizationId:organizationId]"/>
+                    </iterate>
+                </else>
+            </if>
+        </actions>
+    </service>
 </services>

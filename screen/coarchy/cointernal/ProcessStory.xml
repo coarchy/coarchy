@@ -64,31 +64,8 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="."/></transition>
 
-    <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.Activity"/><actions>
-        <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
-            <econdition field-name="activityId"/>
-            <order-by field-name="name"/></entity-find>
-        <set field="actorIdServerList" from="activityActorList*.actorId"/>
-        <if condition="actorIdServerList">
-            <set field="actorIdDeleteList" from="actorIdServerList - actorIdList?:[]"/>
-<!--                    <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>-->
-            <iterate list="actorIdDeleteList" entry="actorIdDelete">
-                <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId,actorId:actorIdDelete]"/>
-            </iterate>
-        </if>
-
-        <set field="actorIdCreateList" from="actorIdList?:[] - actorIdDeleteList?:[]"/>
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
-        <if condition="actorIdCreateList instanceof String">
-            <then>
-                <service-call name="update#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdCreateList]"/></then>
-            <else>
-                <iterate list="actorIdCreateList" entry="actorId">
-                    <service-call name="update#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
-                </iterate>
-            </else>
-        </if>
-        </actions><default-response url="."/></transition>
+    <transition name="updateActivity"><actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]" multi="true"/></actions>
+        <default-response url="."/></transition>
 
     <transition name="activityMoveUp"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
@@ -160,7 +137,6 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <actions>
-        <!-- MVP Phase One: Only allow one processStory per User -->
         <if condition="actorIdList">
             <entity-find entity-name="coarchy.Actor" list="headerActorList">
                 <econdition field-name="actorId" operator="in" from="actorIdList"/>
@@ -202,6 +178,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="name"/></entity-find>
                 <set field="actorIdList" from="activityActorList*.actorId"/>
             </row-actions>
+            <field name="processStoryId"><header-field><hidden default-value="${processStoryId}"/></header-field></field>
             <field name="activityId"><default-field><hidden/></default-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
@@ -222,8 +199,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </drop-down></conditional-field>
                 <last-row-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
-                </drop-down></last-row-field>
-            </field>
+                </drop-down></last-row-field></field>
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
                 <conditional-field condition="action" title="Action"><text-area rows="2" cols="80"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
@@ -249,7 +225,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <column><field-ref name="submit"/><field-ref name="substory"/><field-ref name="substoryLink"/></column>
                 <column><field-ref name="newParagraph"/><field-ref name="delete"/></column>
             </columns>
-
         </form-list>
     </widgets>
 </screen>
