@@ -25,11 +25,6 @@ along with this software (see the LICENSE.md file). If not, see
             <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
             <order-by field-name="-lastUpdatedStamp"/></entity-find>
         <set field="ownerOfAnyOrganization" from="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)"/>
-<!--        <if condition="!ownerOfAnyOrganization &amp;&amp; organizationList?.size() == 1">-->
-<!--            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationList.getFirst().toPartyId]"/>-->
-<!--            <message type="info">Redirected from Organizations</message>-->
-<!--            <script>sri.sendRedirectAndStopRender('/coapp/FindProcessStory')</script>-->
-<!--        </if>-->
     </always-actions>
 
     <transition name="createOrganization">
@@ -134,7 +129,7 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <label text="Organizations" type="h2"/>
 
-        <!-- TODO: Create the feature to transfer to another user -->
+        <!-- TODO: Create the feature to transfer org to another user -->
 
         <container-dialog id="CreateOrganization" button-text="Create Organization">
             <form-single name="CreateOrganization" transition="createOrganization">

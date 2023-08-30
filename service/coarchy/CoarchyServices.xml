@@ -56,7 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <set field="actorIdCreateList" from="actorIdList?:[] - actorIdDeleteList?:[]"/>
-                    <log level="warn" message="context.toString() ${context.toString()}"/>
+<!--                    <log level="warn" message="context.toString() ${context.toString()}"/>-->
 <!--            <log level="warn" message="actorIdCreateList instanceof String ${actorIdCreateList instanceof String}"/>-->
 <!--            <log level="warn" message="actorIdList instanceof String ${actorIdList instanceof String}"/>-->
             <if condition="actorIdCreateList instanceof String">
