@@ -33,40 +33,25 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="coarchy.CoarchyServices.create#ProcessStory" in-map="[name:name,organizationId:activeOrgId]"/>
         <default-response/></transition>
 
-    <transition name="updateProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.ProcessStory"/>
-        <default-response/></transition>
-
-    <transition name="deleteProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
-<!--        <entity-find-count entity-name="coarchy.ProcessStory" count-field="processStoryCount">-->
-<!--            <econdition field-name="actorId"/></entity-find-count>-->
-
-<!--        <if condition="activityActorCount &gt; 0">-->
-<!--            <return type="warning" message="You can't delete an Actor with any Activities"/>-->
-<!--        </if>-->
-
-        <service-call name="delete#coarchy.ProcessStory" in-map="[processStoryId:processStoryId]"/>
-    </actions><default-response/></transition>
-
     <actions>
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
         <entity-find-count entity-name="coarchy.Actor" count-field="actorCount"/>
     </actions>
 
     <widgets>
+        <link url="../Actor" text="Go to Actors"/>
         <label text="Process Stories" type="h2"/>
+        <container-dialog id="CreateProcessStoryDialogue" button-text="Create Process Story">
+            <form-single name="CreateProcessStory" transition="createProcessStory">
+                <field name="name"><default-field><text-line/></default-field></field>
+                <field name="submit"><default-field><submit text="Create"/></default-field></field>
+            </form-single></container-dialog>
 
-        <form-list name="ProcessStory" paginate="false" skip-header="true" list="processStoryList" transition="updateProcessStory" transition-last-row="createProcessStory" multi="true">
+        <form-list name="ProcessStory" paginate="false" skip-header="false" list="processStoryList" transition="updateProcessStory" transition-last-row="createProcessStory" multi="true">
             <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
                 <order-by field-name="lastUpdatedStamp"/></entity-find>
 
             <field name="processStoryId"><default-field><hidden/></default-field></field>
-            <field name="name"><default-field><text-line/></default-field>
-                <last-row-field><text-line/></last-row-field></field>
-<!--            <field name="delete"><default-field title=""><link url="deleteProcessStory" parameter-map="[processStoryId:processStoryId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Delete Process Story"/></default-field></field>-->
-            <field name="goToActors"><default-field><link url="../Actor" parameter-map="[processStoryId:processStoryId]" text="Go to Actors"/></default-field></field>
-            <field name="goToProcessStory"><default-field><link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Process Story" condition="actorCount"/></default-field></field>
-            <field name="submit"><default-field><submit text="Update All"/></default-field>
-                <last-row-field><submit text="Create"/></last-row-field></field>
+            <field name="name"><default-field title="Process Story Name"><link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="${name}"/></default-field></field>
         </form-list>
     </widgets>
 </screen>

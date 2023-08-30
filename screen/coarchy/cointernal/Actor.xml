@@ -15,7 +15,7 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Actor" default-menu-index="91" menu-image="/ssstatic/images/Sales.png" default-menu-include="true">
 
-    <parameter name="processStoryId" required="true"/>
+    <parameter name="processStoryId"/>
 
     <always-actions>
         <if condition="!activeOrgId">
@@ -38,7 +38,7 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="actorList?.size() &gt; 0"><return type="warning" message="Actor ${actorList?.getFirst()?.name} is already created"/></if>
 
         <service-call name="create#coarchy.Actor" in-map="[name:name,description:description,organizationId:activeOrgId]"/>
-        </actions><default-response/></transition>
+        </actions><default-response save-parameters="true"/><error-response url="." save-parameters="true"/></transition>
 
     <transition name="updateActor"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.Actor"/>
         <default-response/></transition>
@@ -59,12 +59,11 @@ along with this software (see the LICENSE.md file). If not, see
 
     <widgets>
         <link url="../FindProcessStory" text="Find Process Stories"/>
-        <link url="../ProcessStory" text="Go to Process Story" condition="actorList?.size() &gt; 0"/>
+        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Process Story" condition="processStoryId"/>
 
         <label text="Actors" type="h2"/>
 
         <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor" transition-last-row="createActor" multi="true">
-
             <field name="actorId"><default-field><hidden/></default-field></field>
             <field name="name"><default-field><text-line/></default-field>
                 <last-row-field><text-line/></last-row-field></field>

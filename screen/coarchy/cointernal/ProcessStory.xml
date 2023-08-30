@@ -50,7 +50,6 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
         <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
         <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:activeOrgId]"/>
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
 
         <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
             <then>
@@ -64,31 +63,15 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="."/></transition>
 
-    <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.Activity"/><actions>
-        <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
-            <econdition field-name="activityId"/>
-            <order-by field-name="name"/></entity-find>
-        <set field="actorIdServerList" from="activityActorList*.actorId"/>
-        <if condition="actorIdServerList">
-            <set field="actorIdDeleteList" from="actorIdServerList - actorIdList?:[]"/>
-<!--                    <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>-->
-            <iterate list="actorIdDeleteList" entry="actorIdDelete">
-                <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId,actorId:actorIdDelete]"/>
-            </iterate>
-        </if>
+<!--    <transition name="updateActivity2"><actions>-->
+<!--        <service-call name="coarchy.CoarchyServices.update#Activity" in-map="[activityId:activityId,condition:condition,actorIdList:actorIdList,action:action,organizationId:activeOrgId]" multi="true"/>-->
+<!--    </actions>-->
+<!--        <default-response url="."/></transition>-->
 
-        <set field="actorIdCreateList" from="actorIdList?:[] - actorIdDeleteList?:[]"/>
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
-        <if condition="actorIdCreateList instanceof String">
-            <then>
-                <service-call name="update#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdCreateList]"/></then>
-            <else>
-                <iterate list="actorIdCreateList" entry="actorId">
-                    <service-call name="update#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
-                </iterate>
-            </else>
-        </if>
-        </actions><default-response url="."/></transition>
+    <transition name="updateActivity2"><actions>
+        <log level="warn" message="context.toString() ${context.toString()}"/>
+        <service-call name="coarchy.CoarchyServices.update#Activity" in-map="[activityId:activityId,condition:condition,actorIdList:actorIdList,action:action,organizationId:activeOrgId]" multi="true"/>
+    </actions><default-response url="."/></transition>
 
     <transition name="activityMoveUp"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
@@ -159,6 +142,11 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response type="none"/>
     </transition>
 
+    <transition name="updateProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.ProcessStory"/>
+        <default-response/></transition>
+
+    <transition-include name="createActor" location="component://coarchy/screen/coarchy/cointernal/Actor.xml"/>
+
     <actions>
         <!-- MVP Phase One: Only allow one processStory per User -->
         <if condition="actorIdList">
@@ -182,11 +170,25 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <link url="../ProcessStory" parameter-map="[processStoryId:detailActivityList?.getFirst()?.processStoryId]" text="Go to Parent Story: ${detailActivityList?.getFirst()?.story?.name}" condition="detailActivityList?.getFirst()?.processStoryId"/>
         <link url="../FindProcessStory" text="Find Process Stories"/>
-        <link url="../Actor" text="Go to Actors"/>
-        <label text="${processStory.name}" type="h2"/>
+        <link url="../Actor" parameter-map="[processStoryId:processStoryId]" text="Go to Actors"/>
+        <label text="Process Story - ${processStory.name}" type="h2"/>
+        <form-single name="UpdateProcessStory" transition="updateProcessStory">
+            <field name="processStoryId"><default-field><hidden/></default-field></field>
+            <field name="name" from="processStory.name"><default-field title="Process Story Name"><text-line/></default-field></field>
+            <field name="submit"><default-field><submit text="Update"/></default-field></field>
+            <field-layout><field-row><field-ref name="name"/><field-ref name="submit"/></field-row></field-layout>
+        </form-single>
+
+        <container-dialog id="AddActorDialogue" button-text="Add Actor">
+            <form-single name="AddActor" transition="createActor">
+                <field name="processStoryId"><default-field><hidden/></default-field></field>
+                <field name="name"><default-field><text-line/></default-field></field>
+                <field name="description"><default-field><text-area rows="2" cols="80"/></default-field></field>
+                <field name="submit"><default-field><submit text="Create"/></default-field></field>
+            </form-single></container-dialog>
         <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]" condition="activityCount &gt; 0"/>
         <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
-                transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
+                transition="updateActivity2" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum"/>
                 <econdition field-name="processStoryId"/>
@@ -216,7 +218,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <list-options list="headerActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></header-field>
-                <conditional-field condition="action" title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
+                <conditional-field condition="action" title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <list-options list="activityActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></conditional-field>
@@ -227,7 +229,7 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
                 <conditional-field condition="action" title="Action"><text-area rows="2" cols="80"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory" parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
+            <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory" parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
             <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action" title=""><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
             <field name="delete"><default-field title=""><link url="deleteActivity" parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
