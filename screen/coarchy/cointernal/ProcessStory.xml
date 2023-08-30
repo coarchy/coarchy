@@ -63,15 +63,8 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="."/></transition>
 
-<!--    <transition name="updateActivity2"><actions>-->
-<!--        <service-call name="coarchy.CoarchyServices.update#Activity" in-map="[activityId:activityId,condition:condition,actorIdList:actorIdList,action:action,organizationId:activeOrgId]" multi="true"/>-->
-<!--    </actions>-->
-<!--        <default-response url="."/></transition>-->
-
-    <transition name="updateActivity2"><actions>
-        <log level="warn" message="context.toString() ${context.toString()}"/>
-        <service-call name="coarchy.CoarchyServices.update#Activity" in-map="[activityId:activityId,condition:condition,actorIdList:actorIdList,action:action,organizationId:activeOrgId]" multi="true"/>
-    </actions><default-response url="."/></transition>
+    <transition name="updateActivity"><actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]" multi="true"/></actions>
+        <default-response url="."/></transition>
 
     <transition name="activityMoveUp"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
@@ -148,7 +141,6 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="createActor" location="component://coarchy/screen/coarchy/cointernal/Actor.xml"/>
 
     <actions>
-        <!-- MVP Phase One: Only allow one processStory per User -->
         <if condition="actorIdList">
             <entity-find entity-name="coarchy.Actor" list="headerActorList">
                 <econdition field-name="actorId" operator="in" from="actorIdList"/>
@@ -188,7 +180,7 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single></container-dialog>
         <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]" condition="activityCount &gt; 0"/>
         <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
-                transition="updateActivity2" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
+                transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum"/>
                 <econdition field-name="processStoryId"/>
@@ -204,6 +196,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="name"/></entity-find>
                 <set field="actorIdList" from="activityActorList*.actorId"/>
             </row-actions>
+            <field name="processStoryId"><header-field><hidden default-value="${processStoryId}"/></header-field></field>
             <field name="activityId"><default-field><hidden/></default-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
@@ -224,8 +217,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </drop-down></conditional-field>
                 <last-row-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
-                </drop-down></last-row-field>
-            </field>
+                </drop-down></last-row-field></field>
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
                 <conditional-field condition="action" title="Action"><text-area rows="2" cols="80"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
@@ -251,7 +243,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <column><field-ref name="submit"/><field-ref name="substory"/><field-ref name="substoryLink"/></column>
                 <column><field-ref name="newParagraph"/><field-ref name="delete"/></column>
             </columns>
-
         </form-list>
     </widgets>
 </screen>
