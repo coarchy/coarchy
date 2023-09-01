@@ -1,10 +1,10 @@
 body {
-    background: linear-gradient(#eeeeee, #707070);
+    background: linear-gradient(#eeeeee, #a5a5a5);
 }
 
 section {
     display: grid;
     place-items: center;
     align-content: center;
-    min-height: 100vh;
+    min-height: 75vh;
 }

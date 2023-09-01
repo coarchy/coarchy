@@ -35,7 +35,7 @@ along with this software (see the LICENSE.md file). If not, see
         <q-header class="${headerClass}" id="top">
 
             <q-bar class="bg-secondary text-black">
-                <div class="justify-center text-bold">For feedback or support, text or call our founder Michael at <a href="sms:+18019958124">(801) 995-8124</a></div>
+                <div class="justify-center text-bold">For feedback or support, contact our founder Michael at <a href="mailto:michael@coarchy.com">michael@coarchy.com</a> or <a href="sms:+18019958124">(801) 995-8124</a></div>
             </q-bar>
 
             <q-toolbar style="font-size:15px;">

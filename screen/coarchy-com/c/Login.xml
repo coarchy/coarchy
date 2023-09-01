@@ -32,22 +32,24 @@ along with this software (see the LICENSE.md file). If not, see
         <section name="NeedsSetupSection" condition="ec.entity.find('moqui.security.UserAccount').disableAuthz().count() > 1"><widgets>
             <render-mode>
                 <text type="html"><![CDATA[
-                    <div class="row">
-                        <div class="col-md-4 offset-md-4 col-xs-12 offset-xs-0">
-                            <div class="column justify-center" style="height: 150px">
-                                <div class="col-4">
-                                    <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">
-                                        <q-card-section>
-                                            <div class="text-h2">Log In</div>
-                                            <q-banner class="q-mt-md bg-secondary text-white">
-                                                <b>Right now, Coarchy is in free preview software status.</b></br></br>Later Coarchy will cost money. When this happens, we will let you know.
-                                            </q-banner>
-                                        </q-card-section>
+                    <div style="">
+                        <div class="row">
+                            <div class="col-md-4 offset-md-4 col-xs-12 offset-xs-0">
+                                <div class="column justify-center" style="height: 150px">
+                                    <div class="col-4">
+                                        <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">
+                                            <q-card-section>
+                                                <div class="text-h2">Log In</div>
+                                                <q-banner class="q-mt-md bg-secondary text-white">
+                                                    <b>Right now, Coarchy is in free preview software status.</b></br></br>Later Coarchy will cost money. When this happens, we will let you know.
+                                                </q-banner>
+                                            </q-card-section>
 
-                                        <q-card-section>
-                                            <c-login></c-login>
-                                        </q-card-section>
-                                    </q-card>
+                                            <q-card-section>
+                                                <c-login></c-login>
+                                            </q-card-section>
+                                        </q-card>
+                                    </div>
                                 </div>
                             </div>
                         </div>

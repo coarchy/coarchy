@@ -27,6 +27,7 @@ along with this software (see the LICENSE.md file). If not, see
     <actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupProcessStoryActivityList">
             <econdition field-name="processStoryId"/>
+            <select-field field-name="activityId,condition,action"/>
             <order-by field-name="sequenceNum"/></entity-find>
         <set field="processStoryActivityList" from="[]"/>
         <iterate list="setupProcessStoryActivityList" entry="processStoryActivity">

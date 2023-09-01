@@ -118,11 +118,11 @@ along with this software (see the LICENSE.md file). If not, see
     <transition name="getActorList"><actions>
             <set field="actorList" from="[]"/>
             <if condition="term == null &amp;&amp; actorIdList ? actorIdList?.size() &gt; 0 : false"><then>
-                <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+                <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
                     <econdition field-name="actorId" operator="in" from="actorIdList"/>
                     <order-by field-name="name"/></entity-find>
             </then><else>
-                <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+                <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
                     <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
                     <order-by field-name="name"/></entity-find>
             </else></if>
@@ -180,7 +180,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="submit"><default-field><submit text="Create"/></default-field></field>
             </form-single></container-dialog>
         <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]" condition="activityCount &gt; 0"/>
-        <form-list name="ProcessStory" paginate="false" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
+        <form-list name="ProcessStory" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
                 transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum"/>
@@ -204,9 +204,9 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="moveUp"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveUp" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_index != 0" icon="fa fa-angle-up" text=" "/></conditional-field></field>
             <field name="moveDown"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveDown" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_has_next" icon="fa fa-angle-down" text=" "/></conditional-field></field>
             <!-- TODO: Fix allowing < and > tags in to prevent attacks -->
-            <field name="condition"><header-field title="Condition" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
-                <conditional-field condition="action" title="Condition"><text-area rows="2"/></conditional-field>
-                <last-row-field><text-area rows="2"/></last-row-field></field>
+            <field name="condition"><header-field title="Condition (optional)" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
+                <conditional-field condition="action" title="Condition (optional)"><text-area rows="2" cols="80"/></conditional-field>
+                <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
             <field name="actorIdList">
                 <header-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <list-options list="headerActorList" key="${actorId}" text="${name}"/>

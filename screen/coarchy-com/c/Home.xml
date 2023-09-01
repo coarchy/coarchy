@@ -30,6 +30,87 @@ along with this software (see the LICENSE.md file). If not, see
                     </q-card>
 
                     <section data-aos="fade-in" data-aos-easing="ease-in-out-cubic">
+                        <q-card class="desktop-only text-h6 bg-grey-9 q-mt-xl q-mb-xl" dark bordered style="min-width:1000px;" flat bordered>
+                            <q-card-section horizontal>
+                                <q-card-section class="q-mt-md desktop-only" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">View Your Process Stories</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Easily read the process stories you write</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Admire your work</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Export your process stories to csv or copy & paste</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/ViewProcessStoryScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+
+                        <q-card class="mobile-only text-h6 bg-grey-9 q-mt-xl q-mb-xl" dark bordered style="min-width:400px;" flat bordered>
+                            <q-card-section>
+                                <q-card-section class="q-mt-md" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">View Your Process Stories</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Easily read the process stories you write</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Admire your work</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Export your process stories to csv or copy & paste</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/ViewProcessStoryScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+                    </section>
+
+                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                        <q-card class="desktop-only text-h6 bg-grey-9 q-mt-xl q-mb-xl" dark bordered style="min-width:1000px;" flat bordered>
+                            <q-card-section horizontal>
+                                <q-card-section class="q-mt-md" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Write Your Process Stories</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Create activities and actors to write a process story</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Search for text or actors to find what you need</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Attach substories for managing large process stories</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/EditProcessStoryScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+                        <q-card class="mobile-only text-h6 bg-grey-9 q-mt-xl q-mb-xl" dark bordered style="min-width:300px;" flat bordered>
+                            <q-card-section>
+                                <q-card-section class="q-mt-md" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Write Your Process Stories</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Create activities and actors to write a process story</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Search for text or actors to find what you need</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Attach substories for managing large process stories</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/EditProcessStoryScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+                    </section>
+
+                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                        <q-card class="desktop-only text-h6 bg-grey-9 q-mt-xl q-mb-xl" dark bordered style="min-width:1000px;" flat bordered>
+                            <q-card-section horizontal>
+                                <q-card-section class="q-mt-md" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Manage Your Organizations</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Clone new organization from existing Organizations</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Invite your team members to join your Organization</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/EditOrganizationScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+
+                        <q-card class="mobile-only text-h6 bg-grey-9 q-mt-xl q-mb-xl" dark bordered style="min-width:300px;" flat bordered>
+                            <q-card-section>
+                                <q-card-section class="q-mt-md" style="max-width:300px">
+                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Manage Your Organizations</div>
+                                    <ul>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Clone new organization from existing Organizations</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Invite your team members to join your Organization</li>
+                                    </ul></q-card-section>
+                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/EditOrganizationScreenshot.png"/>
+                            </q-card-section>
+                        </q-card>
+                    </section>
+
+                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
 <!--                        <div class="text-h2 q-mt-xl">Design</div>-->
                         <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
                             <q-card-section>The core principle of Coarchy is <strong>design</strong> based on <strong>requirements</strong>.</q-card-section>
@@ -42,7 +123,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </q-card>
                     </section>
 
-                    <section data-aos="slide-left" data-aos-easing="ease-in-out-cubic">
+                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
                         <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
                             <q-card-section data-aos="fade-in" data-aos-easing="ease-in-out-cubic"><div class="text-h2">Implement</div></q-card-section>
                             <q-separator class="q-mt-md" dark inset data-aos="fade-in" data-aos-easing="ease-in-out-cubic"></q-separator>
@@ -69,49 +150,6 @@ along with this software (see the LICENSE.md file). If not, see
                         </q-card>
                     </section>
 
-                    <section class="desktop-only" data-aos="slide-left" data-aos-easing="ease-in-out-cubic">
-                        <q-card dark bordered class="text-h6 bg-grey-9 q-mt-xl q-mb-xl" style="min-width:1000px;" flat bordered>
-                            <q-card-section horizontal>
-                                <q-card-section class="q-mt-md" style="max-width:300px">
-                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Manage Your Organizations</div>
-                                    <ul>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Clone new organization from existing Organizations</li>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Invite your team members to join your Organization</li>
-                                    </ul></q-card-section>
-                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/EditOrganizationScreenshot.png"/>
-                            </q-card-section>
-                        </q-card>
-                    </section>
-
-                    <section class="desktop-only" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
-                        <q-card dark bordered class="text-h6 bg-grey-9 q-mt-xl q-mb-xl" style="min-width:1000px;" flat bordered>
-                            <q-card-section horizontal>
-                                <q-card-section class="q-mt-md" style="max-width:300px">
-                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Write Your Process Stories</div>
-                                    <ul>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Create activities and actors to write a process story</li>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Search for text or actors to find what you need</li>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Attach substories for managing large process stories</li>
-                                    </ul></q-card-section>
-                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/EditProcessStoryScreenshot.png"/>
-                            </q-card-section>
-                        </q-card>
-                    </section>
-
-                    <section class="desktop-only" data-aos="slide-left" data-aos-easing="ease-in-out-cubic">
-                        <q-card dark bordered class="text-h6 bg-grey-9 q-mt-xl q-mb-xl" style="min-width:1000px;" flat bordered>
-                            <q-card-section horizontal>
-                                <q-card-section class="q-mt-md" style="max-width:300px">
-                                    <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">View Your Process Stories</div>
-                                    <ul>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Easily read the process stories you write</li>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Admire your work</li>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Export your process stories to csv or copy & paste</li>
-                                    </ul></q-card-section>
-                                <q-img data-aos="fade-in" data-aos-easing="ease-in-out-cubic" src="/cstatic/ViewProcessStoryScreenshot.png"/>
-                            </q-card-section>
-                        </q-card>
-                    </section>
 
                 </div>
                 ]]></text>

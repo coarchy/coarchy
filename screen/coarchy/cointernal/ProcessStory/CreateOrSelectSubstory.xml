@@ -56,7 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <field name="detailProcessStoryId"><default-field title="Select Story"><drop-down submit-on-select="true" required-manual-select="true">
                         <entity-options text="${name}" key="${processStoryId}">
                             <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="20">
-                                <econdition field-name="processStoryId" operator="not-in" from="(parentProcessStoryIdList.getClass() == String ? [parentProcessStoryIdList] : parentProcessStoryIdList) + processStoryId"/>
+                                <econdition field-name="processStoryId" operator="not-in" from="parentProcessStoryIdList ? (parentProcessStoryIdList.getClass() == String ? [parentProcessStoryIdList] : parentProcessStoryIdList) + processStoryId : [processStoryId]"/>
                                 <select-field field-name="name,processStoryId"/>
                                 <order-by field-name="-lastUpdatedStamp"/></entity-find>
                         </entity-options>
