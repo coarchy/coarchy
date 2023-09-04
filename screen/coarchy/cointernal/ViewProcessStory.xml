@@ -25,6 +25,8 @@ along with this software (see the LICENSE.md file). If not, see
     </always-actions>
 
     <actions>
+        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
+
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupProcessStoryActivityList">
             <econdition field-name="processStoryId"/>
             <select-field field-name="activityId,condition,action"/>
@@ -41,12 +43,12 @@ along with this software (see the LICENSE.md file). If not, see
 
     <widgets>
         <link url="../ProcessStory" text="Go Back to Process Story" parameter-map="[processStoryId:processStoryId]"/>
-        <label text="View Process Story" type="h2"/>
+        <label text="${processStory.name?:'View Process Story'}" type="h3"/>
 
         <!-- TODO: Add filter parameters for the activity -->
-        <render-mode><text><![CDATA[<h4>]]></text></render-mode>
+        <render-mode><text><![CDATA[<h6>]]></text></render-mode>
         <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ProcessStory.html.ftl"/></render-mode>
-        <render-mode><text><![CDATA[</h4>]]></text></render-mode>
+        <render-mode><text><![CDATA[</h6>]]></text></render-mode>
 
     </widgets>
 </screen>
