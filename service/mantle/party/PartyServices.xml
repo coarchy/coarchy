@@ -15,7 +15,7 @@
             </if>
 
             <!-- get user organizations data (agent/employee/member rel from member to org) -->
-            <entity-find entity-name="mantle.party.PartyToAndRelationship" list="userOrgRelList" cache="true">
+            <entity-find entity-name="mantle.party.PartyToAndRelationship" list="userOrgRelList">
                 <date-filter/>
                 <econditions combine="or">
                     <econditions><econdition field-name="relationshipTypeEnumId" operator="in" value="PrtAgent,PrtEmployee,PrtMember"/>
@@ -30,7 +30,7 @@
                     <script>userOrgIds.add(userOrgRel.toPartyId)</script>
                     <!-- look for direct child orgs and allow them too (rollup rel from child to parent) -->
                     <!-- NOTE: consider making this recursive (inline method or other service) to walk down multiple levels -->
-                    <entity-find entity-name="mantle.party.PartyRelationship" list="childRelList" cache="true">
+                    <entity-find entity-name="mantle.party.PartyRelationship" list="childRelList">
                         <date-filter/>
                         <econdition field-name="relationshipTypeEnumId" value="PrtOrgRollup"/>
                         <econdition field-name="toPartyId" from="userOrgRel.toPartyId"/>
@@ -38,7 +38,7 @@
                     </entity-find>
                     <iterate list="childRelList" entry="childRel">
                         <if condition="!userOrgIds.contains(childRel.fromPartyId)">
-                            <entity-find-one entity-name="mantle.party.PartyDetail" value-field="childOrg" cache="true">
+                            <entity-find-one entity-name="mantle.party.PartyDetail" value-field="childOrg">
                                 <field-map field-name="partyId" from="childRel.fromPartyId"/></entity-find-one>
                             <script>userOrgIds.add(childRel.fromPartyId)</script>
                         </if>
