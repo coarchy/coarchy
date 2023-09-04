@@ -64,7 +64,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions><default-response url="."/></transition>
 
     <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]" multi="true"/></actions>
+        <actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/></actions>
         <default-response url="."/></transition>
 
     <transition name="activityMoveUp"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
@@ -150,7 +150,7 @@ along with this software (see the LICENSE.md file). If not, see
         <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="activityCount">
             <econdition field-name="processStoryId"/></entity-find-count>
 
-        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory" auto-field-map="[processStoryId:processStoryId]"/>
+        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
         <!-- Currently this only supports one parent process story -->
         <entity-find entity-name="coarchy.ProcessStoryActivity" list="detailActivityList" limit="1">
             <econdition field-name="detailProcessStoryId" from="processStoryId"/>
@@ -161,27 +161,34 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <link url="../ProcessStory" parameter-map="[processStoryId:detailActivityList?.getFirst()?.processStoryId]" text="Go to Parent Story: ${detailActivityList?.getFirst()?.story?.name}" condition="detailActivityList?.getFirst()?.processStoryId"/>
-        <link url="../FindProcessStory" text="Find Process Stories"/>
-        <link url="../Actor" parameter-map="[processStoryId:processStoryId]" text="Go to Actors"/>
-        <label text="Process Story - ${processStory.name}" type="h2"/>
-        <form-single name="UpdateProcessStory" transition="updateProcessStory">
-            <field name="processStoryId"><default-field><hidden/></default-field></field>
-            <field name="name" from="processStory.name"><default-field title="Process Story Name"><text-line/></default-field></field>
-            <field name="submit"><default-field><submit text="Update"/></default-field></field>
-            <field-layout><field-row><field-ref name="name"/><field-ref name="submit"/></field-row></field-layout>
-        </form-single>
+        <label text="Process Story - ${processStory.name}" type="h4"/>
 
-        <container-dialog id="AddActorDialogue" button-text="Add Actor" condition="partyRelationshipCount &gt; 0">
+        <link url="../ProcessStory" parameter-map="[processStoryId:detailActivityList?.getFirst()?.processStoryId]" text="Go to Parent Story: ${detailActivityList?.getFirst()?.story?.name}" condition="detailActivityList?.getFirst()?.processStoryId"/>
+        <link url="../FindProcessStory" text="Find Process Story"/>
+        <link url="../Actor" parameter-map="[processStoryId:processStoryId]" text="Go to Actors"/>
+        <container-dialog id="AddActorDialogue" button-text="Add Actor" type="success" condition="partyRelationshipCount &gt; 0">
             <form-single name="AddActor" transition="createActor">
                 <field name="processStoryId"><default-field><hidden/></default-field></field>
                 <field name="name"><default-field><text-line/></default-field></field>
                 <field name="description"><default-field><text-area rows="2" cols="80"/></default-field></field>
                 <field name="submit"><default-field><submit text="Create"/></default-field></field>
-            </form-single></container-dialog>
-        <link url="../ViewProcessStory" text="View Pretty" tooltip="Go to View Process Story" parameter-map="[processStoryId:processStoryId]" condition="activityCount &gt; 0"/>
-        <form-list name="ProcessStory" header-dialog="true" list="processStoryActivityList" show-csv-button="true"
-                transition="updateActivity" transition-last-row="createActivity" map-last-row="[actorIdList:null,condition:null,action:null]" multi="true">
+            </form-single>
+        </container-dialog>
+
+        <container-dialog id="UpdateStoryDialog" button-text="Edit Story Name">
+            <form-single name="UpdateProcessStory" transition="updateProcessStory">
+                <field name="processStoryId"><default-field><hidden/></default-field></field>
+                <field name="name" from="processStory.name"><default-field title="Process Story Name"><text-line size="50"/></default-field></field>
+                <field name="submit"><default-field><submit text="Update"/></default-field></field>
+            </form-single>
+        </container-dialog>
+        <link url="../ViewProcessStory" text="View/Print Story" tooltip="View Process Story Text" btn-type="info"
+                parameter-map="[processStoryId:processStoryId]" condition="activityCount &gt; 0"/>
+
+        <form-list name="ProcessStory" header-dialog="true" list="processStoryActivityList"
+                show-csv-button="true" show-page-size="true"
+                transition="updateActivity" transition-last-row="createActivity"
+                map-last-row="[actorIdList:null,condition:null,action:null]">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum"/>
                 <econdition field-name="processStoryId"/>
@@ -205,8 +212,8 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="moveDown"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveDown" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_has_next" icon="fa fa-angle-down" text=" "/></conditional-field></field>
             <!-- TODO: Fix allowing < and > tags in to prevent attacks -->
             <field name="condition"><header-field title="Condition (optional)" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
-                <conditional-field condition="action" title="Condition (optional)"><text-area rows="2" cols="80"/></conditional-field>
-                <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
+                <conditional-field condition="action" title="Condition (optional)"><text-area rows="4" cols="40" autogrow="true"/></conditional-field>
+                <last-row-field><text-area rows="4" cols="40"/></last-row-field></field>
             <field name="actorIdList">
                 <header-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <list-options list="headerActorList" key="${actorId}" text="${name}"/>
@@ -220,14 +227,14 @@ along with this software (see the LICENSE.md file). If not, see
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></last-row-field></field>
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
-                <conditional-field condition="action" title="Action"><text-area rows="2" cols="80"/></conditional-field>
+                <conditional-field condition="action" title="Action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
             <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory" parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
             <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action" title=""><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
             <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
-                <default-field title=""><submit text="Update All"/></default-field>
-                <last-row-field><submit text="Create"/></last-row-field></field>
+                <conditional-field condition="action"><submit text="Update"/></conditional-field>
+                <last-row-field><submit text="Add Activity"/></last-row-field></field>
             <field name="newParagraph"><conditional-field condition="false" title=""><label text=" "/></conditional-field>
                 <last-row-field><link url="newParagraph" text="⏎" tooltip="New Paragraph"/></last-row-field></field>
 
@@ -239,8 +246,7 @@ along with this software (see the LICENSE.md file). If not, see
             <columns>
                 <column><field-ref name="moveUp"/><field-ref name="moveDown"/></column>
                 <column><field-ref name="condition"/></column>
-                <column><field-ref name="actorIdList"/></column>
-                <column><field-ref name="action"/></column>
+                <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
                 <column><field-ref name="submit"/><field-ref name="substory"/><field-ref name="substoryLink"/></column>
                 <column><field-ref name="newParagraph"/><field-ref name="delete"/></column>
             </columns>

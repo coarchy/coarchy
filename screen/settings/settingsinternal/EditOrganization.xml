@@ -40,7 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <label text="Edit ${organization?.organizationName?:' Organization'}" type="h2"/>
+        <label text="Edit ${organization?.organizationName?:' Organization'}" type="h4"/>
 
         <container-dialog id="InviteUser" button-text="Invite User">
             <form-single name="InviteUser" transition="inviteUser">

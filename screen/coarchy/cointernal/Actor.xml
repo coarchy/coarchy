@@ -58,10 +58,9 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
+        <label text="Actors" type="h4"/>
         <link url="../FindProcessStory" text="Find Process Stories"/>
         <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Process Story" condition="processStoryId"/>
-
-        <label text="Actors" type="h2"/>
 
         <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor" transition-last-row="createActor" multi="true">
             <field name="actorId"><default-field><hidden/></default-field></field>

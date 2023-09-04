@@ -127,7 +127,7 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <label text="Organizations" type="h2"/>
+        <label text="Organizations" type="h4"/>
 
         <!-- TODO: Create the feature to transfer org to another user -->
 
