@@ -82,13 +82,6 @@ along with this software (see the LICENSE.md file). If not, see
         </actions><default-response url="."/>
     </transition>
 
-    <transition name="updateOrganization"><actions>
-        <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
-        <if condition="!organization || !organization.ownerPartyId"><return type="warning" message="You can't change an organization you don't own"/></if>
-        <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
-            <service-call name="update#mantle.party.Organization" in-map="[partyId:partyId,organizationName:organizationName]"/>
-        </if>
-        </actions><default-response url="."/></transition>
 
     <transition name="inviteUser"><actions>
         <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
@@ -165,14 +158,26 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <form-list name="Organization" header-dialog="true" list="organizationList" transition="updateOrganization" show-page-size="true">
+        <form-list name="Organization" header-dialog="true" list="organizationFormList" transition="updateOrganization"
+                show-page-size="true">
+            <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationFormList" distinct="true">
+                <search-form-inputs/>
+                <date-filter/>
+                <econditions combine="or">
+                    <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                    <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                </econditions>
+                <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
+                <order-by field-name="-visibilityEnumId"/></entity-find>
+
             <field name="partyId" from="toPartyId"><default-field><hidden/></default-field></field>
             <field name="organizationName">
+                <header-field><text-line/></header-field>
                 <conditional-field condition="visibilityEnumId=='PvPublic'"><link url="goToApplication" text="View ${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/>
                     <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip><q-chip>Read Only</q-chip>]]></text></render-mode></conditional-field>
                 <default-field><link url="goToApplication" text="View ${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/></default-field>
             </field>
-            <field name="edit"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title=""><link url="/settings/EditOrganization" text="Edit Organization" parameter-map="[organizationId:toPartyId]" tooltip="Invite Users"/></conditional-field></field>
+            <field name="edit"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title=""><link url="/settings/EditOrganization" text="Edit ${organizationName}" parameter-map="[organizationId:toPartyId]" tooltip="Invite Users"/></conditional-field></field>
         </form-list>
     </widgets>
 </screen>

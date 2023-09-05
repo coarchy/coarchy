@@ -211,7 +211,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
             <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory" parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
             <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action" title=""><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
-            <field name="insert"><default-field><dynamic-dialog id="Insert" button-text="Insert" transition="InsertActivity" parameter-map="[processStoryId:processStory.processStoryId,sequenceNum:sequenceNum]"/></default-field></field>
+            <field name="insert"><conditional-field condition="partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="Insert" button-text="Insert" transition="InsertActivity" parameter-map="[processStoryId:processStory.processStoryId,sequenceNum:sequenceNum]"/></conditional-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
                 <conditional-field condition="action"><submit text="Update"/></conditional-field>
                 <last-row-field><submit text="Add Activity"/></last-row-field></field>
