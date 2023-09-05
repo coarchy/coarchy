@@ -40,28 +40,8 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:activeOrgId]"/>
         </actions><default-response url="."/></transition>
 
-    <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
-        <!-- TODO: migrate this to a service -->
-        <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
-        <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action, organizationId:activeOrgId]" out-map="newActivity"/>
-
-        <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
-            <order-by field-name="-sequenceNum"/></entity-find>
-        <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
-        <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
-        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:activeOrgId]"/>
-
-        <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
-            <then>
-                <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList, organizationId:activeOrgId]"/>
-            </then>
-            <else>
-                <iterate list="actorIdList" entry="actorId">
-                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId, organizationId:activeOrgId]"/>
-                </iterate>
-            </else>
-        </if>
-        </actions><default-response url="."/></transition>
+    <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action]"/><default-response url="."/></transition>
 
     <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/></actions>
@@ -204,7 +184,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="name"/></entity-find>
                 <set field="actorIdList" from="activityActorList*.actorId"/>
             </row-actions>
-            <field name="processStoryId"><header-field><hidden default-value="${processStoryId}"/></header-field></field>
+            <field name="processStoryId"><header-field><hidden/></header-field></field>
             <field name="activityId"><default-field><hidden/></default-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
@@ -231,10 +211,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
             <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory" parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
             <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action" title=""><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
-            <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
+            <field name="insert"><default-field><dynamic-dialog id="Insert" button-text="Insert" transition="InsertActivity" parameter-map="[processStoryId:processStory.processStoryId,sequenceNum:sequenceNum]"/></default-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
                 <conditional-field condition="action"><submit text="Update"/></conditional-field>
                 <last-row-field><submit text="Add Activity"/></last-row-field></field>
+            <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
             <field name="newParagraph"><conditional-field condition="false" title=""><label text=" "/></conditional-field>
                 <last-row-field><link url="newParagraph" text="⏎" tooltip="New Paragraph"/></last-row-field></field>
 
@@ -247,8 +228,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <column><field-ref name="moveUp"/><field-ref name="moveDown"/></column>
                 <column><field-ref name="condition"/></column>
                 <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
-                <column><field-ref name="submit"/><field-ref name="substory"/><field-ref name="substoryLink"/></column>
-                <column><field-ref name="newParagraph"/><field-ref name="delete"/></column>
+                <column><field-ref name="insert"/><field-ref name="submit"/></column>
+                <column><field-ref name="newParagraph"/><field-ref name="substory"/><field-ref name="substoryLink"/><field-ref name="delete"/></column>
             </columns>
         </form-list>
     </widgets>

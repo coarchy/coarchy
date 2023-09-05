@@ -80,26 +80,26 @@ along with this software (see the LICENSE.md file). If not, see
             <q-circular-progress indeterminate size="20px" color="light-blue" class="q-ma-xs" :class="{ hidden: loading < 1 }"></q-circular-progress>
 
             <#-- QZ print options placeholder -->
-            <component :is="qzVue" ref="qzVue"></component>
+<#--            <component :is="qzVue" ref="qzVue"></component>-->
 
             <#-- screen documentation/help -->
-            <q-btn push icon="help_outline" color="info" :class="{hidden:!documentMenuList.length}">
-                <q-tooltip>${ec.l10n.localize("Documentation")}</q-tooltip>
-                <q-menu><q-list dense class="q-my-md">
-                    <q-item v-for="screenDoc in documentMenuList" :key="screenDoc.index"><q-item-section>
-                        <m-dynamic-dialog :url="currentPath + '/screenDoc?docIndex=' + screenDoc.index" :button-text="screenDoc.title" :title="screenDoc.title"></m-dynamic-dialog>
-                    </q-item-section></q-item>
-                </q-list></q-menu>
-            </q-btn>
+<#--            <q-btn push icon="help_outline" color="info" :class="{hidden:!documentMenuList.length}">-->
+<#--                <q-tooltip>${ec.l10n.localize("Documentation")}</q-tooltip>-->
+<#--                <q-menu><q-list dense class="q-my-md">-->
+<#--                    <q-item v-for="screenDoc in documentMenuList" :key="screenDoc.index"><q-item-section>-->
+<#--                        <m-dynamic-dialog :url="currentPath + '/screenDoc?docIndex=' + screenDoc.index" :button-text="screenDoc.title" :title="screenDoc.title"></m-dynamic-dialog>-->
+<#--                    </q-item-section></q-item>-->
+<#--                </q-list></q-menu>-->
+<#--            </q-btn>-->
 
             <#-- nav plugins See in root CoarchyComVue.qvt.ftl -->
-            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>
+<#--            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>-->
 
             <#-- notify history See in root CoarchyComVue.qvt.ftl -->
 
             <#-- screen history menu See in root CoarchyComVue.qvt.ftl -->
 
-                <q-btn color="secondary" class="text-black" label="${(ec.user.userAccount.userFullName)!'Account'}">
+                <q-btn color="secondary" class="text-black" no-caps label="${(ec.user.userAccount.userFullName)!'Account'}">
                     <q-menu auto-close>
                         <q-list dense style="min-width: 100px">
                             <q-item clickable>

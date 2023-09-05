@@ -32,6 +32,49 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="create" noun="Activity">
+        <in-parameters>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="organizationId" required="true"/>
+            <parameter name="condition"/>
+            <parameter name="actorIdList" type="List"/>
+            <parameter name="action"/>
+            <parameter name="sequenceNum"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="activityId"/>
+            <parameter name="processStoryActivityId"/>
+        </out-parameters>
+        <actions>
+            <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
+            <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action, organizationId:organizationId]" out-map="newActivity"/>
+            <set field="activityId" from="newActivity.activityId"/>
+
+            <set field="newSequenceNum" from="sequenceNum"/>
+            <if condition="!sequenceNum">
+                <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
+                    <econdition field-name="processStoryId"/>
+                    <order-by field-name="-sequenceNum"/></entity-find>
+                <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
+                <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
+            </if>
+            <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:organizationId]" out-map="newStoryActivity"/>
+            <set field="processStoryActivityId" from="newStoryActivity.processStoryActivityId"/>
+<!--            <log level="warn" message="highestProcessStoryActivity context.toString() ${context.toString()}"/>-->
+
+            <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
+                <then>
+                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList, organizationId:organizationId]"/>
+                </then>
+                <else>
+                    <iterate list="actorIdList" entry="actorId">
+                        <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId, organizationId:organizationId]"/>
+                    </iterate>
+                </else>
+            </if>
+        </actions>
+    </service>
+
     <service verb="update" noun="Activity">
         <in-parameters>
             <parameter name="activityId" required="true"/>

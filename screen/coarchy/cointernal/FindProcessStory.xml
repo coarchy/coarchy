@@ -38,8 +38,8 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
+        <label text="Process Stories" type="h4"/>
         <link url="../Actor" text="Go to Actors"/>
-        <label text="Process Stories" type="h2"/>
         <container-dialog id="CreateProcessStoryDialogue" button-text="Create Process Story" condition="partyRelationshipCount &gt; 0">
             <form-single name="CreateProcessStory" transition="createProcessStory">
                 <field name="name"><default-field><text-line/></default-field></field>
