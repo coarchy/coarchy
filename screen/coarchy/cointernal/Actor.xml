@@ -66,10 +66,10 @@ along with this software (see the LICENSE.md file). If not, see
 
     <widgets>
         <label text="Actors" type="h4"/>
-
         <link url="../FindProcessStory" text="Find Process Stories"/>
         <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
                 condition="processStory"/>
+
         <container-dialog id="CreateActorDialog" button-text="Add Actor" type="success">
             <form-single name="CreateActorForm" transition="createActor">
                 <field name="name">
