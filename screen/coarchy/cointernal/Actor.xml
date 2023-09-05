@@ -30,48 +30,79 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
-    <transition name="createActor"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
+    <transition name="createActor">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <actions>
         <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
-            <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
-            <order-by field-name="^name"/>
+            <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
+            <econdition field-name="name" from="name" ignore-case="true"/>
         </entity-find>
-        <if condition="actorList?.size() &gt; 0"><return type="warning" message="Actor ${actorList?.getFirst()?.name} is already created"/></if>
+        <if condition="actorList"><return type="danger" message="Actor ${actorList?.getFirst()?.name} already exists"/></if>
 
         <service-call name="create#coarchy.Actor" in-map="[name:name,description:description,organizationId:activeOrgId]"/>
-        </actions><default-response save-parameters="true"/><error-response url="." save-parameters="true"/></transition>
+        </actions>
+        <default-response/>
+        <error-response url="." save-parameters="true"/>
+    </transition>
 
-    <transition name="updateActor"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><service-call name="update#coarchy.Actor"/>
-        <default-response/></transition>
+    <transition name="updateActor">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="update#coarchy.Actor"/>
+        <default-response/>
+    </transition>
 
     <transition name="deleteActor"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find-count entity-name="coarchy.ActivityActor" count-field="activityActorCount">
             <econdition field-name="actorId"/></entity-find-count>
         <if condition="activityActorCount &gt; 0">
-            <return type="warning" message="You can't delete an Actor with any Activities"/>
+            <return type="warning" message="Cannot delete an Actor with Process Story Activities"/>
         </if>
         <service-call name="delete#coarchy.Actor" in-map="[actorId:actorId]"/>
         </actions><default-response/></transition>
 
     <actions>
-        <entity-find entity-name="coarchy.Actor" list="actorList">
-            <order-by field-name="lastUpdatedStamp"/></entity-find>
+        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
     </actions>
 
     <widgets>
+        <label text="Actors" type="h4"/>
+
         <link url="../FindProcessStory" text="Find Process Stories"/>
-        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Process Story" condition="processStoryId"/>
+        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
+                condition="processStory"/>
+        <container-dialog id="CreateActorDialog" button-text="Add Actor" type="success">
+            <form-single name="CreateActorForm" transition="createActor">
+                <field name="name">
+                    <default-field><text-line/></default-field>
+                </field>
+                <field name="description">
+                    <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
+                </field>
+                <field name="submit"><default-field><submit text="Add Actor"/></default-field></field>
+            </form-single>
+        </container-dialog>
 
-        <label text="Actors" type="h2"/>
+        <form-list name="Actor" header-dialog="true" show-page-size="true" show-csv-button="true"
+                list="actorList" transition="updateActor" transition-last-row="createActor">
+            <entity-find entity-name="coarchy.Actor" list="actorList">
+                <search-form-inputs default-order-by="^name"/></entity-find>
 
-        <form-list name="Actor" paginate="false" skip-header="true" list="actorList" transition="updateActor" transition-last-row="createActor" multi="true">
             <field name="actorId"><default-field><hidden/></default-field></field>
-            <field name="name"><default-field><text-line/></default-field>
-                <last-row-field><text-line/></last-row-field></field>
-            <field name="description"><default-field><text-area rows="2" cols="80"/></default-field>
-                <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="delete"><default-field title=""><link url="deleteActor" parameter-map="[actorId:actorId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Delete Actor"/></default-field></field>
-            <field name="submit"><default-field><submit text="Update All"/></default-field>
-                <last-row-field><submit text="Create"/></last-row-field></field>
+            <field name="name">
+                <header-field show-order-by="case-insensitive"><text-find/></header-field>
+                <default-field><text-line/></default-field>
+                <last-row-field><text-line/></last-row-field>
+            </field>
+            <field name="description">
+                <header-field><text-find/></header-field>
+                <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
+                <last-row-field><text-area rows="2" cols="80"/></last-row-field>
+            </field>
+            <field name="submit"><default-field><submit text="Update"/></default-field>
+                <last-row-field><submit text="Add Actor"/></last-row-field></field>
+            <field name="delete"><default-field title="">
+                <link url="deleteActor" parameter-map="[actorId:actorId]" icon="fa fa-trash" btn-type="danger"
+                        text=" " tooltip="Delete Actor" confirmation="Delete actor '${name}'?"/></default-field></field>
         </form-list>
     </widgets>
 </screen>
