@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-include="false" standalone="true">
+
+    <transition-include name="getActorList" location="component://coarchy/screen/coarchy/cointernal/ProcessStory.xml"/>
+
+    <transition name="insertActivity"><actions>
+        <if condition="!action"><return type="danger" error="true" message="An action is needed for an activity"/></if>
+        <set field="insertSequenceNum" from="sequenceNum"/>
+        <if condition="insertType=='below'">
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
+                <select-field field-name="processStoryActivityId,sequenceNum"/>
+                <order-by field-name="sequenceNum"/></entity-find>
+            <!-- This might be null, but if it is null then the right behavior will happen anyways -->
+            <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum"/>
+        </if>
+
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+            <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum"/>
+            <select-field field-name="processStoryActivityId,sequenceNum"/>
+            <order-by field-name="-sequenceNum"/></entity-find>
+        <iterate list="processStoryActivityList" entry="processStoryActivity">
+            <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+        </iterate>
+        <service-call name="coarchy.CoarchyServices.createActivity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum]"/>
+    </actions><default-response url="."/><error-response type="none"/></transition>
+
+    <widgets>
+        <form-single name="Insert" transition="insertActivity">
+            <field name="processStoryId"><default-field><hidden/></default-field></field>
+            <field name="sequenceNum"><default-field><hidden/></default-field></field>
+            <field name="condition"><default-field title="Condition (optional)"><text-area rows="2" autogrow="true"/></default-field></field>
+            <field name="actorIdList">
+                <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
+                    <list-options list="activityActorList" key="${actorId}" text="${name}"/>
+                    <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
+                </drop-down></default-field></field>
+            <field name="action"><default-field title="Action"><text-area rows="2" autogrow="true"/></default-field></field>
+            <field name="insertType" from="'below'"><default-field>
+                <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
+            </default-field></field>
+            <field name="submit"><default-field><submit text="Add Activity"/></default-field></field>
+        </form-single>
+    </widgets>
+</screen>
