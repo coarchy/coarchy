@@ -41,7 +41,9 @@ along with this software (see the LICENSE.md file). If not, see
         </actions><default-response url="."/></transition>
 
     <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action]"/><default-response url="."/></transition>
+        <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action]" out-map="newActivity"/>
+<!--        <actions><log level="warn" message="createActivity context.toString() ${context.toString()}"/></actions>-->
+        <default-response url="."/></transition>
 
     <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/></actions>
@@ -62,7 +64,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <return type="warning" message="Cannot move activity up"/>
             </else>
         </if>
-        </actions><default-response url="."/></transition>
+        </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
 
     <transition name="activityMoveDown"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
@@ -79,7 +81,7 @@ along with this software (see the LICENSE.md file). If not, see
             <return type="warning" message="Cannot move activity down"/>
         </else>
         </if>
-        </actions><default-response url="."/></transition>
+        </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
 
     <transition name="deleteActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
@@ -136,8 +138,9 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="detailProcessStoryId" from="processStoryId"/>
             <order-by field-name="-lastUpdatedStamp"/></entity-find>
 
-        <set field="showMoveUpDown" from="!actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
+        <set field="pageIndex" from="pageIndex?:0"/>
+        <set field="showMoveUpDown" from="(!orderByField || orderByField == 'sequenceNum') &amp;&amp; !actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
+<!--        <log level="warn" message="ProcessStory context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
@@ -183,15 +186,35 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="activityId"/>
                     <order-by field-name="name"/></entity-find>
                 <set field="actorIdList" from="activityActorList*.actorId"/>
+
+<!--                <log level="warn" message="form-list ProcessStory context.toString() ${context.toString()}"/>-->
+
+<!--                <log level="warn" message="Global index ${(processStoryActivityListPageRangeLow+processStoryActivityList_index)}"/>-->
+<!--                <log level="warn" message="Is not lowest on page ${processStoryActivityListPageRangeLow!=(processStoryActivityListPageRangeLow+processStoryActivityList_index)} where processStoryActivityListPageRangeLow ${processStoryActivityListPageRangeLow} and processStoryActivityListPageRangeLow-1+processStoryActivityList_index ${processStoryActivityListPageRangeLow-1+processStoryActivityList_index}"/>-->
+<!--                <log level="warn" message="Is lowest on page ${processStoryActivityListPageRangeLow==(processStoryActivityListPageRangeLow+processStoryActivityList_index)} where processStoryActivityListPageRangeLow ${processStoryActivityListPageRangeLow} and processStoryActivityListPageRangeLow-1+processStoryActivityList_index ${processStoryActivityListPageRangeLow-1+processStoryActivityList_index}"/>-->
+<!--                <log level="warn" message="Is a lower page ${processStoryActivityListPageRangeLow!=1} where processStoryActivityListPageRangeLow ${processStoryActivityListPageRangeLow}"/>-->
+<!--                <log level="warn" message="Should moveUp ${processStoryActivityListPageRangeLow!=1 &amp;&amp; processStoryActivityListPageRangeLow!=(processStoryActivityListPageRangeLow-1+processStoryActivityList_index)} where processStoryActivityListPageRangeLow ${processStoryActivityListPageRangeLow}"/>-->
+<!--                <log level="warn" message="Is not highest on page ${processStoryActivityListPageRangeLow+processStoryActivityList_index!=processStoryActivityListPageRangeHigh} where processStoryActivityListPageRangeHigh ${processStoryActivityListPageRangeHigh}"/>-->
+<!--                <log level="warn" message="Is highest on page ${processStoryActivityListPageRangeLow+processStoryActivityList_index==processStoryActivityListPageRangeHigh} where processStoryActivityListPageRangeHigh ${processStoryActivityListPageRangeHigh}"/>-->
+<!--                <log level="warn" message="highest possible on page ${processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize} where processStoryActivityListPageSize ${processStoryActivityListPageSize}"/>-->
+<!--                <log level="warn" message="Is highest possible on page ${processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index} where processStoryActivityList_index ${processStoryActivityList_index}"/>-->
+<!--                <log level="warn" message="Is a higher page ${processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount} where processStoryActivityListCount ${processStoryActivityListCount}"/>-->
+<!--                <log level="warn" message="Should moveDown ${processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount || processStoryActivityListPageRangeLow+processStoryActivityList_index!=processStoryActivityListPageRangeHigh} where processStoryActivityListPageRangeLow ${processStoryActivityListPageRangeLow}"/>-->
+<!--                <log level="warn" message="${processStoryActivityListPageRangeLow!=1 &amp;&amp; processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeHigh}"/>-->
+
             </row-actions>
-            <field name="processStoryId"><header-field><hidden/></header-field></field>
+            <hidden-parameters><parameter name="processStoryId"/></hidden-parameters>
             <field name="activityId"><default-field><hidden/></default-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
-            <field name="moveUp"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveUp" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_index != 0" icon="fa fa-angle-up" text=" "/></conditional-field></field>
-            <field name="moveDown"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveDown" parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum]" condition="processStoryActivityList_has_next" icon="fa fa-angle-down" text=" "/></conditional-field></field>
+            <field name="moveUp"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveUp"
+                    parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum,pageIndex:processStoryActivityListPageRangeLow==(processStoryActivityListPageRangeLow+processStoryActivityList_index)?pageIndex.toInteger()-1:pageIndex]"
+                    condition="processStoryActivityListPageRangeLow!=1 || processStoryActivityListPageRangeLow!=(processStoryActivityListPageRangeLow+processStoryActivityList_index)" icon="fa fa-angle-up" text=" "/></conditional-field></field>
+            <field name="moveDown"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveDown"
+                    parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum,pageIndex:processStoryActivityListPageRangeLow+processStoryActivityList_index==processStoryActivityListPageRangeHigh?pageIndex.toInteger()+1:pageIndex]"
+                    condition="processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount || processStoryActivityListPageRangeLow+processStoryActivityList_index!=processStoryActivityListPageRangeHigh" icon="fa fa-angle-down" text=" "/></conditional-field></field>
             <!-- TODO: Fix allowing < and > tags in to prevent attacks -->
-            <field name="condition"><header-field title="Condition (optional)" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
+            <field name="condition"><header-field title="Condition (optional)" show-order-by="case-insensitive"><text-find size="25"/></header-field>
                 <conditional-field condition="action" title="Condition (optional)"><text-area rows="4" cols="40" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="4" cols="40"/></last-row-field></field>
             <field name="actorIdList">
@@ -206,16 +229,18 @@ along with this software (see the LICENSE.md file). If not, see
                 <last-row-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></last-row-field></field>
-            <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25" default-operator="begins"/></header-field>
+            <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25"/></header-field>
                 <conditional-field condition="action" title="Action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory" parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
+            <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
+                    parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
             <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action" title=""><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
-            <field name="insert"><default-field><dynamic-dialog id="Insert" button-text="Insert" transition="InsertActivity" parameter-map="[processStoryId:processStory.processStoryId,sequenceNum:sequenceNum]"/></default-field></field>
+            <field name="insert"><conditional-field condition="partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="Insert" button-text="Insert" transition="InsertActivity"
+                    parameter-map="[processStoryId:processStory.processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"/></conditional-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
                 <conditional-field condition="action"><submit text="Update"/></conditional-field>
                 <last-row-field><submit text="Add Activity"/></last-row-field></field>
-            <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
+            <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
             <field name="newParagraph"><conditional-field condition="false" title=""><label text=" "/></conditional-field>
                 <last-row-field><link url="newParagraph" text="⏎" tooltip="New Paragraph"/></last-row-field></field>
 

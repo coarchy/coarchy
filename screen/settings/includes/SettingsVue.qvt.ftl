@@ -99,7 +99,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <#-- screen history menu See in root CoarchyComVue.qvt.ftl -->
 
-                <q-btn color="secondary" class="text-black" no-caps label="${(ec.user.userAccount.userFullName)!'Account'}">
+                <q-btn color="secondary" class="text-black" label="${(ec.user.userAccount.userFullName)!'Account'}">
                     <q-menu auto-close>
                         <q-list dense style="min-width: 100px">
 <#--                            <q-item clickable>-->

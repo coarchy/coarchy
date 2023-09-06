@@ -44,6 +44,7 @@ along with this software (see the LICENSE.md file). If not, see
         <out-parameters>
             <parameter name="activityId"/>
             <parameter name="processStoryActivityId"/>
+            <parameter name="sequenceNum"/>
         </out-parameters>
         <actions>
             <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
@@ -60,7 +61,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:organizationId]" out-map="newStoryActivity"/>
             <set field="processStoryActivityId" from="newStoryActivity.processStoryActivityId"/>
-<!--            <log level="warn" message="highestProcessStoryActivity context.toString() ${context.toString()}"/>-->
+            <set field="sequenceNum" from="newStoryActivity.sequenceNum"/>
 
             <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
                 <then>

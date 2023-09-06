@@ -23,7 +23,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="visibilityEnumId" value="PvPublic"/>
             </econditions>
             <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
-            <order-by field-name="-lastUpdatedStamp"/></entity-find>
+            <order-by field-name="-visibilityEnumId"/></entity-find>
         <set field="ownerOfAnyOrganization" from="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)"/>
     </always-actions>
 
@@ -82,13 +82,6 @@ along with this software (see the LICENSE.md file). If not, see
         </actions><default-response url="."/>
     </transition>
 
-    <transition name="updateOrganization"><actions>
-        <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
-        <if condition="!organization || !organization.ownerPartyId"><return type="warning" message="You can't change an organization you don't own"/></if>
-        <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
-            <service-call name="update#mantle.party.Organization" in-map="[partyId:partyId,organizationName:organizationName]"/>
-        </if>
-        </actions><default-response url="."/></transition>
 
     <transition name="inviteUser"><actions>
         <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
@@ -131,6 +124,20 @@ along with this software (see the LICENSE.md file). If not, see
 
         <!-- TODO: Create the feature to transfer org to another user -->
 
+        <container-dialog id="InviteUser" button-text="Invite User" condition="ownerOfAnyOrganization">
+            <form-single name="InviteUser" transition="inviteUser">
+                <field name="partyId"><default-field title="Organization"><drop-down><entity-options text="${organizationName}" key="${partyId}">
+                    <entity-find entity-name="mantle.party.PartyDetail">
+                        <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                        <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                    </entity-find></entity-options> </drop-down></default-field></field>
+                <field name="emailAddress"><default-field><text-line/></default-field></field>
+                <field name="firstName"><default-field><text-line/></default-field></field>
+                <field name="lastName"><default-field><text-line/></default-field></field>
+                <field name="submit"><default-field><submit/></default-field></field>
+            </form-single>
+        </container-dialog>
+
         <container-dialog id="CreateOrganization" button-text="Create Organization">
             <form-single name="CreateOrganization" transition="createOrganization">
                 <field name="organizationId"><default-field title="Clone from Organization (optional)"><drop-down allow-empty="true" required-manual-select="true">
@@ -151,33 +158,27 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <container-dialog id="InviteUser" button-text="Invite User" condition="ownerOfAnyOrganization">
-            <form-single name="InviteUser" transition="inviteUser">
-                <field name="partyId"><default-field title="Organization"><drop-down><entity-options text="${organizationName}" key="${partyId}">
-                    <entity-find entity-name="mantle.party.PartyDetail">
-                        <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
-                        <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
-                    </entity-find></entity-options> </drop-down></default-field></field>
-                <field name="emailAddress"><default-field><text-line/></default-field></field>
-                <field name="firstName"><default-field><text-line/></default-field></field>
-                <field name="lastName"><default-field><text-line/></default-field></field>
-                <field name="submit"><default-field><submit/></default-field></field>
-            </form-single>
-        </container-dialog>
+        <form-list name="Organization" header-dialog="true" list="organizationFormList" transition="updateOrganization"
+                show-page-size="true">
+            <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationFormList" distinct="true">
+                <search-form-inputs/>
+                <date-filter/>
+                <econditions combine="or">
+                    <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                    <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                </econditions>
+                <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
+                <order-by field-name="-visibilityEnumId"/></entity-find>
 
-        <form-list name="Organization" paginate="false" list="organizationList" transition="updateOrganization">
             <field name="partyId" from="toPartyId"><default-field><hidden/></default-field></field>
-            <field name="organizationName"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title="Name"><text-line/></conditional-field>
-                <default-field><display/></default-field></field>
-            <field name="update"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId"><submit text="Update"/></conditional-field></field>
-            <field name="clone"><default-field title=""><container-dialog id="CloneFrom" button-text="Clone From"><form-single name="CloneFromOrganization" transition="createOrganization">
-                <field name="organizationId" from="partyId"><default-field><hidden/></default-field></field>
-                <field name="organizationName" from="null"><default-field><text-line/></default-field></field>
-                <field name="clone"><default-field><submit/></default-field></field>
-            </form-single>
-            </container-dialog></default-field></field>
-            <field name="edit"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title=""><link url="/settings/EditOrganization" text="Edit Organization" parameter-map="[organizationId:toPartyId]" tooltip="Invite Users"/></conditional-field></field>
-            <field name="go"><default-field title=""><link url="goToApplication" text="Go to Application" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/></default-field></field>
+            <field name="organizationName">
+                <header-field><text-find size="25"/></header-field>
+                <conditional-field condition="visibilityEnumId=='PvPublic'"><link url="goToApplication" text="View ${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/>
+                    <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip><q-chip>Read Only</q-chip>]]></text></render-mode></conditional-field>
+                <default-field><link url="goToApplication" text="View ${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/></default-field>
+            </field>
+            <field name="edit"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title=""><link url="/settings/EditOrganization" text="Edit ${organizationName}" parameter-map="[organizationId:toPartyId]" tooltip="Invite Users"/></conditional-field></field>
+            <field name="submit"><header-field><submit/></header-field></field>
         </form-list>
     </widgets>
 </screen>

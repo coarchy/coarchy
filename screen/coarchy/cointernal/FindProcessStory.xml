@@ -46,12 +46,15 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="submit"><default-field><submit text="Create"/></default-field></field>
             </form-single></container-dialog>
 
-        <form-list name="ProcessStory" paginate="false" skip-header="false" list="processStoryList" transition="updateProcessStory" transition-last-row="createProcessStory" multi="true">
+        <form-list name="ProcessStory" header-dialog="true" list="processStoryList"
+                transition="updateProcessStory" transition-last-row="createProcessStory">
             <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
-                <order-by field-name="lastUpdatedStamp"/></entity-find>
+                <search-form-inputs default-order-by="lastUpdatedStamp"/></entity-find>
 
             <field name="processStoryId"><default-field><hidden/></default-field></field>
-            <field name="name"><default-field title="Process Story Name"><link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="${name}"/></default-field></field>
+            <field name="name"><header-field><text-find size="25"/></header-field>
+                <default-field title="Process Story Name"><link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="${name}"/></default-field></field>
+            <field name="submit"><header-field><submit/></header-field></field>
         </form-list>
     </widgets>
 </screen>
