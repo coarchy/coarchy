@@ -21,6 +21,7 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="!action"><return type="danger" error="true" message="An action is needed for an activity"/></if>
         <set field="insertSequenceNum" from="sequenceNum"/>
         <if condition="insertType=='below'">
+            <set field="pageIndex" from="downPageIndex"/>
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
                 <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
                 <select-field field-name="processStoryActivityId,sequenceNum"/>
@@ -37,10 +38,18 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
         </iterate>
         <service-call name="coarchy.CoarchyServices.createActivity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum]"/>
-    </actions><default-response url="."/><error-response type="none"/></transition>
+
+<!--        <log level="warn" message="insertActivity context.toString() ${context.toString()}"/>-->
+    </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
+
+    <actions>
+<!--        <log level="warn" message="InsertActivity context.toString() ${context.toString()}"/>-->
+    </actions>
 
     <widgets>
         <form-single name="Insert" transition="insertActivity">
+            <field name="pageIndex"><default-field><hidden/></default-field></field>
+            <field name="downPageIndex"><default-field><hidden/></default-field></field>
             <field name="processStoryId"><default-field><hidden/></default-field></field>
             <field name="sequenceNum"><default-field><hidden/></default-field></field>
             <field name="condition"><default-field title="Condition (optional)"><text-area rows="2" autogrow="true"/></default-field></field>

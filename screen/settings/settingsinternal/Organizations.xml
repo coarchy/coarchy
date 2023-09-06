@@ -172,12 +172,13 @@ along with this software (see the LICENSE.md file). If not, see
 
             <field name="partyId" from="toPartyId"><default-field><hidden/></default-field></field>
             <field name="organizationName">
-                <header-field><text-line/></header-field>
+                <header-field><text-find size="25"/></header-field>
                 <conditional-field condition="visibilityEnumId=='PvPublic'"><link url="goToApplication" text="View ${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/>
                     <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip><q-chip>Read Only</q-chip>]]></text></render-mode></conditional-field>
                 <default-field><link url="goToApplication" text="View ${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="Create Process Stories"/></default-field>
             </field>
             <field name="edit"><conditional-field condition="ownerPartyId == ec.user.userAccount.partyId" title=""><link url="/settings/EditOrganization" text="Edit ${organizationName}" parameter-map="[organizationId:toPartyId]" tooltip="Invite Users"/></conditional-field></field>
+            <field name="submit"><header-field><submit/></header-field></field>
         </form-list>
     </widgets>
 </screen>

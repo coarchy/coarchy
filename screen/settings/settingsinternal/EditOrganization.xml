@@ -100,7 +100,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="userAccount" from="userAccountList?.getFirst()"/>
                 </if>
             </row-actions>
-            <field name="organizationId"><header-field><hidden/></header-field></field>
+            <hidden-parameters><parameter name="organizationId"/></hidden-parameters>
             <field name="firstName"><header-field show-order-by="case-insensitive"><text-find size="25"/></header-field></field>
             <field name="lastName"><header-field show-order-by="case-insensitive"><text-find size="25"/></header-field></field>
 
