@@ -37,9 +37,32 @@ along with this software (see the LICENSE.md file). If not, see
         <iterate list="processStoryActivityList" entry="processStoryActivity">
             <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
         </iterate>
-        <service-call name="coarchy.CoarchyServices.createActivity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum]"/>
+        <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum,implementationId:implementationId]"/>
+    </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
 
-<!--        <log level="warn" message="insertActivity context.toString() ${context.toString()}"/>-->
+    <transition name="insertParagraphBreak"><actions>
+        <set field="insertSequenceNum" from="sequenceNum"/>
+        <if condition="insertType=='below'">
+            <set field="pageIndex" from="downPageIndex"/>
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
+                <select-field field-name="processStoryActivityId,sequenceNum"/>
+                <order-by field-name="sequenceNum"/></entity-find>
+            <!-- This might be null, but if it is null then the right behavior will happen anyways -->
+            <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum"/>
+        </if>
+
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+            <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum"/>
+            <select-field field-name="processStoryActivityId,sequenceNum"/>
+            <order-by field-name="-sequenceNum"/></entity-find>
+        <iterate list="processStoryActivityList" entry="processStoryActivity">
+            <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+        </iterate>
+        <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
+        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:activeOrgId]"/>
+
+        <!--        <log level="warn" message="insertActivity context.toString() ${context.toString()}"/>-->
     </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
 
     <actions>
@@ -47,22 +70,49 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <form-single name="Insert" transition="insertActivity">
-            <field name="pageIndex"><default-field><hidden/></default-field></field>
-            <field name="downPageIndex"><default-field><hidden/></default-field></field>
-            <field name="processStoryId"><default-field><hidden/></default-field></field>
-            <field name="sequenceNum"><default-field><hidden/></default-field></field>
-            <field name="condition"><default-field title="Condition (optional)"><text-area rows="2" autogrow="true"/></default-field></field>
-            <field name="actorIdList">
-                <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
-                    <list-options list="activityActorList" key="${actorId}" text="${name}"/>
-                    <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
-                </drop-down></default-field></field>
-            <field name="action"><default-field title="Action"><text-area rows="2" autogrow="true"/></default-field></field>
-            <field name="insertType" from="'below'"><default-field>
-                <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
-            </default-field></field>
-            <field name="submit"><default-field><submit text="Add Activity"/></default-field></field>
-        </form-single>
+        <container-box>
+            <box-header title="Insert Activity"/>
+            <box-body>
+                <form-single name="InsertActivity" transition="insertActivity">
+                    <field name="pageIndex"><default-field><hidden/></default-field></field>
+                    <field name="downPageIndex"><default-field><hidden/></default-field></field>
+                    <field name="processStoryId"><default-field><hidden/></default-field></field>
+                    <field name="sequenceNum"><default-field><hidden/></default-field></field>
+                    <field name="condition"><default-field title="Condition (optional)"><text-area rows="2" autogrow="true"/></default-field></field>
+                    <field name="actorIdList">
+                        <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
+                            <list-options list="activityActorList" key="${actorId}" text="${name}"/>
+                            <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
+                        </drop-down></default-field></field>
+                    <field name="action"><default-field title="Action"><text-area rows="2" autogrow="true"/></default-field></field>
+                    <field name="implementationId"><default-field title="Implementation Status"><drop-down allow-empty="true">
+                        <entity-options key="${enumId}" text="${description}">
+                            <entity-find entity-name="moqui.basic.Enumeration">
+                                <econdition field-name="enumTypeId" value="ActivityImplementation"/>
+                                <order-by field-name="sequenceNum"/></entity-find>
+                        </entity-options>
+                    </drop-down></default-field></field>
+                    <field name="insertType" from="'below'"><default-field>
+                        <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
+                    </default-field></field>
+                    <field name="submit"><default-field><submit text="Add Activity" type="success"/></default-field></field>
+                </form-single>
+            </box-body>
+        </container-box>
+        <container-box>
+            <box-header title="Insert Paragraph Break"/>
+            <box-body>
+                <form-single name="InsertParagraphBreak" transition="insertParagraphBreak">
+                    <field name="pageIndex"><default-field><hidden/></default-field></field>
+                    <field name="downPageIndex"><default-field><hidden/></default-field></field>
+                    <field name="processStoryId"><default-field><hidden/></default-field></field>
+                    <field name="sequenceNum"><default-field><hidden/></default-field></field>
+                    <field name="insertType" from="'below'"><default-field>
+                        <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
+                    </default-field></field>
+                    <field name="submit"><default-field><submit text="Add Paragraph Break ⏎"/></default-field></field>
+                </form-single>
+            </box-body>
+        </container-box>
     </widgets>
 </screen>

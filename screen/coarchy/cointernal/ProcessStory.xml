@@ -33,20 +33,43 @@ along with this software (see the LICENSE.md file). If not, see
     <transition name="newParagraph"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
 
-        <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
+        <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
+            <econdition field-name="sequenceNum" from="insertSequenceNum"/>
             <order-by field-name="-sequenceNum"/></entity-find>
-        <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
-        <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
-        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:activeOrgId]"/>
-        </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
+        <if condition="processStoryInitialActivityList?.size() &gt; 0">
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum"/>
+                <select-field field-name="processStoryActivityId,sequenceNum"/>
+                <order-by field-name="-sequenceNum"/></entity-find>
+            <iterate list="processStoryActivityList" entry="processStoryActivity">
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+            </iterate>
+        </if>
+
+        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:activeOrgId]"/>
+        </actions><default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
 
     <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action]" out-map="newActivity"/>
-<!--        <actions><log level="warn" message="createActivity context.toString() ${context.toString()}"/></actions>-->
-        <default-response url="." parameter-map="[pageIndex:downPageIndex]"/></transition>
+        <actions>
+            <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
+                <econdition field-name="sequenceNum" from="insertSequenceNum"/>
+                <order-by field-name="-sequenceNum"/></entity-find>
+            <if condition="processStoryInitialActivityList?.size() &gt; 0">
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                    <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum"/>
+                    <select-field field-name="processStoryActivityId,sequenceNum"/>
+                    <order-by field-name="-sequenceNum"/></entity-find>
+                <iterate list="processStoryActivityList" entry="processStoryActivity">
+                    <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+                </iterate>
+            </if>
+
+            <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum,implementationId:implementationId]" out-map="newActivity"/>
+        </actions>
+        <default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
 
     <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <actions><service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/></actions>
+        <service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/>
         <default-response url="."/></transition>
 
     <transition name="activityMoveUp"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
@@ -140,7 +163,22 @@ along with this software (see the LICENSE.md file). If not, see
 
         <set field="pageIndex" from="pageIndex?:0"/>
         <set field="showMoveUpDown" from="(!orderByField || orderByField == 'sequenceNum') &amp;&amp; !actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
-<!--        <log level="warn" message="ProcessStory context.toString() ${context.toString()}"/>-->
+
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
+            <search-form-inputs default-order-by="sequenceNum"/>
+            <econdition field-name="processStoryId"/>
+            <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
+            <!-- Don't select fields from activityactor (actorId) -->
+            <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
+        </entity-find>
+
+        <log level="warn" message="ProcessStory context.toString() ${context.toString()}"/>
+
+<!--        <log level="warn" message="Is a lower page ${processStoryActivityListPageRangeLow!=1} where processStoryActivityListPageRangeLow ${processStoryActivityListPageRangeLow}"/>-->
+<!--        <log level="warn" message="highest possible on page ${processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize} where processStoryActivityListPageSize ${processStoryActivityListPageSize}"/>-->
+<!--        <log level="warn" message="Is a higher page ${processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount} where processStoryActivityListCount ${processStoryActivityListCount}"/>-->
+<!--        <log level="warn" message="${processStoryActivityListPageRangeLow!=1 &amp;&amp; processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeHigh}"/>-->
+
     </actions>
 
     <widgets>
@@ -172,13 +210,6 @@ along with this software (see the LICENSE.md file). If not, see
                 show-csv-button="true" show-page-size="true"
                 transition="updateActivity" transition-last-row="createActivity"
                 map-last-row="[actorIdList:null,condition:null,action:null]">
-            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
-                <search-form-inputs default-order-by="sequenceNum"/>
-                <econdition field-name="processStoryId"/>
-                <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
-                <!-- Don't select fields from activityactor (actorId) -->
-                <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId"/>
-            </entity-find>
 
             <row-actions>
                 <set field="activityActorList" from="[]"/>
@@ -206,6 +237,9 @@ along with this software (see the LICENSE.md file). If not, see
 
             <hidden-parameters><parameter name="processStoryId"/></hidden-parameters>
             <field name="activityId"><default-field><hidden/></default-field></field>
+            <field name="pageIndex"><default-field><hidden/></default-field></field>
+            <field name="insertSequenceNum"><last-row-field><hidden default-value="${processStoryActivityList?.last()?.sequenceNum+1?:0}"/></last-row-field></field>
+            <field name="newPageIndex"><last-row-field><hidden default-value="${processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount?pageIndex.toInteger()+1:pageIndex}"/></last-row-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
             <field name="moveUp"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveUp"
@@ -215,7 +249,7 @@ along with this software (see the LICENSE.md file). If not, see
                     parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum,pageIndex:processStoryActivityListPageRangeLow+processStoryActivityList_index==processStoryActivityListPageRangeHigh?pageIndex.toInteger()+1:pageIndex]"
                     condition="processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount || processStoryActivityListPageRangeLow+processStoryActivityList_index!=processStoryActivityListPageRangeHigh" icon="fa fa-angle-down" text=" "/></conditional-field></field>
             <!-- TODO: Fix allowing < and > tags in to prevent attacks -->
-<!--            <field name="sequenceNum" from="pageIndex"><default-field><display/></default-field></field>-->
+<!--            <field name="sequenceNum"><default-field><display/></default-field></field>-->
             <field name="condition"><header-field title="Condition (optional)" show-order-by="case-insensitive"><text-find size="25"/></header-field>
                 <conditional-field condition="action" title="Condition (optional)"><text-area rows="4" cols="40" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="4" cols="40"/></last-row-field></field>
@@ -234,29 +268,54 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25"/></header-field>
                 <conditional-field condition="action" title="Action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
+            <field name="implementationId">
+                <header-field title="Implementation Status" show-order-by="case-insensitive">
+                    <drop-down allow-empty="true">
+                        <entity-options key="${enumId}" text="${description}">
+                            <entity-find entity-name="moqui.basic.Enumeration">
+                                <econdition field-name="enumTypeId" value="ActivityImplementation"/>
+                                <order-by field-name="sequenceNum"/></entity-find>
+                        </entity-options>
+                    </drop-down>
+                </header-field>
+                <conditional-field condition="action" title="Implementation Status"><drop-down allow-empty="true" submit-on-select="true">
+                    <entity-options key="${enumId}" text="${description}">
+                        <entity-find entity-name="moqui.basic.Enumeration">
+                            <econdition field-name="enumTypeId" value="ActivityImplementation"/>
+                            <order-by field-name="sequenceNum"/></entity-find>
+                    </entity-options>
+                </drop-down></conditional-field>
+                <last-row-field><drop-down allow-empty="true">
+                    <entity-options key="${enumId}" text="${description}">
+                        <entity-find entity-name="moqui.basic.Enumeration">
+                            <econdition field-name="enumTypeId" value="ActivityImplementation"/>
+                            <order-by field-name="sequenceNum"/></entity-find>
+                    </entity-options>
+                </drop-down></last-row-field></field>
             <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
                     parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
             <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action" title=""><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
-            <field name="insert"><conditional-field condition="partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="Insert" button-text="Insert" transition="InsertActivity"
+            <field name="insert"><conditional-field condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown" title=""><dynamic-dialog id="Insert" button-text="Insert" transition="InsertActivity"
                     parameter-map="[processStoryId:processStory.processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"/></conditional-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
                 <conditional-field condition="action"><submit text="Update"/></conditional-field>
                 <!-- TODO: Figure out how to run row-actions for the last row field -->
-                <last-row-field><submit text="Add Activity"/></last-row-field></field>
+                <last-row-field><submit text="Add Activity" type="success"/></last-row-field></field>
             <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
             <field name="newParagraph"><conditional-field condition="false" title=""><label text=" "/></conditional-field>
-                <last-row-field><link url="newParagraph" text="⏎" tooltip="New Paragraph" parameter-map="[pageIndex:processStoryActivityListPageMaxIndex]"/></last-row-field></field>
+                <last-row-field><link url="newParagraph" text="⏎" tooltip="Add Paragraph Break" parameter-map="[insertSequenceNum:processStoryActivityList?.last()?.sequenceNum+1?:0,newPageIndex:processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount?pageIndex.toInteger()+1:pageIndex]"/></last-row-field></field>
 
             <form-list-column><field-ref name="condition"/></form-list-column>
             <form-list-column><field-ref name="actorIdList"/></form-list-column>
             <form-list-column><field-ref name="action"/></form-list-column>
+            <form-list-column><field-ref name="implementationId"/></form-list-column>
             <form-list-column><field-ref name="submit"/></form-list-column>
 
             <columns>
                 <column><field-ref name="moveUp"/><field-ref name="moveDown"/></column>
                 <column><field-ref name="condition"/></column>
 <!--                <column><field-ref name="sequenceNum"/><field-ref name="condition"/></column>-->
-                <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
+                <column><field-ref name="actorIdList"/><field-ref name="action"/><field-ref name="implementationId"/></column>
                 <column><field-ref name="submit"/><field-ref name="insert"/></column>
                 <column><field-ref name="newParagraph"/><field-ref name="substory"/><field-ref name="substoryLink"/><field-ref name="delete"/></column>
             </columns>

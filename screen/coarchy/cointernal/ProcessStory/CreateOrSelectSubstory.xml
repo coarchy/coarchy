@@ -39,7 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <widgets>
         <container-box>
-            <box-header title="Create New Substory"></box-header>
+            <box-header title="Create New Substory"/>
             <box-body>
                 <form-single name="CreateSubstory" transition="createSubstory">
                     <field name="processStoryActivityId"><default-field><hidden/></default-field></field>
@@ -49,7 +49,7 @@ along with this software (see the LICENSE.md file). If not, see
             </box-body>
         </container-box>
         <container-box>
-            <box-header title="Select Existing Substory"></box-header>
+            <box-header title="Select Existing Substory"/>
             <box-body>
                 <form-single name="SelectSubstory" transition="selectSubstory">
                     <field name="processStoryActivityId"><default-field><hidden/></default-field></field>

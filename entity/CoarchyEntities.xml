@@ -28,6 +28,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="condition" type="text-intermediate"/>
         <field name="action" type="text-intermediate"/>
 
+        <field name="implementationId" type="id"/>
+
         <field name="organizationId" type="id"/>
 
         <relationship type="many" related="ActivityActor" short-alias="actors">
@@ -35,6 +37,17 @@ along with this software (see the LICENSE.md file). If not, see
 
         <relationship type="one" related="mantle.party.Organization" short-alias="organization">
             <key-map field-name="organizationId" related="partyId"/></relationship>
+        <relationship type="one" related="moqui.basic.Enumeration" short-alias="implementation">
+            <key-map field-name="implementationId" related="enumId"/></relationship>
+
+        <seed-data>
+            <!-- Activity Implementation -->
+            <moqui.basic.EnumerationType description="Activity Implementation Status" enumTypeId="ActivityImplementation">
+                <moqui.basic.Enumeration description="Already being done" enumId="AiDone" sequenceNum="10"/>
+                <moqui.basic.Enumeration description="To be started now" enumId="AiStarting" sequenceNum="20"/>
+                <moqui.basic.Enumeration description="To be done at some point" enumId="AiLater" sequenceNum="30"/>
+            </moqui.basic.EnumerationType>
+        </seed-data>
     </entity>
 
     <entity entity-name="Actor" package="coarchy">
@@ -129,11 +142,12 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="visibilityEnumId"/></relationship>
         <seed-data>
             <!-- Party Visibility -->
-            <moqui.basic.EnumerationType description="Party Visibility" enumTypeId="PartyVisibility"/>
-            <!-- if set to all users then may show in organization lists to clone for all users -->
-            <moqui.basic.Enumeration description="Public" enumId="PvPublic" enumTypeId="PartyVisibility"/>
-            <!-- for these settings will show only if associated with something, but will have limited visibility based on this setting -->
-            <moqui.basic.Enumeration description="Organization Access" enumId="PvOrganization" enumTypeId="PartyVisibility"/>
+            <moqui.basic.EnumerationType description="Party Visibility" enumTypeId="PartyVisibility">
+                <!-- if set to all users then may show in organization lists to clone for all users -->
+                <moqui.basic.Enumeration description="Public" enumId="PvPublic"/>
+                <!-- for these settings will show only if associated with something, but will have limited visibility based on this setting -->
+                <moqui.basic.Enumeration description="Organization Access" enumId="PvOrganization"/>
+            </moqui.basic.EnumerationType>
         </seed-data>
     </extend-entity>
 </entities>

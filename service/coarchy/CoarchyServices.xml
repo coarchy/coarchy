@@ -40,6 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="actorIdList" type="List"/>
             <parameter name="action"/>
             <parameter name="sequenceNum"/>
+            <parameter name="implementationId"/>
         </in-parameters>
         <out-parameters>
             <parameter name="activityId"/>
@@ -48,7 +49,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
-            <service-call name="create#coarchy.Activity" in-map="[condition:condition, action:action, organizationId:organizationId]" out-map="newActivity"/>
+            <service-call name="create#coarchy.Activity" in-map="[condition:condition.trim(), action:action.trim(), organizationId:organizationId, implementationId:implementationId]" out-map="newActivity"/>
             <set field="activityId" from="newActivity.activityId"/>
 
             <set field="newSequenceNum" from="sequenceNum"/>
@@ -81,12 +82,13 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="activityId" required="true"/>
             <parameter name="condition"/>
             <parameter name="actorIdList" type="List"/>
-            <parameter name="action"/>
+            <parameter name="action" required="true"/>
+            <parameter name="implementationId"/>
             <parameter name="organizationId" required="true"/>
         </in-parameters>
         <actions>
 <!--            <log level="warn" message="update activity context.toString() ${context.toString()}"/>-->
-            <service-call name="update#coarchy.Activity" in-map="[activityId:activityId,condition:condition,action:action]"/>
+            <service-call name="update#coarchy.Activity" in-map="[activityId:activityId,condition:condition.trim(),action:action.trim(),implementationId:implementationId]"/>
             <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
                 <econdition field-name="activityId"/>
                 <order-by field-name="name"/></entity-find>
@@ -100,9 +102,6 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <set field="actorIdCreateList" from="actorIdList?:[] - actorIdDeleteList?:[]"/>
-<!--                    <log level="warn" message="context.toString() ${context.toString()}"/>-->
-<!--            <log level="warn" message="actorIdCreateList instanceof String ${actorIdCreateList instanceof String}"/>-->
-<!--            <log level="warn" message="actorIdList instanceof String ${actorIdList instanceof String}"/>-->
             <if condition="actorIdCreateList instanceof String">
                 <then>
                     <service-call name="store#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdCreateList, organizationId:organizationId]"/></then>
