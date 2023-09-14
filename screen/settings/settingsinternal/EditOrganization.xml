@@ -48,7 +48,7 @@ along with this software (see the LICENSE.md file). If not, see
     <actions>
         <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:organizationId]"/>
 
-        <log level="warn" message="context.toString() ${context.toString()}"/>
+<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
