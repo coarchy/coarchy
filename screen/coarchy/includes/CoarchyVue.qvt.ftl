@@ -93,7 +93,7 @@ along with this software (see the LICENSE.md file). If not, see
 <#--            </q-btn>-->
 
             <#-- nav plugins See in root CoarchyComVue.qvt.ftl -->
-<#--            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>-->
+            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>
 
             <#-- notify history See in root CoarchyComVue.qvt.ftl -->
 
@@ -118,7 +118,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </q-menu>
                 </q-btn>
 
-                <#--            <q-btn push icon="account_circle">-->
+<#--            <q-btn push icon="account_circle">-->
 <#--                <q-tooltip>${(ec.user.userAccount.userFullName)!ec.l10n.localize("Account")}</q-tooltip>-->
 <#--                <q-menu><q-card flat bordered>&lt;#&ndash; always matching header (dark): class="${headerClass}" &ndash;&gt;-->
 <#--                        <q-card-section horizontal class="q-pa-md">-->

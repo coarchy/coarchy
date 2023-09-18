@@ -209,7 +209,7 @@ along with this software (see the LICENSE.md file). If not, see
         <form-list name="ProcessStory" header-dialog="true" list="processStoryActivityList"
                 show-csv-button="true" show-page-size="true"
                 transition="updateActivity" transition-last-row="createActivity"
-                map-last-row="[actorIdList:null,condition:null,action:null]">
+                map-last-row="[actorIdList:null,condition:null,action:null,implementationId:null]">
 
             <row-actions>
                 <set field="activityActorList" from="[]"/>
@@ -285,7 +285,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></conditional-field>
-                <last-row-field><drop-down allow-empty="true">
+                <last-row-field title="Implementation Status"><drop-down allow-empty="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ActivityImplementation"/>
@@ -303,7 +303,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <last-row-field><submit text="Add Activity" type="success"/></last-row-field></field>
             <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
             <field name="newParagraph"><conditional-field condition="false" title=""><label text=" "/></conditional-field>
-                <last-row-field><link url="newParagraph" text="Paragraph ⏎" tooltip="Add Paragraph Break" parameter-map="[insertSequenceNum:processStoryActivityList?.last()?.sequenceNum+1?:0,newPageIndex:processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount?pageIndex.toInteger()+1:pageIndex]"/></last-row-field></field>
+                <last-row-field><link url="newParagraph" text="Paragraph ⏎" tooltip="Add Paragraph Break" parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,newPageIndex:processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount?pageIndex.toInteger()+1:pageIndex]"/></last-row-field></field>
 
             <form-list-column><field-ref name="condition"/></form-list-column>
             <form-list-column><field-ref name="actorIdList"/></form-list-column>
@@ -313,9 +313,9 @@ along with this software (see the LICENSE.md file). If not, see
 
             <columns>
                 <column><field-ref name="moveUp"/><field-ref name="moveDown"/></column>
-                <column><field-ref name="condition"/></column>
+                <column><field-ref name="implementationId"/><field-ref name="condition"/></column>
 <!--                <column><field-ref name="sequenceNum"/><field-ref name="condition"/></column>-->
-                <column><field-ref name="actorIdList"/><field-ref name="action"/><field-ref name="implementationId"/></column>
+                <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
                 <column><field-ref name="submit"/><field-ref name="insert"/></column>
                 <column><field-ref name="newParagraph"/><field-ref name="substory"/><field-ref name="substoryLink"/><field-ref name="delete"/></column>
             </columns>

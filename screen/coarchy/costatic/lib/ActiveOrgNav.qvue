@@ -21,6 +21,7 @@ module.exports = {
                     if (partyId) { for (var i=0; i<orgList.length; i++) { if (orgList[i].partyId === partyId) { vm.activeOrg = orgList[i]; break; } } }
                     else { vm.activeOrg = null; }
                     vm.$root.reloadSubscreens();
+                    moqui.webrootVue.setUrl("/coapp", null);
                 }
             });
         }
