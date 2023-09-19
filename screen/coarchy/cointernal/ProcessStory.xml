@@ -238,8 +238,8 @@ along with this software (see the LICENSE.md file). If not, see
             <hidden-parameters><parameter name="processStoryId"/></hidden-parameters>
             <field name="activityId"><default-field><hidden/></default-field></field>
             <field name="pageIndex"><default-field><hidden/></default-field></field>
-<!--            <field name="insertSequenceNum"><last-row-field><hidden default-value="${processStoryActivityList?.last()?.sequenceNum+1?:0}"/></last-row-field></field>-->
-<!--            <field name="newPageIndex"><last-row-field><hidden default-value="${processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount?pageIndex.toInteger()+1:pageIndex}"/></last-row-field></field>-->
+            <field name="insertSequenceNum"><last-row-field><hidden default-value="${processStoryActivityList?.last()?.sequenceNum+1?:0}"/></last-row-field></field>
+            <field name="newPageIndex"><last-row-field><hidden default-value="${processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount?pageIndex.toInteger()+1:pageIndex}"/></last-row-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
             <field name="moveUp"><default-field title="Move Up"><link url="activityMoveUp"

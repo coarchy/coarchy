@@ -36,7 +36,11 @@ Vue.component('c-login', {
                 })
 
         },
-    }
+    },
+    mounted: function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('username')) this.username = urlParams.get('username')
+    },
 });
 Vue.component('c-sign-up', {
     name: "cSignUp",

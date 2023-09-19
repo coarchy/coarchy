@@ -56,10 +56,10 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <set field="activityIdMap" from="[:]"/>
                 <entity-find entity-name="coarchy.Activity" list="activityList">
-                <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
                 </entity-find>
                 <iterate list="activityList" entry="activity">
-                    <service-call name="create#coarchy.Activity" in-map="[condition:activity.condition,action:activity.action,organizationId:newOrganization.partyId]" out-map="activityContext"/>
+                    <service-call name="create#coarchy.Activity" in-map="[condition:activity.condition,action:activity.action,implementationId:activity.implementationId,organizationId:newOrganization.partyId]" out-map="activityContext"/>
                     <script>activityIdMap.put(activity.activityId,activityContext.activityId)</script>
                 </iterate>
 
@@ -84,26 +84,38 @@ along with this software (see the LICENSE.md file). If not, see
 
 
     <transition name="inviteUser"><actions>
-        <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
+        <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:partyId]"/>
         <if condition="!organization || !organization.ownerPartyId"><return/></if>
         <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
-            <service-call name="mantle.party.PartyServices.create#Account" out-map="newUser"
-                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress]"/>
-            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
+            <entity-find entity-name="moqui.security.UserAccount" list="existingUaList">
+                <econdition field-name="emailAddress" ignore-case="true"/></entity-find>
+            <if condition="!existingUaList"><then>
+                <service-call name="mantle.party.PartyServices.create#Account" out-map="newUser"
+                        in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress]"/>
+                <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
+            </then><else>
+                <set field="newUser" from="existingUaList?.getFirst()"/>
+            </else></if>
 
             <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:partyId]"/>
             <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
 
-            <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
-            <!-- reset the password to a random value -->
-            <set field="resetPassword" from="getRandomString(12)"/>
-            <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
-            <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
-            <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
-            <entity-update value-field="userAccount"/>
-
             <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
-            <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'USER_INVITE',toAddresses:emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,title:'You\'ve been invited to join Coarchy']]"/>
+            <if condition="!existingUaList"><then>
+
+                <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
+                <!-- reset the password to a random value -->
+                <set field="resetPassword" from="getRandomString(12)"/>
+                <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
+                <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
+                <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
+                <entity-update value-field="userAccount"/>
+
+                <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'USER_INVITE_RESET_PASSWORD',toAddresses:emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,title:'You\'re invited to join the '+organization.organizationName+' Organization']]"/>
+            </then><else>
+                <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'USER_INVITE',toAddresses:emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+emailAddress,title:'You\'re invited to join the '+organization.organizationName+' Organization']]"/>
+            </else></if>
+
             <else><return type="danger" error="true" message="Not allowed"/></else>
         </if>
         </actions><default-response url="../EditOrganization" parameter-map="[organizationId:partyId]"/></transition>

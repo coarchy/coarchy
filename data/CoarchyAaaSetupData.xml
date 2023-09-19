@@ -56,8 +56,11 @@ along with this software (see the LICENSE.md file). If not, see
             resourceValue="/costatic/lib/ActiveOrgNav.qvue"/>
 
     <!-- EmailTemplate for User Invite -->
+    <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE_RESET_PASSWORD" description="User Invite with Reset Password" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteResetPasswordEmail.xml" webappName="webroot"
+            fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
     <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE" description="User Invite" emailServerId="SYSTEM"
-            emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteEmail.xml" webappName="webroot"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteEmail.xml" webappName="webroot"
             fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
 
     <!-- Data Documents -->
