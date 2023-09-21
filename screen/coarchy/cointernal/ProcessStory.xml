@@ -16,6 +16,9 @@ along with this software (see the LICENSE.md file). If not, see
         default-menu-title="Process Story" default-menu-index="92" menu-image="fa fa-file" menu-image-type="icon">
 
     <parameter name="processStoryId" required="true"/>
+    <parameter name="pageIndex" from="pageIndex?:0"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField" value="sequenceNum"/>
 
     <always-actions>
         <if condition="!activeOrgId">
@@ -38,7 +41,7 @@ along with this software (see the LICENSE.md file). If not, see
             <order-by field-name="-sequenceNum"/></entity-find>
         <if condition="processStoryInitialActivityList?.size() &gt; 0">
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
-                <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum"/>
+                <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
                 <select-field field-name="processStoryActivityId,sequenceNum"/>
                 <order-by field-name="-sequenceNum"/></entity-find>
             <iterate list="processStoryActivityList" entry="processStoryActivity">
@@ -52,11 +55,11 @@ along with this software (see the LICENSE.md file). If not, see
     <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions>
             <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
-                <econdition field-name="sequenceNum" from="insertSequenceNum"/>
+                <econdition field-name="sequenceNum" from="insertSequenceNum.toInteger()"/>
                 <order-by field-name="-sequenceNum"/></entity-find>
             <if condition="processStoryInitialActivityList?.size() &gt; 0">
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
-                    <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum"/>
+                    <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
                     <select-field field-name="processStoryActivityId,sequenceNum"/>
                     <order-by field-name="-sequenceNum"/></entity-find>
                 <iterate list="processStoryActivityList" entry="processStoryActivity">
@@ -143,7 +146,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="updateProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <service-call name="update#coarchy.ProcessStory"/>
-        <default-response/></transition>
+        <default-response url="."/></transition>
 
     <transition-include name="createActor" location="component://coarchy/screen/coarchy/cointernal/Actor.xml"/>
 
@@ -162,7 +165,6 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="detailProcessStoryId" from="processStoryId"/>
             <order-by field-name="-lastUpdatedStamp"/></entity-find>
 
-        <set field="pageIndex" from="pageIndex?:0"/>
         <set field="showMoveUpDown" from="(!orderByField || orderByField == 'sequenceNum') &amp;&amp; !actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
 
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
@@ -234,7 +236,6 @@ along with this software (see the LICENSE.md file). If not, see
 <!--                <log level="warn" message="Is a higher page ${processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount} where processStoryActivityListCount ${processStoryActivityListCount}"/>-->
 <!--                <log level="warn" message="Should moveDown ${processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount || processStoryActivityListPageRangeLow+processStoryActivityList_index!=processStoryActivityListPageRangeHigh} where processStoryActivityListPageRangeLow ${processStoryActivityListPageRangeLow}"/>-->
 <!--                <log level="warn" message="${processStoryActivityListPageRangeLow!=1 &amp;&amp; processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeHigh}"/>-->
-
             </row-actions>
 
             <hidden-parameters><parameter name="processStoryId"/></hidden-parameters>
@@ -297,15 +298,15 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
                     parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
             <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action" title=""><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
-            <field name="insert"><conditional-field condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown" title=""><dynamic-dialog id="Insert" button-text="Insert" transition="InsertActivity"
-                    parameter-map="[processStoryId:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"/></conditional-field></field>
+            <field name="insert"><conditional-field condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown" title=""><dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
+                    parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"/></conditional-field></field>
             <field name="submit"><header-field title="Find"><submit/></header-field>
                 <conditional-field condition="action"><submit text="Update"/></conditional-field>
                 <!-- TODO: Figure out how to run row-actions for the last row field -->
                 <last-row-field><submit text="Add Activity" type="success"/></last-row-field></field>
             <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
             <field name="newParagraph"><conditional-field condition="false" title=""><label text=" "/></conditional-field>
-                <last-row-field><link url="newParagraph" text="Paragraph ⏎" tooltip="Add Paragraph Break" parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,newPageIndex:(processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp; processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex]"/></last-row-field></field>
+                <last-row-field><link url="newParagraph" text="Paragraph ⏎" tooltip="Add Paragraph Break" parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,newPageIndex:((processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp; processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex)]"/></last-row-field></field>
 
             <form-list-column><field-ref name="condition"/></form-list-column>
             <form-list-column><field-ref name="actorIdList"/></form-list-column>

@@ -173,14 +173,13 @@ along with this software (see the LICENSE.md file). If not, see
         <form-list name="Organization" header-dialog="true" list="organizationFormList" transition="updateOrganization"
                 show-page-size="true">
             <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationFormList" distinct="true">
-                <search-form-inputs/>
+                <search-form-inputs default-order-by="-visibilityEnumId"/>
                 <date-filter/>
                 <econditions combine="or">
                     <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
                     <econdition field-name="visibilityEnumId" value="PvPublic"/>
                 </econditions>
-                <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
-                <order-by field-name="-visibilityEnumId"/></entity-find>
+                <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/></entity-find>
 
             <field name="partyId" from="toPartyId"><default-field><hidden/></default-field></field>
             <field name="organizationName">

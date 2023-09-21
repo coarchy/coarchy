@@ -15,6 +15,10 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-include="false" standalone="true">
 
+    <parameter name="pageIndex"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField"/>
+
     <transition-include name="getActorList" location="component://coarchy/screen/coarchy/cointernal/ProcessStory.xml"/>
 
     <transition name="insertActivity"><actions>
@@ -38,7 +42,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
         </iterate>
         <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum,implementationId:implementationId]"/>
-    </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
+    </actions><default-response url=".." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
 
     <transition name="insertParagraphBreak"><actions>
         <set field="insertSequenceNum" from="sequenceNum"/>
@@ -49,11 +53,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <select-field field-name="processStoryActivityId,sequenceNum"/>
                 <order-by field-name="sequenceNum"/></entity-find>
             <!-- This might be null, but if it is null then the right behavior will happen anyways -->
-            <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum"/>
+            <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum?:insertSequenceNum.toInteger()+1"/>
         </if>
 
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
-            <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum"/>
+            <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
             <select-field field-name="processStoryActivityId,sequenceNum"/>
             <order-by field-name="-sequenceNum"/></entity-find>
         <iterate list="processStoryActivityList" entry="processStoryActivity">
@@ -62,8 +66,8 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
         <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:activeOrgId]"/>
 
-        <!--        <log level="warn" message="insertActivity context.toString() ${context.toString()}"/>-->
-    </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
+<!--        <log level="warn" message="insertActivity context.toString() ${context.toString()}"/>-->
+    </actions><default-response url=".." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
 
     <actions>
 <!--        <log level="warn" message="InsertActivity context.toString() ${context.toString()}"/>-->
@@ -78,13 +82,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <field name="downPageIndex"><default-field><hidden/></default-field></field>
                     <field name="processStoryId"><default-field><hidden/></default-field></field>
                     <field name="sequenceNum"><default-field><hidden/></default-field></field>
-                    <field name="condition"><default-field title="Condition (optional)"><text-area rows="2" autogrow="true"/></default-field></field>
-                    <field name="actorIdList">
-                        <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
-                            <list-options list="activityActorList" key="${actorId}" text="${name}"/>
-                            <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
-                        </drop-down></default-field></field>
-                    <field name="action"><default-field title="Action"><text-area rows="2" autogrow="true"/></default-field></field>
                     <field name="implementationId"><default-field title="Implementation Status"><drop-down allow-empty="true">
                         <entity-options key="${enumId}" text="${description}">
                             <entity-find entity-name="moqui.basic.Enumeration">
@@ -92,6 +89,13 @@ along with this software (see the LICENSE.md file). If not, see
                                 <order-by field-name="sequenceNum"/></entity-find>
                         </entity-options>
                     </drop-down></default-field></field>
+                    <field name="condition"><default-field title="Condition (optional)"><text-area rows="2" autogrow="true"/></default-field></field>
+                    <field name="actorIdList">
+                        <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
+                            <list-options list="activityActorList" key="${actorId}" text="${name}"/>
+                            <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
+                        </drop-down></default-field></field>
+                    <field name="action"><default-field title="Action"><text-area rows="2" autogrow="true"/></default-field></field>
                     <field name="insertType" from="'below'"><default-field>
                         <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
                     </default-field></field>
