@@ -35,7 +35,7 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
 
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
-            <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum"/>
+            <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
             <select-field field-name="processStoryActivityId,sequenceNum"/>
             <order-by field-name="-sequenceNum"/></entity-find>
         <iterate list="processStoryActivityList" entry="processStoryActivity">
