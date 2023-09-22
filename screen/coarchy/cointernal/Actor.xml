@@ -13,9 +13,12 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Actor" default-menu-index="91" menu-image="/ssstatic/images/Sales.png" default-menu-include="true">
+        default-menu-title="Actor" default-menu-index="95" menu-image="/ssstatic/images/Sales.png">
 
     <parameter name="processStoryId"/>
+    <parameter name="pageIndex" from="pageIndex?:0"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField" value="name"/>
 
     <always-actions>
         <if condition="!activeOrgId">
@@ -32,22 +35,14 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="createActor">
         <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <actions>
-            <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
-                <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
-                <econdition field-name="name" from="name" ignore-case="true"/>
-            </entity-find>
-            <if condition="actorList"><return type="danger" message="Actor ${actorList?.getFirst()?.name} already exists"/></if>
-
-            <service-call name="create#coarchy.Actor" in-map="[name:name,description:description,organizationId:activeOrgId]"/>
-        </actions>
+        <service-call name="coarchy.CoarchyServices.create#Actor" in-map="[name:name,description:description,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
     <transition name="updateActor">
         <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="update#coarchy.Actor"/>
-        <default-response/>
+        <service-call name="coarchy.CoarchyServices.update#Actor" in-map="[actorId:actorId,name:name,description:description,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
     <transition name="deleteActor"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
@@ -65,7 +60,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <widgets>
         <label text="Actors" type="h4"/>
-        <link url="../FindProcessStory" text="Find Process Stories"/>
+<!--        <link url="../FindProcessStory" text="Find Process Stories"/>-->
         <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
                 condition="processStory"/>
 
@@ -100,10 +95,10 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>
-                <last-row-field><submit text="Add Actor"/></last-row-field></field>
+                <last-row-field><submit text="Add Actor" type="success"/></last-row-field></field>
             <field name="delete"><default-field title="">
                 <link url="deleteActor" parameter-map="[actorId:actorId]" icon="fa fa-trash" btn-type="danger"
-                        text=" " tooltip="Delete Actor" confirmation="Delete actor '${name}'?"/></default-field></field>
+                        text=" " tooltip="Delete Actor" confirmation="Delete Actor '${name}'?"/></default-field></field>
         </form-list>
     </widgets>
 </screen>

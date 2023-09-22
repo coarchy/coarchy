@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Process Stories" default-menu-index="90" menu-image="fa fa-file" menu-image-type="icon">
+        default-menu-title="Find Process Story" default-menu-index="90" menu-image="/ssstatic/images/Wiki.png">
 
     <always-actions>
         <if condition="!activeOrgId">
@@ -38,12 +38,12 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <label text="Process Stories" type="h4"/>
-        <link url="../Actor" text="Go to Actors"/>
-        <container-dialog id="CreateProcessStoryDialogue" button-text="Create Process Story" condition="partyRelationshipCount &gt; 0">
+        <label text="Find Process Story" type="h4"/>
+<!--        <link url="../Actor" text="Go to Actors"/>-->
+        <container-dialog id="CreateProcessStoryDialogue" button-text="Add Process Story" type="success" condition="partyRelationshipCount &gt; 0">
             <form-single name="CreateProcessStory" transition="createProcessStory">
                 <field name="name"><default-field><text-line/></default-field></field>
-                <field name="submit"><default-field><submit text="Create"/></default-field></field>
+                <field name="submit"><default-field><submit text="Add Process Story"/></default-field></field>
             </form-single></container-dialog>
 
         <form-list name="ProcessStory" header-dialog="true" list="processStoryList"

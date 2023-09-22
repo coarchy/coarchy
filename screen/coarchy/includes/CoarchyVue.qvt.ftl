@@ -39,6 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
             </q-bar>
 
             <q-toolbar style="font-size:15px;">
+                <q-btn flat icon="menu" @click="toggleLeftOpen()" size="lg"></q-btn>
 
 <#--            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>-->
             <#if headerLogoList?has_content>
@@ -135,6 +136,12 @@ along with this software (see the LICENSE.md file). If not, see
 <#--                    </q-card></q-menu>-->
 <#--            </q-btn>-->
             </q-toolbar></q-header>
+
+        <q-drawer v-model="leftOpen" side="left" bordered
+                  :width="200" :breakpoint="500"><#-- no 'overlay', for those who want to keep it open better to compress main area -->
+            <q-btn flat icon="menu" @click="toggleLeftOpen()" class="lt-sm"></q-btn>
+            <q-list padding><c-menu-nav-item :menu-index="0"></c-menu-nav-item></q-list>
+        </q-drawer>
 
         <q-page-container class="q-ma-sm"><q-page>
             <m-subscreens-active></m-subscreens-active>

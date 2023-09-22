@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Value Statements" default-menu-index="96" menu-image="/ssstatic/images/Vendor.png">
+
+    <parameter name="processStoryId"/>
+    <parameter name="pageIndex" from="pageIndex?:0"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField" value="value"/>
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+    </always-actions>
+
+    <transition name="createValue">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.create#ValueStatement" in-map="[value:value,typeEnumId:typeEnumId,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition name="updateValue">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition name="deleteValue"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
+        <entity-find-count entity-name="coarchy.ValueStatementActivity" count-field="valueStatementActivityCount">
+            <econdition field-name="valueStatementId"/></entity-find-count>
+        <if condition="valueStatementActivityCount &gt; 0">
+            <return type="warning" message="Cannot delete an Value Statement with Process Story Activities"/>
+        </if>
+        <service-call name="delete#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId]"/>
+        </actions><default-response/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
+    </actions>
+
+    <widgets>
+        <label text="Value Statements" type="h4"/>
+        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
+                condition="processStory"/>
+
+        <container-dialog id="CreateValueDialog" button-text="Add Value Statement" type="success">
+            <form-single name="CreateValueForm" transition="createValue">
+                <field name="value"><default-field title="Value Statement"><text-line/></default-field></field>
+                <field name="typeEnumId"><default-field title="Value Type"><drop-down allow-empty="true">
+                    <entity-options key="${enumId}" text="${description}">
+                        <entity-find entity-name="moqui.basic.Enumeration">
+                            <econdition field-name="enumTypeId" value="ValueType"/>
+                            <order-by field-name="sequenceNum"/></entity-find>
+                    </entity-options>
+                </drop-down></default-field></field>
+                <field name="submit"><default-field><submit text="Add Value Statement"/></default-field></field>
+            </form-single>
+        </container-dialog>
+
+        <form-list name="ValueStatement" header-dialog="true" show-page-size="true" show-csv-button="true"
+                list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null]">
+            <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
+                <search-form-inputs default-order-by="^value"/></entity-find>
+
+            <field name="valueStatementId"><default-field><hidden/></default-field></field>
+            <field name="value">
+                <header-field title="Value Statement" show-order-by="case-insensitive"><text-find/></header-field>
+                <default-field title="Value Statement"><text-line/></default-field>
+                <last-row-field title="Value Statement"><text-line/></last-row-field>
+            </field>
+            <field name="typeEnumId">
+                <header-field title="Value Type" show-order-by="case-insensitive"><drop-down allow-empty="true">
+                    <entity-options key="${enumId}" text="${description}">
+                        <entity-find entity-name="moqui.basic.Enumeration">
+                            <econdition field-name="enumTypeId" value="ValueType"/>
+                            <order-by field-name="sequenceNum"/></entity-find>
+                    </entity-options>
+                </drop-down></header-field>
+                <default-field title="Value Type"><drop-down allow-empty="true" submit-on-select="true">
+                    <entity-options key="${enumId}" text="${description}">
+                        <entity-find entity-name="moqui.basic.Enumeration">
+                            <econdition field-name="enumTypeId" value="ValueType"/>
+                            <order-by field-name="sequenceNum"/></entity-find>
+                    </entity-options>
+                </drop-down></default-field>
+                <last-row-field title="Value Type"><drop-down allow-empty="true">
+                    <entity-options key="${enumId}" text="${description}">
+                        <entity-find entity-name="moqui.basic.Enumeration">
+                            <econdition field-name="enumTypeId" value="ValueType"/>
+                            <order-by field-name="sequenceNum"/></entity-find>
+                    </entity-options>
+                </drop-down></last-row-field></field>
+            <field name="submit">
+                <header-field><submit text="Submit"/></header-field>
+                <default-field><submit text="Update"/></default-field>
+                <last-row-field><submit text="Add Value Statement" type="success"/></last-row-field></field>
+            <field name="delete"><default-field title="">
+                <link url="deleteValue" parameter-map="[valueStatementId:valueStatementId]" icon="fa fa-trash" btn-type="danger"
+                        text=" " tooltip="Delete Value Statement" confirmation="Delete Value Statement '${value}'?"/></default-field></field>
+        </form-list>
+    </widgets>
+</screen>

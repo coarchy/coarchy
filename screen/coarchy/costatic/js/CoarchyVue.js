@@ -1,39 +1,56 @@
-/* This software is in the public domain under CC0 1.0 Universal plus a Grant of Patent License. */
-Vue.component('r-toolbar-left', {
-    name: "rToolbarLeft",
+Vue.component('c-menu-nav-item', {
+    name: "cMenuNavItem",
+    props: { menuIndex:Number },
     template:
-        `<q-btn v-if="backState" flat round dense icon="arrow_back_ios_new" class="q-mr-sm" @click.prevent="goLastPath()"/>`//+
-        // `<m-link :href="firstPath"><div class="q-mx-md q-mt-sm">` +
-        // `<img src="/costatic/images/CoarchySquare.png" alt="Home" height="32">` +
-        // `</div></m-link>`
-    ,
+        '<q-expansion-item v-if="navMenuItem && navMenuItem.subscreens && navMenuItem.subscreens.length" :value="true" :content-inset-level="0.3"' +
+        ' switch-toggle-side dense-toggle hide-expand-icon :to="navMenuItem.pathWithParams" @input="go">' +
+        '<template v-slot:header><c-menu-item-content :menu-item="navMenuItem" active></c-menu-item-content></template>' +
+        '<template v-slot:default><c-menu-subscreen-item v-for="(subscreen, ssIndex) in navMenuItem.subscreens" :key="subscreen.name" :menu-index="menuIndex" :subscreen-index="ssIndex"></c-menu-subscreen-item></template>' +
+        '</q-expansion-item>' +
+        '<q-expansion-item v-else-if="navMenuItem && navMenuItem.savedFinds && navMenuItem.savedFinds.length" :value="true" :content-inset-level="0.3"' +
+        ' switch-toggle-side dense-toggle expanded-icon="arrow_drop_down" :to="navMenuItem.pathWithParams" @input="go">' +
+        '<template v-slot:header><c-menu-item-content :menu-item="navMenuItem" active></c-menu-item-content></template>' +
+        '<template v-slot:default><q-expansion-item v-for="(savedFind, ssIndex) in navMenuItem.savedFinds" :key="savedFind.name"' +
+        ' :value="false" switch-toggle-side dense-toggle expand-icon="chevron_right" :to="savedFind.pathWithParams" @input="goPath(savedFind.pathWithParams)">' +
+        '<template v-slot:header><c-menu-item-content :menu-item="savedFind" :active="savedFind.active"/></template>' +
+        '</q-expansion-item></template>' +
+        '</q-expansion-item>' +
+        '<q-expansion-item v-else-if="menuIndex < (navMenuLength - 1)" :value="true" :content-inset-level="0.3"' +
+        ' switch-toggle-side dense-toggle expanded-icon="arrow_drop_down" :to="navMenuItem.pathWithParams" @input="go">' +
+        '<template v-slot:header><c-menu-item-content :menu-item="navMenuItem" active></c-menu-item-content></template>' +
+        '<template v-slot:default><c-menu-nav-item :menu-index="menuIndex + 1"></c-menu-nav-item></template>' +
+        '</q-expansion-item>' +
+        '<q-expansion-item v-else-if="navMenuItem" :value="false" switch-toggle-side dense-toggle hide-expand-icon :to="navMenuItem.pathWithParams" @input="go">' +
+        '<template v-slot:header><c-menu-item-content :menu-item="navMenuItem" active></c-menu-item-content></template>' +
+        '</q-expansion-item>',
     methods: {
-        goLastPath: function() {
-            // console.log("goPath");
-            // console.log(this);
-            // console.log(this.$root.navHistoryList[1].pathWithParams)
-            // console.log(this.$root.currentPath.substring(0, this.$root.currentPath.lastIndexOf("/")))
-            this.$root.setUrl(this.$root.navHistoryList[1] ? this.$root.navHistoryList[1].pathWithParams : this.$root.currentPath.substring(0, this.$root.currentPath.lastIndexOf("/")));
-        }
+        go: function go() { this.$root.setUrl(this.navMenuItem.pathWithParams); },
+        goPath: function goPath(path) { this.$root.setUrl(path); }
     },
     computed: {
-        backState: function () {
-            // console.log('menuState')
-            // console.log(this)
-            // console.log(this.$root.currentPath !== "/cointernal/Message/FindMessage")
-            return ["/cointernal/Message/FindMessage",
-            //    "/cointernal/Project/ViewProject",
-            //    "/cointernal/Project/FindProjectPositions",
-            //    "/cointernal/Account/ViewAccount",
-            //    "/cointernal/Account/FindTalent",
-            ].includes(this.$root.currentPath);
-        },
-        // firstPath: function() {
-        //     // console.log("goPath");
-        //     // console.log(this);
-        //     // console.log(this.$root.navHistoryList[1].pathWithParams)
-        //     // console.log(this.$root.currentPath.substring(0, this.$root.currentPath.lastIndexOf("/")))
-        //     return this.$root.currentPath.substring(0, this.$root.currentPath.lastIndexOf("/"));
-        // },
-    },
+        navMenuItem: function() { return this.$root.navMenuList[this.menuIndex]; },
+        navMenuLength: function() { return this.$root.navMenuList.length; }
+    }
+});
+Vue.component('c-menu-subscreen-item', {
+    name: "cMenuSubscreenItem",
+    props: { menuIndex:Number, subscreenIndex:Number },
+    template:
+        '<c-menu-nav-item v-if="subscreen.active" :menu-index="menuIndex + 1"></c-menu-nav-item>' +
+        '<q-expansion-item v-else :value="false" switch-toggle-side dense-toggle hide-expand-icon :to="subscreen.pathWithParams" @input="go">' +
+        '<template v-slot:header><c-menu-item-content :menu-item="subscreen"></c-menu-item-content></template>' +
+        '</q-expansion-item>',
+    methods: { go: function go() { this.$root.setUrl(this.subscreen.pathWithParams); } },
+    computed: { subscreen: function() { return this.$root.navMenuList[this.menuIndex].subscreens[this.subscreenIndex]; } }
+});
+Vue.component('c-menu-item-content', {
+    name: "cMenuItemContent",
+    props: { menuItem:Object, active:Boolean },
+    template:
+        '<div class="q-item__section column q-item__section--main justify-center"><div class="q-item__label">' +
+        '<i v-if="menuItem.image && menuItem.imageType === \'icon\'" :class="menuItem.image" style="padding-right: 8px;"></i>' +
+        /* TODO: images don't line up vertically, padding-top and margin-top do nothing, very annoying layout stuff, for another time... */
+        '<span v-else-if="menuItem.image" style="padding-right:8px;"><img :src="menuItem.image" :alt="menuItem.title" height="18" class="invertible"></span>' +
+        '<span :class="{\'text-primary\':active}">{{menuItem.title}}</span>' +
+        '</div></div>'
 });
