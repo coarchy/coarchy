@@ -41,21 +41,51 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="updateValue">
         <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,value:value,typeEnumId:typeEnumId,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
-    <transition name="deleteValue"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
-        <entity-find-count entity-name="coarchy.ValueStatementActivity" count-field="valueStatementActivityCount">
-            <econdition field-name="valueStatementId"/></entity-find-count>
-        <if condition="valueStatementActivityCount &gt; 0">
-            <return type="warning" message="Cannot delete an Value Statement with Process Story Activities"/>
-        </if>
-        <service-call name="delete#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId]"/>
-        </actions><default-response/>
+    <transition name="deleteValue"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.delete#ValueStatement" in-map="[valueStatementId:valueStatementId,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
+    <transition name="getActivityList">
+        <actions>
+            <set field="activityList" from="[]"/>
+            <if condition="term == null &amp;&amp; activityIdList ? activityIdList?.size() &gt; 0 : false"><then>
+                <entity-find entity-name="coarchy.Activity" list="activityList" limit="50">
+                    <econdition field-name="activityId" operator="in" from="activityIdList"/>
+                    <order-by field-name="action"/></entity-find>
+            </then><else>
+                <!-- TODO: Also find by actor name -->
+                <entity-find entity-name="coarchy.Activity" list="activityList" limit="50">
+                    <econditions combine="or">
+                        <econdition field-name="condition" operator="like" value="%${term}%" ignore-case="true"/>
+                        <econdition field-name="action" operator="like" value="%${term}%" ignore-case="true"/>
+                    </econditions>
+                    <order-by field-name="action"/></entity-find>
+            </else></if>
+            <set field="outList" from="[]"/>
+            <iterate list="activityList" entry="activity">
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                    <econdition field-name="activityId" from="activity.activityId"/>
+                    <order-by field-name="name"/></entity-find>
+                <set field="processStoryActivity" from="activity.getMap() + [actorNames:activityActorList*.name]"/>
+                <set field="label" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
+                <script>outList.add([value:activity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}"])</script>
+            </iterate>
+<!--            <log level="warn" message="getActivityList context.toString() ${context.toString()}"/>-->
+            <script>ec.web.sendJsonResponse(outList)</script>
+        </actions><default-response type="none"/></transition>
+
     <actions>
+        <if condition="activityIdList">
+            <entity-find entity-name="coarchy.Activity" list="headerActivityList">
+                <econdition field-name="activityId" operator="in" from="activityIdList"/>
+                <order-by field-name="action"/></entity-find>
+        </if>
+
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
     </actions>
 
@@ -83,12 +113,38 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
                 <search-form-inputs default-order-by="^value"/></entity-find>
 
+            <row-actions>
+                <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
+                    <econdition field-name="valueStatementId"/>
+                    <select-field field-name="activityId,name,condition,action"/>
+                    <order-by field-name="action"/>
+                </entity-find>
+                <set field="activityIdList" from="prepValueActivityList*.activityId"/>
+                <set field="valueActivityList" from="[]"/>
+                <iterate list="prepValueActivityList" entry="valueActivity">
+                    <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                        <econdition field-name="activityId" from="valueActivity.activityId"/>
+                        <order-by field-name="name"/></entity-find>
+                    <set field="processStoryActivity" from="valueActivity.getMap() + [actorNames:activityActorList*.name]"/>
+                    <set field="label" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
+                    <script>valueActivityList.add([activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}"])</script>
+                </iterate>
+
+<!--                <log level="warn" message="form-list ValueStatements context.toString() ${context.toString()}"/>-->
+            </row-actions>
+
             <field name="valueStatementId"><default-field><hidden/></default-field></field>
             <field name="value">
-                <header-field title="Value Statement" show-order-by="case-insensitive"><text-find/></header-field>
-                <default-field title="Value Statement"><text-line/></default-field>
-                <last-row-field title="Value Statement"><text-line/></last-row-field>
+                <header-field title="Value Statement" show-order-by="case-insensitive"><text-area autogrow="true"/></header-field>
+                <default-field title="Value Statement"><text-area autogrow="true"/></default-field>
+                <last-row-field title="Value Statement"><text-area autogrow="true"/></last-row-field>
             </field>
+            <field name="activityIdList"><default-field title="Connected Activities">
+                <drop-down submit-on-select="true" allow-empty="true" allow-multiple="true">
+                    <list-options list="valueActivityList" key="${activityId}" text="${label}"/>
+                    <dynamic-options server-search="true" transition="getActivityList" min-length="0"/>
+                </drop-down>
+            </default-field></field>
             <field name="typeEnumId">
                 <header-field title="Value Type" show-order-by="case-insensitive"><drop-down allow-empty="true">
                     <entity-options key="${enumId}" text="${description}">
@@ -118,6 +174,13 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="delete"><default-field title="">
                 <link url="deleteValue" parameter-map="[valueStatementId:valueStatementId]" icon="fa fa-trash" btn-type="danger"
                         text=" " tooltip="Delete Value Statement" confirmation="Delete Value Statement '${value}'?"/></default-field></field>
+
+            <columns>
+                <column><field-ref name="value"/><field-ref name="activityIdList"/></column>
+                <column><field-ref name="typeEnumId"/></column>
+                <column><field-ref name="submit"/></column>
+                <column><field-ref name="delete"/></column>
+            </columns>
         </form-list>
     </widgets>
 </screen>

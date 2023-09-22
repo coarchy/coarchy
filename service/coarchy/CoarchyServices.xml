@@ -180,6 +180,7 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="valueStatementId" required="true"/>
             <parameter name="value" required="true"/>
+            <parameter name="activityIdList" type="List"/>
             <parameter name="typeEnumId"/>
             <parameter name="organizationId" required="true"/>
         </in-parameters>
@@ -195,7 +196,60 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <if condition="valueStatementList"><return type="danger" message="Value Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
 
-            <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,organizationId:organizationId]"/>
+            <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,organizationId:organizationId]" out-map="context"/>
+
+            <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
+                <econdition field-name="valueStatementId"/>
+                <order-by field-name="name"/></entity-find>
+            <set field="activityIdServerList" from="valueStatementActivityList*.activityId"/>
+            <if condition="activityIdServerList">
+                <set field="activityIdDeleteList" from="activityIdServerList - activityIdList?:[]"/>
+
+                <!--                                    <log level="warn" message="activityIdDeleteList ${activityIdDeleteList}"/>-->
+                <iterate list="activityIdDeleteList" entry="activityIdDelete">
+                    <entity-find-one entity-name="ValueStatementActivity" value-field="valueStatementActivity" auto-field-map="[activityId:activityIdDelete,valueStatementId:valueStatementId]"/>
+                    <if condition="valueStatementActivity"><then>
+                        <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity.valueStatementActivityId]"/>
+                    </then><else>
+                        <message type="warning">Unable to delete activity connection ${activityId}</message>
+                    </else></if>
+                </iterate>
+            </if>
+
+            <set field="activityIdCreateList" from="activityIdList?:[] - activityIdDeleteList?:[]"/>
+<!--            <log level="warn" message="update#ValueStatement context.toString() ${context.toString()}"/>-->
+            <if condition="activityIdCreateList instanceof String">
+                <then>
+                    <entity-find-one entity-name="ValueStatementActivity" value-field="valueStatementActivity" auto-field-map="[activityId:activityIdCreateList,valueStatementId:valueStatementId]"/>
+                    <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity?.valueStatementActivityId,valueStatementId:valueStatementId, activityId:activityIdCreateList, organizationId:organizationId]"/>
+                </then><else>
+                    <iterate list="activityIdCreateList" entry="activityIdCreate">
+                        <entity-find-one entity-name="ValueStatementActivity" value-field="valueStatementActivity" auto-field-map="[activityId:activityIdCreate,valueStatementId:valueStatementId]"/>
+                        <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity?.valueStatementActivityId,valueStatementId:valueStatementId, activityId:activityIdCreate, organizationId:organizationId]"/>
+                    </iterate>
+                </else>
+            </if>
+        </actions>
+    </service>
+    <service verb="delete" noun="ValueStatement">
+        <in-parameters>
+            <parameter name="valueStatementId" required="true"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="valueStatementId"/>
+        </out-parameters>
+        <actions>
+            <entity-find-count entity-name="coarchy.ValueStatementActivity" count-field="valueStatementActivityCount">
+                <econdition field-name="valueStatementId"/></entity-find-count>
+            <if condition="valueStatementActivityCount &gt; 0">
+                <return type="warning" message="Cannot delete an Value Statement with Process Story Activities"/>
+            </if>
+            <entity-find-one entity-name="coarchy.ValueStatement" value-field="valueStatement" auto-field-map="[valueStatementId:valueStatementId,organizationId:organizationId]"/>
+
+            <if condition="valueStatement">
+                <service-call name="delete#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId]"/>
+            </if>
         </actions>
     </service>
 </services>

@@ -76,11 +76,28 @@ along with this software (see the LICENSE.md file). If not, see
 
         <field name="organizationId" type="id"/>
 
-        <relationship type="many" related="ValueStatement" short-alias="value">
+        <relationship type="one" related="ValueStatement" short-alias="value">
             <key-map field-name="valueStatementId"/></relationship>
-        <relationship type="many" related="Activity" short-alias="activity">
+        <relationship type="one" related="Activity" short-alias="activity">
             <key-map field-name="activityId"/></relationship>
     </entity>
+
+    <view-entity entity-name="ValueStatementActivityDetail" package="coarchy">
+        <member-entity entity-alias="VSA" entity-name="coarchy.ValueStatementActivity"/>
+        <member-relationship entity-alias="VS" join-from-alias="VSA" relationship="value"/>
+        <member-relationship entity-alias="ACT" join-from-alias="VSA" relationship="activity"/>
+        <!-- Never select actorId so you don't get multiple rows back, INSTEAD filter by actorId -->
+        <member-relationship entity-alias="ACAC" join-from-alias="ACT" relationship="actors" join-optional="true"/>
+
+        <alias-all entity-alias="VSA"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="VS"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="ACT"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="ACAC"><exclude field="organizationId"/></alias-all>
+        <alias name="valueActivityOrganizationId" entity-alias="VSA" field="organizationId"/>
+        <alias name="valueOrganizationId" entity-alias="VS" field="organizationId"/>
+        <alias name="activityOrganizationId" entity-alias="ACT" field="organizationId"/>
+        <alias name="activityActorOrganizationId" entity-alias="ACAC" field="organizationId"/>
+    </view-entity>
 
     <entity entity-name="Actor" package="coarchy">
         <field name="actorId" type="id" is-pk="true"/>
