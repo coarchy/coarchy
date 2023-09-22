@@ -71,7 +71,7 @@ along with this software (see the LICENSE.md file). If not, see
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
             // Vue Components for Coarchy
-//            footer_scripts.add('/costatic/js/CoarchyVue.js')
+            footer_scripts.add('/costatic/js/CoarchyVue.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
             footer_scripts.add('/js/WebrootVue.qvt.js')
         } else {
