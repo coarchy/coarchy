@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Value Statements" default-menu-index="96" menu-image="/ssstatic/images/Vendor.png">
+        default-menu-title="Values" default-menu-index="96" menu-image="/ssstatic/images/Vendor.png">
 
     <parameter name="processStoryId"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
@@ -90,13 +90,13 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <label text="Value Statements" type="h4"/>
+        <label text="Values" type="h4"/>
         <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
                 condition="processStory"/>
 
-        <container-dialog id="CreateValueDialog" button-text="Add Value Statement" type="success">
+        <container-dialog id="CreateValueDialog" button-text="Add Value" type="success">
             <form-single name="CreateValueForm" transition="createValue">
-                <field name="value"><default-field title="Value Statement"><text-line/></default-field></field>
+                <field name="value"><default-field title="Value"><text-line/></default-field></field>
                 <field name="typeEnumId"><default-field title="Value Type"><drop-down allow-empty="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
@@ -104,7 +104,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></default-field></field>
-                <field name="submit"><default-field><submit text="Add Value Statement"/></default-field></field>
+                <field name="submit"><default-field><submit text="Add Value"/></default-field></field>
             </form-single>
         </container-dialog>
 
@@ -135,9 +135,9 @@ along with this software (see the LICENSE.md file). If not, see
 
             <field name="valueStatementId"><default-field><hidden/></default-field></field>
             <field name="value">
-                <header-field title="Value Statement" show-order-by="case-insensitive"><text-area autogrow="true"/></header-field>
-                <default-field title="Value Statement"><text-area autogrow="true"/></default-field>
-                <last-row-field title="Value Statement"><text-area autogrow="true"/></last-row-field>
+                <header-field title="Value" show-order-by="case-insensitive"><text-area autogrow="true"/></header-field>
+                <default-field title="Value"><text-area autogrow="true"/></default-field>
+                <last-row-field title="Value"><text-area autogrow="true"/></last-row-field>
             </field>
             <field name="activityIdList"><default-field title="Connected Activities">
                 <drop-down submit-on-select="true" allow-empty="true" allow-multiple="true">
@@ -170,10 +170,10 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>
-                <last-row-field><submit text="Add Value Statement" type="success"/></last-row-field></field>
+                <last-row-field><submit text="Add Value" type="success"/></last-row-field></field>
             <field name="delete"><default-field title="">
                 <link url="deleteValue" parameter-map="[valueStatementId:valueStatementId]" icon="fa fa-trash" btn-type="danger"
-                        text=" " tooltip="Delete Value Statement" confirmation="Delete Value Statement '${value}'?"/></default-field></field>
+                        text=" " tooltip="Delete Value" confirmation="Delete Value '${value}'?"/></default-field></field>
 
             <columns>
                 <column><field-ref name="value"/><field-ref name="activityIdList"/></column>
