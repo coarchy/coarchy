@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Checklist" default-menu-index="53" menu-image="/ssstatic/images/task-homework.png">
+
+    <parameter name="checklistId" required="true"/>
+    <parameter name="pageIndex" from="pageIndex?:0"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField" value="workEffortId"/>
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+    </always-actions>
+
+    <transition name="createActor">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.create#Actor" in-map="[name:name,description:description,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition name="updateTask">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.update#Task" in-map="[workEffortId:workEffortId,resolutionEnumId:resolutionEnumId,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="projectWorkEffort" auto-field-map="[workEffortId:checklistId]"/>
+    </actions>
+
+    <widgets>
+        <label text="Checklist" type="h4"/>
+<!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"-->
+<!--                condition="processStory"/>-->
+
+<!--        <container-dialog id="CreateActorDialog" button-text="Add Actor" type="success">-->
+<!--            <form-single name="CreateActorForm" transition="createActor">-->
+<!--                <field name="name">-->
+<!--                    <default-field><text-line/></default-field>-->
+<!--                </field>-->
+<!--                <field name="description">-->
+<!--                    <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>-->
+<!--                </field>-->
+<!--                <field name="submit"><default-field><submit text="Add Actor"/></default-field></field>-->
+<!--            </form-single>-->
+<!--        </container-dialog>-->
+
+        <form-list name="ChecklistFormList" header-dialog="true" show-page-size="true" show-csv-button="true"
+                list="taskList" transition="updateTask">
+            <entity-find entity-name="mantle.work.effort.WorkEffort" list="taskList">
+                <econdition field-name="rootWorkEffortId" from="projectWorkEffort.workEffortId"/>
+                <order-by field-name="workEffortId"/></entity-find>
+
+            <field name="workEffortId"><default-field><hidden/></default-field></field>
+            <field name="resolutionEnumId"><conditional-field condition="resolutionEnumId!=''" title="Resolution"><drop-down submit-on-select="true" required-manual-select="true">
+                <entity-options key="${enumId}" text="${description}">
+                    <entity-find entity-name="moqui.basic.EnumAndGroup">
+                        <econdition field-name="enumGroupEnumId" value="EngTaskResolution"/>
+                        <order-by field-name="sequenceNum"/></entity-find>
+                </entity-options>
+            </drop-down></conditional-field></field>
+            <field name="workEffortName"><default-field title="Task"><label text="${workEffortName}"/></default-field></field>
+        </form-list>
+    </widgets>
+</screen>
