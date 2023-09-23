@@ -199,4 +199,7 @@ along with this software (see the LICENSE.md file). If not, see
             </moqui.basic.EnumerationType>
         </seed-data>
     </extend-entity>
+    <extend-entity entity-name="WorkEffort" package="mantle.work.effort">
+        <field name="actualCompletionDate" type="date-time" enable-audit-log="true"/>
+    </extend-entity>
 </entities>

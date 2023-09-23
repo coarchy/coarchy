@@ -113,10 +113,24 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="create" noun="Checklist">
+    <service verb="create" noun="ChecklistProcessStory">
         <in-parameters>
             <parameter name="processStoryId" required="true"/>
             <parameter name="name" required="true"/>
+            <parameter name="recurStartCron"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="rootWorkEffortId"/>
+            <parameter name="taskWorkEffortIdList"/>
+        </out-parameters>
+        <actions><service-call name="coarchy.CoarchyServices.create#Checklist" in-map="context" out-map="context"/></actions>
+    </service>
+
+    <service verb="create" noun="Checklist">
+        <in-parameters>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="name"/>
             <parameter name="recurStartCron"/>
             <parameter name="organizationId" required="true"/>
         </in-parameters>
@@ -129,16 +143,22 @@ along with this software (see the LICENSE.md file). If not, see
                            estimatedCompletionDate &lt; estimatedStartDate">
                 <return error="true" message="Project date range is not valid."/>
             </if>
-            <service-call name="create#mantle.work.effort.WorkEffort" in-map="[workEffortName:name,recurStartCron:recurStartCron,ownerPartyId:organizationId,workEffortTypeEnumId:'WetProject']" out-map="projectWorkEffort"/>
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                <econdition field-name="processStoryId"/>
+                <select-field field-name="activityId,condition,action"/>
+                <order-by field-name="sequenceNum"/></entity-find>
+            <if condition="processStoryActivityList?.size() == 0"><return type="warning" message="Need at least 1 activity to create a checklist"/></if>
+
+            <if condition="!name">
+                <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory" auto-field-map="[processStoryId:processStoryId]"/>
+                <set field="name" from="processStory.name"/>
+            </if>
+            <service-call name="create#mantle.work.effort.WorkEffort" in-map="[workEffortName:name,recurStartCron:recurStartCron,ownerPartyId:organizationId,workEffortTypeEnumId:'WetProject',actualStartDate:ec.user.nowTimestamp]" out-map="projectWorkEffort"/>
             <set field="rootWorkEffortId" from="projectWorkEffort.workEffortId"/>
             <service-call name="create#mantle.work.effort.WorkEffortParty"
                     in-map="[workEffortId:projectWorkEffort.workEffortId, partyId:ec.user.userAccount.partyId,
                             roleTypeId:'Owner', fromDate:ec.user.nowTimestamp, statusId:'WeptAssigned']"/>
 
-            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
-                <econdition field-name="processStoryId"/>
-                <select-field field-name="activityId,condition,action"/>
-                <order-by field-name="sequenceNum"/></entity-find>
             <set field="taskWorkEffortIdList" from="[]"/>
             <iterate list="processStoryActivityList" entry="processStoryActivity">
                 <if condition="processStoryActivity.action">
@@ -157,6 +177,17 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
         </actions>
     </service>
+    <service verb="update" noun="Checklist">
+        <in-parameters>
+            <parameter name="workEffortId" required="true"/>
+            <parameter name="workEffortName" required="true"/>
+            <parameter name="recurStartCron"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <actions>
+            <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:workEffortId,workEffortName:workEffortName,recurStartCron:recurStartCron]"/>
+        </actions>
+    </service>
     <service verb="update" noun="Task">
         <in-parameters>
             <parameter name="workEffortId" required="true"/>
@@ -166,7 +197,27 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="task" auto-field-map="[workEffortId:workEffortId]"/>
             <if condition="!task"><return type="warning" message="Task not found"/></if>
-            <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:workEffortId,resolutionEnumId:resolutionEnumId,]"/>
+            <set field="actualCompletionDate" from="null"/>
+            <if condition="['WerCompleted','WerNotCondition'].contains(resolutionEnumId)">
+                <set field="actualCompletionDate" from="ec.user.nowTimestamp"/>
+            </if>
+            <if condition="task.actualCompletionDate &amp;&amp; ['WerWontComplete','WerInsufficient'].contains(resolutionEnumId)"/>
+            <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:workEffortId,resolutionEnumId:resolutionEnumId,actualCompletionDate:actualCompletionDate]"/>
+
+            <entity-find-count entity-name="mantle.work.effort.WorkEffort" count-field="taskCount">
+                <econdition field-name="rootWorkEffortId" from="task.rootWorkEffortId"/></entity-find-count>
+            <entity-find-count entity-name="mantle.work.effort.WorkEffort" count-field="taskWithResolutionCount">
+                <econdition field-name="rootWorkEffortId" from="task.rootWorkEffortId"/>
+                <econdition field-name="resolutionEnumId" operator="is-not-null"/></entity-find-count>
+            <if condition="taskWithResolutionCount == taskCount">
+                <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:task.rootWorkEffortId,actualCompletionDate:ec.user.nowTimestamp]"/>
+<!--                <else>-->
+<!--                    <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="project" auto-field-map="[workEffortId:task.rootWorkEffortId]"/>-->
+<!--                    <if condition="project.actualCompletionDate">-->
+<!--                        <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:task.rootWorkEffortId,actualCompletionDate:null]"/>-->
+<!--                    </if>-->
+<!--                </else>-->
+            </if>
         </actions>
     </service>
 
