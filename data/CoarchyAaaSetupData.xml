@@ -28,6 +28,7 @@ along with this software (see the LICENSE.md file). If not, see
         <filters entityFilterId="COARCHY_FILTER_C5" entityName="coarchy.ProcessStoryActivity" filterMap="[organizationId:activeOrgId]"/>
         <filters entityFilterId="COARCHY_FILTER_C6" entityName="coarchy.ValueStatement" filterMap="[organizationId:activeOrgId]"/>
         <filters entityFilterId="COARCHY_FILTER_C7" entityName="coarchy.ValueStatementActivity" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C8" entityName="mantle.work.effort.WorkEffort" filterMap="[ownerPartyId:activeOrgId]"/>
     </moqui.security.EntityFilterSet>
 
     <!-- Artifact group and authz for Coarchy Apps -->
