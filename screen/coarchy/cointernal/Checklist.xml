@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Checklist" default-menu-index="53" menu-image="/ssstatic/images/task-homework.png">
+
+    <parameter name="checklistId" required="true"/>
+    <parameter name="pageIndex" from="pageIndex?:0"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField" value="workEffortId"/>
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+    </always-actions>
+
+    <transition name="updateChecklist"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+<!--        <service-call name="coarchy.CoarchyServices.update#Checklist" in-map="[workEffortId:workEffortId,workEffortName:workEffortName,recurStartCron:recurStartCron,organizationId:activeOrgId]" out-map="checklist"/>-->
+        <service-call name="coarchy.CoarchyServices.update#Checklist" in-map="[workEffortId:workEffortId,workEffortName:workEffortName,organizationId:activeOrgId]" out-map="checklist"/>
+        <default-response url="." parameter-map="[pageIndex:pageIndex,checklistId:workEffortId]"/></transition>
+
+    <transition name="updateTask">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.update#Task" in-map="[workEffortId:workEffortId,resolutionEnumId:resolutionEnumId,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="project" auto-field-map="[workEffortId:checklistId]"/>
+    </actions>
+
+    <widgets>
+        <label text="Checklist${project?.workEffortName?' - '+project?.workEffortName:''}" type="h4"/>
+<!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"-->
+<!--                condition="processStory"/>-->
+        
+        <container-dialog id="UpdateChecklistDialog" button-text="Edit Checklist">
+            <form-single name="UpdateChecklist" transition="updateChecklist">
+                <field name="pageIndex"><default-field><hidden/></default-field></field>
+                <field name="workEffortId" from="project.workEffortId"><default-field><hidden/></default-field></field>
+                <field name="workEffortName" from="project.workEffortName"><default-field title="Checklist Name"><text-line size="50"/></default-field></field>
+<!--                <field name="recurStartCron" from="project.recurStartCron"><default-field title="Repeat (optional)">-->
+<!--                    <drop-down allow-empty="true" required-manual-select="true">-->
+<!--                        <option key="0 0 6 ? * MON-FRI" text="Monday-Friday"/>-->
+<!--                        <option key="0 0 6 ? * *" text="Every Day"/>-->
+<!--                        <option key="0 0 6 ? * MON" text="Monday Only"/>-->
+<!--                        <option key="0 0 6 1 * ?" text="Monthly"/>-->
+<!--                    </drop-down>-->
+<!--                </default-field></field>-->
+                <field name="submit"><default-field><submit text="Edit"/></default-field></field>
+            </form-single>
+        </container-dialog>
+
+        <form-list name="ChecklistFormList" header-dialog="true" show-page-size="true" show-csv-button="true"
+                list="taskList" transition="updateTask">
+            <entity-find entity-name="mantle.work.effort.WorkEffort" list="taskList">
+                <econdition field-name="rootWorkEffortId" from="project.workEffortId"/>
+                <order-by field-name="workEffortId"/></entity-find>
+
+            <field name="workEffortId"><default-field><hidden/></default-field></field>
+            <field name="resolutionEnumId"><conditional-field condition="resolutionEnumId!=''" title="Resolution"><drop-down submit-on-select="true" required-manual-select="true">
+                <entity-options key="${enumId}" text="${description}">
+                    <entity-find entity-name="moqui.basic.EnumAndGroup">
+                        <econdition field-name="enumGroupEnumId" value="EngTaskResolution"/>
+                        <order-by field-name="sequenceNum"/></entity-find>
+                </entity-options>
+            </drop-down></conditional-field></field>
+            <field name="workEffortName"><default-field title="Task"><label text="${workEffortName}" type="h5"/></default-field></field>
+<!--            <field name="actualCompletionDate"><default-field title="Completed"><label text="${ec.l10n.format(ec.l10n.parseDateTime(actualCompletionDate), 'MMM dd HH:mm')}"/></default-field></field>-->
+            <field name="actualCompletionDate"><default-field title="Completed"><label text="${actualCompletionDate?ec.l10n.format(actualCompletionDate,'MMMM dd, HH:mm'):'Not completed'}"/></default-field></field>
+        </form-list>
+    </widgets>
+</screen>

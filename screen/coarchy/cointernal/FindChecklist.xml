@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Find Checklist" default-menu-index="50" menu-image="/ssstatic/images/task-homework.png">
+
+    <parameter name="pageIndex" from="pageIndex?:0"/>
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message>Select an Organization before moving forward.</message>
+            <!-- TODO: Fix this redirect on this and other screens to not redirect to /coapp -->
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+    </always-actions>
+
+    <transition name="createChecklist"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+<!--        <service-call name="coarchy.CoarchyServices.create#Checklist" in-map="[processStoryId:processStoryId,name:name,recurStartCron:recurStartCron,organizationId:activeOrgId]" out-map="checklist"/>-->
+        <service-call name="coarchy.CoarchyServices.create#Checklist" in-map="[processStoryId:processStoryId,name:name,organizationId:activeOrgId]" out-map="checklist"/>
+        <default-response url="../Checklist" parameter-map="[checklistId:checklist.rootWorkEffortId]"/></transition>
+
+    <actions>
+    </actions>
+
+    <widgets>
+        <label text="Find Checklist" type="h4"/>
+        <container-dialog id="CreateChecklistDialogue" button-text="Add Checklist" type="success" condition="partyRelationshipCount &gt; 0">
+            <form-single name="CreateChecklist" transition="createChecklist">
+                <field name="processStoryId"><default-field title="Process Story"><drop-down required-manual-select="true"><entity-options key="${processStoryId}" text="${name}">
+                    <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
+                        <search-form-inputs default-order-by="lastUpdatedStamp"/></entity-find>
+                </entity-options></drop-down></default-field></field>
+<!--                <field name="recurStartCron"><default-field title="Repeat (optional)">-->
+<!--                    <drop-down allow-empty="true" required-manual-select="true">-->
+<!--                        <option key="0 0 6 ? * MON-FRI" text="Monday-Friday"/>-->
+<!--                        <option key="0 0 6 ? * *" text="Every Day"/>-->
+<!--                        <option key="0 0 6 ? * MON" text="Monday Only"/>-->
+<!--                        <option key="0 0 6 1 * ?" text="Monthly"/>-->
+<!--                    </drop-down>-->
+<!--                </default-field></field>-->
+                <field name="submit"><default-field><submit text="Add"/></default-field></field>
+            </form-single></container-dialog>
+
+        <form-list name="Checklist" header-dialog="true" list="checklistList">
+            <entity-find entity-name="mantle.work.effort.WorkEffort" list="checklistList">
+                <search-form-inputs default-order-by="-actualStartDate"/>
+                <econdition field-name="workEffortTypeEnumId" value="WetProject"/>
+            </entity-find>
+
+            <field name="workEffortId"><default-field><hidden/></default-field></field>
+            <field name="workEffortName"><header-field title="Checklist Name"><text-find size="25"/></header-field>
+                <default-field title="Checklists"><link url="../Checklist" parameter-map="[checklistId:workEffortId]" text="${workEffortName}"/></default-field></field>
+            <field name="actualStartDate"><header-field><date-find type="date"/></header-field>
+                <default-field title="Started"><label text="${actualStartDate?ec.l10n.format(actualStartDate,'MMMM dd, HH:mm'):'Not started'}"/></default-field></field>
+            <field name="actualCompletionDate"><header-field><date-find type="date"/></header-field>
+                <default-field title="Completed"><label text="${actualCompletionDate?ec.l10n.format(actualCompletionDate,'MMMM dd, HH:mm'):'Not completed'}"/></default-field></field>
+            <field name="submit"><header-field><submit/></header-field></field>
+        </form-list>
+    </widgets>
+</screen>

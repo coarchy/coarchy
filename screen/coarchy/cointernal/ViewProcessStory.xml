@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="View Process Story" default-menu-index="92" menu-image="fa fa-align-left" menu-image-type="icon">
+        default-menu-title="View Process Story" default-menu-index="36" menu-image="fa fa-align-left" menu-image-type="icon">
 
     <parameter name="processStoryId" required="true"/>
 

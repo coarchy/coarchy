@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Values" default-menu-index="96" menu-image="/ssstatic/images/Vendor.png">
+        default-menu-title="Values" default-menu-index="70" menu-image="/ssstatic/images/Vendor.png">
 
     <parameter name="processStoryId"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>

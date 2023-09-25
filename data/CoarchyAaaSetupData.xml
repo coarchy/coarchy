@@ -28,6 +28,7 @@ along with this software (see the LICENSE.md file). If not, see
         <filters entityFilterId="COARCHY_FILTER_C5" entityName="coarchy.ProcessStoryActivity" filterMap="[organizationId:activeOrgId]"/>
         <filters entityFilterId="COARCHY_FILTER_C6" entityName="coarchy.ValueStatement" filterMap="[organizationId:activeOrgId]"/>
         <filters entityFilterId="COARCHY_FILTER_C7" entityName="coarchy.ValueStatementActivity" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C8" entityName="mantle.work.effort.WorkEffort" filterMap="[ownerPartyId:activeOrgId]"/>
     </moqui.security.EntityFilterSet>
 
     <!-- Artifact group and authz for Coarchy Apps -->
@@ -109,4 +110,15 @@ along with this software (see the LICENSE.md file). If not, see
         <documents dataDocumentId="MantleActor"/>
         <documents dataDocumentId="MantleActivity"/>
     </moqui.entity.feed.DataFeed>
+
+    <!-- ========== Enums ========== -->
+    <!-- Work Effort Resolution -->
+    <moqui.basic.Enumeration description="Condition not met" enumId="WerNotCondition" enumTypeId="WorkEffortResolution"/>
+
+    <moqui.basic.Enumeration description="Checklist Resolution" enumId="EngTaskResolution" enumTypeId="EnumGroup"/>
+    <moqui.basic.EnumGroupMember enumId="WerCompleted" enumGroupEnumId="EngTaskResolution" sequenceNum="01"/>
+    <moqui.basic.EnumGroupMember enumId="WerNotCondition" enumGroupEnumId="EngTaskResolution" sequenceNum="02"/>
+    <moqui.basic.EnumGroupMember enumId="WerWontComplete" enumGroupEnumId="EngTaskResolution" sequenceNum="03"/>
+    <moqui.basic.EnumGroupMember enumId="WerInsufficient" enumGroupEnumId="EngTaskResolution" sequenceNum="04"/>
+
 </entity-facade-xml>
