@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Actor" default-menu-index="10" menu-image="/ssstatic/images/Sales.png">
+        default-menu-title="Actors" default-menu-index="20" menu-image="/ssstatic/images/Parties.png">
 
     <parameter name="processStoryId"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
@@ -56,6 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <actions>
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
+        <entity-find-count entity-name="coarchy.Actor" count-field="actorCount"/>
     </actions>
 
     <widgets>
@@ -75,6 +76,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="submit"><default-field><submit text="Add Actor"/></default-field></field>
             </form-single>
         </container-dialog>
+        <link url="../ViewActors" text="View/Print Actors" tooltip="View Actors Text" btn-type="info"
+                condition="actorCount &gt; 0"/>
 
         <form-list name="Actor" header-dialog="true" show-page-size="true" show-csv-button="true"
                 list="actorList" transition="updateActor" transition-last-row="createActor" map-last-row="[name:null,description:null]">

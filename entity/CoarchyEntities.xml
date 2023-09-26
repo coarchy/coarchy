@@ -173,15 +173,22 @@ along with this software (see the LICENSE.md file). If not, see
     <view-entity entity-name="ProcessStoryActivityDetail" package="coarchy">
         <member-entity entity-alias="PSA" entity-name="coarchy.ProcessStoryActivity"/>
         <member-relationship entity-alias="ACT" join-from-alias="PSA" relationship="activity"/>
+        <member-relationship entity-alias="PS" join-from-alias="PSA" relationship="story"/>
         <!-- Never select actorId so you don't get multiple rows back, INSTEAD filter by actorId -->
         <member-relationship entity-alias="ACAC" join-from-alias="PSA" relationship="actors" join-optional="true"/>
 
-        <alias-all entity-alias="PSA"><exclude field="organizationId"/></alias-all>
-        <alias-all entity-alias="ACT"><exclude field="organizationId"/></alias-all>
-        <alias-all entity-alias="ACAC"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="PSA"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
+        <alias-all entity-alias="ACT"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
+        <alias-all entity-alias="PS"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
+        <alias-all entity-alias="ACAC"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
         <alias name="storyActivityOrganizationId" entity-alias="PSA" field="organizationId"/>
+        <alias name="storyActivityLastUpdatedStamp" entity-alias="PSA" field="lastUpdatedStamp"/>
         <alias name="activityOrganizationId" entity-alias="ACT" field="organizationId"/>
-        <alias name="activityActorOrganizationId" entity-alias="ACAC" field="organizationId"/>
+        <alias name="activityLastUpdatedStamp" entity-alias="ACT" field="lastUpdatedStamp"/>
+        <alias name="storyOrganizationId" entity-alias="PS" field="organizationId"/>
+        <alias name="storyLastUpdatedStamp" entity-alias="PS" field="lastUpdatedStamp"/>
+        <alias name="actorOrganizationId" entity-alias="ACAC" field="organizationId"/>
+        <alias name="actorLastUpdatedStamp" entity-alias="ACAC" field="lastUpdatedStamp"/>
     </view-entity>
 
     <!-- Extend entities -->
@@ -202,16 +209,4 @@ along with this software (see the LICENSE.md file). If not, see
     <extend-entity entity-name="WorkEffort" package="mantle.work.effort">
         <field name="actualCompletionDate" type="date-time" enable-audit-log="true"/>
     </extend-entity>
-    <!-- Need to add ownerPartyId because of COARCHY_FILTER_C8 filtering ownerPartyId on WorkEffort and this is in the update#ProjectTimeFromTask eeca service call -->
-    <view-entity entity-name="TaskTimeSummary" package="mantle.work.time">
-        <member-entity entity-alias="WEFF" entity-name="mantle.work.effort.WorkEffort"/>
-        <alias entity-alias="WEFF" name="rootWorkEffortId"/>
-        <alias entity-alias="WEFF" name="workEffortTypeEnumId"/>
-        <alias entity-alias="WEFF" name="ownerPartyId"/>
-        <alias entity-alias="WEFF" name="estimatedWorkTime" function="sum"/>
-        <alias entity-alias="WEFF" name="actualWorkTime" function="sum"/>
-        <alias entity-alias="WEFF" name="remainingWorkTime" function="sum"/>
-        <alias entity-alias="WEFF" name="actualCost" function="sum"/>
-        <alias entity-alias="WEFF" name="actualClientCost" function="sum"/>
-    </view-entity>
 </entities>

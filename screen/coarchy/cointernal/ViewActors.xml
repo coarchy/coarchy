@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="View Actors" default-menu-index="22" menu-image="/ssstatic/images/Sales.png" default-menu-include="false">
+
+    <parameter name="showActivities" from="showActivities?:'Y'"/>
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message>Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if>
+    </always-actions>
+
+    <actions>
+        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
+
+        <entity-find entity-name="coarchy.Actor" list="prepPrepActorList">
+            <order-by field-name="name"/></entity-find>
+        <set field="actorList" from="[]"/>
+        <iterate list="prepPrepActorList" entry="actor">
+            <if condition="showActivities == 'Y'">
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="actorActivityList" distinct="true">
+                    <econdition field-name="actorId" from="actor.actorId"/>
+                    <!-- Don't select fields from activityactor (actorId) -->
+                    <select-field field-name="actorId,name,description,activityId,condition,action,implementationId,"/>
+                    <order-by field-name="sequenceNum"/>
+                </entity-find>
+                <!--            <set field="activityIdList" from="actorActivityList*.activityId"/>-->
+                <set field="processStoryActivityList" from="[]"/>
+                <iterate list="actorActivityList" entry="actorActivity">
+                    <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                        <econdition field-name="activityId" from="actorActivity.activityId"/>
+                        <order-by field-name="name"/></entity-find>
+                    <entity-find-one entity-name="coarchy.Activity" value-field="activity" auto-field-map="[activityId:actorActivity.activityId]"/>
+                    <set field="actorActivity" from="activity.getMap() + [actorNames:activityActorList*.name]"/>
+                    <script>processStoryActivityList.add(actorActivity)</script>
+                </iterate>
+            </if>
+
+            <script>actorList.add([actorId:actor.actorId, name:actor.name, description:actor.description, processStoryActivityList:processStoryActivityList])</script>
+        </iterate>
+    </actions>
+
+    <widgets>
+        <label text="View Actors" type="h4"/>
+        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
+                condition="processStory"/>
+
+        <container-dialog id="ViewActorsDialog" button-text="Show Activities" type="success">
+            <form-single name="ViewActorsForm">
+                <field name="showActivities" from="showActivities?:'Y'"><default-field>
+                    <radio><option key="Y" text="Yes"/><option key="N" text="No"/></radio>
+                </default-field></field>
+                <field name="submit"><default-field><submit/></default-field></field>
+            </form-single>
+        </container-dialog>
+
+        <!-- TODO: Add filter parameters for the activity -->
+        <render-mode><text><![CDATA[<h5>]]></text></render-mode>
+        <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/Actors.html.ftl"/></render-mode>
+        <render-mode><text><![CDATA[</h5>]]></text></render-mode>
+    </widgets>
+</screen>
