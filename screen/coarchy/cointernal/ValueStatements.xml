@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Values" default-menu-index="70" menu-image="/ssstatic/images/Vendor.png">
+        default-menu-title="Values" default-menu-index="10" menu-image="/ssstatic/images/Vendor.png">
 
     <parameter name="processStoryId"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
@@ -86,6 +86,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="action"/></entity-find>
         </if>
 
+        <entity-find-count entity-name="coarchy.ValueStatement" count-field="valueStatementCount"/>
+
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
     </actions>
 
@@ -107,6 +109,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="submit"><default-field><submit text="Add Value"/></default-field></field>
             </form-single>
         </container-dialog>
+        <link url="../ViewValueStatements" text="View/Print Values" tooltip="View Values Text" btn-type="info"
+                condition="valueStatementCount &gt; 0"/>
 
         <form-list name="ValueStatement" header-dialog="true" show-page-size="true" show-csv-button="true"
                 list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null]">
@@ -146,21 +150,21 @@ along with this software (see the LICENSE.md file). If not, see
                 </drop-down>
             </default-field></field>
             <field name="typeEnumId">
-                <header-field title="Value Type" show-order-by="case-insensitive"><drop-down allow-empty="true">
+                <header-field title="Value Type" show-order-by="case-insensitive"><drop-down>
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></header-field>
-                <default-field title="Value Type"><drop-down allow-empty="true" submit-on-select="true">
+                <default-field title="Value Type"><drop-down submit-on-select="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></default-field>
-                <last-row-field title="Value Type"><drop-down allow-empty="true">
+                <last-row-field title="Value Type"><drop-down required-manual-select="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>

@@ -1,6 +1,12 @@
+<h4 class="q-pb-sm">Value Statements:</h4>
 <#list valueStatementList! as valueStatement>
-    <#if valueStatement.value?hasContent><div>Value: ${valueStatement.value?html?ensureEndsWith(".")}</div></#if>
-    <#if valueStatement.processStoryActivityList!?size &gt; 0>Activities:<ul></#if>
+    <#if valueStatement.value?hasContent><div><b>${valueStatement.value?html?ensureEndsWith(".")}</b></div></#if>
+</#list>
+<hr>
+<h4 class="q-pb-sm">Activities:</h4>
+<#list valueStatementList! as valueStatement>
+    <#if valueStatement.value?hasContent><div><b>${valueStatement.value?html?ensureEndsWith(".")}</b></div></#if>
+    <#if valueStatement.processStoryActivityList!?size &gt; 0><ul></#if>
     <#list valueStatement.processStoryActivityList! as processStoryActivity><li>
         <#if processStoryActivity.condition?hasContent><i>${processStoryActivity.condition?html?ensureEndsWith(",")} </i></#if>
         <#list processStoryActivity.actorNames! as actorName><b>${actorName?html}</b><#sep>, </#list>

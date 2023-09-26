@@ -17,7 +17,7 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="mantle.party.PartyServices.setup#UserOrganizationInfo" out-map="context"/>
     </always-actions>
 
-    <subscreens default-item="FindProcessStory"/>
+    <subscreens default-item="Home"/>
     <widgets>
         <!-- just a placeholder screen, nothing here because rendering gets skipped by c.xml wrapper -->
         <label text="Go to /coapp" type="strong"/>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Home" default-menu-index="1" menu-image="/ssstatic/images/Facility.png">
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if>
+    </always-actions>
+
+    <transition name="viewProcessStory">
+        <default-response url="../ViewProcessStory" parameter-map="[processStoryId:processStoryId]"/>
+    </transition>
+    
+    <actions>
+        <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList" limit="20">
+            <order-by field-name="-lastUpdatedStamp"/>
+        </entity-find>
+        <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
+            <order-by field-name="-lastUpdatedStamp"/>
+        </entity-find>
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryList" limit="20" distinct="true">
+            <order-by field-name="-activityLastUpdatedStamp"/>
+        </entity-find>
+        <entity-find entity-name="mantle.work.effort.WorkEffort" list="checklistList" limit="20">
+            <econdition field-name="workEffortTypeEnumId" value="WetProject"/>
+            <econdition field-name="actualCompletionDate" operator="is-not-null"/>
+            <order-by field-name="-actualCompletionDate"/>
+        </entity-find>
+        <set field="activityFeedList" from="[]"/>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <iterate list="valueStatementList" entry="item">
+            <script>activityFeedList.add(['date':item.lastUpdatedStamp,'updateType':'Updated','entityType':'Value','name':item.value,'identifier':'Value#'+item.valueStatementId,'link':'/coapp/ValueStatements'])</script>
+        </iterate>
+        <iterate list="actorList" entry="item">
+            <script>activityFeedList.add(['date':item.lastUpdatedStamp,'updateType':'Updated','entityType':'Actor','name':item.name,'identifier':'Actor#'+item.actorId,'link':'/coapp/Actor'])</script>
+        </iterate>
+        <iterate list="processStoryList" entry="item">
+            <if condition="!activityFeedList.find{it.identifier == 'ProcessStory#'+item.processStoryId}">
+                <script>activityFeedList.add(['date':item.activityLastUpdatedStamp,'updateType':'Updated','entityType':'Process Story','name':item.name,'identifier':'ProcessStory#'+item.processStoryId,'link':'/coapp/ProcessStory?processStoryId='+item.processStoryId])</script>
+            </if>
+        </iterate>
+        <iterate list="checklistList" entry="item">
+            <script>activityFeedList.add(['date':item.actualCompletionDate,'updateType':'Completed','entityType':'Checklist','name':item.workEffortName,'identifier':'Checklist#'+item.workEffortId,'link':'/coapp/Checklist?checklistId='+item.workEffortId])</script>
+        </iterate>
+        <script>activityFeedList.sort({m1, m2 -> m2.date &lt;=&gt; m1.date})</script>
+
+        <set field="valueStatementCount" from="valueStatementList?.size()"/>
+        <set field="actorCount" from="actorList?.size()"/>
+        <entity-find-count entity-name="coarchy.ProcessStory" count-field="processStoryCount"/>
+
+        <log level="warn" message="context.toString() = ${context.toString()}"/>
+        <log level="warn" message="activityFeedList*.date = ${activityFeedList*.date}"/>
+    </actions>
+
+    <widgets>
+        <label text="Home" type="h4"/>
+        <container-row><row-col md="6">
+            <label text="Screens" type="h5" style="q-pt-sm"/>
+            <link url="../ValueStatements" text="Values"/>
+            <link url="../Actor" text="Actors"/>
+            <link url="../FindProcessStory" text="Process Stories"/>
+            <link url="../FindChecklist" text="Checklists"/>
+        </row-col><row-col md="6">
+            <label text="Reports" type="h5" style="q-pt-sm" condition="valueStatementCount &gt; 0 || actorCount &gt; 0 || processStoryCount &gt; 0"/>
+            <link url="../ViewValueStatements" text="View Values" condition="valueStatementCount &gt; 0" btn-type="info"/>
+            <link url="../ViewActors" text="View Actors" condition="actorCount &gt; 0" btn-type="info"/>
+            <container-dialog id="ViewProcessStoryDialog" button-text="View Process Story" condition="processStoryCount &gt; 0" type="info">
+                <form-single name="ViewProcessStoryForm" transition="viewProcessStory">
+                    <field name="processStoryId"><default-field title="Process Story">
+                        <drop-down required-manual-select="true" submit-on-select="true">
+                            <entity-options key="${processStoryId}" text="${name}">
+                                <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
+                                    <order-by field-name="lastUpdatedStamp"/></entity-find>
+                            </entity-options></drop-down></default-field></field>
+                </form-single>
+            </container-dialog>
+        </row-col><row-col md="8">
+            <label text="Feed" type="h5" style="q-pt-sm"/>
+
+            <section-iterate name="FeedSection" list="activityFeedList" entry="item">
+                <widgets>
+                    <container-box>
+                        <box-header></box-header>
+                        <box-body-nopad>
+<!--                            <label text="" type="h5"/>-->
+                            <render-mode><text><![CDATA[<h5>${item.entityType} <m-link href="${item.link}">${item.name}</h5></m-link>]]></text></render-mode>
+
+                            <label text="${item.updateType} on ${ec.l10n.format(item.date,'MMMM dd, HH:mm')}"/>
+                        </box-body-nopad>
+                    </container-box>
+                </widgets>
+            </section-iterate>
+        </row-col></container-row>
+    </widgets>
+</screen>

@@ -205,21 +205,45 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <if condition="task.actualCompletionDate &amp;&amp; ['WerWontComplete','WerInsufficient'].contains(resolutionEnumId)"/>
             <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:workEffortId,resolutionEnumId:resolutionEnumId,actualCompletionDate:actualCompletionDate]"/>
+            <log message="Updating task ${workEffortId} to ${resolutionEnumId}"/>
 
-            <entity-find-count entity-name="mantle.work.effort.WorkEffort" count-field="taskCount">
-                <econdition field-name="rootWorkEffortId" from="task.rootWorkEffortId"/></entity-find-count>
-            <entity-find-count entity-name="mantle.work.effort.WorkEffort" count-field="taskWithResolutionCount">
-                <econdition field-name="rootWorkEffortId" from="task.rootWorkEffortId"/>
-                <econdition field-name="resolutionEnumId" operator="is-not-null"/></entity-find-count>
-            <if condition="taskWithResolutionCount == taskCount">
-                <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:task.rootWorkEffortId,actualCompletionDate:ec.user.nowTimestamp]"/>
+            <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="project" auto-field-map="[workEffortId:task.rootWorkEffortId]"/>
+            <if condition="!project.actualCompletionDate">
+                <entity-find-count entity-name="mantle.work.effort.WorkEffort" count-field="taskCount">
+                    <econdition field-name="rootWorkEffortId" from="task.rootWorkEffortId"/></entity-find-count>
+                <entity-find-count entity-name="mantle.work.effort.WorkEffort" count-field="taskWithResolutionCount">
+                    <econdition field-name="rootWorkEffortId" from="task.rootWorkEffortId"/>
+                    <econdition field-name="resolutionEnumId" operator="is-not-null"/></entity-find-count>
+                <if condition="taskWithResolutionCount == taskCount">
+                    <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:task.rootWorkEffortId,actualCompletionDate:ec.user.nowTimestamp]"/>
+                    <log message="Completing project ${task.rootWorkEffortId}"/>
 <!--                <else>-->
 <!--                    <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="project" auto-field-map="[workEffortId:task.rootWorkEffortId]"/>-->
 <!--                    <if condition="project.actualCompletionDate">-->
 <!--                        <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:task.rootWorkEffortId,actualCompletionDate:null]"/>-->
 <!--                    </if>-->
 <!--                </else>-->
+                </if>
             </if>
+        </actions>
+    </service>
+    <service verb="resolve" noun="AllTasks">
+        <in-parameters>
+            <parameter name="workEffortId" required="true"/>
+            <parameter name="resolutionEnumId" required="true"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <actions>
+            <entity-find entity-name="mantle.work.effort.WorkEffort" list="taskList">
+                <econdition field-name="rootWorkEffortId" from="workEffortId"/>
+                <order-by field-name="workEffortId"/></entity-find>
+            <if condition="!taskList"><return type="warning" message="No tasks found"/></if>
+
+            <iterate list="taskList" entry="task">
+                <if condition="task.resolutionEnumId != resolutionEnumId">
+                    <service-call name="coarchy.CoarchyServices.update#Task" in-map="[workEffortId:task.workEffortId,resolutionEnumId:resolutionEnumId,organizationId:organizationId]"/>
+                </if>
+            </iterate>
         </actions>
     </service>
 
@@ -269,7 +293,7 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="ValueStatement">
         <in-parameters>
             <parameter name="value" required="true"/>
-            <parameter name="typeEnumId"/>
+            <parameter name="typeEnumId" required="true"/>
             <parameter name="organizationId" required="true"/>
         </in-parameters>
         <out-parameters>

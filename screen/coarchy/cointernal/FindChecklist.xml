@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Find Checklist" default-menu-index="50" menu-image="/ssstatic/images/task-homework.png">
+        default-menu-title="Checklists" default-menu-index="50" menu-image="/ssstatic/images/Picking.png">
 
     <parameter name="pageIndex" from="pageIndex?:0"/>
 
@@ -36,9 +36,6 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="coarchy.CoarchyServices.create#Checklist" in-map="[processStoryId:processStoryId,name:name,organizationId:activeOrgId]" out-map="checklist"/>
         <default-response url="../Checklist" parameter-map="[checklistId:checklist.rootWorkEffortId]"/></transition>
 
-    <actions>
-    </actions>
-
     <widgets>
         <label text="Find Checklist" type="h4"/>
         <container-dialog id="CreateChecklistDialogue" button-text="Add Checklist" type="success" condition="partyRelationshipCount &gt; 0">
@@ -58,7 +55,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="submit"><default-field><submit text="Add"/></default-field></field>
             </form-single></container-dialog>
 
-        <form-list name="Checklist" header-dialog="true" list="checklistList">
+        <form-list name="Checklist" header-dialog="true" show-page-size="true" show-csv-button="true" list="checklistList">
             <entity-find entity-name="mantle.work.effort.WorkEffort" list="checklistList">
                 <search-form-inputs default-order-by="-actualStartDate"/>
                 <econdition field-name="workEffortTypeEnumId" value="WetProject"/>
