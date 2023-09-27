@@ -40,13 +40,39 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="updateTask">
         <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#Task" in-map="[workEffortId:workEffortId,resolutionEnumId:resolutionEnumId,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.update#Task" in-map="[workEffortId:workEffortId,assignedPartyIdList:assignedPartyIdList,resolutionEnumId:resolutionEnumId,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/></transition>
 
     <transition name="resolveAll">
         <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <service-call name="coarchy.CoarchyServices.resolve#AllTasks" in-map="[workEffortId:workEffortId,resolutionEnumId:resolutionEnumId,organizationId:activeOrgId]"/>
         <default-response parameter-map="[checklistId:workEffortId]"/><error-response url="." save-parameters="true"/></transition>
+
+    <transition name="getAssignedPartyList">
+        <actions>
+            <set field="assignedPartyList" from="[]"/>
+            <log level="warn" message="activityId ${activityId}"/>
+            <if condition="term == null &amp;&amp; assignedPartyIdList ? assignedPartyIdList?.size() &gt; 0 : false"><then>
+                <entity-find entity-name="mantle.work.effort.WorkEffortPartyAndPerson" list="assignedPartyList" limit="50">
+                    <date-filter/>
+                    <econdition field-name="workEffortId"/>
+                    <econdition field-name="roleTypeId" value="Assignee"/>
+                    <econdition field-name="partyId" operator="in" from="assignedPartyIdList"/>
+                    <order-by field-name="firstName"/>
+                </entity-find>
+            </then><else-if condition="actorIdList">
+                <entity-find entity-name="coarchy.ActorPartyAndPerson" list="assignedPartyList">
+                    <econdition field-name="actorId" operator="in" from="actorIdList"/>
+                    <order-by field-name="actorId"/></entity-find>
+
+            </else-if></if>
+            <set field="outList" from="[]"/>
+            <iterate list="assignedPartyList" entry="assignedParty">
+                <script>outList.add([value:assignedParty.partyId, label:"${assignedParty.name} - ${assignedParty.firstName} ${assignedParty.lastName}"])</script>
+            </iterate>
+            <!--            <log level="warn" message="getassignedPartyList context.toString() ${context.toString()}"/>-->
+            <script>ec.web.sendJsonResponse(outList)</script>
+        </actions><default-response type="none"/></transition>
 
     <actions>
         <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="project" auto-field-map="[workEffortId:checklistId]"/>
@@ -93,17 +119,38 @@ along with this software (see the LICENSE.md file). If not, see
                 list="taskList" transition="updateTask">
             <entity-find entity-name="mantle.work.effort.WorkEffort" list="taskList">
                 <econdition field-name="rootWorkEffortId" from="project.workEffortId"/>
+                <select-field field-name="workEffortId,workEffortName,resolutionEnumId,actualCompletionDate,activityId"/>
                 <order-by field-name="workEffortId"/></entity-find>
 
+            <row-actions>
+                <entity-find entity-name="mantle.work.effort.WorkEffortPartyAndPerson" list="listParty" limit="50">
+                    <date-filter/>
+                    <econdition field-name="workEffortId"/>
+                    <econdition field-name="roleTypeId" value="Assignee"/>
+                    <order-by field-name="firstName"/>
+                </entity-find>
+                <set field="assignedPartyIdList" from="listParty*.partyId"/>
+
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                    <econdition field-name="activityId"/></entity-find>
+                <set field="actorIdList" from="activityActorList*.actorId"/>
+            </row-actions>
+            
             <field name="workEffortId"><default-field><hidden/></default-field></field>
-            <field name="resolutionEnumId"><conditional-field condition="resolutionEnumId!=''" title="Resolution"><drop-down submit-on-select="true" required-manual-select="true">
+            <field name="assignedPartyIdList"><conditional-field condition="activeOrg.ownerPartyId == ec.user.userAccount.partyId" title="${activeOrg.ownerPartyId == ec.user.userAccount.partyId?'Assigned Users':''}">
+                <drop-down submit-on-select="true" allow-multiple="true" required-manual-select="true">
+                    <list-options list="listParty" key="${partyId}" text="${firstName} ${lastName}"/>
+                    <dynamic-options server-search="true" transition="getAssignedPartyList" min-length="0" parameter-map="[workEffortId:workEffortId,actorIdList:actorIdList]"/>
+                </drop-down>
+            </conditional-field></field>
+            <field name="workEffortName"><default-field title="Task"><label text="${workEffortName}" type="h5"/></default-field></field>
+            <field name="resolutionEnumId"><conditional-field condition="assignedPartyIdList?.size() &gt; 0 &amp;&amp; resolutionEnumId!=''" title="${assignedPartyIdList?.size() &gt; 0 &amp;&amp; resolutionEnumId!=''?'Resolution':''}"><drop-down submit-on-select="true" required-manual-select="true">
                 <entity-options key="${enumId}" text="${description}">
                     <entity-find entity-name="moqui.basic.EnumAndGroup">
                         <econdition field-name="enumGroupEnumId" value="EngTaskResolution"/>
                         <order-by field-name="sequenceNum"/></entity-find>
                 </entity-options>
             </drop-down></conditional-field></field>
-            <field name="workEffortName"><default-field title="Task"><label text="${workEffortName}" type="h5"/></default-field></field>
 <!--            <field name="actualCompletionDate"><default-field title="Completed"><label text="${ec.l10n.format(ec.l10n.parseDateTime(actualCompletionDate), 'MMM dd HH:mm')}"/></default-field></field>-->
             <field name="actualCompletionDate"><default-field title="Completed"><label text="${actualCompletionDate?ec.l10n.format(actualCompletionDate,'MMMM dd, HH:mm'):'Not completed'}"/></default-field></field>
         </form-list>

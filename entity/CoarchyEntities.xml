@@ -144,6 +144,8 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="actorId"/></relationship>
         <relationship type="one" related="mantle.party.Party" short-alias="party">
             <key-map field-name="partyId"/></relationship>
+        <relationship type="one" related="mantle.party.Person" short-alias="person">
+            <key-map field-name="partyId"/></relationship>
     </entity>
     <view-entity entity-name="ActorPartyDetail" package="coarchy">
         <member-entity entity-alias="ACPA" entity-name="coarchy.ActorParty"/>
@@ -151,6 +153,17 @@ along with this software (see the LICENSE.md file). If not, see
 
         <alias-all entity-alias="ACPA"><exclude field="organizationId"/></alias-all>
         <alias-all entity-alias="ACT"><exclude field="organizationId"/></alias-all>
+        <alias name="activityActorOrganizationId" entity-alias="ACPA" field="organizationId"/>
+        <alias name="actorOrganizationId" entity-alias="ACT" field="organizationId"/>
+    </view-entity>
+    <view-entity entity-name="ActorPartyAndPerson" package="coarchy">
+        <member-entity entity-alias="ACPA" entity-name="coarchy.ActorParty"/>
+        <member-relationship entity-alias="ACT" join-from-alias="ACPA" relationship="actor"/>
+        <member-relationship entity-alias="PER" join-from-alias="ACPA" relationship="person"/>
+
+        <alias-all entity-alias="ACPA"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="ACT"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="PER"><exclude field="partyId"/></alias-all>
         <alias name="activityActorOrganizationId" entity-alias="ACPA" field="organizationId"/>
         <alias name="actorOrganizationId" entity-alias="ACT" field="organizationId"/>
     </view-entity>
@@ -211,6 +224,22 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="actorLastUpdatedStamp" entity-alias="ACAC" field="lastUpdatedStamp"/>
     </view-entity>
 
+<!--    <view-entity entity-name="WorkEffortAndPartyAndPerson" package="mantle.work.effort">-->
+<!--        <member-entity entity-alias="WEFF" entity-name="mantle.work.effort.WorkEffort"/>-->
+<!--        <member-entity entity-alias="WEP" entity-name="mantle.work.effort.WorkEffortParty" join-from-alias="WEFF" join-optional="true">-->
+<!--            <key-map field-name="workEffortId"/></member-entity>-->
+<!--        <member-entity entity-alias="PER" entity-name="mantle.party.Person" join-from-alias="WEP" join-optional="true">-->
+<!--            <key-map field-name="partyId"/></member-entity>-->
+<!--        <member-entity entity-alias="USRACT" entity-name="moqui.security.UserAccount" join-from-alias="WEP" join-optional="true">-->
+<!--            <key-map field-name="partyId"/></member-entity>-->
+
+<!--        <alias-all entity-alias="WEFF"></alias-all>-->
+<!--        <alias-all entity-alias="WEP"><exclude field="statusId"/></alias-all>-->
+<!--        <alias-all entity-alias="PER"><exclude field="partyId"/><exclude field="comments"/></alias-all>-->
+<!--        <alias name="username" entity-alias="USRACT"/>-->
+<!--        <alias name="partyStatusId" entity-alias="WEP" field="statusId"/>-->
+<!--    </view-entity>-->
+
     <!-- Extend entities -->
     <extend-entity entity-name="Party" package="mantle.party">
         <field name="visibilityEnumId" type="id"/>
@@ -228,5 +257,9 @@ along with this software (see the LICENSE.md file). If not, see
     </extend-entity>
     <extend-entity entity-name="WorkEffort" package="mantle.work.effort">
         <field name="actualCompletionDate" type="date-time" enable-audit-log="true"/>
+        <field name="activityId" type="id"/>
+
+        <relationship type="one" title="Activity" related="coarchy.Activity" short-alias="activity">
+            <key-map field-name="activityId"/></relationship>
     </extend-entity>
 </entities>
