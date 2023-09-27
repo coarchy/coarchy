@@ -51,8 +51,7 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
-                condition="processStory"/>
+<!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
 
         <!-- TODO: Add filter parameters for the activity -->
         <render-mode><text><![CDATA[<h5>]]></text></render-mode>

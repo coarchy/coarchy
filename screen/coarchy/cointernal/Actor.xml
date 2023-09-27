@@ -31,17 +31,18 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="toRoleTypeId" value="OrgInternal"/>
             <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
             <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+<!--        <log level="warn" message="Actors always-actions context.toString() ${context.toString()}"/>-->
     </always-actions>
 
     <transition name="createActor">
         <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.create#Actor" in-map="[name:name,description:description,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.create#Actor" in-map="[name:name,description:description,partyIdList:partyIdList,organizationId:activeOrgId,isOwner:activeOrg.ownerPartyId==ec.user.userAccount.partyId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
     <transition name="updateActor">
         <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#Actor" in-map="[actorId:actorId,name:name,description:description,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.update#Actor" in-map="[actorId:actorId,name:name,description:description,partyIdList:partyIdList,organizationId:activeOrgId,isOwner:activeOrg.ownerPartyId==ec.user.userAccount.partyId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
@@ -54,6 +55,35 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="delete#coarchy.Actor" in-map="[actorId:actorId]"/>
         </actions><default-response/></transition>
 
+    <transition name="getUserList">
+        <actions>
+            <set field="userList" from="[]"/>
+            <if condition="term == null &amp;&amp; partyIdList ? partyIdList?.size() &gt; 0 : false"><then>
+                <entity-find entity-name="mantle.party.PartyFromAndRelationship" list="userList" distinct="true" limit="50">
+                    <econdition field-name="fromPartyId" operator="in" from="partyIdList"/>
+                    <econdition field-name="toPartyId" from="activeOrgId"/>
+                    <select-field field-name="fromPartyId,firstName,lastName"/>
+                    <order-by field-name="-lastUpdatedStamp"/>
+                </entity-find>
+            </then><else>
+                <entity-find entity-name="mantle.party.PartyFromAndRelationship" list="userList" distinct="true" limit="50">
+                    <econditions combine="or">
+                        <econdition field-name="firstName" operator="like" value="%${term}%" ignore-case="true"/>
+                        <econdition field-name="lastName" operator="like" value="%${term}%" ignore-case="true"/>
+                    </econditions>
+                    <econdition field-name="toPartyId" from="activeOrgId"/>
+                    <select-field field-name="fromPartyId,firstName,lastName"/>
+                    <order-by field-name="-lastUpdatedStamp"/>
+                </entity-find>
+            </else></if>
+            <set field="outList" from="[]"/>
+            <iterate list="userList" entry="user">
+                <script>outList.add([value:user.fromPartyId, label:"${user.firstName} ${user.lastName}"])</script>
+            </iterate>
+<!--            <log level="warn" message="getUserList context.toString() ${context.toString()}"/>-->
+            <script>ec.web.sendJsonResponse(outList)</script>
+        </actions><default-response type="none"/></transition>
+
     <actions>
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
         <entity-find-count entity-name="coarchy.Actor" count-field="actorCount"/>
@@ -62,8 +92,7 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <label text="Actors" type="h4"/>
 <!--        <link url="../FindProcessStory" text="Find Process Stories"/>-->
-        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
-                condition="processStory"/>
+<!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
 
         <container-dialog id="CreateActorDialog" button-text="Add Actor" type="success">
             <form-single name="CreateActorForm" transition="createActor">
@@ -79,10 +108,25 @@ along with this software (see the LICENSE.md file). If not, see
         <link url="../ViewActors" text="View/Print Actors" tooltip="View Actors Text" btn-type="info"
                 condition="actorCount &gt; 0"/>
 
-        <form-list name="Actor" header-dialog="true" show-page-size="true" show-csv-button="true"
+        <form-list name="ActorForm" header-dialog="true" show-page-size="true" show-csv-button="true"
                 list="actorList" transition="updateActor" transition-last-row="createActor" map-last-row="[name:null,description:null]">
             <entity-find entity-name="coarchy.Actor" list="actorList">
-                <search-form-inputs default-order-by="^name"/></entity-find>
+                <search-form-inputs default-order-by="name"/></entity-find>
+
+            <row-actions>
+                <entity-find entity-name="coarchy.ActorParty" list="prepActorPartyList">
+                    <econdition field-name="actorId"/>
+                    <order-by field-name="actorId"/>
+                </entity-find>
+                <entity-find entity-name="mantle.party.PartyFromAndRelationship" list="actorPartyList" distinct="true">
+                    <econdition field-name="fromPartyId" operator="in" from="prepActorPartyList*.partyId"/>
+                    <econdition field-name="toPartyId" from="activeOrgId"/>
+                    <select-field field-name="fromPartyId,firstName,lastName"/>
+                    <order-by field-name="-lastUpdatedStamp"/>
+                </entity-find>
+                <set field="partyIdList" from="actorPartyList*.fromPartyId"/>
+<!--                <log level="warn" message="ActorForm row-actions context.toString() ${context.toString()}"/>-->
+            </row-actions>
 
             <field name="actorId"><default-field><hidden/></default-field></field>
             <field name="name">
@@ -95,6 +139,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
                 <last-row-field><text-area rows="2" cols="80" autogrow="true"/></last-row-field>
             </field>
+            <field name="partyIdList"><conditional-field condition="activeOrg.ownerPartyId!=ec.user.userAccount.partyId" title="${activeOrg.ownerPartyId!=ec.user.userAccount.partyId?'Assigned Users':''}">
+                <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/UserLinkList.html.ftl"/></render-mode>
+            </conditional-field><conditional-field condition="activeOrg.ownerPartyId==ec.user.userAccount.partyId" title="${activeOrg.ownerPartyId==ec.user.userAccount.partyId?'Assigned Users':''}">
+                <drop-down submit-on-select="true" allow-multiple="true" allow-empty="true">
+                    <list-options list="actorPartyList" key="${fromPartyId}" text="${firstName} ${lastName}"/>
+                    <dynamic-options server-search="true" transition="getUserList" min-length="0"/>
+                </drop-down>
+            </conditional-field></field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>

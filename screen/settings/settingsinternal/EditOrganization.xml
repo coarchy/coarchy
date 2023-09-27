@@ -17,6 +17,25 @@ along with this software (see the LICENSE.md file). If not, see
 
     <parameter name="organizationId" required="true"/>
 
+    <always-actions>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="organizationId"/></entity-find-count>
+        <if condition="partyRelationshipCount == null || partyRelationshipCount == 0">
+            <message type="warning">You are not authorized to view this Organization</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script></if>
+
+        <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:organizationId]"/>
+    </always-actions>
+
+    <transition name="updateUser"><condition><expression>organization.ownerPartyId==ec.user.userAccount.partyId</expression></condition>
+        <service-call name="coarchy.CoarchyServices.update#User" in-map="[partyId:partyId,actorIdList:actorIdList,organizationId:organizationId]"/>
+        <default-response/>
+    </transition>
+
     <transition name="removeUser"><actions>
         <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:organizationId]"/>
         <if condition="fromPartyId == ec.user.userAccount.partyId || organization.ownerPartyId != ec.user.userAccount.partyId"><return message="Cannot remove user" type="warning"/></if>
@@ -35,18 +54,40 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="updateOrganization"><actions>
         <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
-        <if condition="!organization || !organization.ownerPartyId"><return type="warning" message="You can't change an organization you don't own"/></if>
+        <if condition="!organization || organization.ownerPartyId != ec.user.userAccount.partyId"><return type="warning" error="true" message="You can't change an organization you don't own"/></if>
         <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
             <service-call name="update#mantle.party.Organization" in-map="[partyId:partyId,organizationName:organizationName]"/>
         </if>
-    </actions><default-response url="." parameter-map="[organizationId:partyId]"/></transition>
+    </actions><default-response type="url" url="." parameter-map="[organizationId:partyId]"/><error-response/></transition>
+
+    <transition name="getActorList"><actions>
+        <set field="actorList" from="[]"/>
+        <if condition="term == null &amp;&amp; actorIdList ? actorIdList?.size() &gt; 0 : false"><then>
+            <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
+                <econdition field-name="actorId" operator="in" from="actorIdList"/>
+                <econdition field-name="organizationId"/>
+                <order-by field-name="actorId"/></entity-find>
+        </then><else>
+            <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
+                <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
+                <econdition field-name="organizationId"/>
+                <order-by field-name="actorId"/></entity-find>
+        </else></if>
+        <script>
+            def outList = []
+            for (def actor in actorList)
+                outList.add([value:actor?.actorId, label:"${actor?.name}".toString()])
+            ec.web.sendJsonResponse(outList)
+        </script>
+    </actions>
+        <default-response type="none"/>
+    </transition>
 
     <transition-include name="inviteUser" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
     <transition-include name="goToApplication" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
     <transition-include name="createOrganization" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
 
     <actions>
-        <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:organizationId]"/>
 
 <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
     </actions>
@@ -54,7 +95,7 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <label text="Edit ${organization?.organizationName?:' Organization'}" type="h4"/>
 
-        <link url="goToApplication" text="View ${organization?.organizationName?:' Organization'}" parameter-map="[partyId:organizationId]" tooltip="Create Process Stories"/>
+        <link url="goToApplication" text="Application" parameter-map="[partyId:organizationId]" tooltip="View ${organization.organizationName} Home"/>
         <link url="../Organizations" text="Find Organizations"/>
 
         <container-dialog id="InviteUser" type="success" button-text="Invite User">
@@ -75,7 +116,7 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="clone"><default-field><submit/></default-field></field>
         </form-single></container-dialog>
 
-        <container-dialog id="UpdateOrganizationDialog" button-text="Edit Organization Name">
+        <container-dialog id="UpdateOrganizationDialog" button-text="Edit Organization Name" condition="organization.ownerPartyId==ec.user.userAccount.partyId">
             <form-single name="UpdateOrganization" transition="updateOrganization">
                 <field name="partyId" from="organizationId"><default-field><hidden/></default-field></field>
                 <field name="organizationName" from="organization.organizationName"><default-field title="Organization Name"><text-line size="50"/></default-field></field>
@@ -83,32 +124,53 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <form-list name="Users" list="usersList" header-dialog="true" show-page-size="true" show-csv-button="true">
+        <label text="Users" type="h5" style="q-pt-sm"/>
+
+        <form-list name="Users" list="usersList" header-dialog="true" show-page-size="true" show-csv-button="true"
+                transition="updateUser">
             <entity-find entity-name="mantle.party.PartyFromAndRelationship" list="usersList" distinct="true">
                 <search-form-inputs default-order-by="-lastUpdatedStamp"/>
                 <econdition field-name="toPartyId" from="organizationId"/>
-                <select-field field-name="firstName,lastName"/>
-                </entity-find>
+                <select-field field-name="fromPartyId,firstName,lastName"/></entity-find>
 
             <row-actions>
-                <!-- This assumes there are only one UserAccount per party in the application -->
+                <!-- This assumes there is only one UserAccount per party in the application -->
                 <if condition="fromPartyId == ec.user.userAccount.partyId || (fromPartyId != ec.user.userAccount.partyId &amp;&amp; organization.ownerPartyId == ec.user.userAccount.partyId)">
-                    <entity-find entity-name="moqui.security.UserAccount" list="userAccountList">
+                    <entity-find entity-name="moqui.security.UserAccount" list="userAccountList" limit="1">
                         <econdition field-name="partyId" from="fromPartyId"/>
                         <select-field field-name="emailAddress"/>
                         <order-by field-name="-lastUpdatedStamp"/></entity-find>
                     <set field="userAccount" from="userAccountList?.getFirst()"/>
                 </if>
+                <entity-find entity-name="coarchy.ActorPartyDetail" list="actorPartyList">
+                    <econdition field-name="partyId" from="fromPartyId"/>
+                    <econdition field-name="activityActorOrganizationId" from="organizationId"/>
+                    <econdition field-name="actorOrganizationId" from="organizationId"/>
+                    <order-by field-name="actorId"/></entity-find>
+                <set field="actorIdList" from="actorPartyList*.actorId"/>
+
+<!--                <log level="warn" message="Users row-actions context.toString() ${context.toString()}"/>-->
             </row-actions>
             <hidden-parameters><parameter name="organizationId"/></hidden-parameters>
             <field name="firstName"><header-field show-order-by="case-insensitive"><text-find size="25"/></header-field></field>
             <field name="lastName"><header-field show-order-by="case-insensitive"><text-find size="25"/></header-field></field>
 
-            <field name="fromPartyId"><default-field><hidden/></default-field></field>
+            <field name="partyId" from="fromPartyId"><default-field><hidden/></default-field></field>
             <field name="name"><default-field><label text="${firstName} ${lastName}"/></default-field></field>
             <field name="emailAddress" from="userAccount?.emailAddress ?: 'Not Authorized'">
                 <default-field><display/></default-field></field>
-            <field name="remove"><conditional-field condition="fromPartyId != ec.user.userAccount.partyId &amp;&amp; organization.ownerPartyId == ec.user.userAccount.partyId" title=""><link url="removeUser" parameter-map="[fromPartyId:fromPartyId,toPartyId:organizationId]" icon="fa fa-trash" btn-type="danger" text=" " tooltip="Remove ${firstName} ${lastName} from ${organization?.organizationName?:' Organization'}"/></conditional-field></field>
+            <field name="actorIdList"><conditional-field condition="organization.ownerPartyId!=ec.user.userAccount.partyId" title="${organization.ownerPartyId!=ec.user.userAccount.partyId?'Assigned Actor Roles':''}">
+                <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ActorLinkList.html.ftl"/></render-mode>
+            </conditional-field><conditional-field condition="organization.ownerPartyId==ec.user.userAccount.partyId" title="${organization.ownerPartyId==ec.user.userAccount.partyId?'Assigned Actor Roles':''}">
+                <drop-down submit-on-select="true" allow-multiple="true" allow-empty="true">
+                    <list-options list="actorPartyList" key="${actorId}" text="${name}"/>
+                    <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
+                </drop-down>
+            </conditional-field></field>
+            <field name="remove"><conditional-field condition="fromPartyId != ec.user.userAccount.partyId &amp;&amp; organization.ownerPartyId == ec.user.userAccount.partyId" title="">
+                <link url="removeUser" parameter-map="[fromPartyId:fromPartyId,toPartyId:organizationId]" icon="fa fa-trash" btn-type="danger" text=" "
+                        tooltip="Remove ${firstName} ${lastName} from ${organization?.organizationName?:' Organization'}"
+                        confirmation="Are you sure you want to remove ${firstName} ${lastName} from ${organization?.organizationName?:' Organization'}"/></conditional-field></field>
             <field name="search"><header-field><submit/></header-field></field>
         </form-list>
     </widgets>

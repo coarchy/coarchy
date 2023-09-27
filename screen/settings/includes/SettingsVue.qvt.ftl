@@ -102,11 +102,13 @@ along with this software (see the LICENSE.md file). If not, see
                 <q-btn color="secondary" class="text-black" label="${(ec.user.userAccount.userFullName)!'Account'}">
                     <q-menu auto-close>
                         <q-list dense style="min-width: 100px">
-<#--                            <q-item clickable>-->
-<#--                                <q-item-section><q-btn flat label="Application" type="a" href="${sri.buildUrl("/coapp/FindProcessStory").url}">-->
-<#--                                        <q-tooltip>Go to Application</q-tooltip></q-btn>-->
-<#--                                </q-item-section>-->
-<#--                            </q-item>-->
+                            <#if ec.user.getPreference('ACTIVE_ORGANIZATION')!?has_content>
+                            <q-item clickable>
+                                <q-item-section><q-btn flat label="Application" type="a" href="${sri.buildUrl("/coapp/Home").url}">
+                                        <q-tooltip>Go to Application</q-tooltip></q-btn>
+                                </q-item-section>
+                            </q-item>
+                            </#if>
                             <q-item clickable>
                                 <q-item-section>
                                     <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"

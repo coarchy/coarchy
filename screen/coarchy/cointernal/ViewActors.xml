@@ -56,8 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <widgets>
         <label text="View Actors" type="h4"/>
-        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}"
-                condition="processStory"/>
+<!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
 
         <container-dialog id="ViewActorsDialog" button-text="Show Activities" type="success">
             <form-single name="ViewActorsForm">

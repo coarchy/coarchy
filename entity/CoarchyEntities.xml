@@ -119,12 +119,11 @@ along with this software (see the LICENSE.md file). If not, see
 
         <field name="organizationId" type="id"/>
 
-        <!-- TODO: Perhaps have a sequenceId here -->
-
+        <relationship type="one" related="coarchy.Activity" short-alias="activity">
+            <key-map field-name="activityId"/></relationship>
         <relationship type="one" related="coarchy.Actor" short-alias="actor">
             <key-map field-name="actorId"/></relationship>
     </entity>
-
     <view-entity entity-name="ActivityActorDetail" package="coarchy">
         <member-entity entity-alias="ACAC" entity-name="coarchy.ActivityActor"/>
         <member-relationship entity-alias="ACT" join-from-alias="ACAC" relationship="actor"/>
@@ -132,6 +131,27 @@ along with this software (see the LICENSE.md file). If not, see
         <alias-all entity-alias="ACAC"><exclude field="organizationId"/></alias-all>
         <alias-all entity-alias="ACT"><exclude field="organizationId"/></alias-all>
         <alias name="activityActorOrganizationId" entity-alias="ACAC" field="organizationId"/>
+        <alias name="actorOrganizationId" entity-alias="ACT" field="organizationId"/>
+    </view-entity>
+
+    <entity entity-name="ActorParty" package="coarchy">
+        <field name="actorId" type="id" is-pk="true"/>
+        <field name="partyId" type="id" is-pk="true"/>
+
+        <field name="organizationId" type="id"/>
+
+        <relationship type="one" related="coarchy.Actor" short-alias="actor">
+            <key-map field-name="actorId"/></relationship>
+        <relationship type="one" related="mantle.party.Party" short-alias="party">
+            <key-map field-name="partyId"/></relationship>
+    </entity>
+    <view-entity entity-name="ActorPartyDetail" package="coarchy">
+        <member-entity entity-alias="ACPA" entity-name="coarchy.ActorParty"/>
+        <member-relationship entity-alias="ACT" join-from-alias="ACPA" relationship="actor"/>
+
+        <alias-all entity-alias="ACPA"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="ACT"><exclude field="organizationId"/></alias-all>
+        <alias name="activityActorOrganizationId" entity-alias="ACPA" field="organizationId"/>
         <alias name="actorOrganizationId" entity-alias="ACT" field="organizationId"/>
     </view-entity>
 

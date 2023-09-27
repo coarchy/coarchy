@@ -98,6 +98,10 @@ along with this software (see the LICENSE.md file). If not, see
         }
     ]]></script></pre-actions>
 
+    <actions>
+        <service-call name="mantle.party.PartyServices.setup#UserOrganizationInfo" out-map="context"/>
+    </actions>
+
     <widgets>
         <render-mode>
             <!-- for html just render the navbar (Vue page wrapper and nav component) -->

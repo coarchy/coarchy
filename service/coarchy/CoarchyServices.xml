@@ -251,19 +251,29 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="name" required="true"/>
             <parameter name="description"/>
+            <parameter name="partyIdList" type="List"/>
             <parameter name="organizationId" required="true"/>
+            <parameter name="isOwner" required="true" type="Boolean"/>
         </in-parameters>
         <out-parameters>
             <parameter name="actorId"/>
+            <parameter name="partyIdList" type="List"/>
         </out-parameters>
         <actions>
+            <set field="name" from="name.trim()"/>
+            <set field="description" from="description?.trim()"/>
             <entity-find entity-name="coarchy.Actor" list="actorList" limit="20">
                 <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
                 <econdition field-name="name" from="name" ignore-case="true"/>
             </entity-find>
             <if condition="actorList"><return type="danger" message="Actor '${actorList?.getFirst()?.name}' already exists"/></if>
 
-            <service-call name="create#coarchy.Actor" in-map="[name:name,description:description,organizationId:organizationId]"/>
+            <service-call name="create#coarchy.Actor" in-map="[name:name,description:description,organizationId:organizationId]" out-map="context"/>
+            <if condition="isOwner">
+                <iterate list="partyIdList" entry="partyId">
+                    <service-call name="create#coarchy.ActorParty" in-map="[actorId:actorId,partyId:partyId,organizationId:organizationId]"/>
+                </iterate>
+            </if>
         </actions>
     </service>
     <service verb="update" noun="Actor">
@@ -271,7 +281,9 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="actorId" required="true"/>
             <parameter name="name" required="true"/>
             <parameter name="description"/>
+            <parameter name="partyIdList" type="List"/>
             <parameter name="organizationId" required="true"/>
+            <parameter name="isOwner" required="true" type="Boolean"/>
         </in-parameters>
         <out-parameters>
             <parameter name="actorId"/>
@@ -287,6 +299,34 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="actorList"><return type="danger" message="Actor '${actorList?.getFirst()?.name}' already exists"/></if>
 
             <service-call name="update#coarchy.Actor" in-map="[actorId:actorId,name:name,description:description,organizationId:organizationId]"/>
+
+            <if condition="isOwner">
+                <entity-find entity-name="coarchy.ActorParty" list="actorPartyList">
+                    <econdition field-name="actorId"/>
+                    <order-by field-name="actorId"/>
+                </entity-find>
+
+                <set field="partyIdServerList" from="actorPartyList*.partyId"/>
+                <if condition="partyIdServerList">
+                    <set field="partyIdDeleteList" from="partyIdServerList - partyIdList?:[]"/>
+
+                    <!--                                                    <log level="warn" message="partyIdDeleteList ${partyIdDeleteList}"/>-->
+                    <iterate list="partyIdDeleteList" entry="partyIdDelete">
+                        <service-call name="delete#coarchy.ActorParty" in-map="[actorId:actorId,partyId:partyIdDelete]"/>
+                    </iterate>
+                </if>
+
+                <set field="partyIdCreateList" from="partyIdList?:[] - partyIdDeleteList?:[]"/>
+                <!--                        <log level="warn" message="update#Actor context.toString() ${context.toString()}"/>-->
+                <if condition="partyIdCreateList instanceof String">
+                    <then>
+                        <service-call name="store#coarchy.ActorParty" in-map="[actorId:actorId, partyId:partyIdCreateList, organizationId:organizationId]"/>
+                    </then><else>
+                    <iterate list="partyIdCreateList" entry="partyIdCreate">
+                        <service-call name="store#coarchy.ActorParty" in-map="[actorId:actorId, partyId:partyIdCreate, organizationId:organizationId]"/>
+                    </iterate>
+                </else></if>
+            </if>
         </actions>
     </service>
 
@@ -425,6 +465,41 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="valueStatement">
                 <service-call name="delete#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId]"/>
             </if>
+        </actions>
+    </service>
+
+    <service verb="update" noun="User">
+        <in-parameters>
+            <parameter name="partyId" required="true"/>
+            <parameter name="actorIdList" type="List"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="partyId"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="coarchy.ActorParty" list="actorPartyList">
+                <econdition field-name="partyId"/>
+                <econdition field-name="organizationId"/>
+            </entity-find>
+            <set field="actorIdServerList" from="actorPartyList*.actorId"/>
+            <if condition="actorIdServerList">
+                <set field="actorIdDeleteList" from="actorIdServerList - actorIdList?:[]"/>
+<!--                                                                    <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>-->
+                <iterate list="actorIdDeleteList" entry="actorIdDelete">
+                    <service-call name="delete#coarchy.ActorParty" in-map="[actorId:actorIdDelete,partyId:partyId]"/>
+                </iterate>
+            </if>
+            <set field="actorIdCreateList" from="actorIdList?:[] - actorIdDeleteList?:[]"/>
+            <!--                        <log level="warn" message="update#Actor context.toString() ${context.toString()}"/>-->
+            <if condition="actorIdCreateList instanceof String">
+                <then>
+                    <service-call name="store#coarchy.ActorParty" in-map="[actorId:actorIdCreateList, partyId:partyId, organizationId:organizationId]"/>
+                </then><else>
+                <iterate list="actorIdCreateList" entry="actorIdCreate">
+                    <service-call name="store#coarchy.ActorParty" in-map="[actorId:actorIdCreate, partyId:partyId, organizationId:organizationId]"/>
+                </iterate>
+            </else></if>
         </actions>
     </service>
 </services>

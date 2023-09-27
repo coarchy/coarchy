@@ -82,7 +82,7 @@ along with this software (see the LICENSE.md file). If not, see
             <container-dialog id="ViewProcessStoryDialog" button-text="View Process Story" condition="processStoryCount &gt; 0" type="info">
                 <form-single name="ViewProcessStoryForm" transition="viewProcessStory">
                     <field name="processStoryId"><default-field title="Process Story">
-                        <drop-down required-manual-select="true" submit-on-select="true">
+                        <drop-down required-manual-select="true" submit-on-select="true" allow-empty="true">
                             <entity-options key="${processStoryId}" text="${name}">
                                 <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
                                     <order-by field-name="lastUpdatedStamp"/></entity-find>
@@ -97,8 +97,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <container-box>
                         <box-header></box-header>
                         <box-body-nopad>
-<!--                            <label text="" type="h5"/>-->
-                            <render-mode><text><![CDATA[<h5>${item.entityType} <m-link href="${item.link}">${item.name}</h5></m-link>]]></text></render-mode>
+                            <render-mode><text><![CDATA[<h6>${item.entityType}: <m-link href="${item.link}">${item.name}</h6></m-link>]]></text></render-mode>
 
                             <label text="${item.updateType} on ${ec.l10n.format(item.date,'MMMM dd, HH:mm')}"/>
                         </box-body-nopad>
