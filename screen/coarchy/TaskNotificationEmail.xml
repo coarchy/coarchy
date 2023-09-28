@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd">
+    <!-- for fields available see NotificationMessageImpl.getWrappedMessageMap(), this is generic so nothing from the 'message' Map within it -->
+    <actions>
+<!--        <set field="linkUrl" from="'https://coarchy.com' + (link.startsWith('/') ? '' : '/') + link"/>-->
+        <!--        <log level="warn" message="message ${message}"/>-->
+        <!--        <log level="warn" message="startTimeString ${startTimeString}"/>-->
+<!--                <log level="warn" message="context.toString() ${context.toString()}"/>-->
+    </actions>
+    <widgets><render-mode>
+        <text type="html"><![CDATA[<html><body>
+        <p style="font-size:16px">Open the checklist here <#if linkUrl?has_content><a href="${linkUrl}">here</a>.</#if></p>
+
+        </body></html>]]></text>
+        <!--        <p>-->
+        <!--            Your position: [project owner, model, photographer, etc] - multiple could be listed-->
+        <!--        </p>-->
+        <!--    </body></html>-->
+
+    </render-mode></widgets>
+</screen>

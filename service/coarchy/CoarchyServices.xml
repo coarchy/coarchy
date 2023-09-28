@@ -160,7 +160,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="rootWorkEffortId" from="projectWorkEffort.workEffortId"/>
             <service-call name="create#mantle.work.effort.WorkEffortParty"
                     in-map="[workEffortId:projectWorkEffort.workEffortId, partyId:ec.user.userAccount.partyId,
-                            roleTypeId:'Owner', fromDate:ec.user.nowTimestamp, statusId:'WeptAssigned']"/>
+                            roleTypeId:'Owner', fromDate:ec.user.nowTimestamp]"/>
 
             <set field="taskWorkEffortIdList" from="[]"/>
             <iterate list="processStoryActivityList" entry="processStoryActivity">
@@ -208,7 +208,55 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="task" auto-field-map="[workEffortId:workEffortId]"/>
             <if condition="!task"><return type="warning" message="Task not found"/></if>
 
-            <if condition="resolutionEnumId">
+            <entity-find entity-name="mantle.work.effort.WorkEffortParty" list="workEffortPartyList">
+                <date-filter/><econdition field-name="workEffortId"/>
+                <econdition field-name="roleTypeId" value="Assignee"/>
+                <order-by field-name="-fromDate"/>
+            </entity-find>
+
+            <set field="partyIdServerList" from="workEffortPartyList*.partyId"/>
+
+            <if condition="partyIdServerList">
+                <set field="partyIdDeleteList" from="partyIdServerList - assignedPartyIdList?:[]"/>
+
+                <!--                                                    <log level="warn" message="partyIdDeleteList ${partyIdDeleteList}"/>-->
+                <iterate list="partyIdDeleteList" entry="partyIdDelete">
+                    <log level="warn" message="workEffortPartyList.find{it.partyId==partyIdDelete}.fromDate ${workEffortPartyList.find{it.partyId==partyIdDelete}.fromDate}"/>
+                    <service-call name="update#mantle.work.effort.WorkEffortParty" in-map="[workEffortId:workEffortId,partyId:partyIdDelete,roleTypeId:'Assignee',fromDate:workEffortPartyList.find{it.partyId==partyIdDelete}.fromDate,thruDate:ec.user.nowTimestamp]"/>
+                </iterate>
+            </if>
+
+            <set field="partyIdCreateList" from="assignedPartyIdList?:[] - partyIdDeleteList?:[]"/>
+            <!--                        <log level="warn" message="update#Actor context.toString() ${context.toString()}"/>-->
+            <if condition="partyIdCreateList instanceof String">
+                <then>
+                    <log level="warn" message="workEffortPartyList.find{it.partyId==partyIdCreateList}.fromDate ${workEffortPartyList.find{it.partyId==partyIdCreateList}?.fromDate}"/>
+                    <service-call name="store#mantle.work.effort.WorkEffortParty" in-map="[workEffortId:workEffortId,partyId:partyIdCreateList,roleTypeId:'Assignee']"/>
+                </then><else>
+                <iterate list="partyIdCreateList" entry="partyIdCreate">
+                    <log level="warn" message="workEffortPartyList.find{it.partyId==partyIdCreate}.fromDate ${workEffortPartyList.find{it.partyId==partyIdCreate}?.fromDate}"/>
+                    <service-call name="store#mantle.work.effort.WorkEffortParty" in-map="[workEffortId:workEffortId,partyId:partyIdCreate,roleTypeId:'Assignee',fromDate:workEffortPartyList.find{it.partyId==partyIdCreate}?.fromDate?:ec.user.nowTimestamp]"/>
+
+                    <!-- Maybe send an assigned email, but on second thought it sounds annoying -->
+<!--                    <if condition="ec.user.userAccount.partyId!=partyIdCreate">-->
+<!--                        <entity-find entity-name="moqui.security.UserAccount" list="userAccountList" limit="1">-->
+<!--                            <econdition field-name="partyId" from="partyIdCreate"/>-->
+<!--                            <select-field field-name="emailAddress"/>-->
+<!--                            <order-by field-name="-lastUpdatedStamp"/></entity-find>-->
+<!--                        <if condition="userAccountList?.getFirst()?.emailAddress == null"><then>-->
+<!--                            <message type="danger">Can't send email to notify assignment</message>-->
+<!--                        </then><else>-->
+<!--                            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>-->
+<!--                            <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'TASK_ASSIGNED_NOTIFICATION',toAddresses:userAccountList.getFirst().emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+task.rootWorkEffortId,title:'You\'ve been assigned a task'+(ec.user.userAccount.userFullName?' by '+ec.user.userAccount.userFullName:'')]]"/>-->
+<!--                        </else></if>-->
+<!--                    </if>-->
+                </iterate>
+            </else></if>
+
+<!--            <log level="warn" message="partyIdServerList.containsAll(assignedPartyIdList) ${partyIdServerList.containsAll(assignedPartyIdList)}"/>-->
+<!--            <log level="warn" message="assignedPartyIdList ${assignedPartyIdList} partyIdServerList ${partyIdServerList}"/>-->
+
+            <if condition="partyIdServerList.containsAll(assignedPartyIdList) &amp;&amp; partyIdServerList.containsAll(assignedPartyIdList) &amp;&amp; workEffortPartyList.find{it.partyId == ec.user.userAccount.partyId} != null &gt; 0 &amp;&amp; resolutionEnumId">
                 <set field="actualCompletionDate" from="null"/>
                 <if condition="['WerCompleted','WerNotCondition'].contains(resolutionEnumId)">
                     <set field="actualCompletionDate" from="ec.user.nowTimestamp"/>
@@ -227,15 +275,35 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="taskWithResolutionCount == taskCount">
                         <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:task.rootWorkEffortId,actualCompletionDate:ec.user.nowTimestamp]"/>
                         <log message="Completing project ${task.rootWorkEffortId}"/>
-                        <!--                <else>-->
-                        <!--                    <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="project" auto-field-map="[workEffortId:task.rootWorkEffortId]"/>-->
-                        <!--                    <if condition="project.actualCompletionDate">-->
-                        <!--                        <service-call name="update#mantle.work.effort.WorkEffort" in-map="[workEffortId:task.rootWorkEffortId,actualCompletionDate:null]"/>-->
-                        <!--                    </if>-->
-                        <!--                </else>-->
+                        <else>
+                            <entity-find entity-name="mantle.work.effort.WorkEffort" list="taskList" limit="1">
+                                <econdition field-name="rootWorkEffortId" from="task.rootWorkEffortId"/>
+                                <econdition field-name="workEffortId" operator="greater"/></entity-find>
+
+                            <if condition="taskList?.size() &gt; 0 &amp;&amp; taskList?.getFirst()?.resolutionEnumId == null">
+                                <entity-find entity-name="mantle.work.effort.WorkEffortAndPartyDetail" list="userAccountList">
+                                    <date-filter/><econdition field-name="workEffortId" from="taskList?.getFirst()?.workEffortId"/>
+                                    <econdition field-name="roleTypeId" value="Assignee"/>
+                                    <select-field field-name="emailAddress,partyId"/>
+                                    <order-by field-name="-fromDate"/></entity-find>
+
+                                <if condition="userAccountList?.getFirst()?.partyId != ec.user.userAccount.partyId">
+                                    <if condition="userAccountList?.getFirst()?.emailAddress == null"><then>
+                                        <message type="danger">Can't send email to notify task is ready</message>
+                                    </then><else>
+                                        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+                                        <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'TASK_NOTIFICATION',toAddresses:userAccountList.getFirst().emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,title:'Task '+taskList?.getFirst().workEffortName+' is ready']]"/>
+                                    </else></if>
+
+                                </if>
+                            </if>
+                            <log level="warn" message="taskList ${taskList}"/>
+
+                        </else>
                     </if>
                 </if>
             </if>
+
         </actions>
     </service>
     <service verb="resolve" noun="AllTasks">

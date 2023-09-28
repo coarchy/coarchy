@@ -17,7 +17,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <parameter name="processStoryId" required="true"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
-    <parameter name="pageSize"/>
+    <parameter name="pageSize" from="pageSize?:50"/>
     <parameter name="orderByField" value="sequenceNum"/>
 
     <always-actions>
@@ -156,6 +156,9 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="createActor" location="component://coarchy/screen/coarchy/cointernal/Actor.xml"/>
 
     <actions>
+        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
+        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/FindProcessStory')</script></if>
+
         <if condition="actorIdList">
             <entity-find entity-name="coarchy.Actor" list="headerActorList">
                 <econdition field-name="actorId" operator="in" from="actorIdList"/>
@@ -164,7 +167,6 @@ along with this software (see the LICENSE.md file). If not, see
         <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="activityCount">
             <econdition field-name="processStoryId"/></entity-find-count>
 
-        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
         <!-- Currently this only supports one parent process story -->
         <entity-find entity-name="coarchy.ProcessStoryActivity" list="detailActivityList" limit="1">
             <econdition field-name="detailProcessStoryId" from="processStoryId"/>

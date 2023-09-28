@@ -58,13 +58,26 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.screen.ScreenThemeResource screenThemeId="DEFAULT_QUASAR" sequenceNum="130" resourceTypeEnumId="STRT_HEADER_NAVBAR_COMP"
             resourceValue="/costatic/lib/ActiveOrgNav.qvue"/>
 
-    <!-- EmailTemplate for User Invite -->
+    <!-- EmailTemplates and Notifications -->
     <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE_RESET_PASSWORD" description="User Invite with Reset Password" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteResetPasswordEmail.xml" webappName="webroot"
             fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
     <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE" description="User Invite" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteEmail.xml" webappName="webroot"
             fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+
+    <moqui.basic.email.EmailTemplate emailTemplateId="TASK_ASSIGNED_NOTIFICATION" description="Task Assigned Notification" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/TaskAssignedNotificationEmail.xml" webappName="webroot"
+            fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+<!--    <moqui.security.user.NotificationTopic topic="CoarchyTaskReminder" description="Coarchy Task Reminder"-->
+<!--            typeString="info" showAlert="Y" persistOnSend="N" receiveNotifications="Y" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"-->
+<!--            linkTemplate="/coapp/Checklist?checklistId=${workEffortId}&amp;canViewProjectPositions=true" emailMessageSave="Y"/>-->
+    <moqui.basic.email.EmailTemplate emailTemplateId="TASK_NOTIFICATION" description="Task Notification" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/TaskNotificationEmail.xml" webappName="webroot"
+            fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+    <!--    <moqui.security.user.NotificationTopic topic="CoarchyTaskReminder" description="Coarchy Task Reminder"-->
+    <!--            typeString="info" showAlert="Y" persistOnSend="N" receiveNotifications="Y" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"-->
+    <!--            linkTemplate="/coapp/Checklist?checklistId=${workEffortId}&amp;canViewProjectPositions=true" emailMessageSave="Y"/>-->
 
     <!-- Data Documents -->
     <dataDocuments dataDocumentId="MantleParty">
@@ -121,4 +134,6 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.EnumGroupMember enumId="WerWontComplete" enumGroupEnumId="EngTaskResolution" sequenceNum="03"/>
     <moqui.basic.EnumGroupMember enumId="WerInsufficient" enumGroupEnumId="EngTaskResolution" sequenceNum="04"/>
 
+    <!-- ========== Moqui Cleanup ========== -->
+    <moqui.security.user.NotificationTopic topic="MantleTask" showAlert="N" persistOnSend="N" receiveNotifications="N"/>
 </entity-facade-xml>
