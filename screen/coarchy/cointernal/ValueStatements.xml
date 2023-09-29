@@ -136,7 +136,6 @@ along with this software (see the LICENSE.md file). If not, see
 <!--                <log level="warn" message="form-list ValueStatements context.toString() ${context.toString()}"/>-->
             </row-actions>
 
-            <field name="valueStatementId"><default-field><hidden/></default-field></field>
             <field name="value">
                 <header-field title="Value" show-order-by="case-insensitive"><text-area autogrow="true"/></header-field>
                 <default-field title="Value"><text-area autogrow="true"/></default-field>
@@ -170,6 +169,9 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></last-row-field></field>
+            <field name="valueStatementId">
+                <header-field title="Id"><text-find size="30"/></header-field>
+                <default-field><hidden/></default-field></field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>

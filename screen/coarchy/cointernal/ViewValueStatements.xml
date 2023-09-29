@@ -51,11 +51,15 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-<!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
-
-        <!-- TODO: Add filter parameters for the activity -->
-        <render-mode><text><![CDATA[<h5>]]></text></render-mode>
-        <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/Values.html.ftl"/></render-mode>
-        <render-mode><text><![CDATA[</h5>]]></text></render-mode>
+        <container-row>
+            <row-col md="2"/>
+            <row-col md="8">
+                <!-- TODO: Add filter parameters for the activity -->
+                <render-mode><text><![CDATA[<h5>]]></text></render-mode>
+                <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/Values.html.ftl"/></render-mode>
+                <render-mode><text><![CDATA[</h5>]]></text></render-mode>
+            </row-col>
+            <row-col md="2"/>
+        </container-row>
     </widgets>
 </screen>

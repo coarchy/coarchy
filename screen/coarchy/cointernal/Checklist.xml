@@ -155,6 +155,7 @@ along with this software (see the LICENSE.md file). If not, see
             </row-actions>
             
             <field name="workEffortId"><default-field><hidden/></default-field></field>
+            <field name="workEffortName"><default-field title="Task"><label text="${workEffortName}" type="h5"/></default-field></field>
             <field name="assignedPartyIdList"><conditional-field condition="canEditAssignedParties" title="${canEditAssignedParties?'Assigned Users':''}">
                 <drop-down submit-on-select="true" required-manual-select="true">
                     <list-options list="actorPartyList" key="${partyId}" text="${firstName} ${lastName}"/>
@@ -163,7 +164,6 @@ along with this software (see the LICENSE.md file). If not, see
             </conditional-field><conditional-field condition="!canEditAssignedParties" title="${!canEditAssignedParties?'Assigned Users':''}">
                 <label text="${actorPartyList?.size()&gt;0 ? (actorPartyList?.getFirst()?.firstName+' '+actorPartyList?.getFirst()?.lastName) : 'None Assigned'}"/>
             </conditional-field></field>
-            <field name="workEffortName"><default-field title="Task"><label text="${workEffortName}" type="h5"/></default-field></field>
             <field name="resolutionEnumId">
                 <conditional-field condition="canEditResolved" title="${canEditResolved?'Resolution':''}"><drop-down submit-on-select="true" required-manual-select="true">
                     <entity-options key="${enumId}" text="${description}">

@@ -44,10 +44,10 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="activityFeedList" from="[]"/>
         <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
         <iterate list="valueStatementList" entry="item">
-            <script>activityFeedList.add(['date':item.lastUpdatedStamp,'updateType':'Updated','entityType':'Value','name':item.value,'identifier':'Value#'+item.valueStatementId,'link':'/coapp/ValueStatements'])</script>
+            <script>activityFeedList.add(['date':item.lastUpdatedStamp,'updateType':'Updated','entityType':'Value','name':item.value,'identifier':'Value#'+item.valueStatementId,'link':'/coapp/ValueStatements?valueStatementId='+item.valueStatementId])</script>
         </iterate>
         <iterate list="actorList" entry="item">
-            <script>activityFeedList.add(['date':item.lastUpdatedStamp,'updateType':'Updated','entityType':'Actor','name':item.name,'identifier':'Actor#'+item.actorId,'link':'/coapp/Actor'])</script>
+            <script>activityFeedList.add(['date':item.lastUpdatedStamp,'updateType':'Updated','entityType':'Actor','name':item.name,'identifier':'Actor#'+item.actorId,'link':'/coapp/Actor?actorId='+item.actorId])</script>
         </iterate>
         <iterate list="processStoryList" entry="item">
             <if condition="!activityFeedList.find{it.identifier == 'ProcessStory#'+item.processStoryId}">
@@ -63,8 +63,8 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="actorCount" from="actorList?.size()"/>
         <entity-find-count entity-name="coarchy.ProcessStory" count-field="processStoryCount"/>
 
-        <log level="warn" message="context.toString() = ${context.toString()}"/>
-        <log level="warn" message="activityFeedList*.date = ${activityFeedList*.date}"/>
+<!--        <log level="warn" message="context.toString() = ${context.toString()}"/>-->
+<!--        <log level="warn" message="activityFeedList*.date = ${activityFeedList*.date}"/>-->
     </actions>
 
     <widgets>

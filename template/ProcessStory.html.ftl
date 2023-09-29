@@ -1,6 +1,9 @@
-<#list processStoryActivityList! as processStoryActivity><div>
-<#--(${processStoryActivity.sequenceNum}) -->
-    <#if processStoryActivity.condition?hasContent><i>${processStoryActivity.condition?html?ensureEndsWith(",")} </i></#if>
-    <#list processStoryActivity.actorNames! as actorName><b>${actorName?html}</b><#sep>, </#list>
-    <#if processStoryActivity.action?hasContent>${processStoryActivity.action?html?removeEnding(".")?ensureEndsWith(".")} <#else><br/><br/></#if>
-</div></#list>
+<#list processStoryActivityList! as processStoryActivity>
+    <#include "ActivityStyled.html.ftl"/>
+    <#if processStoryActivity.detailProcessStoryName!?has_content><h6>Substory: <a href="/coapp/ProcessStory?processStoryId=${processStoryActivity.detailProcessStoryId}">${processStoryActivity.detailProcessStoryName}</h6></a><ul>
+        <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity>
+            <li><h6><#include "ActivityStyled.html.ftl"/></h6></li>
+        </#list>
+    </ul><br>
+    </#if>
+</#list>

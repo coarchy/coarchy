@@ -55,21 +55,26 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <label text="View Actors" type="h4"/>
-<!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
+        <container-row>
+            <row-col md="2"/>
+            <row-col md="8">
+                <label text="View Actors" type="h4"/>
 
-        <container-dialog id="ViewActorsDialog" button-text="Show Activities" type="success">
-            <form-single name="ViewActorsForm">
-                <field name="showActivities" from="showActivities?:'Y'"><default-field>
-                    <radio><option key="Y" text="Yes"/><option key="N" text="No"/></radio>
-                </default-field></field>
-                <field name="submit"><default-field><submit/></default-field></field>
-            </form-single>
-        </container-dialog>
+                <container-dialog id="ViewActorsDialog" button-text="Show Activities" type="success">
+                    <form-single name="ViewActorsForm">
+                        <field name="showActivities" from="showActivities?:'Y'"><default-field>
+                            <radio><option key="Y" text="Yes"/><option key="N" text="No"/></radio>
+                        </default-field></field>
+                        <field name="submit"><default-field><submit/></default-field></field>
+                    </form-single>
+                </container-dialog>
 
-        <!-- TODO: Add filter parameters for the activity -->
-        <render-mode><text><![CDATA[<h5>]]></text></render-mode>
-        <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/Actors.html.ftl"/></render-mode>
-        <render-mode><text><![CDATA[</h5>]]></text></render-mode>
+                <!-- TODO: Add filter parameters for the activity -->
+                <render-mode><text><![CDATA[<h5>]]></text></render-mode>
+                <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/Actors.html.ftl"/></render-mode>
+                <render-mode><text><![CDATA[</h5>]]></text></render-mode>
+            </row-col>
+            <row-col md="2"/>
+        </container-row>
     </widgets>
 </screen>

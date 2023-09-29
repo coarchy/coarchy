@@ -72,6 +72,12 @@ along with this software (see the LICENSE.md file). If not, see
 <!--    <moqui.security.user.NotificationTopic topic="CoarchyTaskReminder" description="Coarchy Task Reminder"-->
 <!--            typeString="info" showAlert="Y" persistOnSend="N" receiveNotifications="Y" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"-->
 <!--            linkTemplate="/coapp/Checklist?checklistId=${workEffortId}&amp;canViewProjectPositions=true" emailMessageSave="Y"/>-->
+    <moqui.basic.email.EmailTemplate emailTemplateId="TASK_NEEDS_ASSIGNMENT_NOTIFICATION" description="Task Needs Assignment Notification" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/TaskNeedsAssignmentNotificationEmail.xml" webappName="webroot"
+            fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+    <!--    <moqui.security.user.NotificationTopic topic="CoarchyTaskReminder" description="Coarchy Task Reminder"-->
+    <!--            typeString="info" showAlert="Y" persistOnSend="N" receiveNotifications="Y" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"-->
+    <!--            linkTemplate="/coapp/Checklist?checklistId=${workEffortId}&amp;canViewProjectPositions=true" emailMessageSave="Y"/>-->
     <moqui.basic.email.EmailTemplate emailTemplateId="TASK_NOTIFICATION" description="Task Notification" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/TaskNotificationEmail.xml" webappName="webroot"
             fromAddress="noreply@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>

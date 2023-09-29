@@ -29,25 +29,48 @@ along with this software (see the LICENSE.md file). If not, see
 
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupProcessStoryActivityList">
             <econdition field-name="processStoryId"/>
-            <select-field field-name="activityId,condition,action"/>
+            <select-field field-name="activityId,condition,action,detailProcessStoryId"/>
             <order-by field-name="sequenceNum"/></entity-find>
         <set field="processStoryActivityList" from="[]"/>
         <iterate list="setupProcessStoryActivityList" entry="processStoryActivity">
             <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
                 <econdition field-name="activityId" from="processStoryActivity.activityId"/>
                 <order-by field-name="name"/></entity-find>
+            <set field="detailProcessStoryName" from="null"/>
+            <set field="detailProcessStoryId" from="processStoryActivity.detailProcessStoryId"/>
+            <if condition="processStoryActivity.detailProcessStoryId">
+                <entity-find-one entity-name="coarchy.ProcessStory" value-field="detailProcessStory" auto-field-map="[processStoryId:processStoryActivity.detailProcessStoryId]"/>
+                <set field="detailProcessStoryName" from="detailProcessStory.name"/>
+                <set field="detailProcessStoryActivityList" from="[]"/>
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupDetailProcessStoryActivityList">
+                    <econdition field-name="processStoryId" from="processStoryActivity.detailProcessStoryId"/>
+                    <select-field field-name="activityId,condition,action"/>
+                    <order-by field-name="sequenceNum"/></entity-find>
+                <iterate list="setupDetailProcessStoryActivityList" entry="detailProcessStoryActivity">
+                    <entity-find entity-name="coarchy.ActivityActorDetail" list="detailActivityActorList">
+                        <econdition field-name="activityId" from="processStoryActivity.activityId"/>
+                        <order-by field-name="name"/></entity-find>
+                    <script>detailProcessStoryActivityList.add([sequenceNum:detailProcessStoryActivity.sequenceNum,condition:detailProcessStoryActivity.condition,actorNames:detailActivityActorList*.name,action:detailProcessStoryActivity.action])</script>
+                </iterate>
+            </if>
 
-            <script>processStoryActivityList.add([sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,actorNames:activityActorList*.name,action:processStoryActivity.action])</script>
+            <script>processStoryActivityList.add([sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,actorNames:activityActorList*.name,action:processStoryActivity.action,detailProcessStoryId:detailProcessStoryId,detailProcessStoryName:detailProcessStoryName,detailProcessStoryActivityList:detailProcessStoryActivityList])</script>
         </iterate>
     </actions>
 
     <widgets>
-        <label text="${processStory.name?:'View Process Story'}" type="h4"/>
-        <link url="../ProcessStory" text="Go Back to Process Story" parameter-map="[processStoryId:processStoryId]"/>
+        <container-row>
+            <row-col md="2"/>
+            <row-col md="8">
+                <label text="${processStory.name?:'View Process Story'}" type="h4"/>
+                <link url="../ProcessStory" text="Go Back to Process Story" parameter-map="[processStoryId:processStoryId]"/>
 
-        <!-- TODO: Add filter parameters for the activity -->
-        <render-mode><text><![CDATA[<h5>]]></text></render-mode>
-        <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ProcessStory.html.ftl"/></render-mode>
-        <render-mode><text><![CDATA[</h5>]]></text></render-mode>
+                <!-- TODO: Add filter parameters for the activity -->
+                <render-mode><text><![CDATA[<h5>]]></text></render-mode>
+                <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ProcessStory.html.ftl"/></render-mode>
+                <render-mode><text><![CDATA[</h5>]]></text></render-mode>
+            </row-col>
+            <row-col md="2"/>
+        </container-row>
     </widgets>
 </screen>

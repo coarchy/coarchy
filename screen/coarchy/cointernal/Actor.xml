@@ -128,7 +128,6 @@ along with this software (see the LICENSE.md file). If not, see
 <!--                <log level="warn" message="ActorForm row-actions context.toString() ${context.toString()}"/>-->
             </row-actions>
 
-            <field name="actorId"><default-field><hidden/></default-field></field>
             <field name="name">
                 <header-field show-order-by="case-insensitive"><text-find/></header-field>
                 <default-field><text-line/></default-field>
@@ -147,6 +146,9 @@ along with this software (see the LICENSE.md file). If not, see
                     <dynamic-options server-search="true" transition="getUserList" min-length="0"/>
                 </drop-down>
             </conditional-field></field>
+            <field name="actorId">
+                <header-field title="Id"><text-find size="30"/></header-field>
+                <default-field><hidden/></default-field></field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>
