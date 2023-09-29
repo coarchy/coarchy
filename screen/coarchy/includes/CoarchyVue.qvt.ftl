@@ -144,7 +144,6 @@ along with this software (see the LICENSE.md file). If not, see
 
         <q-drawer v-model="leftOpen" side="left" bordered
                   :width="200" :breakpoint="500"><#-- no 'overlay', for those who want to keep it open better to compress main area -->
-            <q-btn flat icon="menu" @click="toggleLeftOpen()" class="lt-sm"></q-btn>
             <q-list padding><c-menu-nav-item :menu-index="0"></c-menu-nav-item></q-list>
         </q-drawer>
 

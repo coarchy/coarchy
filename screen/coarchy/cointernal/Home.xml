@@ -71,6 +71,7 @@ along with this software (see the LICENSE.md file). If not, see
         <label text="Home" type="h4"/>
         <container-row><row-col md="6">
             <label text="Screens" type="h5" style="q-pt-sm"/>
+            <link url="../Vision" text="Vision"/>
             <link url="../ValueStatements" text="Values"/>
             <link url="../Actor" text="Actors"/>
             <link url="../FindProcessStory" text="Process Stories"/>

@@ -133,12 +133,17 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- ========== Enums ========== -->
     <!-- Work Effort Resolution -->
     <moqui.basic.Enumeration description="Condition not met" enumId="WerNotCondition" enumTypeId="WorkEffortResolution"/>
-
+    <!-- Work Effort Resolution Group -->
     <moqui.basic.Enumeration description="Checklist Resolution" enumId="EngTaskResolution" enumTypeId="EnumGroup"/>
     <moqui.basic.EnumGroupMember enumId="WerCompleted" enumGroupEnumId="EngTaskResolution" sequenceNum="01"/>
     <moqui.basic.EnumGroupMember enumId="WerNotCondition" enumGroupEnumId="EngTaskResolution" sequenceNum="02"/>
     <moqui.basic.EnumGroupMember enumId="WerWontComplete" enumGroupEnumId="EngTaskResolution" sequenceNum="03"/>
     <moqui.basic.EnumGroupMember enumId="WerInsufficient" enumGroupEnumId="EngTaskResolution" sequenceNum="04"/>
+
+    <!-- Vision Story -->
+    <moqui.basic.Enumeration description="Origin Story"  enumId="PcntOriginStory" enumTypeId="PartyContentType"/>
+    <moqui.basic.Enumeration description="Mission"  enumId="PcntMission" enumTypeId="PartyContentType"/>
+    <moqui.basic.Enumeration description="Vision"  enumId="PcntVision" enumTypeId="PartyContentType"/>
 
     <!-- ========== Moqui Cleanup ========== -->
     <moqui.security.user.NotificationTopic topic="MantleTask" showAlert="N" persistOnSend="N" receiveNotifications="N"/>

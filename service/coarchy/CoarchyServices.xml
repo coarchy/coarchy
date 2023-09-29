@@ -609,4 +609,60 @@ along with this software (see the LICENSE.md file). If not, see
             </else></if>
         </actions>
     </service>
+
+    <service verb="update" noun="Vision">
+        <in-parameters>
+            <parameter name="partyId" required="true"/>
+            <parameter name="originStoryDescription"/>
+            <parameter name="missionDescription"/>
+            <parameter name="visionDescription"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="partyId"/>
+            <parameter name="originStoryContentId"/>
+            <parameter name="missionContentId"/>
+            <parameter name="visionContentId"/>
+        </out-parameters>
+        <actions>
+            <set field="originStoryDescription" from="originStoryDescription.trim()"/>
+            <set field="missionDescription" from="missionDescription.trim()"/>
+            <set field="visionDescription" from="visionDescription.trim()"/>
+
+            <entity-find entity-name="mantle.party.PartyContent" list="originStoryList" limit="1">
+                <econdition field-name="partyId"/>
+                <econdition field-name="partyContentTypeEnumId" value="PcntOriginStory"/>
+                <order-by field-name="-contentDate"/></entity-find>
+            <if condition="originStoryList.size() == 0"><then>
+                <service-call name="create#mantle.party.PartyContent" out-map="originStoryContent" in-map="[partyId:partyId,partyContentTypeEnumId:'PcntOriginStory',description:originStoryDescription]"/>
+                <set field="originStoryContentId" from="originStoryContent.partyContentId"/>
+            </then><else>
+                <set field="originStoryContentId" from="originStoryList.getFirst().partyContentId"/>
+                <service-call name="update#mantle.party.PartyContent" out-map="originStoryContent" in-map="[partyContentId:originStoryContentId,description:originStoryDescription]"/>
+            </else></if>
+
+            <entity-find entity-name="mantle.party.PartyContent" list="missionList" limit="1">
+                <econdition field-name="partyId"/>
+                <econdition field-name="partyContentTypeEnumId" value="PcntMission"/>
+                <order-by field-name="-contentDate"/></entity-find>
+            <if condition="missionList.size() == 0"><then>
+                <service-call name="create#mantle.party.PartyContent" out-map="missionContent" in-map="[partyId:partyId,partyContentTypeEnumId:'PcntMission',description:missionDescription]"/>
+                <set field="missionContentId" from="missionContent.partyContentId"/>
+            </then><else>
+                <set field="missionContentId" from="missionList.getFirst().partyContentId"/>
+                <service-call name="update#mantle.party.PartyContent" out-map="missionContent" in-map="[partyContentId:missionContentId,description:missionDescription]"/>
+            </else></if>
+
+            <entity-find entity-name="mantle.party.PartyContent" list="visionList" limit="1">
+                <econdition field-name="partyId"/>
+                <econdition field-name="partyContentTypeEnumId" value="PcntVision"/>
+                <order-by field-name="-contentDate"/></entity-find>
+            <if condition="visionList.size() == 0"><then>
+                <service-call name="create#mantle.party.PartyContent" out-map="visionContent" in-map="[partyId:partyId,partyContentTypeEnumId:'PcntVision',description:visionDescription]"/>
+                <set field="visionContentId" from="visionContent.partyContentId"/>
+            </then><else>
+                <set field="visionContentId" from="visionList.getFirst().partyContentId"/>
+                <service-call name="update#mantle.party.PartyContent" out-map="visionContent" in-map="[partyContentId:visionContentId,description:visionDescription]"/>
+            </else></if>
+        </actions>
+    </service>
 </services>

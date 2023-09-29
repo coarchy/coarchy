@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Vision" default-menu-index="05" menu-image="fa fa-eye" menu-image-type="icon">
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+    </always-actions>
+
+    <transition name="updateVision">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.update#Vision" in-map="[partyId:activeOrgId,originStoryDescription:originStoryDescription,missionDescription:missionDescription,visionDescription:visionDescription]"/>
+        <default-response/><error-response url="." save-parameters="true"/></transition>
+
+    <actions>
+        <entity-find entity-name="mantle.party.PartyContent" list="originStoryList" limit="1">
+            <econdition field-name="partyId" from="activeOrgId"/>
+            <econdition field-name="partyContentTypeEnumId" value="PcntOriginStory"/>
+            <order-by field-name="-contentDate"/></entity-find>
+        <entity-find entity-name="mantle.party.PartyContent" list="missionList" limit="1">
+            <econdition field-name="partyId" from="activeOrgId"/>
+            <econdition field-name="partyContentTypeEnumId" value="PcntMission"/>
+            <order-by field-name="-contentDate"/></entity-find>
+        <entity-find entity-name="mantle.party.PartyContent" list="visionList" limit="1">
+            <econdition field-name="partyId" from="activeOrgId"/>
+            <econdition field-name="partyContentTypeEnumId" value="PcntVision"/>
+            <order-by field-name="-contentDate"/></entity-find>
+    </actions>
+
+    <widgets>
+        <container-row>
+            <row-col md="8" lg="6">
+                <label text="Vision" type="h4" style="q-pl-sm"/>
+
+                <!--        <link url="../ViewValueStatements" text="View/Print Values" tooltip="View Values Text" btn-type="info"-->
+                <!--                condition="valueStatementCount &gt; 0"/>-->
+
+                <form-single name="UpdateVision" transition="updateVision">
+                    <field name="originStoryLabel"><default-field><label text="Origin Story is the relevant history from the founders that led to the organization being created" type="h5"/></default-field></field>
+                    <field name="originStoryDescription" from="originStoryList.getFirst()?.description"><default-field title="Origin Story"><text-area autogrow="true"/></default-field></field>
+                    <field name="missionLabel"><default-field><label text="A mission describes the purpose behind what organization currently does to guide values and strategy" type="h5" style="q-pt-lg"/></default-field></field>
+                    <field name="missionDescription" from="missionList.getFirst()?.description"><default-field title="Mission"><text-area autogrow="true"/></default-field></field>
+                    <field name="visionLabel"><default-field><label text="Vision describes the future outcomes or goals of the organization" type="h5" style="q-pt-lg"/></default-field></field>
+                    <field name="visionDescription" from="visionList.getFirst()?.description"><default-field title="Vision"><text-area autogrow="true"/></default-field></field>
+                    <field name="submit"><default-field title="Update"><submit/></default-field></field>
+                </form-single>
+            </row-col>
+        </container-row>
+    </widgets>
+</screen>
