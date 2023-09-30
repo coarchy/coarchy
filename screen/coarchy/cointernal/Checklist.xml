@@ -43,64 +43,104 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="coarchy.CoarchyServices.update#Task" in-map="[workEffortId:workEffortId,assignedPartyIdList:assignedPartyIdList,resolutionEnumId:resolutionEnumId,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/></transition>
 
-    <transition name="resolveAll">
+    <transition name="assignAll">
         <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.resolve#AllTasks" in-map="[workEffortId:workEffortId,resolutionEnumId:resolutionEnumId,organizationId:activeOrgId]"/>
-        <default-response parameter-map="[checklistId:workEffortId]"/><error-response url="." save-parameters="true"/></transition>
+        <service-call name="coarchy.CoarchyServices.assign#AllTasks" out-map="context" in-map="[workEffortId:checklistId,partyId:partyId,actorId:actorId,organizationId:activeOrgId]"/>
+        <conditional-response url="." save-current-screen="true"><condition><expression>returnToScreen</expression></condition></conditional-response>
+        <default-response type="none"/></transition>
 
     <transition name="getAssignedPartyList">
         <actions>
             <set field="assignedPartyList" from="[]"/>
             <if condition="term == null &amp;&amp; assignedPartyIdList ? assignedPartyIdList?.size() &gt; 0 : false"><then>
-                <entity-find entity-name="mantle.work.effort.WorkEffortPartyAndPerson" list="assignedPartyList" limit="50">
-                    <date-filter/>
-                    <econdition field-name="workEffortId"/>
+                <entity-find entity-name="mantle.work.effort.WorkEffortPartyAndPerson" list="assignedPartyList" limit="50" distinct="true">
+                    <date-filter/><econdition field-name="workEffortId"/>
                     <econdition field-name="roleTypeId" value="Assignee"/>
                     <econdition field-name="partyId" operator="in" from="assignedPartyIdList"/>
+                    <select-field field-name="partyId,firstName,lastName"/>
                     <order-by field-name="firstName"/>
                 </entity-find>
             </then><else-if condition="actorIdList">
                 <entity-find entity-name="coarchy.ActorPartyAndPerson" list="assignedPartyList" distinct="true">
                     <econdition field-name="actorId" operator="in" from="actorIdList"/>
+                    <select-field field-name="partyId,firstName,lastName"/>
                     <order-by field-name="actorId"/></entity-find>
-
             </else-if></if>
             <set field="outList" from="[]"/>
             <iterate list="assignedPartyList" entry="assignedParty">
-                <script>outList.add([value:assignedParty.partyId, label:"${assignedParty.firstName} ${assignedParty.lastName}"])</script>
+                <if condition="outList.find{it.value == assignedParty.partyId} == null">
+                    <script>outList.add([value:assignedParty.partyId, label:"${assignedParty.firstName} ${assignedParty.lastName}"])</script>
+                </if>
             </iterate>
-            <!--            <log level="warn" message="getassignedPartyList context.toString() ${context.toString()}"/>-->
+            <script>ec.web.sendJsonResponse(outList)</script>
+        </actions><default-response type="none"/></transition>
+
+    <transition name="getActorPartyList">
+        <actions>
+            <set field="assignedPartyList" from="[]"/>
+            <entity-find entity-name="coarchy.ActorPartyAndPerson" list="actorPartyList" distinct="true">
+                <econdition field-name="actorId"/>
+                <econditions combine="or">
+                    <econdition field-name="firstName" operator="like" value="%${term}%" ignore-case="true"/>
+                    <econdition field-name="lastName" operator="like" value="%${term}%" ignore-case="true"/>
+                </econditions>
+                <order-by field-name="actorId"/></entity-find>
+
+            <set field="outList" from="[]"/>
+            <iterate list="actorPartyList" entry="actorParty">
+                <script>outList.add([value:actorParty.partyId, label:"${actorParty.firstName} ${actorParty.lastName}"])</script>
+            </iterate>
             <script>ec.web.sendJsonResponse(outList)</script>
         </actions><default-response type="none"/></transition>
 
     <actions>
         <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="project" auto-field-map="[workEffortId:checklistId]"/>
-        <if condition="!project"><script>sri.sendRedirectAndStopRender('/coapp/FindChecklist')</script></if>
+        <if condition="!project"><message type="warning" error="true">Checklist not found. Returning to find Checklist</message>
+            <script>sri.sendRedirectAndStopRender('/coapp/FindChecklist')</script></if>
 
         <entity-find-count entity-name="mantle.work.effort.WorkEffortParty" count-field="ownerCount">
-            <date-filter/>
-            <econdition field-name="workEffortId" from="checklistId"/>
+            <date-filter/><econdition field-name="workEffortId" from="checklistId"/>
             <econdition field-name="partyId" from="ec.user.userAccount.partyId"/>
             <econdition field-name="roleTypeId" value="Owner"/></entity-find-count>
+
+        <entity-find-count entity-name="WorkEffort" count-field="workEffortCount" distinct="true">
+            <econdition field-name="rootWorkEffortId" from="checklistId"/>
+            <econdition field-name="workEffortTypeEnumId" value="WetTask"/>
+            <select-field field-name="workEffortId"/></entity-find-count>
+        <entity-find-count entity-name="WorkEffortAndParty" count-field="workEffortPartyCount" distinct="true">
+            <date-filter/><econdition field-name="rootWorkEffortId" from="checklistId"/>
+            <econdition field-name="roleTypeId" value="Assignee"/>
+            <select-field field-name="workEffortId,roleTypeId"/></entity-find-count>
+        
+        <set field="assignAll" from="workEffortCount!=workEffortPartyCount"/>
+        <if condition="assignAll">
+            <entity-find entity-name="coarchy.WorkEffortActivityDetail" list="taskPartyList" distinct="true">
+                <date-filter/><econdition field-name="rootWorkEffortId" from="checklistId"/>
+                <econdition field-name="workEffortTypeEnumId" value="WetTask"/>
+                <econdition field-name="roleTypeId" operator="is-null"/>
+                <econdition field-name="resolutionEnumId" operator="is-null"/>
+                <select-field field-name="actorId,name"/>
+                <order-by field-name="name"/></entity-find>
+        </if>
     </actions>
 
     <widgets>
         <label text="Checklist${project?.workEffortName?' - '+project?.workEffortName:''}" type="h4"/>
         <label text="Completed ${ec.l10n.format(project.actualCompletionDate,'MMMM dd, HH:mm')}" type="h5" condition="project.actualCompletionDate" style="q-pt-sm"/>
 
-<!--        <container-dialog id="ResolveAllDialog" button-text="Resolve All" type="success">-->
-<!--            <form-single name="ResolveAllForm" transition="resolveAll">-->
-<!--                <field name="pageIndex"><default-field><hidden/></default-field></field>-->
-<!--                <field name="workEffortId" from="project.workEffortId"><default-field><hidden/></default-field></field>-->
-<!--                <field name="resolutionEnumId"><default-field title="Resolution"><drop-down submit-on-select="true" required-manual-select="true">-->
-<!--                    <entity-options key="${enumId}" text="${description}">-->
-<!--                        <entity-find entity-name="moqui.basic.EnumAndGroup">-->
-<!--                            <econdition field-name="enumGroupEnumId" value="EngTaskResolution"/>-->
-<!--                            <order-by field-name="sequenceNum"/></entity-find>-->
-<!--                    </entity-options>-->
-<!--                </drop-down></default-field></field>-->
-<!--            </form-single>-->
-<!--        </container-dialog>-->
+        <container-dialog id="AssignAllDialog" button-text="Assign All" type="success" condition="assignAll">
+            <label text="Assign a User to each Task that has the Actor assigned to it." type="h5" style="q-pb-sm"/>
+            <form-list name="AssignAllFormList" list="taskPartyList" transition="assignAll">
+                <field name="actorId"><default-field><hidden/></default-field></field>
+                <field name="name"><default-field><display/></default-field></field>
+                <field name="partyId"><default-field title="User">
+                    <drop-down required-manual-select="true">
+                        <dynamic-options server-search="true" transition="getActorPartyList" min-length="0" parameter-map="[workEffortId:checklistId,actorId:actorId]"/>
+                    </drop-down>
+                </default-field></field>
+                <field name="submit"><default-field><submit text="Assign All"/></default-field></field>
+            </form-list>
+        </container-dialog>
 
         <container-dialog id="UpdateChecklistDialog" button-text="Edit Checklist Name">
             <form-single name="UpdateChecklist" transition="updateChecklist">
@@ -135,9 +175,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="canEditResolved" from="thisUserAssignedCount &gt; 0 &amp;&amp; (taskList_index!=0?taskList.get(taskList_index-1).resolutionEnumId!=null:true)"/>
 <!--                <log level="warn" message="canEditResolved ${canEditResolved} thisUserAssignedCount ${thisUserAssignedCount} thisUserAssignedCount &gt; 0 ${thisUserAssignedCount &gt; 0}"/>-->
 
-                <entity-find entity-name="mantle.work.effort.WorkEffortPartyAndPerson" list="actorPartyList" limit="50">
+                <entity-find entity-name="mantle.work.effort.WorkEffortPartyAndPerson" list="actorPartyList" limit="50" distinct="true">
                     <date-filter/><econdition field-name="workEffortId"/>
                     <econdition field-name="roleTypeId" value="Assignee"/>
+                    <select-field field-name="partyId,firstName,lastName"/>
                     <order-by field-name="firstName"/></entity-find>
                 <set field="assignedPartyIdList" from="actorPartyList*.partyId"/>
 

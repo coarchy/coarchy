@@ -83,7 +83,13 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response type="none"/>
     </transition>
 
-    <transition-include name="inviteUser" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
+    <transition name="inviteNewUser">
+        <service-call name="coarchy.CoarchyServices.invite#NewUser" in-map="[partyId:organizationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName]"/>
+        <default-response url="." parameter-map="[organizationId:organizationId]"/></transition>
+    <transition name="inviteUser">
+        <service-call name="coarchy.CoarchyServices.invite#User" in-map="[partyId:organizationId,emailAddress:emailAddress]"/>
+        <default-response url="." parameter-map="[organizationId:organizationId]"/></transition>
+
     <transition-include name="goToApplication" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
     <transition-include name="createOrganization" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
 
@@ -98,12 +104,19 @@ along with this software (see the LICENSE.md file). If not, see
         <link url="goToApplication" text="Application" parameter-map="[partyId:organizationId]" tooltip="View ${organization.organizationName} Home"/>
         <link url="../Organizations" text="Find Organizations"/>
 
-        <container-dialog id="InviteUser" type="success" button-text="Invite User">
-            <form-single name="InviteUser" transition="inviteUser">
-                <field name="partyId" from="organizationId"><default-field><hidden/></default-field></field>
+        <container-dialog id="InviteNewUser" type="success" button-text="Invite New User">
+            <form-single name="InviteNewUser" transition="inviteNewUser">
+                <field name="organizationId"><default-field><hidden/></default-field></field>
                 <field name="emailAddress"><default-field><text-line/></default-field></field>
                 <field name="firstName"><default-field><text-line/></default-field></field>
                 <field name="lastName"><default-field><text-line/></default-field></field>
+                <field name="submit"><default-field><submit/></default-field></field>
+            </form-single>
+        </container-dialog>
+        <container-dialog id="InviteUser" type="success" button-text="Invite Existing User">
+            <form-single name="InviteUser" transition="inviteUser">
+                <field name="organizationId"><default-field><hidden/></default-field></field>
+                <field name="emailAddress"><default-field><text-line/></default-field></field>
                 <field name="submit"><default-field><submit/></default-field></field>
             </form-single>
         </container-dialog>
