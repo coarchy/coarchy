@@ -43,6 +43,15 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response type="none"/>
     </transition>
 
+    <transition name="createPaymentIntent" read-only="true" begin-transaction="false">
+        <service-call name="coarchy.StripeServices.createPaymentIntent" out-map="context"/>
+        <actions><script><![CDATA[
+            ec.web.sendJsonResponse([clientSecret:clientSecret])
+            ]]></script></actions>
+        <!-- NOTE DEJ 20200806 use save-parameters="true" to re-save parameters otherwise lost from the menuData request under vapps, qapps, etc -->
+        <default-response type="none" save-parameters="true"/>
+    </transition>
+
     <!--
     <transition name="serviceWorker.js" read-only="true">
         <actions><script><![CDATA[
@@ -70,8 +79,6 @@ along with this software (see the LICENSE.md file). If not, see
             footer_scripts.add('/js/http-vue-loader/httpVueLoader.js')
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
-            // Vue Components for Coarchy
-//            footer_scripts.add('/costatic/js/CoarchyVue.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
             footer_scripts.add('/js/WebrootVue.qvt.js')
         } else {
@@ -83,8 +90,6 @@ along with this software (see the LICENSE.md file). If not, see
             footer_scripts.add('/js/http-vue-loader/httpVueLoader.js')
             // Quasar
             footer_scripts.add("/libs/quasar/quasar.umd.min.js")
-            // Vue Components for Coarchy
-//            footer_scripts.add('/costatic/js/CoarchyVue.js')
             // Webroot Quasar-Vue instance, in footer so runs after page loaded
             footer_scripts.add('/js/WebrootVue.qvt.js')
         }
@@ -96,7 +101,15 @@ along with this software (see the LICENSE.md file). If not, see
             // TODO migrate MoquiQzComponent.js to MoquiQzComponent.qvt.js
             footer_scripts.add('/js/qz-tray/MoquiQzComponent.js')
         }
-    ]]></script></pre-actions>
+
+        if (ec.web.getPathInfo() == '/settings/Checkout') {
+            html_scripts.add('https://js.stripe.com/v3/')
+            // Vue Components for Coarchy Settings
+            footer_scripts.add('/settingsstatic/js/SettingsVue.qvt.js')
+            html_stylesheets.add('/settingsstatic/css/checkout.css')
+        }
+    ]]></script>
+    </pre-actions>
 
     <widgets>
         <render-mode>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    <service verb="create" noun="PaymentIntent" authenticate="anonymous-view">
+        <in-parameters>
+            <parameter name="amount" default="20000"/>
+            <parameter name="currency" default="usd"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="clientSecret"/>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="moqui.service.message.SystemMessageRemote" value-field="stripeRemote" auto-field-map="[systemMessageRemoteId:'DemoStripe']"/>
+
+            <script><![CDATA[import org.moqui.util.RestClient
+                org.moqui.util.RestClient restClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
+                        .basicAuth("sk_test_51NwtETDVIK4XcJLUTakuCxHAAYkzVlnsWfdBWH6KoUwv7HtZXaXfZo8PgvJQq6h3vUseB3KGulgDc4wukRg1xFfj00u2Yfrvub","")
+                        .addBodyParameter("amount", (String) "20000")
+                        .addBodyParameter("currency", (String) "usd")
+                        .addBodyParameter("automatic_payment_methods[enabled]", (String) "true")
+                def uriBuilder = restClient.uri().protocol("https").host("api.stripe.com").port(443)
+                    .path("/v1/payment_intents")
+                // if (postalCode || country) uriBuilder.parameter("components", (postalCode ? "postal_code:" + postalCode : "") + (postalCode && country ? "|" : "") +  (country ? "country:" + country : ""))
+                uriBuilder.build()
+
+                org.moqui.util.RestClient.RestResponse restResponse = restClient.call()
+                responseMap = (Map) restResponse.jsonObject()
+                // ec.logger.warn("responseMap: ${responseMap}")
+                if (restResponse.statusCode < 200 || restResponse.statusCode >= 300) {
+                    ec.message.addPublic("Could not create Payment", "warning")
+                }
+                ]]></script>
+
+            <set field="clientSecret" from="responseMap.client_secret"/>
+
+        </actions>
+    </service>
+</services>
