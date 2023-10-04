@@ -4,10 +4,10 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    /*font-family: -apple-system, BlinkMacSystemFont, sans-serif;*/
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
-    display: flex;
+    /*display: flex;*/
     justify-content: center;
     align-content: center;
     height: 100vh;
@@ -43,7 +43,7 @@ form {
 /* Buttons and links */
 button {
     background: #5469d4;
-    font-family: Arial, sans-serif;
+    /*font-family: Arial, sans-serif;*/
     color: #ffffff;
     border-radius: 4px;
     border: 0;

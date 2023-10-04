@@ -15,13 +15,20 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Checkout" default-menu-index="30" menu-image="/ssstatic/images/Parties.png" default-menu-include="false">
 
-    <widgets>
-        <label text="Checkout" type="h4" style="q-pb-sm"/>
+    <parameter name="orderId" required="true"/>
 
-        <render-mode>
-            <text type="qvt"><![CDATA[
-                <m-stripe></m-stripe>
-            ]]></text></render-mode>
+    <widgets>
+        <container-row>
+            <row-col md="3"/>
+            <row-col md="6">
+                <label text="Checkout" type="h4" style="q-pb-sm"/>
+                <render-mode>
+                    <text type="qvt"><![CDATA[
+                        <m-stripe></m-stripe>
+                    ]]></text></render-mode>
+            </row-col>
+            <row-col md="3"/>
+        </container-row>
 
     </widgets>
 </screen>

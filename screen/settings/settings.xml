@@ -43,7 +43,7 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response type="none"/>
     </transition>
 
-    <transition name="createPaymentIntent" read-only="true" begin-transaction="false">
+    <transition name="createPaymentIntent">
         <service-call name="coarchy.StripeServices.createPaymentIntent" out-map="context"/>
         <actions><script><![CDATA[
             ec.web.sendJsonResponse([clientSecret:clientSecret])
@@ -102,11 +102,12 @@ along with this software (see the LICENSE.md file). If not, see
             footer_scripts.add('/js/qz-tray/MoquiQzComponent.js')
         }
 
+        // Vue Components for Coarchy Settings
+        footer_scripts.add('/settingsstatic/js/SettingsVue.qvt.js')
+        html_stylesheets.add('/settingsstatic/css/checkout.css')
+
         if (ec.web.getPathInfo() == '/settings/Checkout') {
             html_scripts.add('https://js.stripe.com/v3/')
-            // Vue Components for Coarchy Settings
-            footer_scripts.add('/settingsstatic/js/SettingsVue.qvt.js')
-            html_stylesheets.add('/settingsstatic/css/checkout.css')
         }
     ]]></script>
     </pre-actions>

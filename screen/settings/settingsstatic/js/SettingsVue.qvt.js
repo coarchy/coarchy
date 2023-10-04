@@ -1,6 +1,6 @@
 // Components
 Vue.component('m-stripe', {
-    name: "mStrip",
+    name: "mStripe",
     template:
         // Display a payment form
         '<form id="payment-form">\n' +
@@ -18,7 +18,6 @@ Vue.component('m-stripe', {
         '</form>',
     methods: {
         async initialize() {
-            this.moquiSessionToken = $("#confMoquiSessionToken").val();
             const response = await fetch("/settings/createPaymentIntent", {
                 cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
                 credentials: "same-origin", // include, *same-origin, omit
@@ -29,7 +28,6 @@ Vue.component('m-stripe', {
                 },
                 redirect: "follow",
                 referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-                // body: JSON.stringify({ items, moquiSessionToken:moquiSessionToken }),
             })
 
             const { clientSecret } = await response.json();
@@ -43,7 +41,7 @@ Vue.component('m-stripe', {
             linkAuthenticationElement.mount("#link-authentication-element");
 
             linkAuthenticationElement.on('change', (event) => {
-                emailAddress = event.value.email;
+                this.emailAddress = event.value.email;
             });
 
             const paymentElementOptions = {

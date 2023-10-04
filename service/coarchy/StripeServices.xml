@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
-    <service verb="create" noun="PaymentIntent" authenticate="anonymous-view">
+    <service verb="create" noun="PaymentIntent">
         <in-parameters>
             <parameter name="amount" default="20000"/>
             <parameter name="currency" default="usd"/>
@@ -22,28 +22,103 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="clientSecret"/>
         </out-parameters>
         <actions>
-            <entity-find-one entity-name="moqui.service.message.SystemMessageRemote" value-field="stripeRemote" auto-field-map="[systemMessageRemoteId:'DemoStripe']"/>
+            <!-- System steps -->
+            <set field="instancePurpose" from="System.getProperty('instance_purpose')"/>
+            <if condition="!instancePurpose || instancePurpose == 'production'"><then>
+                <script><![CDATA[stripeRemote = ec.entity.fastFindOne("moqui.service.message.SystemMessageRemote", false, true, 'ProdStripe')]]></script>
+            </then><else>
+                <script><![CDATA[stripeRemote = ec.entity.fastFindOne("moqui.service.message.SystemMessageRemote", false, true, 'DemoStripe')]]></script>
+            </else></if>
+            <script><![CDATA[party = ec.entity.find("mantle.party.Party").condition("partyId", ec.user.userAccount.partyId).one()]]></script>
 
-            <script><![CDATA[import org.moqui.util.RestClient
-                org.moqui.util.RestClient restClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
-                        .basicAuth("sk_test_51NwtETDVIK4XcJLUTakuCxHAAYkzVlnsWfdBWH6KoUwv7HtZXaXfZo8PgvJQq6h3vUseB3KGulgDc4wukRg1xFfj00u2Yfrvub","")
+            <script>import org.moqui.util.RestClient</script>
+
+            <if condition="!party.externalId">
+                <script><![CDATA[
+                org.moqui.util.RestClient customerRestClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
+                        .basicAuth(stripeRemote.privateKey,"")
+                def customerUriBuilder = customerRestClient.uri().protocol("https").host("api.stripe.com").port(443)
+                        .path("/v1/customers")
+                customerUriBuilder.build()
+
+                org.moqui.util.RestClient.RestResponse customerRestResponse = customerRestClient.call()
+                customerResponseMap = (Map) customerRestResponse.jsonObject()
+//                ec.logger.warn("customerResponseMap: ${customerResponseMap}")
+                if (customerRestResponse.statusCode < 200 || customerRestResponse.statusCode >= 300) {
+                    ec.message.addPublic("Could not create Customer", "warning")
+                    return
+                }
+                    ]]></script>
+
+                <set field="party.externalId" from="customerResponseMap.id"/>
+                <entity-update value-field="party"/>
+            </if>
+
+            <!-- for not entering in the payment information for each payment -->
+<!--            <script><![CDATA[
+                org.moqui.util.RestClient paymentMethodListRestClient = ec.service.rest().method(org.moqui.util.RestClient.GET)
+                        .basicAuth(stripeRemote.privateKey,"")
+                        .addBodyParameter("type", (String) "card")
+                def paymentMethodListUriBuilder = paymentMethodListRestClient.uri().protocol("https").host("api.stripe.com").port(443)
+                        .path("/v1/customers/").path(party.externalId).path("/payment_methods")
+                paymentMethodListUriBuilder.build()
+
+                org.moqui.util.RestClient.RestResponse paymentMethodListRestResponse = paymentMethodListRestClient.call()
+                paymentMethodListResponseMap = (Map) paymentMethodListRestResponse.jsonObject()
+                 ec.logger.warn("paymentMethodListResponseMap: ${paymentMethodListResponseMap}")
+                if (paymentMethodListRestResponse.statusCode < 200 || paymentMethodListRestResponse.statusCode >= 300) {
+                    ec.message.addPublic("Could not find Payment Methods", "warning")
+                    return
+                }
+                ]]></script>
+            <set field="paymentMethodId" from="paymentMethodListResponseMap.data.first()?.id"/>
+
+            <if condition="paymentMethodId != null &amp;&amp; party.externalId != null">
+                <script><![CDATA[
+                    org.moqui.util.RestClient attachPaymentMethodRestClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
+                            .basicAuth(stripeRemote.privateKey,"")
+                            .addBodyParameter("customer", (String) party.externalId)
+                    def attachPaymentMethodUriBuilder = attachPaymentMethodRestClient.uri().protocol("https").host("api.stripe.com").port(443)
+                            .path("/v1/payment_methods/").path(paymentMethodId).path("/attach")
+                    attachPaymentMethodUriBuilder.build()
+
+                    org.moqui.util.RestClient.RestResponse attachPaymentMethodRestResponse = attachPaymentMethodRestClient.call()
+//                    attachPaymentMethodResponseMap = (Map) attachPaymentMethodRestResponse.jsonObject()
+                    ec.logger.warn("attachPaymentMethodResponseMap: ${attachPaymentMethodResponseMap}")
+                    if (attachPaymentMethodRestResponse.statusCode < 200 || attachPaymentMethodRestResponse.statusCode >= 300) {
+                        ec.message.addPublic("Could not find Payment Methods", "warning")
+                        return
+                    }
+                    ]]></script>
+            </if>-->
+
+            <script><![CDATA[
+                org.moqui.util.RestClient paymentIntentRestClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
+                        .basicAuth(stripeRemote.privateKey,"")
+                        .addBodyParameter("customer", (String) party.externalId)
                         .addBodyParameter("amount", (String) "20000")
                         .addBodyParameter("currency", (String) "usd")
-                        .addBodyParameter("automatic_payment_methods[enabled]", (String) "true")
-                def uriBuilder = restClient.uri().protocol("https").host("api.stripe.com").port(443)
+//                        .addBodyParameter("setup_future_usage", (String) "off_session")
+                if (paymentMethodId != null) {
+//                    ec.logger.warn("Adding paymentMethodId: ${paymentMethodId}")
+                    paymentIntentRestClient.addBodyParameter("payment_method", (String) paymentMethodId)
+                }
+                def paymentIntentUriBuilder = paymentIntentRestClient.uri().protocol("https").host("api.stripe.com").port(443)
                     .path("/v1/payment_intents")
-                // if (postalCode || country) uriBuilder.parameter("components", (postalCode ? "postal_code:" + postalCode : "") + (postalCode && country ? "|" : "") +  (country ? "country:" + country : ""))
-                uriBuilder.build()
+                paymentIntentUriBuilder.build()
 
-                org.moqui.util.RestClient.RestResponse restResponse = restClient.call()
-                responseMap = (Map) restResponse.jsonObject()
-                // ec.logger.warn("responseMap: ${responseMap}")
-                if (restResponse.statusCode < 200 || restResponse.statusCode >= 300) {
+                org.moqui.util.RestClient.RestResponse paymentIntentRestResponse = paymentIntentRestClient.call()
+                paymentIntentResponseMap = (Map) paymentIntentRestResponse.jsonObject()
+                // ec.logger.warn("paymentIntentResponseMap: ${paymentIntentResponseMap}")
+                if (paymentIntentRestResponse.statusCode < 200 || paymentIntentRestResponse.statusCode >= 300) {
                     ec.message.addPublic("Could not create Payment", "warning")
                 }
                 ]]></script>
 
-            <set field="clientSecret" from="responseMap.client_secret"/>
+            <set field="clientSecret" from="paymentIntentResponseMap.client_secret"/>
+
+            <!-- TODO: Handle https://stripe.com/docs/payments/quickstart#use-webhook -->
+<!--            <log level="warn" message="create#PaymentIntent context.toString(): ${context.toString()}"/>-->
 
         </actions>
     </service>
