@@ -44,12 +44,18 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <transition name="createPaymentIntent">
-        <service-call name="coarchy.StripeServices.createPaymentIntent" out-map="context"/>
+        <service-call name="coarchy.StripeServices.create#PaymentIntent" out-map="context"/>
         <actions><script><![CDATA[
             ec.web.sendJsonResponse([clientSecret:clientSecret])
             ]]></script></actions>
         <!-- NOTE DEJ 20200806 use save-parameters="true" to re-save parameters otherwise lost from the menuData request under vapps, qapps, etc -->
         <default-response type="none" save-parameters="true"/>
+    </transition>
+
+    <transition name="stripeWebhook" method="post">
+        <service-call name="coarchy.StripeServices.handle#Webhook" in-map="context" out-map="context"/>
+        <!-- NOTE DEJ 20200806 use save-parameters="true" to re-save parameters otherwise lost from the menuData request under vapps, qapps, etc -->
+        <default-response type="none"/>
     </transition>
 
     <!--
@@ -105,12 +111,13 @@ along with this software (see the LICENSE.md file). If not, see
         // Vue Components for Coarchy Settings
         footer_scripts.add('/settingsstatic/js/SettingsVue.qvt.js')
         html_stylesheets.add('/settingsstatic/css/checkout.css')
-
-        if (ec.web.getPathInfo() == '/settings/Checkout') {
-            html_scripts.add('https://js.stripe.com/v3/')
-        }
     ]]></script>
     </pre-actions>
+
+    <actions>
+        <entity-find-one entity-name="mantle.party.Organization" value-field="organization" auto-field-map="[partyId:ec.user.getPreference('ACTIVE_ORGANIZATION')]"/>
+        <set field="organizationName" from="organization.organizationName"/>
+    </actions>
 
     <widgets>
         <render-mode>

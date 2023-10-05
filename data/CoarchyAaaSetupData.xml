@@ -52,6 +52,8 @@ along with this software (see the LICENSE.md file). If not, see
         <artifacts artifactName="component://coarchy/screen/settings/settingsinternal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
         <artifacts artifactName="coarchy.StripeServices.create#PaymentIntent" artifactTypeEnumId="AT_SERVICE" inheritAuthz="N" nameIsPattern="N"/>
         <artifacts artifactName="mantle.party.Party" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>
+        <artifacts artifactName="mantle.party.Organization" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>
+        <artifacts artifactName="mantle.order.OrderHeaderAndPart" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>
         <authz artifactAuthzId="COARCHY_SETTINGS_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
         <authz artifactAuthzId="COARCHY_SETTINGS_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
     </artifactGroups>
@@ -151,7 +153,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.security.user.NotificationTopic topic="MantleTask" showAlert="N" persistOnSend="N" receiveNotifications="N"/>
 
     <!-- ========== Products ========== -->
-    <products productId="c100000" productName="Organization-Month Credit" pseudoId="ORGMNTH" productTypeEnumId="PtDigitalAsset">
+    <products productId="c100000" productName="Organization-Month Credits" pseudoId="ORGMNTH" productTypeEnumId="PtDigitalAsset">
         <description><![CDATA[Buy monthly usage of Coarchy premium features for you organization. Each organization-month credit allows premium features for one organization for one month.
         If you want to have 5 organizations for 12 months then you would buy 60 organizaiton-month credits.]]></description>
         <prices productPriceId="c100000" priceTypeEnumId="PptCurrent" minQuantity="1" price="100.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200000" priceUomId="USD"/>

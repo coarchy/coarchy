@@ -14,18 +14,27 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
     <service verb="create" noun="PaymentIntent">
-        <in-parameters>
-            <parameter name="amount" default="20000"/>
-            <parameter name="currency" default="usd"/>
-        </in-parameters>
         <out-parameters>
             <parameter name="clientSecret"/>
         </out-parameters>
         <actions>
+            <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">
+                <econdition field-name="statusId" value="OrderOpen"/>
+                <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
+                <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId"/>
+                <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
+            <if condition="existingOrderList.size() &lt; 1">
+                <return error="true" public="true" type="danger" message="No order found for user."/>
+            </if>
+            <set field="orderId" from="existingOrderList.getFirst().orderId"/>
+            <set field="grandTotal" from="existingOrderList.getFirst().grandTotal"/>
+            <set field="currencyUomId" from="existingOrderList.getFirst().currencyUomId"/>
+
+
             <!-- System steps -->
             <set field="instancePurpose" from="System.getProperty('instance_purpose')"/>
             <if condition="!instancePurpose || instancePurpose == 'production'"><then>
-                <script><![CDATA[stripeRemote = ec.entity.fastFindOne("moqui.service.message.SystemMessageRemote", false, true, 'ProdStripe')]]></script>
+                <script><![CDATA[stripeRemote = ec.entity.fastFindOne("moqui.service.message.SystemMessageRemote", false, true, 'ProductionStripe')]]></script>
             </then><else>
                 <script><![CDATA[stripeRemote = ec.entity.fastFindOne("moqui.service.message.SystemMessageRemote", false, true, 'DemoStripe')]]></script>
             </else></if>
@@ -37,6 +46,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <script><![CDATA[
                 org.moqui.util.RestClient customerRestClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
                         .basicAuth(stripeRemote.privateKey,"")
+                        .addBodyParameter("email", (String) ec.user.userAccount.emailAddress)
                 def customerUriBuilder = customerRestClient.uri().protocol("https").host("api.stripe.com").port(443)
                         .path("/v1/customers")
                 customerUriBuilder.build()
@@ -48,7 +58,7 @@ along with this software (see the LICENSE.md file). If not, see
                     ec.message.addPublic("Could not create Customer", "warning")
                     return
                 }
-                    ]]></script>
+                ]]></script>
 
                 <set field="party.externalId" from="customerResponseMap.id"/>
                 <entity-update value-field="party"/>
@@ -96,8 +106,8 @@ along with this software (see the LICENSE.md file). If not, see
                 org.moqui.util.RestClient paymentIntentRestClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
                         .basicAuth(stripeRemote.privateKey,"")
                         .addBodyParameter("customer", (String) party.externalId)
-                        .addBodyParameter("amount", (String) "20000")
-                        .addBodyParameter("currency", (String) "usd")
+                        .addBodyParameter("amount", (String) grandTotal)
+                        .addBodyParameter("currency", (String) currencyUomId)
 //                        .addBodyParameter("setup_future_usage", (String) "off_session")
                 if (paymentMethodId != null) {
 //                    ec.logger.warn("Adding paymentMethodId: ${paymentMethodId}")
@@ -119,6 +129,33 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- TODO: Handle https://stripe.com/docs/payments/quickstart#use-webhook -->
 <!--            <log level="warn" message="create#PaymentIntent context.toString(): ${context.toString()}"/>-->
+
+        </actions>
+    </service>
+
+    <service verb="handle" noun="Webhook" authenticate="anonymous-all">
+        <actions>
+            <log level="warn" message="handle#Webhook ec.web.request.getHeader('Stripe-Signature'): ${ec.web.request.getHeader('Stripe-Signature')}"/>
+            <set field="headerStripeSignature" from="ec.web.request.getHeader('Stripe-Signature')"/>
+            <set field="stripeSignatureList" from="headerStripeSignature.split(',')"/>
+            <set field="t" from="null"/>
+            <set field="v1" from="null"/>
+            <iterate list="stripeSignatureList" entry="stripeSignature">
+                <set field="key" from="stripeSignature.split('=')[0]"/>
+                <set field="value" from="stripeSignature.split('=')[0]"/>
+                <if condition="key == 't'"><then>
+                    <set field="t" from="value"/>
+                </then><else-if condition="key == 'v1'">
+                    <set field="v1" from="value"/>
+                </else-if></if>
+            </iterate>
+
+            <set field="signed_payload" from="t+'.'+ec.web.getRequestBodyText()"/>
+
+
+<!--            <log level="warn" message="handle#Webhook ec.web.getRequestParameters(): ${ec.web.getRequestParameters()}"/>-->
+
+<!--            <log level="warn" message="handle#Webhook context.toString(): ${context.toString()}"/>-->
 
         </actions>
     </service>

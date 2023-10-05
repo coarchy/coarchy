@@ -13,13 +13,13 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Checkout" default-menu-index="30" menu-image="/ssstatic/images/Parties.png" default-menu-include="false">
+        default-menu-title="Order" default-menu-index="40" menu-image="/ssstatic/images/Parties.png" default-menu-include="false">
 
     <always-actions>
         <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">
             <econdition field-name="statusId" value="OrderOpen"/>
             <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
-            <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId"/>
+            <select-field field-name="orderId,entryDate,placedDate,orderPartSeqId,grandTotal,currencyUomId"/>
             <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
         <if condition="existingOrderList.size() &lt; 1">
             <message type="danger" public="true" error="true">No order found for user.</message>
@@ -27,10 +27,6 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         <set field="orderId" from="existingOrderList.getFirst().orderId"/>
     </always-actions>
-
-<!--    <transition name="buyOrganizationMonthCredits">-->
-<!--        <service-call name="coarchy.CoarchyServices.buy#OrganizationMonthCredits" in-map="[quantity:quantity]" out-map="context"/>-->
-<!--        <default-response url="." save-current-screen="true"/></transition>-->
 
     <actions>
         <set field="orderPartSeqId" from="existingOrderList[0].orderPartSeqId"/>
@@ -52,29 +48,12 @@ along with this software (see the LICENSE.md file). If not, see
 
     <widgets>
         <container-row>
-            <row-col md="3"/>
-            <row-col md="6">
-                <label text="Checkout" type="h4" style="q-pb-sm"/>
+            <row-col md="2"/>
+            <row-col md="8">
+                <label text="Order #${orderId}, placed ${ec.l10n.format(existingOrderList.getFirst().placedDate ?: existingOrderList.getFirst().entryDate, 'd MMM yyyy')}" type="h4"/>
 
-                <label text="Buying ${orderItemList.getFirst().quantity} ${orderItemList.getFirst().itemDescription} at ${existingOrderList.getFirst().currencyUomId=='USD'?'$':''}${orderItemList.getFirst().unitAmount} each for a total of ${existingOrderList.getFirst().currencyUomId=='USD'?'$':''}${existingOrderList.getFirst().grandTotal}" type="h6" style="q-pb-sm"/>
-
-<!--                <form-single name="BuyOrganizationMonthCredits" transition="buyOrganizationMonthCredits">-->
-<!--                    <field name="description"><default-field><label text="Organization-Month Credits" type="h5"/></default-field></field>-->
-<!--                    <field name="quantity" from="orderItemList.getFirst().quantity"><default-field title="Organization-Month Quantity"><text-line/></default-field></field>-->
-<!--                    <field name="submit"><default-field><submit text="Change Amount"/></default-field></field>-->
-<!--                    <field-layout><field-row-big>-->
-<!--                        <field-ref name="description"/>-->
-<!--                        <field-ref name="quantity"/>-->
-<!--                        <field-ref name="submit"/>-->
-<!--                    </field-row-big></field-layout>-->
-<!--                </form-single>-->
-
-                <render-mode>
-                    <text type="qvt"><![CDATA[
-                        <m-stripe></m-stripe>
-                    ]]></text></render-mode>
             </row-col>
-            <row-col md="3"/>
+            <row-col md="2"/>
         </container-row>
     </widgets>
 </screen>

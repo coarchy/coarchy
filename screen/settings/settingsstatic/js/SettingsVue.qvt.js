@@ -62,7 +62,7 @@ Vue.component('m-stripe', {
                 elements,
                 confirmParams: {
                     // Make sure to change this to your payment completion page
-                    return_url: "http://localhost:8080/settings/Checkout",
+                    return_url: "http://localhost:8080/settings/Order",
                     receipt_email: this.emailAddress,
                 },
             });
@@ -144,17 +144,32 @@ Vue.component('m-stripe', {
         }
     },
     mounted: function() {
-        // this.$nextTick(function () {
+        var vm = this;
+        moqui.loadScript('https://js.stripe.com/v3', function(err) {
+            if (err) {
+                console.error("Error loading stripe: " + err);
+                return;
+            }
             // This is your test publishable API key.
-            this.stripe = Stripe("pk_test_51NwtETDVIK4XcJLUKKfmdgqu4P7JZXG2OYxvI2RwINSohtadc4IIhdHr9yxjDat8fTA1k0noud5oyVWAlMjL9kxS00uDSFLMI3")
+            vm.stripe = Stripe("pk_test_51NwtETDVIK4XcJLUKKfmdgqu4P7JZXG2OYxvI2RwINSohtadc4IIhdHr9yxjDat8fTA1k0noud5oyVWAlMjL9kxS00uDSFLMI3")
+            console.log("loaded stripe")
 
-            this.initialize();
-            this.checkStatus();
+            vm.initialize();
+            vm.checkStatus();
 
             document
                 .querySelector("#payment-form")
-                .addEventListener("submit", this.handleSubmit);
+                .addEventListener("submit", vm.handleSubmit);
 
-        // })
+        }, function() {
+            return !!window.Stripe;
+        });
     },
+    beforeDestroy: function() {
+        // Remove stripe from other pages
+        Array.from(document.querySelectorAll("script[src='https://js.stripe.com/v3']")).forEach(script => {
+            script.parentNode.removeChild(script);
+        });
+        location.reload();
+    }
 });

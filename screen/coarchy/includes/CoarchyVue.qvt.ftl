@@ -108,11 +108,13 @@ along with this software (see the LICENSE.md file). If not, see
                                         <q-tooltip>Go to Settings</q-tooltip></q-btn>
                                 </q-item-section>
                             </q-item>
-                            <q-item clickable>
-                                <q-item-section><q-btn flat label="Organization" type="a" href="${sri.buildUrl("/settings/EditOrganization").url+'?organizationId='+activeOrgId}">
-                                        <q-tooltip>Go to Users</q-tooltip></q-btn>
-                                </q-item-section>
-                            </q-item>
+                            <#if activeOrg.organizationName!?has_content>
+                                <q-item clickable>
+                                    <q-item-section><q-btn flat label="Edit ${activeOrg.organizationName}" type="a" href="${sri.buildUrl("/settings/EditOrganization").url+'?organizationId='+activeOrgId}">
+                                            <q-tooltip>${activeOrg.organizationName} Settings</q-tooltip></q-btn>
+                                    </q-item-section>
+                                </q-item>
+                            </#if>
                             <q-item clickable>
                                 <q-item-section>
                                     <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"

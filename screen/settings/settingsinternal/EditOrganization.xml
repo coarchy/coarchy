@@ -93,15 +93,10 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="goToApplication" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
     <transition-include name="createOrganization" location="component://coarchy/screen/settings/settingsinternal/Organizations.xml"/>
 
-    <actions>
-
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
-    </actions>
-
     <widgets>
-        <label text="Edit ${organization?.organizationName?:' Organization'}" type="h4"/>
+        <label text="${organization?.organizationName?:' Organization'} Settings" type="h4"/>
 
-        <link url="goToApplication" text="Application" parameter-map="[partyId:organizationId]" tooltip="View ${organization.organizationName} Home"/>
+        <link url="goToApplication" text="View ${organization.organizationName}" parameter-map="[partyId:organizationId]" tooltip="View ${organization.organizationName} Home"/>
         <link url="../Organizations" text="Find Organizations"/>
 
         <container-dialog id="InviteNewUser" type="success" button-text="Invite New User">

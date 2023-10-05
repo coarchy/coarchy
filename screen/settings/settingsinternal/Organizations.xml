@@ -156,13 +156,13 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="partyId" from="toPartyId"><default-field><hidden/></default-field></field>
             <field name="application">
                 <header-field><text-find size="25"/></header-field>
-                <conditional-field condition="visibilityEnumId=='PvPublic'&amp;&amp;ownerPartyId != ec.user.userAccount.partyId"><link url="goToApplication" text="Application" parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/>
+                <conditional-field title="View Organization" condition="visibilityEnumId=='PvPublic'&amp;&amp;ownerPartyId != ec.user.userAccount.partyId"><link url="goToApplication" text="${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/>
                     <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip><q-chip>Read Only</q-chip>]]></text></render-mode></conditional-field>
-                <conditional-field condition="visibilityEnumId=='PvPublic'&amp;&amp;ownerPartyId == ec.user.userAccount.partyId"><link url="goToApplication" text="Application" parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/>
+                <conditional-field title="View Organization" condition="visibilityEnumId=='PvPublic'&amp;&amp;ownerPartyId == ec.user.userAccount.partyId"><link url="goToApplication" text="${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/>
                     <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip>]]></text></render-mode></conditional-field>
-                <default-field><link url="goToApplication" text="Application" parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/></default-field>
+                <default-field title="View Organization"><link url="goToApplication" text="${organizationName}" parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/></default-field>
             </field>
-            <field name="organizationName"><conditional-field condition="visibilityEnumId!='PvPublic'||ownerPartyId == ec.user.userAccount.partyId"><link url="/settings/EditOrganization" text="${organizationName}" parameter-map="[organizationId:toPartyId]" tooltip="Edit ${organizationName}"/></conditional-field></field>
+            <field name="organizationName"><conditional-field title="Organization Settings" condition="visibilityEnumId!='PvPublic'||ownerPartyId == ec.user.userAccount.partyId"><link url="/settings/EditOrganization" text="${organizationName}" parameter-map="[organizationId:toPartyId]" tooltip="Edit ${organizationName}"/></conditional-field></field>
             <field name="submit"><header-field><submit/></header-field></field>
         </form-list>
     </widgets>

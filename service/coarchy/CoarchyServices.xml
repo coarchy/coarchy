@@ -765,9 +765,8 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <if condition="quantity &lt; 1"><return type="danger" message="Organization-Month Quantity must at least 1" error="true" public="true"/></if>
-            <service-call name="mantle.order.OrderServices.add#OrderProductQuantity" in-map="[quantity:quantity,productId:'c100000',customerPartyId:ec.user.userAccount.partyId]" out-map="context"/>
+            <service-call name="mantle.order.OrderServices.add#OrderProductQuantity" in-map="[quantity:quantity,productId:'c100000',customerPartyId:ec.user.userAccount.partyId,addToQuantity:false]" out-map="context"/>
 
-            <script>ec.</script>
         </actions>
     </service>
 </services>
