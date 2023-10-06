@@ -58,6 +58,13 @@ Vue.component('m-stripe', {
 
             let elements = this.elements;
 
+            if (elements == null) {
+                // set loading false and return
+                this.setLoading(false);
+                console.log("pressed submit before elements were loaded - try again")
+                return;
+            }
+
             const { error } = await this.stripe.confirmPayment({
                 elements,
                 confirmParams: {

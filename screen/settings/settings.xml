@@ -116,7 +116,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <actions>
         <entity-find-one entity-name="mantle.party.Organization" value-field="organization" auto-field-map="[partyId:ec.user.getPreference('ACTIVE_ORGANIZATION')]"/>
-        <set field="organizationName" from="organization.organizationName"/>
+        <set field="organizationName" from="organization?.organizationName"/>
     </actions>
 
     <widgets>

@@ -16,20 +16,37 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="PaymentIntent">
         <out-parameters>
             <parameter name="clientSecret"/>
+            <parameter name="paymentId"/>
         </out-parameters>
         <actions>
-            <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">
+            <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="2">
                 <econdition field-name="statusId" value="OrderOpen"/>
                 <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
                 <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId"/>
                 <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
-            <if condition="existingOrderList.size() &lt; 1">
-                <return error="true" public="true" type="danger" message="No order found for user."/>
-            </if>
-            <set field="orderId" from="existingOrderList.getFirst().orderId"/>
-            <set field="grandTotal" from="existingOrderList.getFirst().grandTotal"/>
-            <set field="currencyUomId" from="existingOrderList.getFirst().currencyUomId"/>
+            <if condition="existingOrderList.size() &lt; 1"><return error="true" public="true" type="danger" message="No order found for user."/></if>
+            <if condition="existingOrderList.size() &gt; 1"><message type="warning">Multiple open orders or parts found for user. This should not happen.</message></if>
 
+            <set field="orderHeaderAndPart" from="existingOrderList.getFirst()"/>
+            <set field="orderId" from="orderHeaderAndPart.orderId"/>
+            <!-- TODO: Check if payment already exists? -->
+            <entity-find entity-name="mantle.account.payment.Payment" list="existingPaymentList" limit="1">
+                <econdition field-name="orderId" value="orderId"/>
+                <econdition field-name="orderPartSeqId" value="orderHeaderAndPart.orderPartSeqId"/>
+                <select-field field-name="paymentId"/>
+                <order-by field-name="-paymentDate"/></entity-find>
+            <if condition="existingPaymentList.size() &gt; 0"><then>
+                <set field="payment" from="existingPaymentList.getFirst()"/>
+                <set field="paymentId" from="payment.paymentId"/>
+            </then><else>
+                <service-call name="mantle.order.OrderServices.add#OrderPartPayment" in-map="[orderId:orderHeaderAndPart.orderId,
+                    orderPartSeqId:orderHeaderAndPart.orderPartSeqId,settlementTermId:'Immediate']" out-map="context"/>
+                <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment" auto-field-map="[paymentId:paymentId]"/>
+            </else></if>
+
+            <!-- convert unappliedTotal to cents -->
+            <set field="unappliedTotal" from="(payment.unappliedTotal * 100).toInteger()" type="Integer"/>
+            <set field="currencyUomId" from="payment.amountUomId"/>
 
             <!-- System steps -->
             <set field="instancePurpose" from="System.getProperty('instance_purpose')"/>
@@ -55,6 +72,7 @@ along with this software (see the LICENSE.md file). If not, see
                 customerResponseMap = (Map) customerRestResponse.jsonObject()
 //                ec.logger.warn("customerResponseMap: ${customerResponseMap}")
                 if (customerRestResponse.statusCode < 200 || customerRestResponse.statusCode >= 300) {
+                    ec.logger.warn("Got status code ${customerRestResponse.statusCode} from Stripe on a create customers request")
                     ec.message.addPublic("Could not create Customer", "warning")
                     return
                 }
@@ -106,7 +124,7 @@ along with this software (see the LICENSE.md file). If not, see
                 org.moqui.util.RestClient paymentIntentRestClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
                         .basicAuth(stripeRemote.privateKey,"")
                         .addBodyParameter("customer", (String) party.externalId)
-                        .addBodyParameter("amount", (String) grandTotal)
+                        .addBodyParameter("amount", (String) unappliedTotal)
                         .addBodyParameter("currency", (String) currencyUomId)
 //                        .addBodyParameter("setup_future_usage", (String) "off_session")
                 if (paymentMethodId != null) {
@@ -121,9 +139,12 @@ along with this software (see the LICENSE.md file). If not, see
                 paymentIntentResponseMap = (Map) paymentIntentRestResponse.jsonObject()
                 // ec.logger.warn("paymentIntentResponseMap: ${paymentIntentResponseMap}")
                 if (paymentIntentRestResponse.statusCode < 200 || paymentIntentRestResponse.statusCode >= 300) {
+                    ec.logger.warn("Got status code ${paymentIntentRestResponse.statusCode} from Stripe on a create payment_intents request")
                     ec.message.addPublic("Could not create Payment", "warning")
                 }
                 ]]></script>
+
+            <service-call name="update#mantle.account.payment.Payment" in-map="[paymentId:payment.paymentId, paymentRefNum:paymentIntentResponseMap?.id]"/>
 
             <set field="clientSecret" from="paymentIntentResponseMap.client_secret"/>
 

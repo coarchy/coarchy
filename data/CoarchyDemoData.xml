@@ -18,9 +18,14 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- Create a fromAddress for any email that you want to test -->
     <moqui.basic.email.EmailTemplate emailTemplateId="PASSWORD_RESET" fromAddress="test@localhost"/>
 
+    <!-- Stripe data -->
+    <moqui.service.message.SystemMessageRemote systemMessageRemoteId="DemoStripe" description="Strip Demo"
+            authHeaderName="Stripe-Signature" messageAuthEnumId="SmatHmacSha256Timestamp"
+            publicKey="${Put public key here}" privateKey="${Put private key here}"/>
+    <moqui.service.message.SystemMessageType systemMessageTypeId="StripeWebhookEvent" description="Stripe Webhook Event"/>
+
     <!-- Demo data -->
     <parties pseudoId="c100051" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100051"/>
-    <parties pseudoId="c100102" ownerPartyId="c100051" partyTypeEnumId="PtyOrganization" disabled="N" partyId="c100102" visibilityEnumId="PvPublic"/>
     <parties pseudoId="c100104" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100104"/>
     <parties pseudoId="c100167" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100167"/>
     <parties pseudoId="c100169" ownerPartyId="c100167" partyTypeEnumId="PtyOrganization" disabled="N" partyId="c100169" visibilityEnumId="PvOrganization"/>
@@ -32,11 +37,10 @@ along with this software (see the LICENSE.md file). If not, see
     <parties pseudoId="c100612" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100612"/>
     <parties pseudoId="c100613" ownerPartyId="c100612" partyTypeEnumId="PtyOrganization" disabled="N" partyId="c100613" visibilityEnumId="PvOrganization"/>
     <parties pseudoId="c100614" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100614"/>
-    <mantle.party.Organization organizationName="Coarchy" partyId="c100102"/>
     <mantle.party.Organization organizationName="John" partyId="c100169"/>
     <mantle.party.Organization organizationName="HH" partyId="c100511"/>
     <mantle.party.Organization organizationName="Resist Management" partyId="c100613"/>
-    <mantle.party.PartyRelationship fromPartyId="c100051" toRoleTypeId="OrgInternal" fromDate="1691687280000" partyRelationshipId="c100000" relationshipTypeEnumId="PrtMember" toPartyId="c100102"/>
+    <mantle.party.PartyRelationship fromPartyId="c100051" toRoleTypeId="OrgInternal" fromDate="1691687280000" partyRelationshipId="c100000" relationshipTypeEnumId="PrtMember" toPartyId="coarchy"/>
     <mantle.party.PartyRelationship fromPartyId="c100167" toRoleTypeId="OrgInternal" partyRelationshipId="c100051" relationshipTypeEnumId="PrtMember" toPartyId="c100169"/>
     <mantle.party.PartyRelationship fromPartyId="c100510" toRoleTypeId="OrgInternal" partyRelationshipId="c100102" relationshipTypeEnumId="PrtMember" toPartyId="c100511"/>
     <mantle.party.PartyRelationship fromPartyId="c100612" toRoleTypeId="OrgInternal" partyRelationshipId="c100153" relationshipTypeEnumId="PrtMember" toPartyId="c100613"/>
