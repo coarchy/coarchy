@@ -154,29 +154,35 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="handle" noun="Webhook" authenticate="anonymous-all">
+    <service verb="consume" noun="StripeWebhookEvent" authenticate="anonymous-all">
+        <in-parameters>
+            <parameter name="systemMessageId" required="true"/>
+        </in-parameters>
         <actions>
-            <log level="warn" message="handle#Webhook ec.web.request.getHeader('Stripe-Signature'): ${ec.web.request.getHeader('Stripe-Signature')}"/>
-            <set field="headerStripeSignature" from="ec.web.request.getHeader('Stripe-Signature')"/>
-            <set field="stripeSignatureList" from="headerStripeSignature.split(',')"/>
-            <set field="t" from="null"/>
-            <set field="v1" from="null"/>
-            <iterate list="stripeSignatureList" entry="stripeSignature">
-                <set field="key" from="stripeSignature.split('=')[0]"/>
-                <set field="value" from="stripeSignature.split('=')[0]"/>
-                <if condition="key == 't'"><then>
-                    <set field="t" from="value"/>
-                </then><else-if condition="key == 'v1'">
-                    <set field="v1" from="value"/>
-                </else-if></if>
-            </iterate>
+            <entity-find-one entity-name="moqui.service.message.SystemMessage" value-field="systemMessage" auto-field-map="[systemMessageId:systemMessageId]" for-update="true"/>
 
-            <set field="signed_payload" from="t+'.'+ec.web.getRequestBodyText()"/>
+            <set field="messageObject" from="ec.elastic.jsonToObject(systemMessage.messageText)"/>
 
+            <if condition="messageObject.object == 'event' &amp;&amp; messageObject.data.object.object == 'payment_intent'">
+                <entity-find entity-name="mantle.account.payment.Payment" list="paymentList">
+                    <econdition field-name="paymentRefNum" value="messageObject.data.object.id"/>
+                </entity-find>
+                <if condition="paymentList.size() == 0">
+                    <set field="systemMessage.statusId" value="SmsgRejected"/>
+                    <entity-update value-field="systemMessage"/>
+                    <return message="No payment found for paymentRefNum ${messageObject.data.object.id}." error="true" type="danger"/>
+                </if>
+                <if condition="paymentList.size() &gt; 1"><message type="warning">Multiple payments found for paymentRefNum ${messageObject.data.object.id}. This should not happen.</message></if>
 
-<!--            <log level="warn" message="handle#Webhook ec.web.getRequestParameters(): ${ec.web.getRequestParameters()}"/>-->
+                <if condition="messageObject.data.type == 'payment_intent.succeeded'">
+                    <if condition="paymentList.size() == 1">
+                        <service-call name="update#mantle.account.payment.Payment" in-map="[paymentId:paymentList.getFirst(), statusId:'PAYMENT_RECEIVED']"/>
+                    </if>
+                </if>
 
-<!--            <log level="warn" message="handle#Webhook context.toString(): ${context.toString()}"/>-->
+            </if>
+
+            <log level="warn" message="handle#Webhook messageObject.toString() ${messageObject.toString()}}"/>
 
         </actions>
     </service>
