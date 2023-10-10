@@ -22,7 +22,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="2">
                 <econdition field-name="statusId" value="OrderOpen"/>
                 <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
-                <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId"/>
+                <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId,productStoreId"/>
                 <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
             <if condition="existingOrderList.size() &lt; 1"><return error="true" public="true" type="danger" message="No order found for user."/></if>
             <if condition="existingOrderList.size() &gt; 1"><message type="warning">Multiple open orders or parts found for user. This should not happen.</message></if>
@@ -31,7 +31,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="orderId" from="orderHeaderAndPart.orderId"/>
             <!-- TODO: Check if payment already exists? -->
             <entity-find entity-name="mantle.account.payment.Payment" list="existingPaymentList" limit="1">
-                <econdition field-name="orderId" value="orderId"/>
+                <econdition field-name="orderId"/>
                 <econdition field-name="orderPartSeqId" value="orderHeaderAndPart.orderPartSeqId"/>
                 <select-field field-name="paymentId"/>
                 <order-by field-name="-paymentDate"/></entity-find>
@@ -39,8 +39,16 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="payment" from="existingPaymentList.getFirst()"/>
                 <set field="paymentId" from="payment.paymentId"/>
             </then><else>
+                <entity-find entity-name="mantle.product.store.ProductStorePaymentGateway" list="productStorePaymentGatewayList" limit="1">
+                    <econdition field-name="productStoreId" from="orderHeaderAndPart.productStoreId"/>
+                    <econdition field-name="paymentInstrumentEnumId" value="PiStripe"/>
+                    <econdition field-name="paymentGatewayConfigId" operator="is-not-null"/>
+                    <select-field field-name="paymentGatewayConfigId"/><order-by field-name="-lastUpdatedStamp"/></entity-find>
+                <if condition="productStorePaymentGatewayList.size() == 0"><return error="true" public="true" type="danger" message="No payment gateway found for order."/></if>
+
                 <service-call name="mantle.order.OrderServices.add#OrderPartPayment" in-map="[orderId:orderHeaderAndPart.orderId,
-                    orderPartSeqId:orderHeaderAndPart.orderPartSeqId,settlementTermId:'Immediate']" out-map="context"/>
+                    orderPartSeqId:orderHeaderAndPart.orderPartSeqId,settlementTermId:'Immediate', paymentInstrumentEnumId:'PiStripe',
+                    paymentGatewayConfigId:productStorePaymentGatewayList.getFirst().paymentGatewayConfigId]" out-map="context"/>
                 <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment" auto-field-map="[paymentId:paymentId]"/>
             </else></if>
 
@@ -139,7 +147,7 @@ along with this software (see the LICENSE.md file). If not, see
                 paymentIntentResponseMap = (Map) paymentIntentRestResponse.jsonObject()
                 // ec.logger.warn("paymentIntentResponseMap: ${paymentIntentResponseMap}")
                 if (paymentIntentRestResponse.statusCode < 200 || paymentIntentRestResponse.statusCode >= 300) {
-                    ec.logger.warn("Got status code ${paymentIntentRestResponse.statusCode} from Stripe on a create payment_intents request")
+                    ec.logger.warn("Got status code ${paymentIntentRestResponse.statusCode} from Stripe on a create payment_intents request for the parameter '${paymentIntentResponseMap.error.param}' and message '${paymentIntentResponseMap.error.message}'")
                     ec.message.addPublic("Could not create Payment", "warning")
                 }
                 ]]></script>
@@ -148,8 +156,11 @@ along with this software (see the LICENSE.md file). If not, see
 
             <set field="clientSecret" from="paymentIntentResponseMap.client_secret"/>
 
-            <!-- TODO: Handle https://stripe.com/docs/payments/quickstart#use-webhook -->
-<!--            <log level="warn" message="create#PaymentIntent context.toString(): ${context.toString()}"/>-->
+            <if condition="paymentIntentResponseMap?.id &amp;&amp; paymentIntentResponseMap.client_secret">
+                <service-call name="mantle.order.OrderServices.place#Order" in-map="[orderId:orderId]"/>
+            </if>
+
+            <!--            <log level="warn" message="create#PaymentIntent context.toString(): ${context.toString()}"/>-->
 
         </actions>
     </service>
@@ -161,12 +172,24 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <entity-find-one entity-name="moqui.service.message.SystemMessage" value-field="systemMessage" auto-field-map="[systemMessageId:systemMessageId]" for-update="true"/>
 
+            <entity-find entity-name="mantle.account.method.PaymentGatewayConfig" list="paymentGatewayConfigList">
+                <econdition field-name="systemMessageRemoteId" from="systemMessage.systemMessageRemoteId"/>
+                <econdition field-name="paymentGatewayTypeEnumId" value="PgtStripe"/>
+                <order-by field-name="-lastUpdatedStamp"/>
+            </entity-find>
+            <set field="paymentGatewayConfig" from="paymentGatewayConfigList.getFirst()"/>
+            <set field="paymentGatewayConfigId" from="paymentGatewayConfig.paymentGatewayConfigId"/>
+
             <set field="messageObject" from="ec.elastic.jsonToObject(systemMessage.messageText)"/>
+
+<!--            <log level="warn" message="handle#Webhook messageObject.toString() ${messageObject.toString()}}"/>-->
 
             <if condition="messageObject.object == 'event' &amp;&amp; messageObject.data.object.object == 'payment_intent'">
                 <entity-find entity-name="mantle.account.payment.Payment" list="paymentList">
-                    <econdition field-name="paymentRefNum" value="messageObject.data.object.id"/>
+                    <econdition field-name="paymentRefNum" from="messageObject.data.object.id"/>
                 </entity-find>
+<!--                <log level="warn" message="handle#Webhook paymentList.toString() ${paymentList.toString()}}"/>-->
+
                 <if condition="paymentList.size() == 0">
                     <set field="systemMessage.statusId" value="SmsgRejected"/>
                     <entity-update value-field="systemMessage"/>
@@ -174,16 +197,77 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
                 <if condition="paymentList.size() &gt; 1"><message type="warning">Multiple payments found for paymentRefNum ${messageObject.data.object.id}. This should not happen.</message></if>
 
-                <if condition="messageObject.data.type == 'payment_intent.succeeded'">
-                    <if condition="paymentList.size() == 1">
-                        <service-call name="update#mantle.account.payment.Payment" in-map="[paymentId:paymentList.getFirst(), statusId:'PAYMENT_RECEIVED']"/>
-                    </if>
+<!--                <log level="warn" message="handle#Webhook messageObject.type ${messageObject.type}}"/>-->
+                <set field="payment" from="paymentList.getFirst()"/>
+                <if condition="messageObject.type == 'payment_intent.processing'">
+
                 </if>
+                <if condition="messageObject.type == 'payment_intent.succeeded'">
+<!--                    <log level="warn" message="handle#Webhook messageObject.data.object.amount ${(messageObject.data.object.amount as BigDecimal)} : ${(messageObject.data.object.amount as BigDecimal).getClass()}}"/>-->
 
+                    <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context" in-map="[
+                          paymentGatewayConfigId:paymentGatewayConfigId,
+                          paymentOperationEnumId:'PgoAuthAndCapture',
+                          paymentId:payment.paymentId,
+                          paymentMethodId:payment.paymentMethodId,
+                          amount: (messageObject.data.object.amount as BigDecimal) / 100,
+                          amountUomId:messageObject.data.object.currency.toUpperCase(),
+                          finAccountId:payment.finAccountId,
+                          transactionDate:new Timestamp(messageObject.data.object.created * 1000L),
+                          referenceNum:messageObject.id,
+                          altReference:messageObject.request.idempotency_key,
+                          subReference:messageObject.data.object.id,
+                          resultSuccess:'Y',
+                          resultDeclined:'N',
+                          resultError:'N',
+                          resultBadExpire:'N',
+                          resultBadCardNumber:'N']"/>
+
+                    <service-call name="mantle.account.PaymentServices.authorize#OrderPayments" out-map="context" in-map="[
+                        orderId:payment.orderId]"/>
+                </if>
+                <if condition="messageObject.type == 'payment_intent.payment_failed'">
+                    <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context" in-map="[
+                          paymentGatewayConfigId:paymentGatewayConfigId,
+                          paymentOperationEnumId:'PgoAuthAndCapture',
+                          paymentId:payment.paymentId,
+                          paymentMethodId:payment.paymentMethodId,
+                          amount: (messageObject.data.object.amount as BigDecimal) / 100,
+                          amountUomId:messageObject.data.object.currency.toUpperCase(),
+                          finAccountId:payment.finAccountId,
+                          transactionDate:new Timestamp(messageObject.data.object.created * 1000L),
+                          referenceNum:messageObject.id,
+                          altReference:messageObject.request.idempotency_key,
+                          subReference:messageObject.data.object.id,
+                          resultSuccess:'N',
+                          resultDeclined:'Y',
+                          resultError:'N',
+                          resultBadExpire:'N',
+                          resultBadCardNumber:'N']"/>
+
+                    <service-call name="mantle.account.PaymentServices.authorize#OrderPayments" out-map="context" in-map="[
+                        orderId:payment.orderId]"/>
+                </if>
             </if>
+        </actions>
+    </service>
 
-            <log level="warn" message="handle#Webhook messageObject.toString() ${messageObject.toString()}}"/>
+    <service verb="authorize" noun="Payment">
+        <implements service="mantle.account.PaymentServices.authorize#Payment"/>
+        <actions>
+            <entity-find entity-name="mantle.account.method.PaymentGatewayResponse" list="paymentGatewayResponseList">
+                <econdition field-name="paymentId"/>
+                <econdition field-name="paymentGatewayConfigId"/>
+                <econdition field-name="paymentOperationEnumId" value="PgoAuthAndCapture"/>
+                <order-by field-name="-transactionDate"/></entity-find>
 
+            <if condition="paymentGatewayResponseList.size() == 0">
+                <return error="true" type="danger" message="No payment gateway response found for payment."/>
+            </if>
+            <if condition="paymentGatewayResponseList.size() &gt; 1">
+                <log level="warn" message="Multiple payment gateway responses found for payment. This should not happen."/>
+            </if>
+            <set field="paymentGatewayResponseId" from="paymentGatewayResponseList.getFirst().paymentGatewayResponseId"/>
         </actions>
     </service>
 </services>
