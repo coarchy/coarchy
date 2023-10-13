@@ -51,6 +51,7 @@ along with this software (see the LICENSE.md file). If not, see
             <row-col md="2"/>
             <row-col md="8">
                 <label text="Order #${orderId}, placed ${ec.l10n.format(existingOrderList.getFirst().placedDate ?: existingOrderList.getFirst().entryDate, 'd MMM yyyy')}" type="h4"/>
+                <link url="../OrganizationMonthCredits" text="Buy Again" btn-type="success"/>
 
             </row-col>
             <row-col md="2"/>

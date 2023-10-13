@@ -24,33 +24,36 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
                 <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId,productStoreId"/>
                 <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
-            <if condition="existingOrderList.size() &lt; 1"><return error="true" public="true" type="danger" message="No order found for user."/></if>
+            <if condition="existingOrderList.size() == 0"><return error="true" public="true" type="danger" message="No order found for user."/></if>
             <if condition="existingOrderList.size() &gt; 1"><message type="warning">Multiple open orders or parts found for user. This should not happen.</message></if>
 
             <set field="orderHeaderAndPart" from="existingOrderList.getFirst()"/>
             <set field="orderId" from="orderHeaderAndPart.orderId"/>
-            <!-- TODO: Check if payment already exists? -->
-            <entity-find entity-name="mantle.account.payment.Payment" list="existingPaymentList" limit="1">
-                <econdition field-name="orderId"/>
-                <econdition field-name="orderPartSeqId" value="orderHeaderAndPart.orderPartSeqId"/>
-                <select-field field-name="paymentId"/>
-                <order-by field-name="-paymentDate"/></entity-find>
-            <if condition="existingPaymentList.size() &gt; 0"><then>
-                <set field="payment" from="existingPaymentList.getFirst()"/>
-                <set field="paymentId" from="payment.paymentId"/>
-            </then><else>
-                <entity-find entity-name="mantle.product.store.ProductStorePaymentGateway" list="productStorePaymentGatewayList" limit="1">
-                    <econdition field-name="productStoreId" from="orderHeaderAndPart.productStoreId"/>
-                    <econdition field-name="paymentInstrumentEnumId" value="PiStripe"/>
-                    <econdition field-name="paymentGatewayConfigId" operator="is-not-null"/>
-                    <select-field field-name="paymentGatewayConfigId"/><order-by field-name="-lastUpdatedStamp"/></entity-find>
-                <if condition="productStorePaymentGatewayList.size() == 0"><return error="true" public="true" type="danger" message="No payment gateway found for order."/></if>
 
-                <service-call name="mantle.order.OrderServices.add#OrderPartPayment" in-map="[orderId:orderHeaderAndPart.orderId,
-                    orderPartSeqId:orderHeaderAndPart.orderPartSeqId,settlementTermId:'Immediate', paymentInstrumentEnumId:'PiStripe',
-                    paymentGatewayConfigId:productStorePaymentGatewayList.getFirst().paymentGatewayConfigId]" out-map="context"/>
-                <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment" auto-field-map="[paymentId:paymentId]"/>
-            </else></if>
+            <entity-find entity-name="mantle.product.store.ProductStorePaymentGateway" list="productStorePaymentGatewayList" limit="1">
+                <econdition field-name="productStoreId" from="orderHeaderAndPart.productStoreId"/>
+                <econdition field-name="paymentInstrumentEnumId" value="PiStripe"/>
+                <econdition field-name="paymentGatewayConfigId" operator="is-not-null"/>
+                <select-field field-name="paymentGatewayConfigId"/><order-by field-name="-lastUpdatedStamp"/></entity-find>
+            <if condition="productStorePaymentGatewayList.size() == 0"><return error="true" public="true" type="danger" message="No payment gateway found for order."/></if>
+
+            <!-- TODO: Check if payment already exists? -->
+            <entity-find entity-name="mantle.account.payment.Payment" list="existingPaymentList">
+                <econdition field-name="orderId"/>
+                <econdition field-name="orderPartSeqId" from="orderHeaderAndPart.orderPartSeqId"/>
+                <econdition field-name="paymentGatewayConfigId" from="productStorePaymentGatewayList.getFirst().paymentGatewayConfigId"/>
+                <select-field field-name="paymentId,amountUomId,unappliedTotal"/>
+                <order-by field-name="-paymentDate"/></entity-find>
+<!--            <log level="warn" message="create#PaymentIntent existingPaymentList.toString(): ${existingPaymentList.toString()}"/>-->
+            <iterate list="existingPaymentList" entry="existingPayment">
+                <service-call name="mantle.account.PaymentServices.cancel#PaymentAndInvoices" in-map="[paymentId:existingPayment.paymentId]"/>
+            </iterate>
+
+
+            <service-call name="mantle.order.OrderServices.add#OrderPartPayment" in-map="[orderId:orderHeaderAndPart.orderId,
+                orderPartSeqId:orderHeaderAndPart.orderPartSeqId,settlementTermId:'Immediate', paymentInstrumentEnumId:'PiStripe',
+                paymentGatewayConfigId:productStorePaymentGatewayList.getFirst().paymentGatewayConfigId]" out-map="context"/>
+            <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment" auto-field-map="[paymentId:paymentId]"/>
 
             <!-- convert unappliedTotal to cents -->
             <set field="unappliedTotal" from="(payment.unappliedTotal * 100).toInteger()" type="Integer"/>
@@ -128,16 +131,22 @@ along with this software (see the LICENSE.md file). If not, see
                     ]]></script>
             </if>-->
 
+            <!-- TODO: Handle if payments already exists so that it will take the previous payment payment_intent id, and client_secret and update stripe with the new payment amount -->
+
+<!--            <set field="return_url" from="(!'production'.equals(System.getProperty('instance_purpose')) ?-->
+<!--                'http://localhost:8080' : 'https://coarchy.com') + '/settings/Order'"/>-->
             <script><![CDATA[
                 org.moqui.util.RestClient paymentIntentRestClient = ec.service.rest().method(org.moqui.util.RestClient.POST)
                         .basicAuth(stripeRemote.privateKey,"")
                         .addBodyParameter("customer", (String) party.externalId)
                         .addBodyParameter("amount", (String) unappliedTotal)
                         .addBodyParameter("currency", (String) currencyUomId)
-//                        .addBodyParameter("setup_future_usage", (String) "off_session")
+//                        .addBodyParameter("setup_future_usage", "off_session")
+//                        .addBodyParameter("confirm", (String) "true")
+//                        .addBodyParameter("return_url", (String) return_url)
                 if (paymentMethodId != null) {
 //                    ec.logger.warn("Adding paymentMethodId: ${paymentMethodId}")
-                    paymentIntentRestClient.addBodyParameter("payment_method", (String) paymentMethodId)
+//                    paymentIntentRestClient.addBodyParameter("payment_method", (String) paymentMethodId)
                 }
                 def paymentIntentUriBuilder = paymentIntentRestClient.uri().protocol("https").host("api.stripe.com").port(443)
                     .path("/v1/payment_intents")
@@ -145,7 +154,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 org.moqui.util.RestClient.RestResponse paymentIntentRestResponse = paymentIntentRestClient.call()
                 paymentIntentResponseMap = (Map) paymentIntentRestResponse.jsonObject()
-                // ec.logger.warn("paymentIntentResponseMap: ${paymentIntentResponseMap}")
+//                 ec.logger.warn("paymentIntentResponseMap: ${paymentIntentResponseMap}")
                 if (paymentIntentRestResponse.statusCode < 200 || paymentIntentRestResponse.statusCode >= 300) {
                     ec.logger.warn("Got status code ${paymentIntentRestResponse.statusCode} from Stripe on a create payment_intents request for the parameter '${paymentIntentResponseMap.error.param}' and message '${paymentIntentResponseMap.error.message}'")
                     ec.message.addPublic("Could not create Payment", "warning")
@@ -156,12 +165,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <set field="clientSecret" from="paymentIntentResponseMap.client_secret"/>
 
-            <if condition="paymentIntentResponseMap?.id &amp;&amp; paymentIntentResponseMap.client_secret">
-                <service-call name="mantle.order.OrderServices.place#Order" in-map="[orderId:orderId]"/>
-            </if>
-
             <!--            <log level="warn" message="create#PaymentIntent context.toString(): ${context.toString()}"/>-->
-
         </actions>
     </service>
 
@@ -199,8 +203,55 @@ along with this software (see the LICENSE.md file). If not, see
 
 <!--                <log level="warn" message="handle#Webhook messageObject.type ${messageObject.type}}"/>-->
                 <set field="payment" from="paymentList.getFirst()"/>
-                <if condition="messageObject.type == 'payment_intent.processing'">
+                <if condition="!payment.paymentMethodId">
+                    <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethodList" for-update="true">
+                        <econdition field-name="ownerPartyId" from="payment.fromPartyId"/>
+                        <econdition field-name="gatewayCimId" from="messageObject.data.object.payment_method"/>
+                        <econdition field-name="paymentGatewayConfigId"/>
+                        <date-filter/></entity-find>
+                    <if condition="paymentMethodList.size() == 0"><then>
+                        <service-call name="create#mantle.account.method.PaymentMethod" out-map="context" in-map="[
+                            ownerPartyId:payment.fromPartyId,fromDate:ec.user.nowTimestamp,
+                            currencyUomId:messageObject.data.object.currency.toUpperCase(),
+                            gatewayCimId:messageObject.data.object.payment_method,
+                            paymentGatewayConfigId:paymentGatewayConfigId]"/>
+                        <set field="payment.paymentMethodId" from="paymentMethodId"/>
+                    </then><else>
+                        <if condition="paymentMethodList.size() &gt; 1">
+                            <message type="warning">Multiple payment methods found for ownerPartyId ${payment.fromPartyId}, paymentGatewayConfigId ${paymentGatewayConfigId}, and gatewayCimId ${messageObject.data.object.payment_method}.</message></if>
+                        <service-call name="update#mantle.account.method.PaymentMethod" in-map="[
+                            paymentMethodId:paymentMethodList.getFirst().paymentMethodId,
+                            ownerPartyId:payment.fromPartyId,fromDate:ec.user.nowTimestamp,
+                            currencyUomId:messageObject.data.object.currency.toUpperCase(),
+                            gatewayCimId:messageObject.data.object.payment_method,
+                            paymentGatewayConfigId:paymentGatewayConfigId]"/>
+                        <set field="payment.paymentMethodId" from="paymentMethodList.getFirst().paymentMethodId"/>
+                    </else></if>
+<!--                    <log level="warn" message="handle#Webhook payment.paymentMethodId ${payment.paymentMethodId}"/>-->
+                    <service-call name="update#mantle.account.payment.Payment" in-map="[paymentId:payment.paymentId,
+                        paymentMethodId:payment.paymentMethodId]"/>
+                </if>
+<!--                <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment" auto-field-map="[paymentId:payment.paymentId]"/>-->
+<!--                <log level="warn" message="handle#Webhook payment.toString() ${payment.toString()}}"/>-->
 
+                <if condition="messageObject.type == 'payment_intent.processing'">
+                    <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context" in-map="[
+                          paymentGatewayConfigId:paymentGatewayConfigId,
+                          paymentOperationEnumId:'PgoStoreCim',
+                          paymentId:payment.paymentId,
+                          paymentMethodId:payment.paymentMethodId,
+                          amount: (messageObject.data.object.amount as BigDecimal) / 100,
+                          amountUomId:messageObject.data.object.currency.toUpperCase(),
+                          finAccountId:payment.finAccountId,
+                          transactionDate:new Timestamp(messageObject.data.object.created * 1000L),
+                          referenceNum:messageObject.data.object.id,
+                          altReference:messageObject.request.idempotency_key,
+                          subReference:messageObject.id,
+                          resultSuccess:'N',
+                          resultDeclined:'N',
+                          resultError:'N',
+                          resultBadExpire:'N',
+                          resultBadCardNumber:'N']"/>
                 </if>
                 <if condition="messageObject.type == 'payment_intent.succeeded'">
 <!--                    <log level="warn" message="handle#Webhook messageObject.data.object.amount ${(messageObject.data.object.amount as BigDecimal)} : ${(messageObject.data.object.amount as BigDecimal).getClass()}}"/>-->
@@ -214,45 +265,44 @@ along with this software (see the LICENSE.md file). If not, see
                           amountUomId:messageObject.data.object.currency.toUpperCase(),
                           finAccountId:payment.finAccountId,
                           transactionDate:new Timestamp(messageObject.data.object.created * 1000L),
-                          referenceNum:messageObject.id,
+                          referenceNum:messageObject.data.object.id,
                           altReference:messageObject.request.idempotency_key,
-                          subReference:messageObject.data.object.id,
+                          subReference:messageObject.id,
                           resultSuccess:'Y',
                           resultDeclined:'N',
                           resultError:'N',
                           resultBadExpire:'N',
                           resultBadCardNumber:'N']"/>
 
-                    <service-call name="mantle.account.PaymentServices.authorize#OrderPayments" out-map="context" in-map="[
-                        orderId:payment.orderId]"/>
+                    <service-call name="mantle.order.OrderServices.place#Order" in-map="[orderId:payment.orderId]"/>
                 </if>
                 <if condition="messageObject.type == 'payment_intent.payment_failed'">
                     <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context" in-map="[
                           paymentGatewayConfigId:paymentGatewayConfigId,
-                          paymentOperationEnumId:'PgoAuthAndCapture',
+                          paymentOperationEnumId:'PgoRelease',
                           paymentId:payment.paymentId,
                           paymentMethodId:payment.paymentMethodId,
                           amount: (messageObject.data.object.amount as BigDecimal) / 100,
                           amountUomId:messageObject.data.object.currency.toUpperCase(),
                           finAccountId:payment.finAccountId,
                           transactionDate:new Timestamp(messageObject.data.object.created * 1000L),
-                          referenceNum:messageObject.id,
+                          referenceNum:messageObject.data.object.id,
                           altReference:messageObject.request.idempotency_key,
-                          subReference:messageObject.data.object.id,
+                          subReference:messageObject.id,
                           resultSuccess:'N',
                           resultDeclined:'Y',
                           resultError:'N',
                           resultBadExpire:'N',
                           resultBadCardNumber:'N']"/>
 
-                    <service-call name="mantle.account.PaymentServices.authorize#OrderPayments" out-map="context" in-map="[
-                        orderId:payment.orderId]"/>
+<!--                    <service-call name="mantle.account.PaymentServices.authorize#OrderPayments" out-map="context" in-map="[-->
+<!--                        orderId:payment.orderId]"/>-->
                 </if>
             </if>
         </actions>
     </service>
 
-    <service verb="authorize" noun="Payment">
+    <service verb="authorizeAndCapture" noun="Payment">
         <implements service="mantle.account.PaymentServices.authorize#Payment"/>
         <actions>
             <entity-find entity-name="mantle.account.method.PaymentGatewayResponse" list="paymentGatewayResponseList">
@@ -265,8 +315,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <return error="true" type="danger" message="No payment gateway response found for payment."/>
             </if>
             <if condition="paymentGatewayResponseList.size() &gt; 1">
-                <log level="warn" message="Multiple payment gateway responses found for payment. This should not happen."/>
+                <log level="warn" message="Multiple payment gateway responses found for payment."/>
             </if>
+
             <set field="paymentGatewayResponseId" from="paymentGatewayResponseList.getFirst().paymentGatewayResponseId"/>
         </actions>
     </service>
