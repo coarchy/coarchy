@@ -37,18 +37,23 @@ along with this software (see the LICENSE.md file). If not, see
                 <select-field field-name="paymentGatewayConfigId"/><order-by field-name="-lastUpdatedStamp"/></entity-find>
             <if condition="productStorePaymentGatewayList.size() == 0"><return error="true" public="true" type="danger" message="No payment gateway found for order."/></if>
 
-            <!-- TODO: Check if payment already exists? -->
             <entity-find entity-name="mantle.account.payment.Payment" list="existingPaymentList">
                 <econdition field-name="orderId"/>
                 <econdition field-name="orderPartSeqId" from="orderHeaderAndPart.orderPartSeqId"/>
                 <econdition field-name="paymentGatewayConfigId" from="productStorePaymentGatewayList.getFirst().paymentGatewayConfigId"/>
-                <select-field field-name="paymentId,amountUomId,unappliedTotal"/>
+                <select-field field-name="paymentId,amountUomId,unappliedTotal,statusId"/>
                 <order-by field-name="-paymentDate"/></entity-find>
 <!--            <log level="warn" message="create#PaymentIntent existingPaymentList.toString(): ${existingPaymentList.toString()}"/>-->
             <iterate list="existingPaymentList" entry="existingPayment">
-                <service-call name="mantle.account.PaymentServices.cancel#PaymentAndInvoices" in-map="[paymentId:existingPayment.paymentId]"/>
+                <if condition="['PmntProposed','PmntPromised'].contains(existingPayment.statusId)">
+                    <then>
+                        <service-call name="mantle.account.PaymentServices.cancel#PaymentAndInvoices" in-map="[paymentId:existingPayment.paymentId]"/>
+                    </then>
+                    <else-if condition="['PmntAuthorized','PmntDelivered'].contains(existingPayment.statusId)">
+                        <service-call name="mantle.account.PaymentServices.void#Payment" in-map="[paymentId:existingPayment.paymentId]"/>
+                    </else-if>
+                </if>
             </iterate>
-
 
             <service-call name="mantle.order.OrderServices.add#OrderPartPayment" in-map="[orderId:orderHeaderAndPart.orderId,
                 orderPartSeqId:orderHeaderAndPart.orderPartSeqId,settlementTermId:'Immediate', paymentInstrumentEnumId:'PiStripe',

@@ -772,4 +772,43 @@ along with this software (see the LICENSE.md file). If not, see
                 productStoreId:productStoreProductList.getFirst()?.productStoreId,addToQuantity:false]" out-map="context"/>
         </actions>
     </service>
+
+    <service verb="deposit" noun="OrderToFinancialAccount">
+        <in-parameters>
+            <parameter name="orderId" required="true"/>
+            <auto-parameters entity-name="mantle.order.OrderHeader" include="nonpk"/>
+        </in-parameters>
+        <actions>
+<!--            <log level="warn" message="deposit#OrderToFinancialAccount context.toString() ${context.toString()}"/>-->
+
+            <entity-find entity-name="mantle.order.OrderItemAndPart" list="orderItemPartList">
+                <econdition field-name="orderId"/>
+                <econdition field-name="itemTypeEnumId" value="ItemProduct"/>
+                <econdition field-name="productId" value="c100000"/>
+                <order-by field-name="orderItemSeqId"/></entity-find>
+            <if condition="orderItemPartList.size() == 0"><return type="warning" message="No Organization-Month Items found for order"/></if>
+
+            <iterate list="orderItemPartList" entry="orderItemPart">
+                <!-- find financial accounts for the user who bought the order items or create financial account if not already exists -->
+                <service-call name="mantle.account.FinancialAccountServices.getOrCreate#FinancialAccount" in-map="[
+                        finAccountTypeId:'OrganizationMonthCredit',organizationPartyId:'coarchy',
+                        ownerPartyId:orderItemPart.customerPartyId,currencyUomId:'']" out-map="context"/>
+
+                <service-call name="mantle.account.FinancialAccountServices.deposit#FinancialAccount" in-map="[
+                        finAccountId:finAccountId,amount:orderItemPart.quantity,orderId:orderId,
+                        orderItemSeqId:orderItemPart.orderItemSeqId]"/>
+            </iterate>
+
+            <set field="partsAlreadyInvoiced" from="[]"/>
+            <iterate list="orderItemPartList" entry="orderItemPart">
+                <if condition="partsAlreadyInvoiced.contains(orderItemPart.orderPartSeqId)"><continue/></if>
+                <service-call name="mantle.account.InvoiceServices.create#EntireOrderPartInvoice" in-map="[orderId:orderId,
+                    orderPartSeqId:orderItemPart.orderPartSeqId]"/>
+                <set field="partsAlreadyInvoiced" from="partsAlreadyInvoiced + [orderItemPart.orderPartSeqId]"/>
+            </iterate>
+
+            <service-call name="mantle.order.OrderServices.complete#Order" in-map="[orderId:orderId]"/>
+
+        </actions>
+    </service>
 </services>

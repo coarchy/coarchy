@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Order" default-menu-index="40" menu-image="/ssstatic/images/Parties.png" default-menu-include="false">
+
+
+    <widgets>
+        <container-row>
+            <row-col md="2"/>
+            <row-col md="8">
+                <label text="Orders" type="h4"/>
+                <link url="../OrganizationMonthCredits" text="Buy Again" btn-type="success"/>
+
+                <form-list name="OrderItemPartForm" list="existingOrderList">
+                    <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList">
+                        <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
+                        <select-field field-name="orderId,placedDate,entryDate,orderPartSeqId,currencyUomId,grandTotal"/>
+                        <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
+
+                    <row-actions>
+                        <entity-find entity-name="mantle.order.OrderItem" list="orderItemList" limit="1">
+                            <econdition field-name="orderId"/>
+                            <econdition field-name="orderPartSeqId"/>
+                            <order-by field-name="orderItemSeqId"/></entity-find>
+                        <set field="orderItem" from="orderItemList.getFirst()"/>
+                        <entity-find-one entity-name="moqui.basic.StatusItem" value-field="status" auto-field-map="[statusId:statusId]" cache="true"/>
+
+<!--                        <log level="warn" message="OrderItemPartForm row-actions context.toString() ${context.toString()}"/>-->
+                    </row-actions>
+
+                    <field name="orderId"><default-field><display/></default-field></field>
+                    <field name="date"><default-field title="Placed Date"><label text="${ec.l10n.format(placedDate ?: entryDate, 'dd MMM yyyy hh:mm a')}"/></default-field></field>
+                    <field name="statusId"><default-field title="Status"><label text="${status.description}"/></default-field></field>
+                    <field name="quantity"><default-field title="Quantity"><label text="${ec.l10n.formatNumber((Number)orderItem.quantity,null,null)} ${orderItem.itemDescription}"/></default-field></field>
+                    <field name="total"><default-field title="Total"><label text="${ec.l10n.formatCurrency(grandTotal,currencyUomId,2)}"/></default-field></field>
+                </form-list>
+
+
+
+            </row-col>
+            <row-col md="2"/>
+        </container-row>
+    </widgets>
+</screen>

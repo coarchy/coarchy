@@ -21,11 +21,13 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
             <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId"/>
             <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
-        <if condition="existingOrderList.size() &lt; 1">
+        <if condition="existingOrderList.size() == 0">
             <message type="danger" public="true" error="true">No order found for user.</message>
             <script>sri.sendRedirectAndStopRender('/settings/OrganizationMonthCredits')</script>
+            <return/>
         </if>
-        <set field="orderId" from="existingOrderList.getFirst().orderId"/>
+        <set field="headerAndPart" from="existingOrderList.getFirst()"/>
+        <set field="orderId" from="headerAndPart.orderId"/>
     </always-actions>
 
 <!--    <transition name="buyOrganizationMonthCredits">-->
@@ -42,6 +44,7 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="selectedAmount" operator="is-null"/>
             <select-field field-name="orderItemSeqId,unitAmount,itemDescription,quantity"/>
             <order-by field-name="orderItemSeqId"/></entity-find>
+        <set field="orderItem" from="orderItemList.getFirst()"/>
 
         <!-- Should never happen, but if it does an error would happen so redirect them -->
         <if condition="orderItemList.size() &lt; 1">
@@ -56,8 +59,7 @@ along with this software (see the LICENSE.md file). If not, see
             <row-col md="6">
                 <label text="Checkout" type="h4" style="q-pb-sm"/>
 
-                <label text="Buying ${orderItemList.getFirst().quantity} ${orderItemList.getFirst().itemDescription} at ${existingOrderList.getFirst().currencyUomId=='USD'?'$':''}${orderItemList.getFirst().unitAmount} each for a total of ${existingOrderList.getFirst().currencyUomId=='USD'?'$':''}${existingOrderList.getFirst().grandTotal}" type="h6" style="q-pb-sm"/>
-
+                <label text="Buying ${ec.l10n.formatNumber((Number)orderItem.quantity,null,null)} ${orderItem.itemDescription} at ${ec.l10n.formatCurrency(orderItem.unitAmount,headerAndPart.currencyUomId,2)} each for a total of ${ec.l10n.formatCurrency(headerAndPart.grandTotal,headerAndPart.currencyUomId,2)}" type="h6" style="q-pb-sm"/>
 <!--                <form-single name="BuyOrganizationMonthCredits" transition="buyOrganizationMonthCredits">-->
 <!--                    <field name="description"><default-field><label text="Organization-Month Credits" type="h5"/></default-field></field>-->
 <!--                    <field name="quantity" from="orderItemList.getFirst().quantity"><default-field title="Organization-Month Quantity"><text-line/></default-field></field>-->
