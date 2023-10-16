@@ -803,7 +803,7 @@ along with this software (see the LICENSE.md file). If not, see
             <iterate list="orderItemPartList" entry="orderItemPart">
                 <if condition="partsAlreadyInvoiced.contains(orderItemPart.orderPartSeqId)"><continue/></if>
                 <service-call name="mantle.account.InvoiceServices.create#EntireOrderPartInvoice" in-map="[orderId:orderId,
-                    orderPartSeqId:orderItemPart.orderPartSeqId]"/>
+                    orderPartSeqId:orderItemPart.orderPartSeqId,statusId:'InvoiceFinalized']" out-map="context"/>
                 <set field="partsAlreadyInvoiced" from="partsAlreadyInvoiced + [orderItemPart.orderPartSeqId]"/>
             </iterate>
 
