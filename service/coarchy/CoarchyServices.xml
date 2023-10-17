@@ -772,7 +772,6 @@ along with this software (see the LICENSE.md file). If not, see
                 productStoreId:productStoreProductList.getFirst()?.productStoreId,addToQuantity:false]" out-map="context"/>
         </actions>
     </service>
-
     <service verb="deposit" noun="OrderToFinancialAccount">
         <in-parameters>
             <parameter name="orderId" required="true"/>
@@ -809,6 +808,43 @@ along with this software (see the LICENSE.md file). If not, see
 
             <service-call name="mantle.order.OrderServices.complete#Order" in-map="[orderId:orderId]"/>
 
+        </actions>
+    </service>
+
+    <service verb="activateOrDeactivate" noun="Organization">
+        <in-parameters>
+            <parameter name="organizationPartyId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="needsCredits" type="Boolean"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="mantle.party.Party" list="organizationPartyList">
+                <econdition field-name="partyId" from="organizationPartyId"/>
+                <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+            </entity-find>
+            <if condition="organizationPartyList.size() == 0"><return type="danger" message="Cannot activate organization you do not own"/></if>
+
+            <entity-find entity-name="mantle.party.PartyActivation" list="partyActivationList">
+                <econdition field-name="partyId" from="organizationPartyId"/>
+                <date-filter/></entity-find>
+
+            <entity-find entity-name="mantle.account.financial.FinancialAccount" list="finAccountlist">
+                <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
+                <econdition field-name="organizationPartyId" value="coarchy"/>
+                <econdition field-name="statusId" value="FaActive"/>
+                <date-filter/>
+                <order-by field-name="-transactionDate"/></entity-find>
+            <set field="needsCredits" from="finAccountlist.size() == 0 || finAccountlist.sum{it.availableBalance} &lt; 1"/>
+            <if condition="needsCredits"><return type="warning" message="Organization needs at least 1 Organization-Month Credit to activate. Buy credits to get premium"/></if>
+
+            <if condition="partyActivationList.size() == 0"><then>
+                <service-call name="create#mantle.party.PartyActivation" in-map="[partyId:organizationPartyId,fromDate:ec.user.nowTimestamp]"/>
+            </then><else>
+                <service-call name="update#mantle.party.PartyActivation" in-map="[partyId:organizationPartyId,
+                    fromDate:partyActivationList.getFirst().fromDate,thruDate:ec.user.nowTimestamp]"/>
+            </else></if>
         </actions>
     </service>
 </services>

@@ -15,6 +15,8 @@ along with this software (see the LICENSE.md file). If not, see
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
 
+    <!-- Coarchy entities -->
+
     <!--
     Customer submits issue.
     Programmer reads issue.
@@ -224,6 +226,15 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="actorLastUpdatedStamp" entity-alias="ACAC" field="lastUpdatedStamp"/>
     </view-entity>
 
+    <!-- Settings entities -->
+    <entity entity-name="PartyActivation" package="mantle.party">
+        <field name="partyId" type="id" is-pk="true"/>
+        <field name="fromDate" type="date-time" is-pk="true"/>
+        <field name="thruDate" type="date-time"/>
+
+        <relationship type="one" title="Party" related="mantle.party.Party" short-alias="party">
+            <key-map field-name="partyId"/></relationship>
+    </entity>
 
     <!-- Extend entities -->
     <extend-entity entity-name="Party" package="mantle.party">

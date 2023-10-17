@@ -22,6 +22,7 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
             <econdition field-name="organizationPartyId" value="coarchy"/>
             <econdition field-name="statusId" value="FaActive"/>
+            <date-filter/>
             <order-by field-name="-transactionDate"/>
         </entity-find>
     </actions>

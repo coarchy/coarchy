@@ -21,7 +21,7 @@ along with this software (see the LICENSE.md file). If not, see
     <input type="hidden" id="confUsername" value="${ec.user.username!''}">
     <input type="hidden" id="confLocale" value="${ec.user.locale.toLanguageTag()}">
     <input type="hidden" id="confDarkMode" value="${ec.user.getPreference("QUASAR_DARK")!"false"}">
-    <input type="hidden" id="confLeftOpen" value="${ec.user.getPreference("QUASAR_LEFT_OPEN")!"false"}">
+    <input type="hidden" id="confLeftOpen" value="${ec.user.getPreference("QUASAR_LEFT_OPEN")!"true"}">
     <#assign navbarCompList = sri.getThemeValues("STRT_HEADER_NAVBAR_COMP")>
     <#list navbarCompList! as navbarCompUrl><input type="hidden" class="confNavPluginUrl" value="${navbarCompUrl}"></#list>
     <#assign accountCompList = sri.getThemeValues("STRT_HEADER_ACCOUNT_COMP")>
