@@ -13,18 +13,18 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Order" default-menu-index="40" menu-image="/ssstatic/images/Parties.png" default-menu-include="false">
-
+        default-menu-title="Order History" default-menu-index="60" menu-image="fa fa-history" menu-image-type="icon">
 
     <widgets>
         <container-row>
             <row-col md="2"/>
             <row-col md="8">
                 <label text="Orders" type="h4"/>
-                <link url="../OrganizationMonthCredits" text="Buy Again" btn-type="success"/>
+                <link url="../BuyPremium" text="Buy Again" btn-type="success"/>
 
-                <form-list name="OrderItemPartForm" list="existingOrderList">
+                <form-list name="OrderItemPartForm" list="existingOrderList" header-dialog="true" show-csv-button="false">
                     <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList">
+                        <search-form-inputs/>
                         <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
                         <select-field field-name="orderId,placedDate,entryDate,orderPartSeqId,currencyUomId,grandTotal"/>
                         <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
@@ -36,19 +36,28 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="orderItemSeqId"/></entity-find>
                         <set field="orderItem" from="orderItemList.getFirst()"/>
                         <entity-find-one entity-name="moqui.basic.StatusItem" value-field="status" auto-field-map="[statusId:statusId]" cache="true"/>
-
+                        <entity-find-count entity-name="mantle.account.financial.FinancialAccountAndTrans" count-field="finAccountAndTransCount">
+                            <econdition field-name="orderId"/>
+                            <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                            <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
+                            <econdition field-name="organizationPartyId" value="coarchy"/>
+                            <econdition field-name="statusId" value="FaActive"/></entity-find-count>
 <!--                        <log level="warn" message="OrderItemPartForm row-actions context.toString() ${context.toString()}"/>-->
                     </row-actions>
 
-                    <field name="orderId"><default-field><display/></default-field></field>
-                    <field name="date"><default-field title="Placed Date"><label text="${ec.l10n.format(placedDate ?: entryDate, 'dd MMM yyyy hh:mm a')}"/></default-field></field>
+                    <field name="orderId"><header-field><text-find/></header-field>
+                        <default-field><display/></default-field></field>
+                    <field name="placedDate"><header-field><date-find type="date-time"/></header-field>
+                        <default-field title="Date"><label text="${ec.l10n.format(placedDate ?: entryDate, 'dd MMM yyyy hh:mm a')}"/></default-field></field>
                     <field name="statusId"><default-field title="Status"><label text="${status.description}"/></default-field></field>
-                    <field name="quantity"><default-field title="Quantity"><label text="${ec.l10n.formatNumber((Number)orderItem.quantity,null,null)} ${orderItem.itemDescription}"/></default-field></field>
-                    <field name="total"><default-field title="Total"><label text="${ec.l10n.formatCurrency(grandTotal,currencyUomId,2)}"/></default-field></field>
+                    <field name="quantity"><default-field title="Quantity">
+                        <label text="${ec.l10n.formatNumber((Number)orderItem.quantity,null,null)} ${orderItem.itemDescription}"/></default-field></field>
+                    <field name="total"><default-field title="Total">
+                        <label text="${ec.l10n.formatCurrency(grandTotal,currencyUomId,2)}"/></default-field></field>
+                    <field name="transaction"><conditional-field condition="finAccountAndTransCount">
+                        <link url="../TransactionHistory?orderId=${orderId}" text="Transaction"/></conditional-field></field>
+                    <field name="submit"><header-field><submit text="Find"/></header-field></field>
                 </form-list>
-
-
-
             </row-col>
             <row-col md="2"/>
         </container-row>

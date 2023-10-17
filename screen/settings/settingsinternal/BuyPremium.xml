@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Organization-Month Credits" default-menu-index="25" menu-image="/ssstatic/images/Parties.png" default-menu-include="false">
+        default-menu-title="Buy Premium" default-menu-index="20" menu-image="fa fa-star" menu-image-type="icon">
 
     <transition name="buyOrganizationMonthCredits">
         <service-call name="coarchy.CoarchyServices.buy#OrganizationMonthCredits" in-map="[quantity:quantity]" out-map="context"/>

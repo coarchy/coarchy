@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Checkout" default-menu-index="30" menu-image="/ssstatic/images/Parties.png" default-menu-include="false">
+        default-menu-title="Checkout" default-menu-index="50" menu-image="fa fa-shopping-cart" menu-image-type="icon" default-menu-include="false">
 
     <always-actions>
         <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">
@@ -23,7 +23,7 @@ along with this software (see the LICENSE.md file). If not, see
             <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
         <if condition="existingOrderList.size() == 0">
             <message type="danger" public="true" error="true">No order found for user.</message>
-            <script>sri.sendRedirectAndStopRender('/settings/OrganizationMonthCredits')</script>
+            <script>sri.sendRedirectAndStopRender('/settings/BuyPremium')</script>
             <return/>
         </if>
         <set field="headerAndPart" from="existingOrderList.getFirst()"/>
@@ -45,7 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- Should never happen, but if it does an error would happen so redirect them -->
         <if condition="orderItemList.size() &lt; 1">
             <message type="danger" public="true" error="true">No order item found for user.</message>
-            <script>sri.sendRedirectAndStopRender('/settings/OrganizationMonthCredits')</script>
+            <script>sri.sendRedirectAndStopRender('/settings/BuyPremium')</script>
         </if>
     </actions>
 
