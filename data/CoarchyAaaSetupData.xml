@@ -181,4 +181,20 @@ along with this software (see the LICENSE.md file). If not, see
 
     <mantle.account.financial.FinancialAccountType description="Organization-Month Credit" finAccountTypeId="OrganizationMonthCredit"
             replenishTypeEnumId="FarpManual" isRefundable="Y" parentTypeId="DepositAccount"/>
+
+    <!-- ========== Service Jobs ========== -->
+    <moqui.service.job.ServiceJob jobName="withdraw_FinancialAccountCredits" description="Reduce Financial Account Credits"
+            serviceName="coarchy.CoarchyServices.withdraw#FinancialAccountCredits" cronExpression="0 0 2 1 * ?" paused="N"
+            transactionTimeout="3600">
+        <parameters parameterName="organizationPartyId" parameterValue="coarchy"/>
+        <parameters parameterName="finAccountTypeId" parameterValue="OrganizationMonthCredit"/>
+        <parameters parameterName="jobName" parameterValue="withdraw_FinancialAccountCredits"/>
+    </moqui.service.job.ServiceJob>
+    <moqui.service.job.ServiceJob jobName="check_PartyActivation" description="Check Party Activation"
+            serviceName="coarchy.CoarchyServices.check#PartyActivation" cronExpression="0 0 2 * * ?" paused="N"
+            transactionTimeout="3600">
+        <parameters parameterName="organizationPartyId" parameterValue="coarchy"/>
+        <parameters parameterName="finAccountTypeId" parameterValue="OrganizationMonthCredit"/>
+        <parameters parameterName="jobName" parameterValue="check_PartyActivation"/>
+    </moqui.service.job.ServiceJob>
 </entity-facade-xml>
