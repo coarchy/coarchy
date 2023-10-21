@@ -93,9 +93,9 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="activateOrDeactivateOrganization">
         <service-call name="coarchy.CoarchyServices.activateOrDeactivate#Organization" in-map="[organizationPartyId:toPartyId]" out-map="context"/>
-        <conditional-response url="../BuyPremium" parameter-map="[needsCredits:needsCredits]">
-            <condition><expression>needsCredits</expression></condition></conditional-response>
-        <default-response/></transition>
+        <default-response/>
+        <error-response url="../BuyPremium" parameter-map="[needsCredits:needsCredits,creditsNeeded:creditsNeeded]"/>
+    </transition>
 
     <transition name="goToApplication"><actions>
         <entity-find-one entity-name="moqui.security.UserPreference" value-field="userPreference" auto-field-map="[userId:ec.user.userId,preferenceKey:'ACTIVE_ORGANIZATION']"/>
@@ -191,7 +191,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
                                 &amp;&amp; partyActivationCount == 0">
                             <submit text="Activate" type="success" confirmation="Activating will cost 1 Organization-Month
-                             Credit per month ${organizationName} is activated. Are you sure?"/></conditional-field>
+                             Credit per month while ${organizationName} is activated. Are you sure?"/></conditional-field>
                         <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
                                 &amp;&amp; partyActivationCount != 0">
                             <submit text="Deactivate" type="danger"/></conditional-field>

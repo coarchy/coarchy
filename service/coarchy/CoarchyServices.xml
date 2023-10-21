@@ -817,6 +817,7 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <out-parameters>
             <parameter name="needsCredits" type="Boolean"/>
+            <parameter name="creditsNeeded" type="BigDecimal"/>
         </out-parameters>
         <actions>
             <entity-find entity-name="mantle.party.Party" list="organizationPartyList">
@@ -829,18 +830,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="partyId" from="organizationPartyId"/>
                 <date-filter/></entity-find>
 
-            <entity-find entity-name="mantle.account.financial.FinancialAccount" list="finAccountlist">
-                <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
-                <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
-                <econdition field-name="organizationPartyId" value="coarchy"/>
-                <econdition field-name="statusId" value="FaActive"/>
-                <date-filter/>
-                <order-by field-name="-transactionDate"/></entity-find>
-            <set field="needsCredits" from="finAccountlist.size() == 0 || finAccountlist.sum{it.availableBalance} &lt; 1"/>
-            <if condition="needsCredits"><return type="warning" message="Organization needs at least 1 Organization-Month Credit to activate. Buy credits to get premium"/></if>
-
             <if condition="partyActivationList.size() == 0"><then>
                 <service-call name="create#mantle.party.PartyActivation" in-map="[partyId:organizationPartyId,fromDate:ec.user.nowTimestamp]"/>
+
+                <service-call name="coarchy.CoarchyServices.check#PartyActivation" in-map="[organizationPartyId:
+                    organizationPartyId,finAccountTypeId:'OrganizationMonthCredit']" out-map="context"/>
+                <if condition="needsCredits">
+                    <return type="danger" public="true" message="Can't activate organization. Buy at least ${creditsNeeded} Organization-Month Credits to get premium" error="true"/>
+                </if>
             </then><else>
                 <service-call name="update#mantle.party.PartyActivation" in-map="[partyId:organizationPartyId,
                     fromDate:partyActivationList.getFirst().fromDate,thruDate:ec.user.nowTimestamp]"/>
@@ -849,172 +846,287 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="calculate" noun="PartyActivationUsage">
+        <description>This will find all the PartyActivation records that have any time between their from or thru date
+            within the given period from and thru dates. For each day that there is activation time, if it is at least
+            minActivationMinutesPerDay then count it as a day. Then return the activation days / the total days between
+            period.</description>
         <in-parameters>
-            <parameter name="organizationPartyId"/>
-            <parameter name="periodFromDate" type="Timestamp"/>
-            <parameter name="periodThruDate" type="Timestamp"/>
+            <parameter name="organizationPartyId" required="true"/>
+            <parameter name="periodFromDate" type="Timestamp" required="true">
+                <description>(inclusive) Start of the period to calculate activation. Rounded to midnight in default system timezone.</description></parameter>
+            <parameter name="periodThruDate" type="Timestamp" required="true">
+                <description>(exclusive) End of the period to calculate activation. Rounded to midnight subtracted 1 millisecond in default system timezone.</description></parameter>
+            <parameter name="minActivationMinutesPerDay" type="Long" default-value="5" required="true"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="orgMonthCount" type="BigDecimal"/>
+            <parameter name="activationPeriodCount" type="BigDecimal" required="true"><description>The time the organization was active
+                during the period where 1 is 100% of the days and .5 is 50% of the days that at least
+                minActivationMinutesPerDay was active</description></parameter>
         </out-parameters>
         <actions>
-            <!-- TODO: add comment for high level logic of service -->
+            <if condition="periodFromDate &gt;= periodThruDate"><return type="danger" error="true"
+                    message="Period From Date must be before Period Thru Date"/></if>
 
-            <log level="warn" message="calculate#PartyActivationUsage organizationPartyId ${organizationPartyId}"/>
-
-            <entity-find entity-name="mantle.party.PartyActivation" list="partyActivationList">
-                <econdition field-name="partyId" from="organizationPartyId"/>
-                <econdition field-name="fromDate" operator="greater-equals" from="periodFromDate"/>
-                <order-by field-name="fromDate"/>
-            </entity-find>
-            <entity-find entity-name="mantle.party.PartyActivation" list="partyActivation1List" limit="1">
-                <econdition field-name="partyId" from="organizationPartyId"/>
-                <econdition field-name="fromDate" operator="less" from="periodFromDate"/>
-                <order-by field-name="-fromDate"/>
-            </entity-find>
-            <set field="partyActivationList" from="partyActivation1List.getFirst()?partyActivation1List.getFirst()+partyActivationList:partyActivationList"/>
-            <if condition="partyActivationList.size() == 0"><return/></if>
-
-            <!-- Take all the from and thru dates in order and for each day that has more than 5 minutes of activation time, add 1 to the day counter.
-                Only count days from periodFromDate date. -->
-            <set field="dayList" from="[]"/>
-            <set field="daysBetween" from="java.time.temporal.ChronoUnit.DAYS.between(periodFromDate.toLocalDateTime().toLocalDate(), periodThruDate.toLocalDateTime().toLocalDate())"/>
-            <script>
-                java.time.ZonedDateTime periodFromDateTime = java.time.ZonedDateTime.ofInstant(
-                        java.time.Instant.ofEpochMilli((long) periodFromDate.time), java.time.ZoneId.systemDefault())
-            </script>
-
-            <log level="warn" message="withdraw#FinancialAccountCredits periodFromDate.toLocalDateTime().toLocalDate() ${periodFromDate.toLocalDateTime().toLocalDate()}"/>
-            <log level="warn" message="withdraw#FinancialAccountCredits periodThruDate.toLocalDateTime().toLocalDate() ${periodThruDate.toLocalDateTime().toLocalDate()}"/>
-            <!--                <log level="warn" message="withdraw#FinancialAccountCredits context.toString() ${context.toString()}"/>-->
-            <while condition="periodFromDateTime.toLocalDateTime().toLocalDate() &lt; periodThruDate.toLocalDateTime().toLocalDate()">
-                <set field="dayList" from="dayList + [dayCal:periodFromDateTime,activationAmountMinutes:0]"/>
-                <script>
-                    periodFromDateTime = periodFromDateTime.plusDays(1)
-                </script>
+            <!-- Create a list of all the days between the period from and thru dates with the start of day at midnight
+            timestamp and amount of milliseconds (defaulted to 0)-->
+            <set field="periodFromDateZoned" from="ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) periodFromDate.time), ZoneId.systemDefault()).with(LocalTime.MIN)"/>
+            <set field="periodThruDateZoned" from="ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) periodThruDate.time-1L), ZoneId.systemDefault()).with(LocalTime.MIN)"/>
+            <set field="dayList" from="[[dateTime:periodFromDateZoned,amount:0L]]" type="List"/>
+            <set field="daysIndex" from="0"/>
+            <set field="daysBetweenPeriod" from="java.time.temporal.ChronoUnit.DAYS.between(
+                periodFromDateZoned, periodThruDateZoned)"/>
+            <while condition="daysIndex &lt; daysBetweenPeriod">
+                <set field="dayList" from="dayList + [dateTime:dayList[daysIndex].dateTime.plusDays(1),amount:0L]"/>
+                <set field="daysIndex" from="daysIndex + 1"/>
             </while>
 
-            <set field="partyActivationIndex" from="0"/>
-            <set field="dayListIndex" from="0"/>
+            <!-- Find all activation records are found within the time period and put into a list-->
+            <entity-find entity-name="mantle.party.PartyActivation" list="partyActivationList">
+                <econdition field-name="partyId" from="organizationPartyId"/>
+                <econdition field-name="fromDate" operator="greater-equals" from="new Timestamp(periodFromDateZoned.toInstant().toEpochMilli())"/>
+                <econdition field-name="fromDate" operator="less" from="new Timestamp(periodThruDateZoned.toInstant().toEpochMilli())"/>
+                <order-by field-name="fromDate"/></entity-find>
+            <entity-find entity-name="mantle.party.PartyActivation" list="partyActivation1List" limit="1">
+                <econdition field-name="partyId" from="organizationPartyId"/>
+                <econdition field-name="fromDate" operator="less" from="new Timestamp(periodFromDateZoned.toInstant().toEpochMilli())"/>
+                <econdition field-name="thruDate" operator="greater-equals" from="new Timestamp(periodFromDateZoned.toInstant().toEpochMilli())" or-null="true"/>
+                <order-by field-name="-fromDate"/></entity-find>
+            <set field="partyActivationList" from="partyActivation1List + partyActivationList"/>
+            <if condition="partyActivationList.size() == 0">
+                <set field="activationPeriodCount" from="0.0" type="BigDecimal"/>
+                <return/>
+            </if>
 
+            <!-- For each activation record, find the days that it is active and add the amount of milliseconds to the
+            day's amount. If the activation record is active for more than one day, then add the amount of milliseconds
+            to each day.-->
+            <set field="firstPartyActivation" from="partyActivationList.getFirst()"/>
+            <set field="firstDay" from="dayList[0]"/>
+            <if condition="firstPartyActivation.fromDate.toInstant() &lt; firstDay.dateTime.toInstant()"><then>
+                <set field="daysIndex" from="0"/>
+            </then><else>
+                <set field="daysIndex" from="java.time.temporal.ChronoUnit.DAYS.between(firstDay.dateTime,
+                    ZonedDateTime.ofInstant(Instant.ofEpochMilli((long) firstPartyActivation.fromDate.time),
+                    ZoneId.systemDefault()))"/>
+            </else></if>
+
+<!--            <log level="warn" message="calculate#PartyActivationUsage daysIndex ${daysIndex}"/>-->
             <iterate list="partyActivationList" entry="partyActivation">
-                <set field="activationFromDateMin" from="partyActivation.fromDate"/>
-                <if condition="activationFromDateMin.toLocalDateTime().toLocalDate() &lt; periodFromDate.toLocalDateTime().toLocalDate()">
-                    <set field="activationFromDateMin" from="periodFromDate"/>
-                </if>
-                <set field="activationThruDateMax" from="partyActivation.thruDate"/>
-                <set field="isThruDateValid" from="false"/>
-                <if condition="!activationThruDateMax">
-                    <if condition="partyActivationList.size() == partyActivationIndex + 1"><then>
-                        <script>
-                            Calendar thruDateCal = startDateCalendar.clone()
-                            thruDateCal.add(Calendar.DAY_OF_MONTH, (int) -1)
-                        </script>
-                        <set field="activationThruDateMax" from="new Timestamp(thruDateCal.getTimeInMillis())"/>
-                        <set field="isThruDateValid" from="true"/>
+
+<!--                <log level="warn" message="calculate#PartyActivationUsage partyActivation ${partyActivation}"/>-->
+                <set field="partyActivationThruDate" from="partyActivation.thruDate ?: new Timestamp(dayList[dayList.size()-1].dateTime.plusDays(1).toInstant().toEpochMilli())"/>
+
+                <while condition="daysIndex &lt;= daysBetweenPeriod">
+                    <set field="dayActivationFromDate" from="partyActivation.fromDate.toInstant() &lt;
+                    dayList[daysIndex].dateTime.toInstant() ? dayList[daysIndex].dateTime.toInstant() :
+                    partyActivation.fromDate.toInstant()"/>
+                    <set field="dayActivationThruDate" from="partyActivationThruDate.toInstant() &gt;
+                    dayList[daysIndex].dateTime.plusDays(1).toInstant() ? dayList[daysIndex].dateTime.plusDays(1).toInstant() :
+                    partyActivationThruDate.toInstant()"/>
+
+                    <set field="dayActivationAmount" from="Duration.between(dayActivationFromDate,dayActivationThruDate).toMillis()"/>
+                    <if condition="dayActivationAmount &lt; 0"><set field="dayActivationAmount" from="0L"/>
+                        <log level="warn" message="Amount of milliseconds between activation from and thru dates is negative"/></if>
+                    <set field="dayList[daysIndex].amount" from="dayList[daysIndex].amount+dayActivationAmount"/>
+
+<!--                    <log level="warn" message="calculate#PartyActivationUsage dayList[daysIndex] ${dayList[daysIndex]} partyActivationThruDate.toInstant() ${partyActivationThruDate.toInstant()} dayList[daysIndex].dateTime.plusDays(1).toInstant() ${dayList[daysIndex].dateTime.plusDays(1).toInstant()}"/>-->
+                    <if condition="partyActivationThruDate.toInstant() &gt; dayList[daysIndex].dateTime.plusDays(1).toInstant()"><then>
+                        <set field="daysIndex" from="daysIndex + 1"/>
                     </then><else>
-                        <log level="error" message="Missing thruDate for PartyActivation ${partyActivation.partyId} at ${partyActivation.fromDate}"/>
+                        <break/>
                     </else></if>
-                </if>
-                <if condition="!isThruDateValid &amp;&amp; activationThruDateMax.toLocalDateTime().toLocalDate() &gt;= periodThruDate.toLocalDateTime().toLocalDate()">
-                    <script>
-                        Calendar thruDateCal = startDateCalendar.clone()
-                        thruDateCal.add(Calendar.DAY_OF_MONTH, (int) -1)
-                    </script>
-                    <set field="activationThruDateMax" from="new Timestamp(thruDateCal.getTimeInMillis())"/>
-                </if>
-
-                <log level="warn" message="Current dayList: ${dayList}"/>
-                <log level="warn" message="Current dayListIndex: ${dayListIndex}"/>
-                <log level="warn" message="Current dayList[dayListIndex]: ${dayList[dayListIndex]}"/>
-                <log level="warn" message="Current dayList.size(): ${dayList.size()}"/>
-                <set field="daysBetweenFrom" from="java.time.temporal.ChronoUnit.DAYS.between(dayList[dayListIndex].dayCal.toLocalDateTime().toLocalDate(), activationFromDateMin.toLocalDateTime().toLocalDate())"/>
-                <log level="warn" message="Current daysBetweenFrom: ${daysBetweenFrom}"/>
-                <!--                    <set field="dayListIndex" from="dayListIndex + daysBetweenFrom-1"/>-->
-
-                <set field="daysBetweenMaxIndex" from="dayListIndex+java.time.temporal.ChronoUnit.DAYS.between(activationFromDateMin.toLocalDateTime().toLocalDate(),activationThruDateMax.toLocalDateTime().toLocalDate())+1"/>
-                <log level="warn" message="Current daysBetweenMaxIndex: ${daysBetweenMaxIndex}"/>
-
-                <while condition="dayListIndex &lt;= daysBetweenMaxIndex">
-                    <set field="day" from="dayList[dayListIndex]"/>
-                    <set field="startOfDay" from="Timestamp.valueOf(day.dayCal.toLocalDateTime().toLocalDate().atStartOfDay().now())"/>
-                    <script>
-                        java.time.ZonedDateTime endOfDayTime = day.dayCal
-                        endOfDayTime = endOfDayTime.plusDays(1)
-                    </script>
-                    <set field="endOfDay" from="new Timestamp(endOfDayTime.toInstant().toEpochMilli())"/>
-
-                    <if condition="endOfDay.before(activationFromDateMin) || startOfDay.after(activationThruDateMax)">
-                        <set field="dayListIndex" from="dayListIndex + 1"/>
-                        <continue/>
-                    </if>
-
-                    <set field="overlapStart" from="(activationFromDateMin.after(startOfDay) ? activationFromDateMin : startOfDay).toLocalDateTime()"/>
-                    <set field="overlapEnd" from="(activationThruDateMax.before(endOfDay) ? activationThruDateMax : endOfDay).toLocalDateTime()"/>
-
-                    <log level="warn" message="overlapStart ${overlapStart}"/>
-                    <log level="warn" message="overlapEnd ${overlapEnd}"/>
-                    <log level="warn" message="java.time.temporal.ChronoUnit.MINUTES.between(overlapEnd, overlapStart) ${java.time.temporal.ChronoUnit.MINUTES.between(overlapEnd, overlapStart)}"/>
-                    <set field="dayList[dayListIndex].activationAmountMinutes" from="dayList[dayListIndex].activationAmountMinutes+java.time.temporal.ChronoUnit.MINUTES.between(overlapStart, overlapEnd)"/>
-                    <log level="warn" message="Current dayListIndex: ${dayListIndex}"/>
-                    <log level="warn" message="Current day: ${day}"/>
                 </while>
-                <set field="dayListIndex" from="dayListIndex + 1"/>
-                <log level="warn" message="Current partyActivationIndex: ${partyActivationIndex}"/>
-                <set field="partyActivationIndex" from="partyActivationIndex + 1"/>
+
+<!--                <log level="warn" message="calculate#PartyActivationUsage context.toString() ${context.toString()}"/>-->
+
             </iterate>
 
+            <!-- Count the number of days that the organization was active for at least minActivationMinutesPerDay minutes-->
+            <set field="activationPeriodCount" from="dayList.sum{it.amount &gt;=
+                minActivationMinutesPerDay * 60 * 1000 ? 1 : 0} / (daysBetweenPeriod+1)" type="BigDecimal"/>
 
+<!--            <log level="warn" message="calculate#PartyActivationUsage context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
 
-    <service verb="withdraw" noun="FinancialAccountCredits" authenticate="anonymous-all">
+    <service verb="withdraw" noun="FinancialAccountCreditsMonthly" authenticate="anonymous-all">
         <description>This service should run monthly on the first day of the month.
 
             This service withdraws FinancialAccount Credits from each organization that has had any activation of
             premium features from the PartyActivation records.</description>
         <in-parameters>
-            <parameter name="financialAccountOrganizationPartyId" required="true"/>
             <parameter name="finAccountTypeId" required="true"/>
-            <parameter name="jobName" required="true"/>
         </in-parameters>
         <actions>
 
-            <set field="startDateCalendar" from="ec.user.getCalendarSafe()"/>
-            <set field="startDate" from="new Timestamp(startDateCalendar.getTimeInMillis())"/>
-            <set field="oneMonthAgo" from="null"/>
-            <script>
-                Calendar oneMonthAgoCalendar = startDateCalendar.clone()
-                oneMonthAgoCalendar.add(Calendar.MONTH, (int) -1)
-                oneMonthAgo = new Timestamp(oneMonthAgoCalendar.getTimeInMillis())
-            </script>
+            <set field="periodThruDate" from="ec.user.nowTimestamp"/>
+            <set field="periodFromDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) periodThruDate.time), ZoneId.systemDefault()).minusMonths(1).toInstant().toEpochMilli())"/>
 
-            <entity-find entity-name="mantle.party.PartyAndOwnerWithFinancialAccount" list="organizationList" distinct="true" limit="1">
-                <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+            <entity-find entity-name="mantle.account.financial.FinancialAccount" list="financialAccountList" distinct="true">
                 <econdition field-name="finAccountTypeId"/>
                 <econdition field-name="statusId" value="FaActive"/>
                 <date-filter/>
-                <select-field field-name="partyId,ownerPartyId,financialAccountId"/>
+                <select-field field-name="ownerPartyId,finAccountId,availableBalance"/>
             </entity-find>
-            <iterate list="organizationList" entry="organization">
-                <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[organizationPartyId:
-                    organization.partyId, periodFromDate:oneMonthAgo, periodThruDate:startDate]" out-map="context"/>
+            <!-- if there are multiple financial accounts for an organization, then remove all but the one with the most credits -->
+            <set field="financialAccountList" from="financialAccountList.groupBy{it.ownerPartyId}.collect{it.value.max{it.availableBalance}}"/>
 
-                <log level="warn" message="withdraw#FinancialAccountCredits context.toString() ${context.toString()}"/>
+            <iterate list="financialAccountList" entry="financialAccount">
+                <set field="totalActivationPeriodCount" from="0.0" type="BigDecimal"/>
+                <entity-find entity-name="mantle.party.Party" list="organizationList">
+                    <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                    <econdition field-name="disabled" value="N" or-null="true"/>
+                    <econdition field-name="ownerPartyId" from="financialAccount.ownerPartyId"/>
+                </entity-find>
+                <if condition="organizationList.size() == 0">
+                    <log level="warn" message="No organization found with financial account for ${financialAccount.ownerPartyId}"/>
+                    <continue/></if>
+                <iterate list="organizationList" entry="organization">
+                    <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[organizationPartyId:
+                    organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
+
+<!--                    <log level="warn" message="withdraw#FinancialAccountCredits organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
+                    <set field="totalActivationPeriodCount" from="totalActivationPeriodCount + activationPeriodCount" type="BigDecimal"/>
+                </iterate>
+
+                <if condition="totalActivationPeriodCount &gt; 0.0">
+                    <service-call name="mantle.account.FinancialAccountServices.withdraw#FinancialAccount" in-map="[
+                        finAccountId:financialAccount.finAccountId,amount:totalActivationPeriodCount,decimalDigits:4]"
+                        out-map="context"/>
+                </if>
+
+<!--                <log level="warn" message="withdraw#FinancialAccountCredits context.toString() ${context.toString()}"/>-->
 
             </iterate>
-
         </actions>
     </service>
     <service verb="check" noun="PartyActivation" authenticate="anonymous-all">
         <in-parameters>
+            <parameter name="organizationPartyId" required="true"/>
+            <parameter name="finAccountTypeId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="needsCredits" type="Boolean"/>
+            <parameter name="creditsNeeded" type="BigDecimal"/>
+        </out-parameters>
+        <actions>
+            <set field="periodThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).plusMonths(1).withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
+            <set field="periodFromDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
 
+            <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:organizationPartyId]"/>
+            <if condition="!organization"><return type="warning" message="No organization found for ${organizationPartyId}"/></if>
+
+            <entity-find entity-name="mantle.account.financial.FinancialAccount" list="financialAccountList" distinct="true">
+                <econdition field-name="ownerPartyId" from="organization.ownerPartyId"/>
+                <econdition field-name="finAccountTypeId"/>
+                <econdition field-name="statusId" value="FaActive"/>
+                <date-filter/>
+                <select-field field-name="ownerPartyId,finAccountId,availableBalance"/>
+            </entity-find>
+            <if condition="financialAccountList.size() == 0"><return type="warning" message="Organization not eligible for having Premium. Must buy credits first"/></if>
+
+            <!-- if there are multiple financial accounts for an organization, then remove all but the one with the most credits -->
+            <set field="financialAccount" from="financialAccountList.groupBy{it.ownerPartyId}.collect{it.value.max{it.availableBalance}}[0]"/>
+
+            <set field="totalActivationPeriodCount" from="0.0" type="BigDecimal"/>
+            <entity-find entity-name="mantle.party.Party" list="organizationList">
+                <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                <econdition field-name="disabled" value="N" or-null="true"/>
+                <econdition field-name="ownerPartyId" from="organization.ownerPartyId"/>
+            </entity-find>
+            <if condition="organizationList.size() == 0">
+                <return type="warning" message="No organization found with financial account for ${organization.ownerPartyId}"/>
+            </if>
+            <iterate list="organizationList" entry="organization">
+                <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[organizationPartyId:
+                        organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
+
+                <!--                    <log level="warn" message="check#PartyActivation organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
+                <set field="totalActivationPeriodCount" from="totalActivationPeriodCount + activationPeriodCount" type="BigDecimal"/>
+            </iterate>
+
+<!--            <entity-find-count entity-name="mantle.party.PartyActivationAndParty" count-field="activatedOrganizationCount">-->
+<!--                <econdition field-name="ownerPartyId" from="organization.ownerPartyId"/>-->
+<!--                <date-filter/></entity-find-count>-->
+<!--            <log level="warn" message="check#PartyActivation activatedOrganizationCount ${activatedOrganizationCount} totalActivationPeriodCount ${totalActivationPeriodCount} financialAccount.availableBalance ${financialAccount.availableBalance}"/>-->
+            <set field="creditsNeeded" from="0.0"/>
+            <set field="needsCredits" from="false"/>
+            <if condition="totalActivationPeriodCount &gt; financialAccount.availableBalance">
+                <set field="needsCredits" from="true"/>
+
+                <set field="creditsNeeded" from="(totalActivationPeriodCount-financialAccount.availableBalance).setScale(0, BigDecimal.ROUND_UP)"/>
+            </if>
+
+<!--            <log level="warn" message="check#PartyActivation context.toString() ${context.toString()}"/>-->
+        </actions>
+    </service>
+
+    <service verb="check" noun="PartyActivationDaily" authenticate="anonymous-all">
+        <in-parameters>
+            <parameter name="finAccountTypeId" required="true"/>
+            <parameter name="currentTimestamp" default="ec.user.nowTimestamp" type="Timestamp" required="true"/>
         </in-parameters>
         <out-parameters>
 
         </out-parameters>
         <actions>
+            <set field="periodThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) currentTimestamp.time), ZoneId.systemDefault()).plusDays(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
+            <set field="periodFromDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) periodThruDate.time), ZoneId.systemDefault()).withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
 
+            <entity-find entity-name="mantle.account.financial.FinancialAccount" list="financialAccountList" distinct="true">
+                <econdition field-name="finAccountTypeId"/>
+                <econdition field-name="statusId" value="FaActive"/>
+                <date-filter valid-date="currentTimestamp"/>
+                <select-field field-name="ownerPartyId,finAccountId,availableBalance"/>
+            </entity-find>
+            <!-- if there are multiple financial accounts for an organization, then remove all but the one with the most credits -->
+            <set field="financialAccountList" from="financialAccountList.groupBy{it.ownerPartyId}.collect{it.value.max{it.availableBalance}}"/>
+
+            <iterate list="financialAccountList" entry="financialAccount">
+                <set field="totalActivationPeriodCount" from="0.0" type="BigDecimal"/>
+                <entity-find entity-name="mantle.party.Party" list="organizationList">
+                    <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                    <econdition field-name="disabled" value="N" or-null="true"/>
+                    <econdition field-name="ownerPartyId" from="financialAccount.ownerPartyId"/>
+                </entity-find>
+                <if condition="organizationList.size() == 0">
+                    <log level="warn" message="No organization found with financial account for ${financialAccount.ownerPartyId}"/>
+                    <continue/></if>
+                <iterate list="organizationList" entry="organization">
+                    <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[organizationPartyId:
+                        organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
+
+                    <!--                    <log level="warn" message="check#PartyActivationDaily organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
+                    <set field="totalActivationPeriodCount" from="totalActivationPeriodCount + activationPeriodCount" type="BigDecimal"/>
+                </iterate>
+
+<!--                <log level="warn" message="check#PartyActivationDaily organizationList.size() ${organizationList.size()} totalActivationPeriodCount ${totalActivationPeriodCount} financialAccount.availableBalance ${financialAccount.availableBalance}"/>-->
+                <if condition="totalActivationPeriodCount &gt; 0.0 &amp;&amp; totalActivationPeriodCount &gt; financialAccount.availableBalance">
+                    <iterate list="organizationList" entry="organization">
+                        <entity-find entity-name="mantle.party.PartyActivation" list="partyActivationList" limit="1" for-update="true">
+                            <econdition field-name="partyId" from="organization.partyId"/>
+                            <date-filter valid-date="currentTimestamp"/>
+                            <order-by field-name="-fromDate"/>
+                        </entity-find>
+                        <if condition="partyActivationList.size() == 0">
+<!--                            <log level="warn" message="No PartyActivation found for ${organization.partyId}"/>-->
+                            <continue/></if>
+
+<!--                        <log level="warn" message="check#PartyActivationDaily partyActivationList ${partyActivationList}"/>-->
+
+                        <set field="partyActivationList.getFirst().thruDate" from="currentTimestamp"/>
+                        <entity-update value-field="partyActivationList.getFirst()"/>
+                    </iterate>
+                </if>
+            </iterate>
+<!--            <log level="warn" message="check#PartyActivationDaily context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
 </services>

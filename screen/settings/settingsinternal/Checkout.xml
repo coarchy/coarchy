@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Checkout" default-menu-index="50" menu-image="fa fa-shopping-cart" menu-image-type="icon" default-menu-include="false">
+        default-menu-title="Checkout" default-menu-index="25" menu-image="fa fa-shopping-cart" menu-image-type="icon" default-menu-include="false">
 
     <always-actions>
         <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">

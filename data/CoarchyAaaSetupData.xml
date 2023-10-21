@@ -183,18 +183,14 @@ along with this software (see the LICENSE.md file). If not, see
             replenishTypeEnumId="FarpManual" isRefundable="Y" parentTypeId="DepositAccount"/>
 
     <!-- ========== Service Jobs ========== -->
-    <moqui.service.job.ServiceJob jobName="withdraw_FinancialAccountCredits" description="Reduce Financial Account Credits"
-            serviceName="coarchy.CoarchyServices.withdraw#FinancialAccountCredits" cronExpression="0 0 2 1 * ?" paused="N"
+    <moqui.service.job.ServiceJob jobName="withdraw_FinancialAccountCredits" description="Withdraw Financial Account Credits Monthly"
+            serviceName="coarchy.CoarchyServices.withdraw#FinancialAccountCreditsMonthly" cronExpression="0 0 2 1 * ?" paused="N"
             transactionTimeout="3600">
-        <parameters parameterName="organizationPartyId" parameterValue="coarchy"/>
         <parameters parameterName="finAccountTypeId" parameterValue="OrganizationMonthCredit"/>
-        <parameters parameterName="jobName" parameterValue="withdraw_FinancialAccountCredits"/>
     </moqui.service.job.ServiceJob>
-    <moqui.service.job.ServiceJob jobName="check_PartyActivation" description="Check Party Activation"
-            serviceName="coarchy.CoarchyServices.check#PartyActivation" cronExpression="0 0 2 * * ?" paused="N"
+    <moqui.service.job.ServiceJob jobName="check_PartyActivation" description="Check Party Activation Daily"
+            serviceName="coarchy.CoarchyServices.check#PartyActivationDaily" cronExpression="0 30 2 * * ?" paused="N"
             transactionTimeout="3600">
-        <parameters parameterName="organizationPartyId" parameterValue="coarchy"/>
         <parameters parameterName="finAccountTypeId" parameterValue="OrganizationMonthCredit"/>
-        <parameters parameterName="jobName" parameterValue="check_PartyActivation"/>
     </moqui.service.job.ServiceJob>
 </entity-facade-xml>

@@ -326,11 +326,11 @@ along with this software (see the LICENSE.md file). If not, see
         <alias-all entity-alias="ACTV"/>
         <alias name="partyStatusId" entity-alias="WEP" field="statusId"/>
     </view-entity>
-    <view-entity entity-name="PartyAndOwnerWithFinancialAccount" package="mantle.party">
-        <member-entity entity-alias="PTY" entity-name="mantle.party.Party"/>
-        <member-entity entity-alias="FACC" entity-name="mantle.account.financial.FinancialAccount" join-from-alias="PTY">
-            <key-map field-name="ownerPartyId"/></member-entity>
-        <alias-all entity-alias="PTY"/>
-        <alias-all entity-alias="FACC"><exclude field="ownerPartyId"/></alias-all>
+    <view-entity entity-name="PartyActivationAndParty" package="mantle.party">
+        <member-entity entity-alias="PACT" entity-name="mantle.party.PartyActivation"/>
+        <member-entity entity-alias="PTY" entity-name="mantle.party.Party" join-from-alias="PACT">
+            <key-map field-name="partyId"/></member-entity>
+        <alias-all entity-alias="PACT"/>
+        <alias-all entity-alias="PTY"><exclude field="partyId"/></alias-all>
     </view-entity>
 </entities>
