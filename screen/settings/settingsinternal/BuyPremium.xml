@@ -34,6 +34,27 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="pricePurposeEnumId" value="PppPurchase"/>
             <date-filter/>
             <order-by field-name="minQuantity"/></entity-find>
+
+        <set field="featureList" from="[
+            [featureName:'Unlimited Users',free:'X',premium:'X'],
+            [featureName:'Clone Public Organization',free:'X',premium:'X'],
+            [featureName:'Vision Story',free:'X',premium:'X'],
+            [featureName:'Actors',free:'X',premium:'X'],
+            [featureName:'Unlimited Actors',free:'X',premium:'X'],
+            [featureName:'Actors Report',free:'X',premium:'X'],
+            [featureName:'Process Story',free:'X',premium:'X'],
+            [featureName:'Unlimited Process Stories',free:'X',premium:'X'],
+            [featureName:'Unlimited Activities per Process Story',free:'X',premium:'X'],
+            [featureName:'Process Story Report',free:'X',premium:'X'],
+            [featureName:'Clone Private Organization',free:'',premium:'X'],
+            [featureName:'Value Statements',free:'',premium:'X'],
+            [featureName:'Unlimited Value Statements',free:'',premium:'X'],
+            [featureName:'Value Statements Report',free:'',premium:'X'],
+            [featureName:'Actors Report with Process Activities',free:'',premium:'X'],
+            [featureName:'Process Story Report with Substories',free:'',premium:'X'],
+            [featureName:'Process Task Checklist',free:'',premium:'X'],
+            [featureName:'Unlimited Checklists per Process Story',free:'',premium:'X'],
+        ]"/>
     </actions>
 
     <widgets>
@@ -70,18 +91,25 @@ along with this software (see the LICENSE.md file). If not, see
                         <set field="nextPriceQuantity" from="priceEntry_has_next?priceList.get(priceEntry_index+1).minQuantity:null"/>
                     </row-actions>
                     <field name="minQuantity"><default-field title="Organization-Month Quantity"><label text="${minQuantity}${nextPriceQuantity?' - '+(String) (nextPriceQuantity.toInteger()-1):'+'}"/></default-field></field>
-                    <field name="price"><default-field><label text="${priceUomId=='USD'?'$':''}${price}"/></default-field></field>
+                    <field name="price"><default-field><label text="${ec.l10n.formatCurrency(price,priceUomId,2)}"/></default-field></field>
                 </form-list>
                 <render-mode><text><![CDATA[</div>]]></text></render-mode>
 
                 <!-- Feature Matrix -->
+                <label text="Feature Matrix" type="h5" style="q-pl-sm q-pb-sm"/>
+                <render-mode><text><![CDATA[<div style="max-width:600px">]]></text></render-mode>
+                <form-list name="FeatureMatrix" list="featureList" list-entry="featureEntry">
+                    <field name="featureName"><default-field><display/></default-field></field>
+                    <field name="free"><default-field><display/></default-field></field>
+                    <field name="premium"><default-field><display/></default-field></field>
+                </form-list>
+                <render-mode><text><![CDATA[</div>]]></text></render-mode>
 
                 <!-- Buy Organization-Month Credits -->
                 <!-- Quantity Break Matrix -->
             </row-col>
             <row-col md="2"/>
         </container-row>
-
 
     </widgets>
 </screen>

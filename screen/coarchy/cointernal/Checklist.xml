@@ -31,20 +31,22 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="toRoleTypeId" value="OrgInternal"/>
             <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
             <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+            <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
-    <transition name="updateChecklist"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+    <transition name="updateChecklist"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
 <!--        <service-call name="coarchy.CoarchyServices.update#Checklist" in-map="[workEffortId:workEffortId,workEffortName:workEffortName,recurStartCron:recurStartCron,organizationId:activeOrgId]" out-map="checklist"/>-->
         <service-call name="coarchy.CoarchyServices.update#Checklist" in-map="[workEffortId:workEffortId,workEffortName:workEffortName,organizationId:activeOrgId]" out-map="checklist"/>
         <default-response url="." parameter-map="[pageIndex:pageIndex,checklistId:workEffortId]"/></transition>
 
     <transition name="updateTask">
-        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
         <service-call name="coarchy.CoarchyServices.update#Task" in-map="[workEffortId:workEffortId,assignedPartyIdList:assignedPartyIdList,resolutionEnumId:resolutionEnumId,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/></transition>
 
     <transition name="assignAll">
-        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
         <service-call name="coarchy.CoarchyServices.assign#AllTasks" out-map="context" in-map="[workEffortId:checklistId,partyId:partyId,actorId:actorId,organizationId:activeOrgId]"/>
         <conditional-response url="." save-current-screen="true"><condition><expression>returnToScreen</expression></condition></conditional-response>
         <default-response type="none"/></transition>
@@ -125,6 +127,14 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
+        <section name="FreemiumBanner" condition="partyActivationCount == 0">
+            <widgets>
+                <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
+                    <label text="To enable all the features upgrade organization '${activeOrg.organizationName}' to Premium" type="b"/>
+                    <container type="template v-slot:action"><container type="q-btn flat color='primary' label='Upgrade' href='/settings/Organizations?toPartyId=${activeOrgId}'"/></container>
+                </container>
+            </widgets>
+        </section>
         <label text="Checklist${project?.workEffortName?' - '+project?.workEffortName:''}" type="h4"/>
         <label text="Completed ${ec.l10n.format(project.actualCompletionDate,'MMMM dd, HH:mm')}" type="h5" condition="project.actualCompletionDate" style="q-pt-sm"/>
 

@@ -1,4 +1,4 @@
-<h4 class="q-pb-sm" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">Value Statements:</h4>
+<h4 class="q-pb-sm">Value Statements:</h4>
 <#list valueStatementList! as valueStatement>
     <#if valueStatement.value?hasContent><div><b><a href="/coapp/ValueStatements?valueStatmentId=${valueStatement.valueStatementId}">${valueStatement.value?html?ensureEndsWith(".")}</a></b></div><#if valueStatement_has_next><br></#if></#if>
 </#list>

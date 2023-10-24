@@ -172,10 +172,10 @@ along with this software (see the LICENSE.md file). If not, see
 
     <products productId="c100000" productName="Organization-Month Credits" pseudoId="ORGMNTH" productTypeEnumId="PtDigitalAsset">
         <description><![CDATA[Buy monthly usage of Coarchy premium features for you organization. Each organization-month credit allows premium features for one organization for one month.\n\nIf you want to have 5 organizations for 12 months then you would buy 60 organizaiton-month credits.]]></description>
-        <prices productPriceId="c100000" priceTypeEnumId="PptCurrent" minQuantity="1" price="100.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200000" priceUomId="USD"/>
-        <prices productPriceId="c100001" priceTypeEnumId="PptCurrent" minQuantity="3" price="95.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200001" priceUomId="USD"/>
-        <prices productPriceId="c100002" priceTypeEnumId="PptCurrent" minQuantity="12" price="90.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200002" priceUomId="USD"/>
-        <prices productPriceId="c100003" priceTypeEnumId="PptCurrent" minQuantity="120" price="80.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200003" priceUomId="USD"/>
+        <prices productPriceId="c100000" priceTypeEnumId="PptCurrent" minQuantity="1" price="30.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200000" priceUomId="USD"/>
+        <prices productPriceId="c100001" priceTypeEnumId="PptCurrent" minQuantity="3" price="29.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200001" priceUomId="USD"/>
+        <prices productPriceId="c100002" priceTypeEnumId="PptCurrent" minQuantity="12" price="27.50" pricePurposeEnumId="PppPurchase" fromDate="1696309200002" priceUomId="USD"/>
+        <prices productPriceId="c100003" priceTypeEnumId="PptCurrent" minQuantity="120" price="20.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200003" priceUomId="USD"/>
         <mantle.product.store.ProductStoreProduct productStoreId="coarchy"/>
     </products>
 

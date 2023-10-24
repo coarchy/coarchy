@@ -105,7 +105,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <q-list dense style="min-width: 100px">
                             <q-item clickable>
                                 <q-item-section><q-btn flat label="Settings" type="a" href="${sri.buildUrl("/settings").url}">
-                                        <q-tooltip>Go to Settings</q-tooltip></q-btn>
+                                        <q-tooltip>General Settings</q-tooltip></q-btn>
                                 </q-item-section>
                             </q-item>
                             <#if activeOrg.organizationName!?has_content>

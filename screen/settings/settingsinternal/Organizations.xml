@@ -116,7 +116,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <!-- TODO: Create the feature to transfer org to another user -->
 
-                <container-dialog id="InviteUser" button-text="Invite User" condition="ownerOfAnyOrganization" type="success">
+                <container-dialog id="InviteUser" button-text="Invite User" condition="false &amp;&amp; ownerOfAnyOrganization" type="success">
                     <form-single name="InviteUser" transition="inviteUser">
                         <field name="partyId"><default-field title="Organization"><drop-down><entity-options text="${organizationName}" key="${partyId}">
                             <entity-find entity-name="mantle.party.PartyDetail">
@@ -134,14 +134,15 @@ along with this software (see the LICENSE.md file). If not, see
                     <form-single name="CreateOrganization" transition="createOrganization">
                         <field name="organizationId"><default-field title="Clone from Organization (optional)"><drop-down allow-empty="true" required-manual-select="true">
                             <entity-options text="${visibilityEnumId=='PvPublic'?organizationName+' - Template':organizationName}" key="${partyId}">
-                                <entity-find entity-name="mantle.party.PartyDetail">
+                                <entity-find entity-name="mantle.party.PartyDetail" distinct="true">
                                     <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
                                     <econditions combine="or">
                                         <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
                                         <econdition field-name="visibilityEnumId" value="PvPublic"/>
                                         <econdition field-name="partyId" operator="in" from="organizationList*.toPartyId"/>
                                     </econditions>
-                                    <order-by field-name="-visibilityEnumId"/>
+                                    <select-field field-name="partyId,organizationName,visibilityEnumId"/>
+                                    <order-by field-name="-visibilityEnumId,organizationName"/>
                                 </entity-find>
                             </entity-options>
                         </drop-down></default-field></field>
@@ -190,11 +191,11 @@ along with this software (see the LICENSE.md file). If not, see
                     <field name="activation"><header-field title="Premium"><hidden/></header-field>
                         <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
                                 &amp;&amp; partyActivationCount == 0">
-                            <submit text="Activate" type="success" confirmation="Activating will cost 1 Organization-Month
-                             Credit per month while ${organizationName} is activated. Are you sure?"/></conditional-field>
+                            <submit text="Upgrade" type="success" confirmation="Activating will cost 1 Organization-Month
+                             Credit per month while ${organizationName} is upgraded. Are you sure?"/></conditional-field>
                         <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
                                 &amp;&amp; partyActivationCount != 0">
-                            <submit text="Deactivate" type="danger"/></conditional-field>
+                            <submit text="Downgrade" type="danger"/></conditional-field>
                     </field>
                     <field name="submit"><header-field><submit/></header-field></field>
                 </form-list>
