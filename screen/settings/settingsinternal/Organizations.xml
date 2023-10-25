@@ -76,7 +76,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
 
                 <entity-find entity-name="coarchy.ActivityActor" list="activityActorList">
-                <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
                 </entity-find>
                 <iterate list="activityActorList" entry="activityActor">
                     <service-call name="create#coarchy.ActivityActor" in-map="[activityId:activityIdMap[activityActor.activityId],actorId:actorIdMap[activityActor.actorId], organizationId:newOrganization.partyId]"/>
@@ -105,7 +105,7 @@ along with this software (see the LICENSE.md file). If not, see
     </actions><default-response url="/coapp/Home" url-type="plain"/></transition>
 
     <actions>
-<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
+        <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
@@ -160,13 +160,6 @@ along with this software (see the LICENSE.md file). If not, see
                             <econdition field-name="visibilityEnumId" value="PvPublic"/>
                         </econditions>
                         <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/></entity-find>
-
-                    <row-actions>
-                        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
-                            <econdition field-name="partyId" from="toPartyId"/>
-                            <date-filter/></entity-find-count>
-                    </row-actions>
-
                     <field name="toPartyId">
                         <header-field><text-find size="25"/></header-field>
                         <default-field><hidden/></default-field></field>
@@ -188,15 +181,6 @@ along with this software (see the LICENSE.md file). If not, see
                             visibilityEnumId!='PvPublic'||ownerPartyId == ec.user.userAccount.partyId">
                         <link url="/settings/EditOrganization" text="${organizationName}" parameter-map="[
                             organizationId:toPartyId]" tooltip="Edit ${organizationName}"/></conditional-field></field>
-                    <field name="activation"><header-field title="Premium"><hidden/></header-field>
-                        <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
-                                &amp;&amp; partyActivationCount == 0">
-                            <submit text="Upgrade" type="success" confirmation="Activating will cost 1 Organization-Month
-                             Credit per month while ${organizationName} is upgraded. Are you sure?"/></conditional-field>
-                        <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
-                                &amp;&amp; partyActivationCount != 0">
-                            <submit text="Downgrade" type="danger"/></conditional-field>
-                    </field>
                     <field name="submit"><header-field><submit/></header-field></field>
                 </form-list>
             </row-col>
