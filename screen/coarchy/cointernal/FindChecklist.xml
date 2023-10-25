@@ -70,7 +70,7 @@ along with this software (see the LICENSE.md file). If not, see
         <form-list name="Checklist" header-dialog="true" show-page-size="true" show-csv-button="true" list="checklistList">
             <entity-find entity-name="mantle.work.effort.WorkEffort" list="checklistList">
                 <search-form-inputs default-order-by="-actualStartDate"/>
-                <econdition field-name="workEffortTypeEnumId" value="WetProject"/>
+                <econdition field-name="workEffortTypeEnumId" value="WetChecklist"/>
             </entity-find>
 
             <field name="workEffortId"><default-field><hidden/></default-field></field>

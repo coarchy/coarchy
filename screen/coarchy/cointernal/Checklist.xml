@@ -107,7 +107,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <entity-find-count entity-name="WorkEffort" count-field="workEffortCount" distinct="true">
             <econdition field-name="rootWorkEffortId" from="checklistId"/>
-            <econdition field-name="workEffortTypeEnumId" value="WetTask"/>
+            <econdition field-name="workEffortTypeEnumId" value="WetChecklistItem"/>
             <select-field field-name="workEffortId"/></entity-find-count>
         <entity-find-count entity-name="WorkEffortAndParty" count-field="workEffortPartyCount" distinct="true">
             <date-filter/><econdition field-name="rootWorkEffortId" from="checklistId"/>
@@ -118,7 +118,7 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="assignAll">
             <entity-find entity-name="coarchy.WorkEffortActivityDetail" list="taskPartyList" distinct="true">
                 <date-filter/><econdition field-name="rootWorkEffortId" from="checklistId"/>
-                <econdition field-name="workEffortTypeEnumId" value="WetTask"/>
+                <econdition field-name="workEffortTypeEnumId" value="WetChecklistItem"/>
                 <econdition field-name="roleTypeId" operator="is-null"/>
                 <econdition field-name="resolutionEnumId" operator="is-null"/>
                 <select-field field-name="actorId,name"/>
@@ -173,7 +173,7 @@ along with this software (see the LICENSE.md file). If not, see
                 list="taskList" transition="updateTask">
             <entity-find entity-name="mantle.work.effort.WorkEffort" list="taskList">
                 <econdition field-name="rootWorkEffortId" from="project.workEffortId"/>
-                <econdition field-name="workEffortTypeEnumId" value="WetTask"/>
+                <econdition field-name="workEffortTypeEnumId" value="WetChecklistItem"/>
                 <select-field field-name="workEffortId,workEffortName,resolutionEnumId,actualCompletionDate,activityId"/>
                 <order-by field-name="workEffortId"/></entity-find>
 

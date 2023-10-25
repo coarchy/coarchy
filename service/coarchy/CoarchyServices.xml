@@ -222,7 +222,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="name" from="processStory.name"/>
             </if>
 <!--            <service-call name="create#mantle.work.effort.WorkEffort" in-map="[workEffortName:name,recurStartCron:recurStartCron,ownerPartyId:organizationId,workEffortTypeEnumId:'WetProject',actualStartDate:ec.user.nowTimestamp]" out-map="projectWorkEffort"/>-->
-            <service-call name="create#mantle.work.effort.WorkEffort" out-map="projectWorkEffort" in-map="[workEffortName:name,ownerPartyId:organizationId,workEffortTypeEnumId:'WetProject',actualStartDate:ec.user.nowTimestamp]"/>
+            <service-call name="create#mantle.work.effort.WorkEffort" out-map="projectWorkEffort" in-map="[workEffortName:name,ownerPartyId:organizationId,workEffortTypeEnumId:'WetChecklist',actualStartDate:ec.user.nowTimestamp]"/>
             <set field="rootWorkEffortId" from="projectWorkEffort.workEffortId"/>
             <set field="projectFromDate" from="ec.user.nowTimestamp"/>
             <service-call name="create#mantle.work.effort.WorkEffortParty"
@@ -260,7 +260,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="workEffortId" value="${projectWorkEffort.workEffortId}-${ec.entity.sequencedIdPrimary(seqName, null, 10)}"/>
                     <service-call name="create#mantle.work.effort.WorkEffort" out-map="taskWorkEffort" in-map="[
                         rootWorkEffortId:projectWorkEffort.workEffortId,workEffortId:workEffortId,workEffortName:taskName,
-                        ownerPartyId:organizationId,workEffortTypeEnumId:'WetTask',activityId:processStoryActivity.activityId]"/>
+                        ownerPartyId:organizationId,workEffortTypeEnumId:'WetChecklistItem',activityId:processStoryActivity.activityId]"/>
 
                     <script>taskWorkEffortIdList.add(taskWorkEffort.workEffortId)</script>
                 </if>
@@ -417,8 +417,8 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <entity-find entity-name="coarchy.WorkEffortActivityDetail" list="taskList" distinct="true">
                 <date-filter/><econdition field-name="rootWorkEffortId" from="workEffortId"/>
-                <econdition field-name="workEffortTypeEnumId" value="WetTask"/>
-                <econdition field-name="workEffortTypeEnumId" value="WetTask"/>
+                <econdition field-name="workEffortTypeEnumId" value="WetChecklistItem"/>
+                <econdition field-name="workEffortTypeEnumId" value="WetChecklistItem"/>
                 <econdition field-name="actorId"/>
                 <econdition field-name="roleTypeId" operator="is-null"/>
                 <econdition field-name="resolutionEnumId" operator="is-null"/>
@@ -432,7 +432,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <entity-find-count entity-name="WorkEffort" count-field="workEffortCount" distinct="true">
                 <econdition field-name="rootWorkEffortId" from="workEffortId"/>
-                <econdition field-name="workEffortTypeEnumId" value="WetTask"/>
+                <econdition field-name="workEffortTypeEnumId" value="WetChecklistItem"/>
                 <select-field field-name="workEffortId"/></entity-find-count>
             <entity-find-count entity-name="WorkEffortAndParty" count-field="workEffortPartyCount" distinct="true">
                 <date-filter/><econdition field-name="rootWorkEffortId" from="workEffortId"/>
