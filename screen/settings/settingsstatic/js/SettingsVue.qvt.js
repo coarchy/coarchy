@@ -69,7 +69,7 @@ Vue.component('m-stripe', {
                 elements,
                 confirmParams: {
                     // Make sure to change this to your payment completion page
-                    return_url: "http://localhost:8080/settings/OrderHistory",
+                    return_url: "https://coarchy.com/settings/OrderHistory",
                     receipt_email: this.emailAddress,
                 },
             });
