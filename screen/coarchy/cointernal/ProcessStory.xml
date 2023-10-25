@@ -31,6 +31,8 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="toRoleTypeId" value="OrgInternal"/>
             <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
             <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+            <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
     <transition name="newParagraph"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
@@ -148,7 +150,7 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="update#coarchy.ProcessStory"/>
         <default-response url="."/></transition>
 
-    <transition name="createChecklist"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+    <transition name="createChecklist"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
 <!--        <service-call name="coarchy.CoarchyServices.create#ChecklistProcessStory" in-map="[processStoryId:processStoryId,name:name,recurStartCron:recurStartCron,organizationId:activeOrgId]" out-map="checklist"/>-->
         <service-call name="coarchy.CoarchyServices.create#ChecklistProcessStory" in-map="[processStoryId:processStoryId,name:name,organizationId:activeOrgId]" out-map="checklist"/>
         <default-response url="../Checklist" parameter-map="[checklistId:checklist.rootWorkEffortId]"/></transition>
@@ -191,6 +193,15 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
+        <section name="FreemiumBanner" condition="partyActivationCount == 0">
+            <widgets>
+                <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
+                    <label text="To enable all the features upgrade organization '${activeOrg.organizationName}' to Premium" type="b"/>
+                    <container type="template v-slot:action"><container type="q-btn flat color='primary' label='Upgrade' href='/settings/Organizations?toPartyId=${activeOrgId}'"/></container>
+                </container>
+            </widgets>
+        </section>
+
         <label text="Process Story${processStory?.name?' - '+processStory.name:''}" type="h4"/>
 
         <container-dialog id="AddChecklistDialog" button-text="Add Checklist" type="success" condition="partyRelationshipCount &gt; 0">
@@ -306,7 +317,7 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25"/></header-field>
                 <conditional-field condition="action" title="Action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
+            <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; partyRelationshipCount &gt; 0" title=""><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
                     parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
             <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action" title=""><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
             <field name="insert"><conditional-field condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown" title=""><dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Checkout" default-menu-index="25" menu-image="fa fa-shopping-cart" menu-image-type="icon" default-menu-include="false">
+
+    <always-actions>
+        <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">
+            <econdition field-name="statusId" value="OrderOpen"/>
+            <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
+            <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId"/>
+            <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
+        <if condition="existingOrderList.size() == 0">
+            <message type="danger" public="true" error="true">No order found for user.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/BuyPremium')</script>
+            <return/>
+        </if>
+        <set field="headerAndPart" from="existingOrderList.getFirst()"/>
+        <set field="orderId" from="headerAndPart.orderId"/>
+    </always-actions>
+
+    <actions>
+        <set field="orderPartSeqId" from="existingOrderList[0].orderPartSeqId"/>
+        <entity-find entity-name="mantle.order.OrderItem" list="orderItemList" limit="1">
+            <econdition field-name="orderId"/><econdition field-name="orderPartSeqId"/>
+            <econdition field-name="productId" value="c100000"/>
+            <econdition field-name="itemTypeEnumId" value="ItemProduct"/>
+            <econdition field-name="fromAssetId" operator="is-null"/>
+            <econdition field-name="selectedAmount" operator="is-null"/>
+            <select-field field-name="orderItemSeqId,unitAmount,itemDescription,quantity"/>
+            <order-by field-name="orderItemSeqId"/></entity-find>
+        <set field="orderItem" from="orderItemList.getFirst()"/>
+
+        <!-- Should never happen, but if it does an error would happen so redirect them -->
+        <if condition="orderItemList.size() &lt; 1">
+            <message type="danger" public="true" error="true">No order item found for user.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/BuyPremium')</script>
+        </if>
+    </actions>
+
+    <widgets>
+        <container-row>
+            <row-col md="3"/>
+            <row-col md="6">
+                <label text="Checkout" type="h4" style="q-pb-sm"/>
+
+                <label text="Buying ${ec.l10n.formatNumber((Number)orderItem.quantity,null,null)} ${orderItem.itemDescription} at ${ec.l10n.formatCurrency(orderItem.unitAmount,headerAndPart.currencyUomId,2)} each for a total of ${ec.l10n.formatCurrency(headerAndPart.grandTotal,headerAndPart.currencyUomId,2)}" type="h6" style="q-pb-sm"/>
+
+                <render-mode>
+                    <text type="qvt"><![CDATA[
+                        <m-stripe></m-stripe>
+                    ]]></text></render-mode>
+            </row-col>
+            <row-col md="3"/>
+        </container-row>
+    </widgets>
+</screen>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Order History" default-menu-index="60" menu-image="fa fa-history" menu-image-type="icon">
+
+    <actions>
+        <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrder1List" limit="1">
+            <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
+            <select-field field-name="orderId,placedDate,completedDate,entryDate,statusId"/>
+            <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
+
+        <set field="firstOrder" from="existingOrder1List.getFirst()"/>
+        <set field="shouldReload" from="false"/>
+        <if condition="firstOrder?.statusId == 'OrderOpen'"><then>
+            <if condition="!ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered"><then>
+                <set field="shouldReload" from="true"/>
+                <script>ec.web.sessionAttributes.put("coarchy_orderHistoryFirstRendered", ec.user.nowTimestamp)</script>
+            </then><else>
+                <set field="shouldReload" from="Duration.between(ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered.toInstant(),ec.user.nowTimestamp.toInstant()).toMillis()&lt;1501*5"/>
+                <if condition="!shouldReload"><script>ec.web.sessionAttributes.remove("coarchy_orderHistoryFirstRendered")</script></if>
+<!--                <log level="warn" message="shouldReload ${shouldReload}"/>-->
+            </else></if>
+        </then><else>
+            <if condition="!shouldReload&amp;&amp;ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered"><script>ec.web.sessionAttributes.remove("coarchy_orderHistoryFirstRendered")</script></if>
+        </else></if>
+<!--        <log level="warn" message="firstOrder?.statusId ${firstOrder?.statusId} firstRendered ${firstRendered} timeSinceEntryDate ${timeSinceEntryDate}"/>-->
+<!--        <log level="warn" message="entryDate.toString() ${firstOrder.entryDate} placedDate ${firstOrder.placedDate} completedDate ${firstOrder.completedDate} ${ec.user.nowTimestamp} ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered ${ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered}"/>-->
+<!--        <log level="warn" message="OrderHistory actions context.toString() ${context.toString()}"/>-->
+    </actions>
+
+    <widgets>
+        <container-row>
+            <row-col md="2"/>
+            <row-col md="8">
+                <label text="Orders" type="h4"/>
+                <link url="../BuyPremium" text="Buy Again" btn-type="success"/>
+
+                <form-list name="OrderItemPartForm" list="existingOrderList" header-dialog="true" show-csv-button="false">
+                    <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList">
+                        <search-form-inputs/>
+                        <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
+                        <select-field field-name="orderId,placedDate,entryDate,orderPartSeqId,currencyUomId,grandTotal"/>
+                        <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
+
+                    <row-actions>
+                        <entity-find entity-name="mantle.order.OrderItem" list="orderItemList" limit="1">
+                            <econdition field-name="orderId"/>
+                            <econdition field-name="orderPartSeqId"/>
+                            <order-by field-name="orderItemSeqId"/></entity-find>
+                        <set field="orderItem" from="orderItemList.getFirst()"/>
+                        <entity-find-one entity-name="moqui.basic.StatusItem" value-field="status" auto-field-map="[statusId:statusId]" cache="true"/>
+                        <entity-find-count entity-name="mantle.account.financial.FinancialAccountAndTrans" count-field="finAccountAndTransCount">
+                            <econdition field-name="orderId"/>
+                            <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                            <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
+                            <econdition field-name="organizationPartyId" value="coarchy"/>
+                            <econdition field-name="statusId" value="FaActive"/></entity-find-count>
+<!--                        <log level="warn" message="OrderItemPartForm row-actions context.toString() ${context.toString()}"/>-->
+                    </row-actions>
+
+                    <field name="orderId"><header-field><text-find/></header-field>
+                        <default-field><display/></default-field></field>
+                    <field name="placedDate"><header-field><date-find type="date-time"/></header-field>
+                        <default-field title="Date"><label text="${ec.l10n.format(placedDate ?: entryDate, 'dd MMM yyyy hh:mm a')}"/></default-field></field>
+                    <field name="statusId"><default-field title="Status"><label text="${shouldReload&amp;&amp;
+                        existingOrderList_index==0?'Order Processing...':status.description}"/></default-field></field>
+                    <field name="quantity"><default-field title="Quantity">
+                        <label text="${ec.l10n.formatNumber((Number)orderItem.quantity,null,null)} ${orderItem.itemDescription}"/></default-field></field>
+                    <field name="total"><default-field title="Total">
+                        <label text="${ec.l10n.formatCurrency(grandTotal,currencyUomId,2)}"/></default-field></field>
+                    <field name="transaction"><conditional-field condition="finAccountAndTransCount">
+                        <link url="../TransactionHistory?orderId=${orderId}" text="Transaction"/></conditional-field></field>
+                    <field name="submit"><header-field><submit text="Find"/></header-field></field>
+                </form-list>
+            </row-col>
+            <row-col md="2"/>
+        </container-row>
+        <container type="script" condition="shouldReload">
+            setTimeout(function() { console.log('reloading');  location.reload(); }, 1500);
+        </container>
+    </widgets>
+</screen>

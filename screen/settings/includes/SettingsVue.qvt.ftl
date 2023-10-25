@@ -21,7 +21,7 @@ along with this software (see the LICENSE.md file). If not, see
     <input type="hidden" id="confUsername" value="${ec.user.username!''}">
     <input type="hidden" id="confLocale" value="${ec.user.locale.toLanguageTag()}">
     <input type="hidden" id="confDarkMode" value="${ec.user.getPreference("QUASAR_DARK")!"false"}">
-    <input type="hidden" id="confLeftOpen" value="${ec.user.getPreference("QUASAR_LEFT_OPEN")!"false"}">
+    <input type="hidden" id="confLeftOpen" value="${ec.user.getPreference("QUASAR_LEFT_OPEN")!"true"}">
     <#assign navbarCompList = sri.getThemeValues("STRT_HEADER_NAVBAR_COMP")>
     <#list navbarCompList! as navbarCompUrl><input type="hidden" class="confNavPluginUrl" value="${navbarCompUrl}"></#list>
     <#assign accountCompList = sri.getThemeValues("STRT_HEADER_ACCOUNT_COMP")>
@@ -39,6 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
             </q-bar>
 
             <q-toolbar style="font-size:15px;">
+                <q-btn flat icon="menu" @click="toggleLeftOpen()" size="lg"></q-btn>
 
 <#--            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>-->
             <#if headerLogoList?has_content>
@@ -102,12 +103,12 @@ along with this software (see the LICENSE.md file). If not, see
                 <q-btn color="secondary" class="text-black" label="${(ec.user.userAccount.userFullName)!'Account'}">
                     <q-menu auto-close>
                         <q-list dense style="min-width: 100px">
-                            <#if ec.user.getPreference('ACTIVE_ORGANIZATION')!?has_content>
-                            <q-item clickable>
-                                <q-item-section><q-btn flat label="Application" type="a" href="${sri.buildUrl("/coapp/Home").url}">
-                                        <q-tooltip>Go to Application</q-tooltip></q-btn>
-                                </q-item-section>
-                            </q-item>
+                            <#if organizationName!?has_content>
+                                <q-item clickable>
+                                    <q-item-section><q-btn flat label="View ${organizationName}" type="a" href="${sri.buildUrl("/coapp/Home").url}">
+                                            <q-tooltip>View ${organizationName} Home</q-tooltip></q-btn>
+                                    </q-item-section>
+                                </q-item>
                             </#if>
                             <q-item clickable>
                                 <q-item-section>
@@ -134,6 +135,11 @@ along with this software (see the LICENSE.md file). If not, see
 <#--                    </q-card></q-menu>-->
 <#--            </q-btn>-->
             </q-toolbar></q-header>
+
+        <q-drawer v-model="leftOpen" side="left" bordered
+                  :width="200" :breakpoint="500"><#-- no 'overlay', for those who want to keep it open better to compress main area -->
+            <q-list padding><c-menu-nav-item :menu-index="0"></c-menu-nav-item></q-list>
+        </q-drawer>
 
         <q-page-container class="q-ma-sm"><q-page>
             <m-subscreens-active></m-subscreens-active>

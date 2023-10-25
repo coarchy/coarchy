@@ -31,7 +31,9 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="toRoleTypeId" value="OrgInternal"/>
             <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
             <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
-<!--        <log level="warn" message="Actors always-actions context.toString() ${context.toString()}"/>-->
+        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+            <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
+        <!--        <log level="warn" message="Actors always-actions context.toString() ${context.toString()}"/>-->
     </always-actions>
 
     <transition name="createActor">
@@ -90,6 +92,15 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
+        <section name="FreemiumBanner" condition="partyActivationCount == 0">
+            <widgets>
+                <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
+                    <label text="To enable all the features upgrade organization '${activeOrg.organizationName}' to Premium" type="b"/>
+                    <container type="template v-slot:action"><container type="q-btn flat color='primary' label='Upgrade' href='/settings/Organizations?toPartyId=${activeOrgId}'"/></container>
+                </container>
+            </widgets>
+        </section>
+
         <label text="Actors" type="h4"/>
 <!--        <link url="../FindProcessStory" text="Find Process Stories"/>-->
 <!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
@@ -138,9 +149,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
                 <last-row-field><text-area rows="2" cols="80" autogrow="true"/></last-row-field>
             </field>
-            <field name="partyIdList"><conditional-field condition="activeOrg.ownerPartyId!=ec.user.userAccount.partyId" title="${activeOrg.ownerPartyId!=ec.user.userAccount.partyId?'Assigned Users':''}">
+            <field name="partyIdList"><conditional-field condition="(partyActivationCount == 0 &amp;&amp; activeOrg.ownerPartyId==ec.user.userAccount.partyId) || activeOrg.ownerPartyId!=ec.user.userAccount.partyId"
+                    title="${(partyActivationCount == 0 &amp;&amp; activeOrg.ownerPartyId==ec.user.userAccount.partyId)||activeOrg.ownerPartyId!=ec.user.userAccount.partyId?'Assigned Users':''}">
                 <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/UserLinkList.html.ftl"/></render-mode>
-            </conditional-field><conditional-field condition="activeOrg.ownerPartyId==ec.user.userAccount.partyId" title="${activeOrg.ownerPartyId==ec.user.userAccount.partyId?'Assigned Users':''}">
+            </conditional-field><conditional-field condition="partyActivationCount &gt; 0 &amp;&amp; activeOrg.ownerPartyId==ec.user.userAccount.partyId" title="${activeOrg.ownerPartyId==ec.user.userAccount.partyId?'Assigned Users':''}">
                 <drop-down submit-on-select="true" allow-multiple="true" allow-empty="true">
                     <list-options list="actorPartyList" key="${fromPartyId}" text="${firstName} ${lastName}"/>
                     <dynamic-options server-search="true" transition="getUserList" min-length="0"/>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Transactions" default-menu-index="70" menu-image="fa fa-university" menu-image-type="icon">
+
+    <actions>
+        <entity-find entity-name="mantle.account.financial.FinancialAccountAndTrans" list="finAccountAndTrans">
+            <search-form-inputs/>
+            <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
+            <econdition field-name="organizationPartyId" value="coarchy"/>
+            <econdition field-name="statusId" value="FaActive"/>
+            <date-filter/>
+            <order-by field-name="-transactionDate"/>
+        </entity-find>
+    </actions>
+
+    <widgets>
+        <container-row>
+            <row-col md="2"/>
+            <row-col md="8">
+                <label text="Transaction History" type="h4"/>
+
+                <section name="TotalCredits" condition="finAccountAndTrans.getFirst() != null">
+                    <widgets><label text="Total Organization-Month Credits ${ec.l10n.formatNumber((Number)finAccountAndTrans.getFirst().availableBalance,null,null)}"/></widgets>
+                </section>
+
+                <form-list name="OrderItemPartForm" list="finAccountAndTrans" header-dialog="true" show-csv-button="true">
+                    <row-actions>
+                        <entity-find-one entity-name="mantle.party.Person" value-field="person" auto-field-map="[partyId:ownerPartyId]" cache="true"/>
+                        <set field="partyName" from="person.firstName + ' ' + person.lastName"/>
+                        <entity-find-one entity-name="moqui.basic.Enumeration" value-field="finAccountTransTypeEnum" auto-field-map="[enumId:finAccountTransTypeEnumId]" cache="true"/>
+                    </row-actions>
+
+                    <field name="finAccountTransId"><default-field><hidden/></default-field></field>
+                    <field name="partyName"><default-field title="Name"><label text="${partyName}"/></default-field></field>
+                    <field name="finAccountTransTypeEnumId">
+                        <default-field title="Type"><label text="${finAccountTransTypeEnum.description}"/></default-field></field>
+                    <field name="amount"><default-field title="Amount">
+                        <label text="${ec.l10n.formatNumber((Number)amount,null,null)} Organization-Month Credits"/></default-field></field>
+                    <field name="transactionDate"><header-field title="Date"><date-find type="date-time"/></header-field>
+                        <default-field title="Date"><label text="${ec.l10n.format(transactionDate, 'dd MMM yyyy hh:mm a')}"/></default-field></field>
+                    <field name="orderId"><header-field title=""><text-find/></header-field>
+                        <conditional-field condition="orderId != null" title="Order">
+                        <link url="../OrderHistory?orderId=${orderId}" text="Order"/></conditional-field></field>
+                    <field name="submit"><header-field><submit text="Find"/></header-field></field>
+                </form-list>
+            </row-col>
+            <row-col md="2"/>
+        </container-row>
+    </widgets>
+</screen>

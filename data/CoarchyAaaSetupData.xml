@@ -50,6 +50,11 @@ along with this software (see the LICENSE.md file). If not, see
 
     <artifactGroups artifactGroupId="COARCHY_SETTINGS" description="Coarchy Settings (via root screen)">
         <artifacts artifactName="component://coarchy/screen/settings/settingsinternal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+        <artifacts artifactName="coarchy.StripeServices.create#PaymentIntent" artifactTypeEnumId="AT_SERVICE" inheritAuthz="Y" nameIsPattern="N"/>
+        <artifacts artifactName="mantle.party.Party" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>
+        <artifacts artifactName="mantle.party.Organization" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>
+        <artifacts artifactName="mantle.order.OrderHeaderAndPart" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>
+        <artifacts artifactName="mantle.order.OrderServices.add#OrderPartPayment" artifactTypeEnumId="AT_SERVICE" inheritAuthz="Y" nameIsPattern="N"/>
         <authz artifactAuthzId="COARCHY_SETTINGS_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
         <authz artifactAuthzId="COARCHY_SETTINGS_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
     </artifactGroups>
@@ -147,4 +152,57 @@ along with this software (see the LICENSE.md file). If not, see
 
     <!-- ========== Moqui Cleanup ========== -->
     <moqui.security.user.NotificationTopic topic="MantleTask" showAlert="N" persistOnSend="N" receiveNotifications="N"/>
+
+    <!-- ========== Stripe ========== -->
+    <moqui.basic.Enumeration description="Stripe" enumId="PmtStripe" enumTypeId="PaymentMethodType"/>
+    <moqui.basic.Enumeration description="Stripe" enumId="PiStripe" enumTypeId="PaymentInstrument" relatedEnumId="PmtStripe"/>
+
+    <moqui.service.message.SystemMessageType systemMessageTypeId="StripeWebhookEvent" consumeServiceName="coarchy.StripeServices.consume#StripeWebhookEvent" description="Stripe Webhook Event"/>
+    <moqui.service.message.SystemMessageRemote systemMessageRemoteId="ProductionStripe" authHeaderName="Stripe-Signature" messageAuthEnumId="SmatHmacSha256Timestamp" description="Stripe"/>
+    <moqui.basic.Enumeration description="Stripe" enumId="PgtStripe" enumTypeId="PaymentGatewayType"/>
+    <mantle.account.method.PaymentGatewayConfig paymentGatewayConfigId="ProductionStripe" paymentGatewayTypeEnumId="PgtStripe" description="Stripe Payment Gateway" systemMessageRemoteId="ProductionStripe"
+            authorizeServiceName="coarchy.StripeServices.authorizeAndCapture#Payment" captureServiceName="coarchy.StripeServices.capture#Payment"/>
+
+    <!-- ========== Products and Other Related ========== -->
+    <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy" visibilityEnumId="PvPublic">
+        <mantle.party.Organization organizationName="Coarchy" partyId="coarchy"/>
+        <roles roleTypeId="OrgInternal"/>
+    </parties>
+
+    <productStores defaultSalesChannelEnumId="ScWeb" storeName="Coarchy" productStoreId="coarchy"
+            systemMessageRemoteId="ProductionStripe" organizationPartyId="coarchy" reservationOrderEnumId="AsResOrdNoRes"
+            autoApproveDelay="-1">
+        <mantle.product.store.ProductStorePaymentGateway paymentInstrumentEnumId="PiStripe" paymentGatewayConfigId="ProductionStripe"/>
+        <settings fromDate="1697159760000" settingValue="false" settingTypeEnumId="PsstOrdApproveSimilar"/>
+        <settings fromDate="1697159760000" settingValue="false" settingTypeEnumId="PsstOrdApproveNewCust"/>
+        <settings fromDate="1697159820000" settingValue="false" settingTypeEnumId="PsstOrdApproveAddrMissing"/>
+        <settings fromDate="1697159880000" settingValue="false" settingTypeEnumId="PsstOrdApprovePayMethNameDiff"/>
+        <settings fromDate="1697159880000" settingValue="false" settingTypeEnumId="PsstOrdApproveAddrNotValid"/>
+        <settings fromDate="1697159890000" settingValue="0.0" settingTypeEnumId="PsstOrdApproveStdDevTotal"/>
+        <settings fromDate="1697159890000" settingValue="0.0" settingTypeEnumId="PsstOrdApproveStdDevProdQty"/>
+    </productStores>
+
+    <products productId="c100000" productName="Organization-Month Credits" pseudoId="ORGMNTH" productTypeEnumId="PtDigitalAsset">
+        <description><![CDATA[Buy monthly usage of Coarchy premium features for you organization. Each organization-month credit allows premium features for one organization for one month.\n\nIf you want to have 5 organizations for 12 months then you would buy 60 organizaiton-month credits.]]></description>
+        <prices productPriceId="c100000" priceTypeEnumId="PptCurrent" minQuantity="1" price="30.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200000" priceUomId="USD"/>
+        <prices productPriceId="c100001" priceTypeEnumId="PptCurrent" minQuantity="3" price="29.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200001" priceUomId="USD"/>
+        <prices productPriceId="c100002" priceTypeEnumId="PptCurrent" minQuantity="12" price="27.50" pricePurposeEnumId="PppPurchase" fromDate="1696309200002" priceUomId="USD"/>
+<!--        <prices productPriceId="c100003" priceTypeEnumId="PptCurrent" minQuantity="120" price="20.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200003" priceUomId="USD"/>-->
+        <mantle.product.store.ProductStoreProduct productStoreId="coarchy"/>
+    </products>
+
+    <mantle.account.financial.FinancialAccountType description="Organization-Month Credit" finAccountTypeId="OrganizationMonthCredit"
+            replenishTypeEnumId="FarpManual" isRefundable="Y" parentTypeId="DepositAccount"/>
+
+    <!-- ========== Service Jobs ========== -->
+    <moqui.service.job.ServiceJob jobName="withdraw_FinancialAccountCredits" description="Withdraw Financial Account Credits Monthly"
+            serviceName="coarchy.CoarchyServices.withdraw#FinancialAccountCreditsMonthly" cronExpression="0 0 2 1 * ?" paused="N"
+            transactionTimeout="3600">
+        <parameters parameterName="finAccountTypeId" parameterValue="OrganizationMonthCredit"/>
+    </moqui.service.job.ServiceJob>
+    <moqui.service.job.ServiceJob jobName="check_PartyActivation" description="Check Party Activation Daily"
+            serviceName="coarchy.CoarchyServices.check#PartyActivationDaily" cronExpression="0 30 2 * * ?" paused="N"
+            transactionTimeout="3600">
+        <parameters parameterName="finAccountTypeId" parameterValue="OrganizationMonthCredit"/>
+    </moqui.service.job.ServiceJob>
 </entity-facade-xml>

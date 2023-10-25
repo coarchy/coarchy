@@ -20,6 +20,8 @@ along with this software (see the LICENSE.md file). If not, see
             <message type="info">Select an Organization before moving forward.</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
+        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+            <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
     <transition name="viewProcessStory">
@@ -68,6 +70,15 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
+        <section name="FreemiumBanner" condition="partyActivationCount == 0">
+            <widgets>
+                <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
+                    <label text="To enable all the features upgrade organization '${activeOrg.organizationName}' to Premium" type="b"/>
+                    <container type="template v-slot:action"><container type="q-btn flat color='primary' label='Upgrade' href='/settings/Organizations?toPartyId=${activeOrgId}'"/></container>
+                </container>
+            </widgets>
+        </section>
+
         <label text="Home" type="h4"/>
         <container-row><row-col md="6">
             <label text="Screens" type="h5" style="q-pt-sm"/>
@@ -95,14 +106,11 @@ along with this software (see the LICENSE.md file). If not, see
 
             <section-iterate name="FeedSection" list="activityFeedList" entry="item">
                 <widgets>
-                    <container-box>
-                        <box-header></box-header>
-                        <box-body-nopad>
-                            <render-mode><text><![CDATA[<h6>${item.entityType}: <m-link href="${item.link}">${item.name}</h6></m-link>]]></text></render-mode>
+                    <container type="q-card" style="q-pa-sm q-mb-xs">
+                        <render-mode><text><![CDATA[<h6>${item.entityType}: <m-link href="${item.link}">${item.name}</h6></m-link>]]></text></render-mode>
 
-                            <label text="${item.updateType} on ${ec.l10n.format(item.date,'MMMM dd, HH:mm')}"/>
-                        </box-body-nopad>
-                    </container-box>
+                        <label text="${item.updateType} on ${ec.l10n.format(item.date,'MMMM dd, HH:mm')}"/>
+                    </container>
                 </widgets>
             </section-iterate>
         </row-col></container-row>

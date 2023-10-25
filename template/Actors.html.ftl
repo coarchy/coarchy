@@ -1,10 +1,10 @@
-<h4 class="q-pb-sm">Actors:</h4>
+<h5 class="q-pb-sm">Actors:</h5>
 <#list actorList! as actor>
     <#if actor.name?hasContent><div><b><a href="/coapp/Actor?actorId=${actor.actorId}">${actor.name?html}</a></b><#if actor.description?hasContent>: ${actor.description?html}</#if></div><#if actor_has_next><br></#if></#if>
 </#list>
-<#if showActivities! == 'Y'>
+<#if showActivities! == 'Y' && partyActivationCount! gt 0>
 <hr>
-<h4 class="q-pb-sm">Activities:</h4>
+<h5 class="q-pb-sm">Activities:</h5>
 <#list actorList! as actor>
     <#if actor.name?hasContent><div><b>${actor.name?html}</b></div></#if>
     <#if actor.processStoryActivityList!?size &gt; 0><ul></#if>

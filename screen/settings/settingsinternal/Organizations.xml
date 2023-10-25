@@ -160,7 +160,6 @@ along with this software (see the LICENSE.md file). If not, see
                             <econdition field-name="visibilityEnumId" value="PvPublic"/>
                         </econditions>
                         <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/></entity-find>
-
                     <field name="toPartyId">
                         <header-field><text-find size="25"/></header-field>
                         <default-field><hidden/></default-field></field>

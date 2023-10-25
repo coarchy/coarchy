@@ -22,6 +22,8 @@ along with this software (see the LICENSE.md file). If not, see
             <message>Select an Organization before moving forward.</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
+        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+            <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
     <actions>
@@ -55,12 +57,20 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
+        <section name="FreemiumBanner" condition="partyActivationCount == 0">
+            <widgets>
+                <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
+                    <label text="To enable all the features upgrade organization '${activeOrg.organizationName}' to Premium" type="b"/>
+                    <container type="template v-slot:action"><container type="q-btn flat color='primary' label='Upgrade' href='/settings/Organizations?toPartyId=${activeOrgId}'"/></container>
+                </container>
+            </widgets>
+        </section>
         <container-row>
             <row-col md="2"/>
             <row-col md="8">
-                <label text="View Actors" type="h4"/>
+                <label text="View Actors" type="h4" style="q-pb-md"/>
 
-                <container-dialog id="ViewActorsDialog" button-text="Show Activities" type="success">
+                <container-dialog id="ViewActorsDialog" button-text="Show Activities" type="success" condition="partyActivationCount &gt; 0">
                     <form-single name="ViewActorsForm">
                         <field name="showActivities" from="showActivities?:'Y'"><default-field>
                             <radio><option key="Y" text="Yes"/><option key="N" text="No"/></radio>
