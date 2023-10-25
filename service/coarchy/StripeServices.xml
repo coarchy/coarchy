@@ -90,7 +90,7 @@ along with this software (see the LICENSE.md file). If not, see
                 customerResponseMap = (Map) customerRestResponse.jsonObject()
 //                ec.logger.warn("customerResponseMap: ${customerResponseMap}")
                 if (customerRestResponse.statusCode < 200 || customerRestResponse.statusCode >= 300) {
-                    ec.logger.warn("Got status code ${customerRestResponse.statusCode} from Stripe on a create customers request")
+                    ec.logger.warn("Got status code ${customerRestResponse.statusCode} from Stripe on a create customers request for the parameter '${customerResponseMap.error.type}' and message '${customerResponseMap.error.message}'")
                     ec.message.addPublic("Could not create Customer", "warning")
                     return
                 }
