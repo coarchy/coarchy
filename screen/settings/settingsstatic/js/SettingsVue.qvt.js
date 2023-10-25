@@ -158,7 +158,7 @@ Vue.component('m-stripe', {
                 return;
             }
             // This is your test publishable API key.
-            vm.stripe = Stripe("pk_test_51NwtETDVIK4XcJLUKKfmdgqu4P7JZXG2OYxvI2RwINSohtadc4IIhdHr9yxjDat8fTA1k0noud5oyVWAlMjL9kxS00uDSFLMI3")
+            vm.stripe = Stripe("pk_live_51NwtETDVIK4XcJLUczddFgaBWNcxbCoCbF9ipNbzqwoKAjy93jl3TBiymRaXGLqe01yROWZWWcW5FM7r2BBd6jET00J1zvHKmx")
             console.log("loaded stripe")
 
             vm.initialize();
