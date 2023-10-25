@@ -24,8 +24,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
                 <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId,productStoreId"/>
                 <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
-            <if condition="existingOrderList.size() == 0"><return error="true" public="true" type="danger" message="No order found for user."/></if>
-            <if condition="existingOrderList.size() &gt; 1"><message type="warning">Multiple open orders or parts found for user. This should not happen.</message></if>
+            <if condition="existingOrderList.size() == 0"><return error="true" public="true" type="danger"
+                    message="No order found for user."/></if>
+            <if condition="existingOrderList.size() &gt; 1">
+                <message type="warning">Multiple open orders or parts found for user. This should not happen.</message></if>
 
             <set field="orderHeaderAndPart" from="existingOrderList.getFirst()"/>
             <set field="orderId" from="orderHeaderAndPart.orderId"/>
@@ -35,12 +37,15 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="paymentInstrumentEnumId" value="PiStripe"/>
                 <econdition field-name="paymentGatewayConfigId" operator="is-not-null"/>
                 <select-field field-name="paymentGatewayConfigId"/><order-by field-name="-lastUpdatedStamp"/></entity-find>
-            <if condition="productStorePaymentGatewayList.size() == 0"><return error="true" public="true" type="danger" message="No payment gateway found for order."/></if>
+            <if condition="productStorePaymentGatewayList.size() == 0"><return error="true" public="true" type="danger"
+                    message="No payment gateway found for order."/></if>
+
+            <set field="paymentGatewayConfigId" from="productStorePaymentGatewayList.getFirst().paymentGatewayConfigId"/>
 
             <entity-find entity-name="mantle.account.payment.Payment" list="existingPaymentList">
                 <econdition field-name="orderId"/>
                 <econdition field-name="orderPartSeqId" from="orderHeaderAndPart.orderPartSeqId"/>
-                <econdition field-name="paymentGatewayConfigId" from="productStorePaymentGatewayList.getFirst().paymentGatewayConfigId"/>
+                <econdition field-name="paymentGatewayConfigId"/>
                 <select-field field-name="paymentId,amountUomId,unappliedTotal,statusId"/>
                 <order-by field-name="-paymentDate"/></entity-find>
 <!--            <log level="warn" message="create#PaymentIntent existingPaymentList.toString(): ${existingPaymentList.toString()}"/>-->
@@ -57,7 +62,8 @@ along with this software (see the LICENSE.md file). If not, see
 
             <service-call name="mantle.order.OrderServices.add#OrderPartPayment" in-map="[orderId:orderHeaderAndPart.orderId,
                 orderPartSeqId:orderHeaderAndPart.orderPartSeqId,settlementTermId:'Immediate', paymentInstrumentEnumId:'PiStripe',
-                paymentGatewayConfigId:productStorePaymentGatewayList.getFirst().paymentGatewayConfigId]" out-map="context"/>
+                paymentGatewayConfigId:paymentGatewayConfigId,
+                entryDate:ec.user.nowTimestamp]" out-map="context"/>
             <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment" auto-field-map="[paymentId:paymentId]"/>
 
             <!-- convert unappliedTotal to cents -->
@@ -65,12 +71,8 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="currencyUomId" from="payment.amountUomId"/>
 
             <!-- System steps -->
-            <set field="instancePurpose" from="System.getProperty('instance_purpose')"/>
-            <if condition="!instancePurpose || instancePurpose == 'production'"><then>
-                <script><![CDATA[stripeRemote = ec.entity.fastFindOne("moqui.service.message.SystemMessageRemote", false, true, 'ProductionStripe')]]></script>
-            </then><else>
-                <script><![CDATA[stripeRemote = ec.entity.fastFindOne("moqui.service.message.SystemMessageRemote", false, true, 'DemoStripe')]]></script>
-            </else></if>
+            <entity-find-one entity-name="mantle.account.method.PaymentGatewayConfig" value-field="paymentGateway" auto-field-map="[paymentGatewayConfigId:paymentGatewayConfigId]"/>
+            <set field="stripeRemote" from="paymentGateway.remote"/>
             <script><![CDATA[party = ec.entity.find("mantle.party.Party").condition("partyId", ec.user.userAccount.partyId).one()]]></script>
 
             <script>import org.moqui.util.RestClient</script>

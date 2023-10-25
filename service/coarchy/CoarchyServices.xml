@@ -766,6 +766,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <if condition="quantity &lt; 1"><return type="danger" message="Organization-Month Quantity must at least 1" error="true" public="true"/></if>
+            <if condition="quantity &gt; 18"><return type="danger" message="Cannot buy more than 18 Organization-Month Credits" error="true" public="true"/></if>
             <entity-find entity-name="mantle.product.store.ProductStoreProduct" list="productStoreProductList" limit="1">
                 <econdition field-name="productId"/><order-by field-name="-lastUpdatedStamp"/></entity-find>
             <service-call name="mantle.order.OrderServices.add#OrderProductQuantity" in-map="[quantity:quantity,productId:productId,

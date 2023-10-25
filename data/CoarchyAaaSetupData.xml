@@ -158,16 +158,28 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Stripe" enumId="PiStripe" enumTypeId="PaymentInstrument" relatedEnumId="PmtStripe"/>
 
     <moqui.service.message.SystemMessageType systemMessageTypeId="StripeWebhookEvent" consumeServiceName="coarchy.StripeServices.consume#StripeWebhookEvent" description="Stripe Webhook Event"/>
-    <moqui.service.message.SystemMessageRemote systemMessageRemoteId="DemoStripe" authHeaderName="Stripe-Signature" messageAuthEnumId="SmatHmacSha256Timestamp" description="Stripe Demo"/>
+    <moqui.service.message.SystemMessageRemote systemMessageRemoteId="ProductionStripe" authHeaderName="Stripe-Signature" messageAuthEnumId="SmatHmacSha256Timestamp" description="Stripe"/>
     <moqui.basic.Enumeration description="Stripe" enumId="PgtStripe" enumTypeId="PaymentGatewayType"/>
-    <mantle.account.method.PaymentGatewayConfig paymentGatewayConfigId="DemoStripe" paymentGatewayTypeEnumId="PgtStripe" description="Stripe Demo Payment Gateway" systemMessageRemoteId="DemoStripe"/>
+    <mantle.account.method.PaymentGatewayConfig paymentGatewayConfigId="ProductionStripe" paymentGatewayTypeEnumId="PgtStripe" description="Stripe Payment Gateway" systemMessageRemoteId="ProductionStripe"
+            authorizeServiceName="coarchy.StripeServices.authorizeAndCapture#Payment" captureServiceName="coarchy.StripeServices.capture#Payment"/>
 
     <!-- ========== Products and Other Related ========== -->
-    <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy" visibilityEnumId="PvPublic"/>
-    <mantle.party.Organization organizationName="Coarchy" partyId="coarchy"/>
+    <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy" visibilityEnumId="PvPublic">
+        <mantle.party.Organization organizationName="Coarchy" partyId="coarchy"/>
+        <roles roleTypeId="OrgInternal"/>
+    </parties>
 
-    <productStores defaultSalesChannelEnumId="ScWeb" storeName="Coarchy" productStoreId="coarchy" systemMessageRemoteId="DemoStripe" organizationPartyId="coarchy">
-        <mantle.product.store.ProductStorePaymentGateway paymentInstrumentEnumId="PiStripe" paymentGatewayConfigId="DemoStripe"/>
+    <productStores defaultSalesChannelEnumId="ScWeb" storeName="Coarchy" productStoreId="coarchy"
+            systemMessageRemoteId="ProductionStripe" organizationPartyId="coarchy" reservationOrderEnumId="AsResOrdNoRes"
+            autoApproveDelay="-1">
+        <mantle.product.store.ProductStorePaymentGateway paymentInstrumentEnumId="PiStripe" paymentGatewayConfigId="ProductionStripe"/>
+        <settings fromDate="1697159760000" settingValue="false" settingTypeEnumId="PsstOrdApproveSimilar"/>
+        <settings fromDate="1697159760000" settingValue="false" settingTypeEnumId="PsstOrdApproveNewCust"/>
+        <settings fromDate="1697159820000" settingValue="false" settingTypeEnumId="PsstOrdApproveAddrMissing"/>
+        <settings fromDate="1697159880000" settingValue="false" settingTypeEnumId="PsstOrdApprovePayMethNameDiff"/>
+        <settings fromDate="1697159880000" settingValue="false" settingTypeEnumId="PsstOrdApproveAddrNotValid"/>
+        <settings fromDate="1697159890000" settingValue="0.0" settingTypeEnumId="PsstOrdApproveStdDevTotal"/>
+        <settings fromDate="1697159890000" settingValue="0.0" settingTypeEnumId="PsstOrdApproveStdDevProdQty"/>
     </productStores>
 
     <products productId="c100000" productName="Organization-Month Credits" pseudoId="ORGMNTH" productTypeEnumId="PtDigitalAsset">
@@ -175,7 +187,7 @@ along with this software (see the LICENSE.md file). If not, see
         <prices productPriceId="c100000" priceTypeEnumId="PptCurrent" minQuantity="1" price="30.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200000" priceUomId="USD"/>
         <prices productPriceId="c100001" priceTypeEnumId="PptCurrent" minQuantity="3" price="29.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200001" priceUomId="USD"/>
         <prices productPriceId="c100002" priceTypeEnumId="PptCurrent" minQuantity="12" price="27.50" pricePurposeEnumId="PppPurchase" fromDate="1696309200002" priceUomId="USD"/>
-        <prices productPriceId="c100003" priceTypeEnumId="PptCurrent" minQuantity="120" price="20.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200003" priceUomId="USD"/>
+<!--        <prices productPriceId="c100003" priceTypeEnumId="PptCurrent" minQuantity="120" price="20.00" pricePurposeEnumId="PppPurchase" fromDate="1696309200003" priceUomId="USD"/>-->
         <mantle.product.store.ProductStoreProduct productStoreId="coarchy"/>
     </products>
 

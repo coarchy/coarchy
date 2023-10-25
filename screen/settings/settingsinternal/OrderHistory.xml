@@ -15,6 +15,31 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Order History" default-menu-index="60" menu-image="fa fa-history" menu-image-type="icon">
 
+    <actions>
+        <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrder1List" limit="1">
+            <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
+            <select-field field-name="orderId,placedDate,completedDate,entryDate,statusId"/>
+            <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
+
+        <set field="firstOrder" from="existingOrder1List.getFirst()"/>
+        <set field="shouldReload" from="false"/>
+        <if condition="firstOrder?.statusId == 'OrderOpen'"><then>
+            <if condition="!ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered"><then>
+                <set field="shouldReload" from="true"/>
+                <script>ec.web.sessionAttributes.put("coarchy_orderHistoryFirstRendered", ec.user.nowTimestamp)</script>
+            </then><else>
+                <set field="shouldReload" from="Duration.between(ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered.toInstant(),ec.user.nowTimestamp.toInstant()).toMillis()&lt;1501*5"/>
+                <if condition="!shouldReload"><script>ec.web.sessionAttributes.remove("coarchy_orderHistoryFirstRendered")</script></if>
+<!--                <log level="warn" message="shouldReload ${shouldReload}"/>-->
+            </else></if>
+        </then><else>
+            <if condition="!shouldReload&amp;&amp;ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered"><script>ec.web.sessionAttributes.remove("coarchy_orderHistoryFirstRendered")</script></if>
+        </else></if>
+<!--        <log level="warn" message="firstOrder?.statusId ${firstOrder?.statusId} firstRendered ${firstRendered} timeSinceEntryDate ${timeSinceEntryDate}"/>-->
+<!--        <log level="warn" message="entryDate.toString() ${firstOrder.entryDate} placedDate ${firstOrder.placedDate} completedDate ${firstOrder.completedDate} ${ec.user.nowTimestamp} ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered ${ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered}"/>-->
+<!--        <log level="warn" message="OrderHistory actions context.toString() ${context.toString()}"/>-->
+    </actions>
+
     <widgets>
         <container-row>
             <row-col md="2"/>
@@ -49,7 +74,8 @@ along with this software (see the LICENSE.md file). If not, see
                         <default-field><display/></default-field></field>
                     <field name="placedDate"><header-field><date-find type="date-time"/></header-field>
                         <default-field title="Date"><label text="${ec.l10n.format(placedDate ?: entryDate, 'dd MMM yyyy hh:mm a')}"/></default-field></field>
-                    <field name="statusId"><default-field title="Status"><label text="${status.description}"/></default-field></field>
+                    <field name="statusId"><default-field title="Status"><label text="${shouldReload&amp;&amp;
+                        existingOrderList_index==0?'Order Processing...':status.description}"/></default-field></field>
                     <field name="quantity"><default-field title="Quantity">
                         <label text="${ec.l10n.formatNumber((Number)orderItem.quantity,null,null)} ${orderItem.itemDescription}"/></default-field></field>
                     <field name="total"><default-field title="Total">
@@ -61,5 +87,8 @@ along with this software (see the LICENSE.md file). If not, see
             </row-col>
             <row-col md="2"/>
         </container-row>
+        <container type="script" condition="shouldReload">
+            setTimeout(function() { console.log('reloading');  location.reload(); }, 1500);
+        </container>
     </widgets>
 </screen>
