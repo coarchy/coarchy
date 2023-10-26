@@ -25,6 +25,18 @@ along with this software (see the LICENSE.md file). If not, see
             <date-filter/>
             <order-by field-name="-transactionDate"/>
         </entity-find>
+
+        <set field="totalTotalCreditsUsed" from="0.0" type="BigDecimal"/>
+        <entity-find entity-name="mantle.party.Party" list="organizationList">
+            <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+            <econdition field-name="disabled" value="N" or-null="true"/>
+            <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+            <select-field field-name="partyId"/>
+        </entity-find>
+        <iterate list="organizationList" entry="organization">
+        <service-call name="coarchy.CoarchyServices.check#PartyActivation" in-map="[organizationPartyId:organization.partyId,finAccountTypeId:'OrganizationMonthCredit']" out-map="context"/>
+            <set field="totalTotalCreditsUsed" from="totalTotalCreditsUsed + totalCreditsUsed" type="BigDecimal"/>
+        </iterate>
     </actions>
 
     <widgets>
@@ -33,9 +45,8 @@ along with this software (see the LICENSE.md file). If not, see
             <row-col md="8">
                 <label text="Transaction History" type="h4"/>
 
-                <section name="TotalCredits" condition="finAccountAndTrans.getFirst() != null">
-                    <widgets><label text="Total Organization-Month Credits ${ec.l10n.formatNumber((Number)finAccountAndTrans.getFirst().availableBalance,null,null)}"/></widgets>
-                </section>
+                <label condition="finAccountAndTrans.getFirst() != null&amp;&amp;finAccountAndTrans.getFirst().availableBalance&gt;0"
+                        text="Used ${ec.l10n.formatNumber((Number)totalTotalCreditsUsed,null,null)} / ${ec.l10n.formatNumber((Number)finAccountAndTrans.getFirst().availableBalance,null,null)} Organization-Month Credits this month"/>
 
                 <form-list name="OrderItemPartForm" list="finAccountAndTrans" header-dialog="true" show-csv-button="true">
                     <row-actions>

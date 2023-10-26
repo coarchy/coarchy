@@ -978,7 +978,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="financialAccountList" from="financialAccountList.groupBy{it.ownerPartyId}.collect{it.value.max{it.availableBalance}}"/>
 
             <iterate list="financialAccountList" entry="financialAccount">
-                <set field="totalActivationPeriodCount" from="0.0" type="BigDecimal"/>
+                <set field="totalCreditsUsed" from="0.0" type="BigDecimal"/>
                 <entity-find entity-name="mantle.party.Party" list="organizationList">
                     <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
                     <econdition field-name="disabled" value="N" or-null="true"/>
@@ -992,12 +992,12 @@ along with this software (see the LICENSE.md file). If not, see
                     organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
 
 <!--                    <log level="warn" message="withdraw#FinancialAccountCredits organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
-                    <set field="totalActivationPeriodCount" from="totalActivationPeriodCount + activationPeriodCount" type="BigDecimal"/>
+                    <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
                 </iterate>
 
-                <if condition="totalActivationPeriodCount &gt; 0.0">
+                <if condition="totalCreditsUsed &gt; 0.0">
                     <service-call name="mantle.account.FinancialAccountServices.withdraw#FinancialAccount" in-map="[
-                        finAccountId:financialAccount.finAccountId,amount:totalActivationPeriodCount,decimalDigits:4]"
+                        finAccountId:financialAccount.finAccountId,amount:totalCreditsUsed,decimalDigits:4]"
                         out-map="context"/>
                 </if>
 
@@ -1015,6 +1015,7 @@ along with this software (see the LICENSE.md file). If not, see
         <out-parameters>
             <parameter name="needsCredits" type="Boolean"/>
             <parameter name="creditsNeeded" type="BigDecimal"/>
+            <parameter name="totalCreditsUsed" type="BigDecimal"/>
         </out-parameters>
         <actions>
             <set field="periodThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
@@ -1041,7 +1042,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if there are multiple financial accounts for an organization, then remove all but the one with the most credits -->
             <set field="financialAccount" from="financialAccountList.groupBy{it.ownerPartyId}.collect{it.value.max{it.availableBalance}}[0]"/>
 
-            <set field="totalActivationPeriodCount" from="0.0" type="BigDecimal"/>
+            <set field="totalCreditsUsed" from="0.0" type="BigDecimal"/>
             <entity-find entity-name="mantle.party.Party" list="organizationList">
                 <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
                 <econdition field-name="disabled" value="N" or-null="true"/>
@@ -1057,23 +1058,23 @@ along with this software (see the LICENSE.md file). If not, see
                         organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
 
                 <!--                    <log level="warn" message="check#PartyActivation organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
-                <set field="totalActivationPeriodCount" from="totalActivationPeriodCount + activationPeriodCount" type="BigDecimal"/>
+                <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
             </iterate>
 
 <!--            <entity-find-count entity-name="mantle.party.PartyActivationAndParty" count-field="activatedOrganizationCount">-->
 <!--                <econdition field-name="ownerPartyId" from="organization.ownerPartyId"/>-->
 <!--                <date-filter/></entity-find-count>-->
-<!--            <log level="warn" message="check#PartyActivation activatedOrganizationCount ${activatedOrganizationCount} totalActivationPeriodCount ${totalActivationPeriodCount} financialAccount.availableBalance ${financialAccount.availableBalance}"/>-->
+<!--            <log level="warn" message="check#PartyActivation activatedOrganizationCount ${activatedOrganizationCount} totalCreditsUsed ${totalCreditsUsed} financialAccount.availableBalance ${financialAccount.availableBalance}"/>-->
             <set field="creditsNeeded" from="0.0"/>
             <set field="needsCredits" from="false"/>
-            <if condition="totalActivationPeriodCount &gt;= financialAccount.availableBalance">
+            <if condition="totalCreditsUsed &gt;= financialAccount.availableBalance">
                 <set field="needsCredits" from="true"/>
 
-                <set field="creditsNeededMax" from="(totalActivationPeriodCount-financialAccount.availableBalance).setScale(0, BigDecimal.ROUND_UP)" type="Integer"/>
+                <set field="creditsNeededMax" from="(totalCreditsUsed-financialAccount.availableBalance).setScale(0, BigDecimal.ROUND_UP)" type="Integer"/>
                 <set field="creditsNeeded" from="creditsNeededMax&gt;1.0?creditsNeededMax:1"/>
             </if>
 
-            <log level="warn" message="check#PartyActivation context.toString() ${context.toString()}"/>
+<!--            <log level="warn" message="check#PartyActivation context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
 
@@ -1101,7 +1102,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="financialAccountList" from="financialAccountList.groupBy{it.ownerPartyId}.collect{it.value.max{it.availableBalance}}"/>
 
             <iterate list="financialAccountList" entry="financialAccount">
-                <set field="totalActivationPeriodCount" from="0.0" type="BigDecimal"/>
+                <set field="totalCreditsUsed" from="0.0" type="BigDecimal"/>
                 <entity-find entity-name="mantle.party.Party" list="organizationList">
                     <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
                     <econdition field-name="disabled" value="N" or-null="true"/>
@@ -1115,11 +1116,11 @@ along with this software (see the LICENSE.md file). If not, see
                         organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
 
                     <!--                    <log level="warn" message="check#PartyActivationDaily organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
-                    <set field="totalActivationPeriodCount" from="totalActivationPeriodCount + activationPeriodCount" type="BigDecimal"/>
+                    <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
                 </iterate>
 
-<!--                <log level="warn" message="check#PartyActivationDaily organizationList.size() ${organizationList.size()} totalActivationPeriodCount ${totalActivationPeriodCount} financialAccount.availableBalance ${financialAccount.availableBalance}"/>-->
-                <if condition="totalActivationPeriodCount &gt; 0.0 &amp;&amp; totalActivationPeriodCount &gt; financialAccount.availableBalance">
+<!--                <log level="warn" message="check#PartyActivationDaily organizationList.size() ${organizationList.size()} totalCreditsUsed ${totalCreditsUsed} financialAccount.availableBalance ${financialAccount.availableBalance}"/>-->
+                <if condition="totalCreditsUsed &gt; 0.0 &amp;&amp; totalCreditsUsed &gt; financialAccount.availableBalance">
                     <iterate list="organizationList" entry="organization">
                         <entity-find entity-name="mantle.party.PartyActivation" list="partyActivationList" limit="1" for-update="true">
                             <econdition field-name="partyId" from="organization.partyId"/>

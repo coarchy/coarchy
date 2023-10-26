@@ -106,7 +106,27 @@ along with this software (see the LICENSE.md file). If not, see
     </actions><default-response url="/coapp/Home" url-type="plain"/></transition>
 
     <actions>
-        <!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
+        <entity-find entity-name="mantle.account.financial.FinancialAccountAndTrans" list="finAccountAndTrans" limit="1">
+            <search-form-inputs/>
+            <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
+            <econdition field-name="organizationPartyId" value="coarchy"/>
+            <econdition field-name="statusId" value="FaActive"/>
+            <date-filter/>
+            <order-by field-name="-transactionDate"/>
+        </entity-find>
+
+        <set field="totalTotalCreditsUsed" from="0.0" type="BigDecimal"/>
+        <entity-find entity-name="mantle.party.Party" list="otherOrganizationList">
+            <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+            <econdition field-name="disabled" value="N" or-null="true"/>
+            <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+            <select-field field-name="partyId"/>
+        </entity-find>
+        <iterate list="otherOrganizationList" entry="organization">
+            <service-call name="coarchy.CoarchyServices.check#PartyActivation" in-map="[organizationPartyId:organization.partyId,finAccountTypeId:'OrganizationMonthCredit']" out-map="context"/>
+            <set field="totalTotalCreditsUsed" from="totalTotalCreditsUsed + totalCreditsUsed" type="BigDecimal"/>
+        </iterate>
     </actions>
 
     <widgets>
@@ -116,6 +136,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <label text="Organizations" type="h4"/>
 
                 <!-- TODO: Create the feature to transfer org to another user -->
+                <label condition="finAccountAndTrans.getFirst() != null&amp;&amp;finAccountAndTrans.getFirst().availableBalance&gt;0"
+                        text="Used ${ec.l10n.formatNumber((Number)totalTotalCreditsUsed,null,null)} / ${ec.l10n.formatNumber((Number)finAccountAndTrans.getFirst().availableBalance,null,null)} Organization-Month Credits this month\n"/>
 
                 <container-dialog id="InviteUser" button-text="Invite User" condition="false &amp;&amp; ownerOfAnyOrganization" type="success">
                     <form-single name="InviteUser" transition="inviteUser">
