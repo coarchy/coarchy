@@ -351,7 +351,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <columns>
                 <column><field-ref name="move"/></column>
-                <column><field-ref name="implementationId"/><field-ref name="condition"/></column>
+                <column><field-ref name="condition"/></column>
 <!--                <column><field-ref name="sequenceNum"/><field-ref name="condition"/></column>-->
                 <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
                 <column><field-ref name="submit"/><field-ref name="insert"/><field-ref name="values"/></column>
