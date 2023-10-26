@@ -23,22 +23,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <set field="firstOrder" from="existingOrder1List.getFirst()"/>
         <!-- TODO: Fix extra loading on reload -->
-        <set field="shouldReload" from="false"/>
-        <if condition="firstOrder?.statusId == 'OrderOpen'"><then>
-            <if condition="!ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered"><then>
-                <set field="shouldReload" from="true"/>
-                <script>ec.web.sessionAttributes.put("coarchy_orderHistoryFirstRendered", ec.user.nowTimestamp)</script>
-            </then><else>
-                <set field="shouldReload" from="Duration.between(ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered.toInstant(),ec.user.nowTimestamp.toInstant()).toMillis()&lt;1501*5"/>
-                <if condition="!shouldReload"><script>ec.web.sessionAttributes.remove("coarchy_orderHistoryFirstRendered")</script></if>
-<!--                <log level="warn" message="shouldReload ${shouldReload}"/>-->
-            </else></if>
-        </then><else>
-            <if condition="!shouldReload&amp;&amp;ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered"><script>ec.web.sessionAttributes.remove("coarchy_orderHistoryFirstRendered")</script></if>
-        </else></if>
-<!--        <log level="warn" message="firstOrder?.statusId ${firstOrder?.statusId} firstRendered ${firstRendered} timeSinceEntryDate ${timeSinceEntryDate}"/>-->
-<!--        <log level="warn" message="entryDate.toString() ${firstOrder.entryDate} placedDate ${firstOrder.placedDate} completedDate ${firstOrder.completedDate} ${ec.user.nowTimestamp} ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered ${ec.web.sessionAttributes.coarchy_orderHistoryFirstRendered}"/>-->
-<!--        <log level="warn" message="OrderHistory actions context.toString() ${context.toString()}"/>-->
+        <set field="shouldReload" from="firstOrder?.statusId == 'OrderOpen'&amp;&amp;Duration.between(firstOrder?.entryDate.toInstant(),ec.user.nowTimestamp.toInstant()).toMillis()&lt;5000"/>
     </actions>
 
     <widgets>
@@ -88,8 +73,5 @@ along with this software (see the LICENSE.md file). If not, see
             </row-col>
             <row-col md="2"/>
         </container-row>
-        <container type="script" condition="shouldReload">
-            setTimeout(function() { console.log('reloading');  location.reload(); }, 1500);
-        </container>
     </widgets>
 </screen>
