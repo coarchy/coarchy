@@ -248,7 +248,7 @@ along with this software (see the LICENSE.md file). If not, see
         <form-list name="ProcessStory" header-dialog="true" list="processStoryActivityList"
                 show-csv-button="true" show-page-size="true"
                 transition="updateActivity" transition-last-row="createActivity"
-                map-last-row="[actorIdList:null,condition:null,action:null,implementationId:null]">
+                map-last-row="[actorIdList:null,condition:null,action:null,implementationId:null]" select-columns="true">
 
             <row-actions>
                 <set field="activityActorList" from="[]"/>
@@ -267,12 +267,13 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="newPageIndex"><last-row-field><hidden default-value="${(processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp; processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex}"/></last-row-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
-            <field name="moveUp"><default-field title=""><link url="activityMoveUp"
+            <field name="move"><default-field title="Move"><link url="activityMoveUp"
                     parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum,pageIndex:processStoryActivityListPageRangeLow==(processStoryActivityListPageRangeLow+processStoryActivityList_index)?pageIndex.toInteger()-1:pageIndex]"
-                    condition="showMoveUpDown &amp;&amp; (processStoryActivityListPageRangeLow!=1 || processStoryActivityListPageRangeLow!=(processStoryActivityListPageRangeLow+processStoryActivityList_index))" icon="fa fa-angle-up" text=" "/></default-field></field>
-            <field name="moveDown"><conditional-field condition="showMoveUpDown" title=""><link url="activityMoveDown"
+                    condition="showMoveUpDown &amp;&amp; (processStoryActivityListPageRangeLow!=1 || processStoryActivityListPageRangeLow!=(processStoryActivityListPageRangeLow+processStoryActivityList_index))" icon="fa fa-angle-up" text=""/>
+                <container condition="showMoveUpDown"/>
+                <link url="activityMoveDown"
                     parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum,pageIndex:processStoryActivityListPageRangeLow+processStoryActivityList_index==processStoryActivityListPageRangeHigh?pageIndex.toInteger()+1:pageIndex]"
-                    condition="processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount || processStoryActivityListPageRangeLow+processStoryActivityList_index!=processStoryActivityListPageRangeHigh" icon="fa fa-angle-down" text=" "/></conditional-field></field>
+                    condition="showMoveUpDown &amp;&amp; (processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount || processStoryActivityListPageRangeLow+processStoryActivityList_index!=processStoryActivityListPageRangeHigh)" icon="fa fa-angle-down" text=""/></default-field></field>
 <!--            <field name="sequenceNum"><default-field><display/></default-field></field>-->
             <field name="implementationId">
                 <header-field title="Implementation Status" show-order-by="case-insensitive">
@@ -284,7 +285,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </entity-options>
                     </drop-down>
                 </header-field>
-                <conditional-field condition="action" title="Implementation Status"><drop-down allow-empty="true" submit-on-select="true">
+                <conditional-field condition="action"><drop-down allow-empty="true" submit-on-select="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ActivityImplementation"/>
@@ -300,14 +301,14 @@ along with this software (see the LICENSE.md file). If not, see
                 </drop-down></last-row-field></field>
             <!-- TODO: Fix allowing < and > tags in to prevent attacks -->
             <field name="condition"><header-field title="Condition (optional)" show-order-by="case-insensitive"><text-find size="25"/></header-field>
-                <conditional-field condition="action" title="Condition (optional)"><text-area rows="4" cols="40" autogrow="true"/></conditional-field>
+                <conditional-field condition="action"><text-area rows="4" cols="40" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="4" cols="40"/></last-row-field></field>
             <field name="actorIdList">
                 <header-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
                     <list-options list="headerActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></header-field>
-                <conditional-field condition="action" title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
+                <conditional-field condition="action"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
                     <list-options list="activityActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></conditional-field>
@@ -315,24 +316,32 @@ along with this software (see the LICENSE.md file). If not, see
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></last-row-field></field>
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25"/></header-field>
-                <conditional-field condition="action" title="Action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
+                <conditional-field condition="action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="substory"><conditional-field condition="!detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0" title="">
-                <dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
-                        parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"/></conditional-field></field>
-            <field name="substoryLink"><conditional-field condition="detailProcessStoryId &amp;&amp; action &amp;&amp; !detailActivityList?.getFirst()?.processStoryId" title="">
-                <link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"/></conditional-field></field>
-            <field name="insert"><conditional-field condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown" title=""><dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
-                    parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"/></conditional-field></field>
-            <field name="values"><conditional-field condition="partyRelationshipCount &gt; 0 &amp;&amp; action" title=""><dynamic-dialog id="ManageValues" button-text="Values" transition="ManageValues"
-                    parameter-map="[activityId:activityId]"/></conditional-field></field>
-            <field name="submit"><header-field title="Find"><submit/></header-field>
+            <field name="substory"><header-field title="Substory"/><conditional-field condition="action">
+                <container type="div" style="q-ma-sm"><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
+                        parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"
+                        condition="!detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0"/>
+                </container>
+                <container type="div" style="q-ma-sm"><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"
+                        condition="detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId"/></container></conditional-field></field>
+            <field name="insert"><default-field title="Insert"><dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
+                    parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"
+                    condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown"/></default-field></field>
+            <field name="values"><header-field title="Values"/><conditional-field condition="action">
+                <dynamic-dialog id="ManageValues" button-text="Values" transition="ManageValues"
+                    parameter-map="[activityId:activityId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/></conditional-field></field>
+            <field name="submit"><header-field title="Update"><submit/></header-field>
                 <conditional-field condition="action"><submit text="Update"/></conditional-field>
                 <!-- TODO: Figure out how to run row-actions for the last row field -->
                 <last-row-field><submit text="Add Activity" type="success"/></last-row-field></field>
-            <field name="delete"><default-field title=""><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
-            <field name="newParagraph"><conditional-field condition="false" title=""><label text=" "/></conditional-field>
-                <last-row-field><link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break" parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,newPageIndex:((processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp; processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex)]"/></last-row-field></field>
+            <field name="delete"><default-field title="Delete"><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
+            <field name="newParagraph"><header-field title="New Paragraph"/>
+                <default-field></default-field>
+                <last-row-field><link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break"
+                        parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,
+                        newPageIndex:((processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp;
+                        processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex)]"/></last-row-field></field>
 
             <form-list-column><field-ref name="condition"/></form-list-column>
             <form-list-column><field-ref name="actorIdList"/></form-list-column>
@@ -341,12 +350,12 @@ along with this software (see the LICENSE.md file). If not, see
             <form-list-column><field-ref name="submit"/></form-list-column>
 
             <columns>
-                <column><field-ref name="moveUp"/><field-ref name="moveDown"/></column>
+                <column><field-ref name="move"/></column>
                 <column><field-ref name="implementationId"/><field-ref name="condition"/></column>
 <!--                <column><field-ref name="sequenceNum"/><field-ref name="condition"/></column>-->
                 <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
                 <column><field-ref name="submit"/><field-ref name="insert"/><field-ref name="values"/></column>
-                <column><field-ref name="newParagraph"/><field-ref name="substory"/><field-ref name="substoryLink"/><field-ref name="delete"/></column>
+                <column><field-ref name="newParagraph"/><field-ref name="substory"/><field-ref name="delete"/></column>
             </columns>
         </form-list>
     </widgets>
