@@ -132,7 +132,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <container-dialog id="CloneFrom" button-text="Clone From">
                     <label text="This will create a New Organization from a copy of ${organization.organizationName}" type="h6"/>
                     <form-single name="CloneFromOrganization" transition="createOrganization">
-                    <field name="organizationId" from="partyId"><default-field><hidden/></default-field></field>
+                    <field name="organizationId"><default-field><hidden/></default-field></field>
                     <field name="organizationName" from="null"><default-field title="New Organization Name"><text-line/></default-field></field>
                     <field name="clone"><default-field><submit/></default-field></field>
                 </form-single></container-dialog>

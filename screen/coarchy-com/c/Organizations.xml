@@ -35,7 +35,7 @@ along with this software (see the LICENSE.md file). If not, see
                     in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress]"/>
             <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
 
-            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:toPartyId]"/>
+            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:toPartyId,fromDate:ec.user.nowTimestamp]"/>
             <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:toPartyId]"/>
 
             <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
