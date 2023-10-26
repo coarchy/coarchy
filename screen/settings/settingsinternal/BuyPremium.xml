@@ -37,7 +37,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <set field="featureList" from="[
             [featureName:'Unlimited Users',free:'X',premium:'X'],
-            [featureName:'Clone Public Organization',free:'X',premium:'X'],
+            [featureName:'Copy Public Organization',free:'X',premium:'X'],
             [featureName:'Vision Story',free:'X',premium:'X'],
             [featureName:'Actors',free:'X',premium:'X'],
             [featureName:'Unlimited Actors',free:'X',premium:'X'],
@@ -46,7 +46,7 @@ along with this software (see the LICENSE.md file). If not, see
             [featureName:'Unlimited Process Stories',free:'X',premium:'X'],
             [featureName:'Unlimited Activities per Process Story',free:'X',premium:'X'],
             [featureName:'Process Story Report',free:'X',premium:'X'],
-            [featureName:'Clone Private Organization',free:'',premium:'X'],
+            [featureName:'Copy Private Organization',free:'',premium:'X'],
             [featureName:'Value Statements',free:'',premium:'X'],
             [featureName:'Unlimited Value Statements',free:'',premium:'X'],
             [featureName:'Value Statements Report',free:'',premium:'X'],
