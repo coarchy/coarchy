@@ -89,8 +89,10 @@ Vue.component('c-change-password', {
     template:
     // Could include type="email" for email, but then wouldn't allow john.doe to login
         '<q-form @submit="onSubmit" class="q-gutter-md" >\n' +
-        '    <q-input filled v-model="username" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
-        '    <q-input filled v-model="oldPassword" label="Reset Password" :type="isOldPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\']">' +
+        '    <q-input filled v-model="username" :disable="this.cameFromEmail" :readonly="this.cameFromEmail" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
+        '    <q-input v-if="this.cameFromEmail" filled v-model="firstName" label="First Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
+        '    <q-input v-if="this.cameFromEmail" filled v-model="lastName" label="Last Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
+        '    <q-input filled v-model="oldPassword" :readonly="this.cameFromEmail" label="Reset Password" :type="isOldPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\']">' +
         '        <template v-slot:append>\n' +
         '            <q-icon :name="isOldPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isOldPwd = !isOldPwd"/>\n' +
         '        </template>\n' +
@@ -107,6 +109,9 @@ Vue.component('c-change-password', {
     data () {
         return {
             username: null,
+            cameFromEmail: false,
+            firstName: null,
+            lastName: null,
             oldPassword: null,
             newPassword: null,
             isOldPwd: true,
@@ -130,6 +135,7 @@ Vue.component('c-change-password', {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('username')) this.username = urlParams.get('username')
         if (urlParams.get('oldPassword')) this.oldPassword = urlParams.get('oldPassword')
+        if (this.username && this.oldPassword) this.cameFromEmail = true
     },
 });
 Vue.component('c-create-organization', {

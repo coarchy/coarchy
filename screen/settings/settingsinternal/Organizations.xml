@@ -214,7 +214,7 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <transition name="inviteUser">
-        <service-call name="coarchy.CoarchyServices.create#NewUser" in-map="[partyId:partyId,emailAddress:emailAddress,firstName:firstName,lastName:lastName]"/>
+        <service-call name="coarchy.CoarchyServices.invite#User" in-map="[partyId:organizationId,emailAddress:emailAddress]"/>
         <default-response url="../EditOrganization" parameter-map="[organizationId:partyId]"/></transition>
 
     <transition name="activateOrDeactivateOrganization">
@@ -301,16 +301,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <label condition="finAccountAndTrans.getFirst() != null&amp;&amp;finAccountAndTrans.getFirst().availableBalance&gt;0"
                         text="Used ~${ec.l10n.formatNumber((Number)(totalCreditsUsed.setScale(2, BigDecimal.ROUND_HALF_UP)),null,null)} / ${ec.l10n.formatNumber((Number)finAccountAndTrans.getFirst().availableBalance,null,null)} Organization-Month Credits this month\n"/>
 
-                <container-dialog id="InviteUser" button-text="Invite User" condition="false &amp;&amp; ownerOfAnyOrganization" type="success">
+                <container-dialog id="InviteUser" button-text="Invite User" condition="ownerOfAnyOrganization" type="success">
                     <form-single name="InviteUser" transition="inviteUser">
-                        <field name="partyId"><default-field title="Organization"><drop-down><entity-options text="${organizationName}" key="${partyId}">
+                        <field name="organizationId"><default-field title="Organization"><drop-down><entity-options text="${organizationName}" key="${partyId}">
                             <entity-find entity-name="mantle.party.PartyDetail">
                                 <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
                                 <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
                             </entity-find></entity-options> </drop-down></default-field></field>
                         <field name="emailAddress"><default-field><text-line/></default-field></field>
-                        <field name="firstName"><default-field><text-line/></default-field></field>
-                        <field name="lastName"><default-field><text-line/></default-field></field>
                         <field name="submit"><default-field><submit/></default-field></field>
                     </form-single>
                 </container-dialog>
