@@ -6,7 +6,7 @@
     <#if html_keywords?has_content><meta name="keywords" content="${html_keywords}"></#if>
     <#if html_description?has_content><meta name="description" content="${html_description}"></#if>
     <title><#if html_title?has_content>${html_title}<#else><#if parentMenuName?has_content>${ec.resource.expand(parentMenuName, "")} - </#if><#if defaultMenuName?has_content>${ec.resource.expand(defaultMenuName, "")}</#if></#if></title>
-<#--    <link rel="apple-touch-icon" href="/MoquiLogo100.png"/>-->
+    <link rel="apple-touch-icon" href="/coarchy120.png"/>
     <#-- Style Sheets -->
 <#--    <#list sri.getThemeValues("STRT_STYLESHEET") as styleSheetLocation>-->
 <#--        <#assign hrefUrl = sri.buildUrl(styleSheetLocation).url>-->
@@ -59,20 +59,18 @@
     <#-- to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder -->
     <q-layout view="hHh LpR fFf">
         <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px; background: #eeeeee;">
-
-                <q-btn stretch flat label="Home" href="/"></q-btn>
+                <q-btn stretch flat href="/">
+                    <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>
+                    <#if headerLogoList?has_content>
+                        <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="42">
+                    </#if>
+                </q-btn>
                 <q-space></q-space>
 
                 <q-btn stretch flat label="Log In" href="/Login"></q-btn>
                 <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Sign Up" href="/SignUp"></q-btn>
 
-<#--                &lt;#&ndash;            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>&ndash;&gt;-->
-<#--                <#if headerLogoList?has_content>-->
-<#--                    <m-link href="/"><div class="q-mx-md q-mt-sm">-->
-<#--                            <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="32">-->
-<#--                        </div></m-link>-->
-<#--                </#if>-->
 <#--                <#assign headerTitleList = sri.getThemeValues("STRT_HEADER_TITLE")>-->
 <#--                <#if headerTitleList?has_content>-->
 <#--                    <q-toolbar-title>${ec.resource.expand(headerTitleList?first, "")}</q-toolbar-title>-->

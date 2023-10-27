@@ -41,10 +41,10 @@ along with this software (see the LICENSE.md file). If not, see
             <q-toolbar style="font-size:15px;">
                 <q-btn flat icon="menu" @click="toggleLeftOpen()" size="lg"></q-btn>
 
-<#--            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>-->
+            <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>
             <#if headerLogoList?has_content>
                 <m-link href="/copps"><div class="q-mx-md q-mt-sm">
-                    <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="32">
+                    <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="42">
                 </div></m-link>
             </#if>
             <#assign headerTitleList = sri.getThemeValues("STRT_HEADER_TITLE")>
