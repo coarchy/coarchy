@@ -226,6 +226,20 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="actorLastUpdatedStamp" entity-alias="ACAC" field="lastUpdatedStamp"/>
     </view-entity>
 
+    <view-entity entity-name="ProcessStoryActivityAndDetail" package="coarchy">
+        <member-entity entity-alias="PSA" entity-name="coarchy.ProcessStoryActivity"/>
+        <member-relationship entity-alias="PS" join-from-alias="PSA" relationship="story"/>
+        <member-relationship entity-alias="DPS" join-from-alias="PSA" relationship="detailStory"/>
+
+        <alias-all entity-alias="PSA"><exclude field="lastUpdatedStamp"/></alias-all>
+        <alias-all entity-alias="PS"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
+        <alias-all entity-alias="DPS" prefix="detail"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
+        <alias name="storyOrganizationId" entity-alias="PS" field="organizationId"/>
+        <alias name="storyLastUpdatedStamp" entity-alias="PS" field="lastUpdatedStamp"/>
+        <alias name="detailStoryOrganizationId" entity-alias="PS" field="organizationId"/>
+        <alias name="detailStoryLastUpdatedStamp" entity-alias="PS" field="lastUpdatedStamp"/>
+    </view-entity>
+
     <!-- Settings entities -->
     <entity entity-name="PartyActivation" package="mantle.party">
         <field name="partyId" type="id" is-pk="true"/>

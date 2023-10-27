@@ -34,7 +34,23 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response/></transition>
 
     <actions>
-        <entity-find-count entity-name="coarchy.Actor" count-field="actorCount"/>
+        <entity-find entity-name="coarchy.ProcessStoryActivityAndDetail" list="processStoryActivityList">
+            <search-form-inputs/>
+            <econdition field-name="detailProcessStoryId" operator="is-not-null"/>
+            <order-by field-name="processStoryId,sequenceNum"/>
+        </entity-find>
+        <entity-find entity-name="coarchy.ProcessStory" list="processStoryInputList">
+            <search-form-inputs/>
+            <econdition field-name="processStoryId" operator="not-in" from="processStoryActivityList?.detailProcessStoryId"/>
+        </entity-find>
+        <set field="processStoryList" from="[]"/>
+        <iterate list="processStoryInputList" entry="processStoryInput">
+            <script>processStoryList.add([processStoryId:processStoryInput.processStoryId,name:processStoryInput.name])</script>
+            <set field="processStoryActivityDetailList" from="processStoryActivityList.findAll{ it.processStoryId == processStoryInput.processStoryId }"/>
+            <iterate list="processStoryActivityDetailList" entry="processStoryActivityDetail">
+                <script>processStoryList.add([processStoryId:processStoryActivityDetail.detailProcessStoryId,name:processStoryInput.name+' - '+processStoryActivityDetail.detailName])</script>
+            </iterate>
+        </iterate>
     </actions>
 
     <widgets>
@@ -47,10 +63,7 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single></container-dialog>
 
         <form-list name="ProcessStory" header-dialog="true" show-page-size="true" show-csv-button="true" list="processStoryList"
-                transition="updateProcessStory" transition-last-row="createProcessStory">
-            <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
-                <search-form-inputs default-order-by="lastUpdatedStamp"/></entity-find>
-
+                transition-last-row="createProcessStory">
             <field name="processStoryId"><default-field><hidden/></default-field></field>
             <field name="name"><header-field><text-find size="25"/></header-field>
                 <default-field title="Process Story Name"><link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="${name}"/></default-field></field>
