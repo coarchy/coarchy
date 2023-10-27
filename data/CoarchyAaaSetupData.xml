@@ -148,6 +148,8 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Checklist" enumId="WetChecklist" enumTypeId="WorkEffortType"/>
     <moqui.basic.Enumeration description="Checklist Item" enumId="WetChecklistItem" enumTypeId="WorkEffortType"/>
 
+    <moqui.basic.Uom abbreviation="DSM" description="Digital Service Month" uomId="DSM" uomTypeEnumId="UT_CURRENCY_MEASURE"/>
+
     <!-- Vision Story -->
     <moqui.basic.Enumeration description="Origin Story"  enumId="PcntOriginStory" enumTypeId="PartyContentType"/>
     <moqui.basic.Enumeration description="Mission"  enumId="PcntMission" enumTypeId="PartyContentType"/>

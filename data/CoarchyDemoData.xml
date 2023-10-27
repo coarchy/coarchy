@@ -27,6 +27,10 @@ along with this software (see the LICENSE.md file). If not, see
     </productStores>
 
     <!-- Demo data -->
+    <parties partyId="coarchy" ownerPartyId="EX_JOHN_DOE">
+        <toRelationships fromPartyId="EX_JOHN_DOE" toRoleTypeId="OrgInternal" fromDate="1691687280000" partyRelationshipId="c100001" relationshipTypeEnumId="PrtMember" toPartyId="coarchy"/>
+    </parties>
+
     <parties pseudoId="c100051" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100051"/>
     <parties pseudoId="c100104" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100104"/>
     <parties pseudoId="c100167" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100167"/>

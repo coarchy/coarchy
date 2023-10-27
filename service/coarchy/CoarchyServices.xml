@@ -792,7 +792,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- find financial accounts for the user who bought the order items or create financial account if not already exists -->
                 <service-call name="mantle.account.FinancialAccountServices.getOrCreate#FinancialAccount" in-map="[
                         finAccountTypeId:'OrganizationMonthCredit',organizationPartyId:'coarchy',
-                        ownerPartyId:orderItemPart.customerPartyId]" out-map="context"/>
+                        ownerPartyId:orderItemPart.customerPartyId,currencyUomId:'DSM']" out-map="context"/>
 
                 <service-call name="mantle.account.FinancialAccountServices.deposit#FinancialAccount" in-map="[
                         finAccountId:finAccountId,amount:orderItemPart.quantity,orderId:orderId,
@@ -1033,6 +1033,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <date-filter/>
                 <select-field field-name="ownerPartyId,finAccountId,availableBalance"/>
             </entity-find>
+            <log level="warn" message="check#PartyActivation financialAccountList ${financialAccountList}"/>
             <if condition="financialAccountList.size() == 0">
                 <set field="needsCredits" from="true"/>
                 <set field="creditsNeeded" from="1.0"/>

@@ -1,6 +1,10 @@
 // Components
 Vue.component('m-stripe', {
     name: "mStripe",
+    props: {
+        return_url: String,
+        public_key: String,
+    },
     template:
         // Display a payment form
         '<form id="payment-form">\n' +
@@ -69,7 +73,7 @@ Vue.component('m-stripe', {
                 elements,
                 confirmParams: {
                     // Make sure to change this to your payment completion page
-                    return_url: "https://coarchy.com/settings/OrderHistory",
+                    return_url: this.return_url,
                     receipt_email: this.emailAddress,
                 },
             });
@@ -144,10 +148,9 @@ Vue.component('m-stripe', {
     },
     data () {
         return {
-            items: [{ id: "xl-tshirt" }],
             stripe: null,
             emailAddress: "",
-            elements: null
+            elements: null,
         }
     },
     mounted: function() {
@@ -157,8 +160,8 @@ Vue.component('m-stripe', {
                 console.error("Error loading stripe: " + err);
                 return;
             }
-            // This is your test publishable API key.
-            vm.stripe = Stripe("pk_live_51NwtETDVIK4XcJLUczddFgaBWNcxbCoCbF9ipNbzqwoKAjy93jl3TBiymRaXGLqe01yROWZWWcW5FM7r2BBd6jET00J1zvHKmx")
+            // This is your publishable API key.
+            vm.stripe = Stripe(vm.public_key)
             console.log("loaded stripe")
 
             vm.initialize();

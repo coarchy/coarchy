@@ -19,7 +19,7 @@ along with this software (see the LICENSE.md file). If not, see
         <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">
             <econdition field-name="statusId" value="OrderOpen"/>
             <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
-            <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId"/>
+            <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId,productStoreId"/>
             <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
         <if condition="existingOrderList.size() == 0">
             <message type="danger" public="true" error="true">No order found for user.</message>
@@ -47,6 +47,17 @@ along with this software (see the LICENSE.md file). If not, see
             <message type="danger" public="true" error="true">No order item found for user.</message>
             <script>sri.sendRedirectAndStopRender('/settings/BuyPremium')</script>
         </if>
+
+        <entity-find entity-name="mantle.product.store.ProductStorePaymentGateway" list="productStorePaymentGatewayList" limit="1">
+            <econdition field-name="productStoreId" from="existingOrderList.getFirst().productStoreId"/>
+            <econdition field-name="paymentInstrumentEnumId" value="PiStripe"/>
+            <econdition field-name="paymentGatewayConfigId" operator="is-not-null"/>
+            <select-field field-name="paymentGatewayConfigId"/><order-by field-name="-lastUpdatedStamp"/></entity-find>
+        <entity-find-one entity-name="mantle.account.method.PaymentGatewayConfig" value-field="paymentGateway" auto-field-map="[paymentGatewayConfigId:productStorePaymentGatewayList.getFirst().paymentGatewayConfigId]"/>
+        <set field="stripeRemote" from="paymentGateway.remote"/>
+
+        <set field="public_key" from="stripeRemote.publicKey"/>
+        <set field="return_url" from="sri.buildUrl('/settings/OrderHistory').url"/>
     </actions>
 
     <widgets>
@@ -59,7 +70,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <render-mode>
                     <text type="qvt"><![CDATA[
-                        <m-stripe></m-stripe>
+                        <m-stripe return_url="${return_url}" public_key="${public_key}"></m-stripe>
                     ]]></text></render-mode>
             </row-col>
             <row-col md="3"/>

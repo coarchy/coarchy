@@ -319,12 +319,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <conditional-field condition="action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
             <field name="substory"><header-field title="Substory"/><conditional-field condition="action">
-                <container type="div" style="q-ma-sm"><dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
+                <dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
                         parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"
                         condition="!detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0"/>
-                </container>
-                <container type="div" style="q-ma-sm"><link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"
-                        condition="detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId"/></container></conditional-field></field>
+                <link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"
+                        condition="detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId"/></conditional-field></field>
             <field name="insert"><default-field title="Insert"><dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
                     parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"
                     condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown"/></default-field></field>
