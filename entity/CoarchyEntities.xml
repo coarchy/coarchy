@@ -55,6 +55,7 @@ along with this software (see the LICENSE.md file). If not, see
     <entity entity-name="ValueStatement" package="coarchy">
         <field name="valueStatementId" type="id" is-pk="true"/>
         <field name="value" type="text-intermediate"/>
+        <field name="sequenceNum" type="number-integer"/>
         <field name="typeEnumId" type="id"/>
 
         <field name="organizationId" type="id"/>

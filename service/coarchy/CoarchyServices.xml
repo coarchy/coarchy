@@ -542,7 +542,13 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <if condition="valueStatementList"><return type="danger" message="Value Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
 
-            <service-call name="create#coarchy.ValueStatement" in-map="[value:value,typeEnumId:typeEnumId,organizationId:organizationId]"/>
+            <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList" limit="1">
+                <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
+                <order-by field-name="-sequenceNum,value"/>
+            </entity-find>
+
+            <service-call name="create#coarchy.ValueStatement" in-map="[value:value,typeEnumId:typeEnumId,
+                sequenceNum:valueStatementList.getFirst()?.sequenceNum?valueStatementList.getFirst()?.sequenceNum+1:1,organizationId:organizationId]"/>
         </actions>
     </service>
     <service verb="create" noun="ActivityValue">
@@ -592,6 +598,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="value" required="true"/>
             <parameter name="activityIdList" type="List"/>
             <parameter name="typeEnumId"/>
+            <parameter name="sequenceNum"/>
             <parameter name="organizationId" required="true"/>
         </in-parameters>
         <out-parameters>
@@ -606,7 +613,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <if condition="valueStatementList"><return type="danger" message="Value Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
 
-            <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,organizationId:organizationId]" out-map="context"/>
+            <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,organizationId:organizationId]" out-map="context"/>
 
             <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
                 <econdition field-name="valueStatementId"/>

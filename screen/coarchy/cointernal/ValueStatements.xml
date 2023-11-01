@@ -41,7 +41,7 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <transition name="updateValue"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,value:value,typeEnumId:typeEnumId,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
@@ -121,9 +121,11 @@ along with this software (see the LICENSE.md file). If not, see
                 condition="valueStatementCount &gt; 0"/>
 
         <form-list name="ValueStatement" header-dialog="true" show-page-size="true" show-csv-button="true"
-                list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null]">
+                list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null]"
+                select-columns="true">
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
-                <search-form-inputs default-order-by="^value"/></entity-find>
+                <search-form-inputs/>
+                <order-by field-name="sequenceNum,value"/></entity-find>
 
             <row-actions>
                 <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
@@ -178,6 +180,9 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></last-row-field></field>
+            <field name="sequenceNum">
+                <default-field title="Priority"><text-line input-type="number" maxlength="3"/></default-field>
+            </field>
             <field name="valueStatementId">
                 <header-field title="Id"><text-find size="30"/></header-field>
                 <default-field><hidden/></default-field></field>
@@ -185,7 +190,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>
                 <last-row-field><submit text="Add Value" type="success"/></last-row-field></field>
-            <field name="delete"><default-field title="">
+            <field name="delete"><default-field title="Delete">
                 <link url="deleteValue" parameter-map="[valueStatementId:valueStatementId]" icon="fa fa-trash" btn-type="danger"
                         text=" " tooltip="Delete Value" confirmation="Delete Value '${value}'?"/></default-field></field>
 

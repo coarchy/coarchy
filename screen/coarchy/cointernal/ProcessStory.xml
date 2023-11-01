@@ -308,7 +308,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <list-options list="headerActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></header-field>
-                <conditional-field condition="action"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
+                <conditional-field condition="action" title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
                     <list-options list="activityActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></conditional-field>
