@@ -327,4 +327,13 @@ along with this software (see the LICENSE.md file). If not, see
         <alias-all entity-alias="PACT"/>
         <alias-all entity-alias="PTY"><exclude field="partyId"/></alias-all>
     </view-entity>
+    <view-entity entity-name="AgreementAndContent" package="mantle.party.agreement">
+        <member-entity entity-alias="AGMT" entity-name="mantle.party.agreement.Agreement"/>
+        <member-relationship entity-alias="ATYP" join-from-alias="AGMT" relationship="type"/>
+        <member-entity entity-alias="ACNT" entity-name="mantle.party.agreement.AgreementContent" join-from-alias="AGMT">
+            <key-map field-name="agreementId"/></member-entity>
+        <alias-all entity-alias="AGMT" prefix="agreement"/>
+        <alias-all entity-alias="ACNT" prefix="content"/>
+        <alias-all entity-alias="ATYP" prefix="type"/>
+    </view-entity>
 </entities>

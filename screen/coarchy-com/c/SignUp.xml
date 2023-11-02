@@ -43,6 +43,18 @@ along with this software (see the LICENSE.md file). If not, see
         // if user already logged in redirect to application
         if (ec.user.userId) sri.sendRedirectAndStopRender('/settings')
     </script></pre-actions>
+
+    <actions>
+        <entity-find entity-name="mantle.party.agreement.AgreementAndContent" list="agreementList">
+            <econdition field-name="agreementAgreementTypeEnumId" operator="in" from="['AgrPrivacyPolicy','AgrTermsOfUse']" ignore-if-empty="true"/>
+            <econdition field-name="agreementIsTemplate" value="Y" ignore-if-empty="true"/>
+            <econdition field-name="contentContentTypeEnumId" value="AcntDocument"/>
+            <date-filter from-field-name="agreementFromDate" thru-field-name="agreementThruDate"/>
+            <select-field field-name="contentContentLocation, typeDescription"/>
+            <order-by field-name="-contentContentDate, -agreementAgreementDate"/>
+        </entity-find>
+    </actions>
+
     <widgets>
         <render-mode>
             <text type="html"><![CDATA[
