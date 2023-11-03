@@ -872,6 +872,9 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="activationPeriodCount" type="BigDecimal" required="true"><description>The time the organization was active
                 during the period where 1 is 100% of the days and .5 is 50% of the days that at least
                 minActivationMinutesPerDay was active</description></parameter>
+            <parameter name="dayAmountList" type="List" required="true"/>
+            <parameter name="dayCount" type="BigDecimal" required="true"/>
+            <parameter name="totalDays" type="BigDecimal" required="true"/>
         </out-parameters>
         <actions>
             <if condition="periodFromDate &gt;= periodThruDate"><return type="danger" error="true"
@@ -886,7 +889,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="dayList" from="[[dateTime:periodFromDateZoned,amount:0L]]" type="List"/>
             <set field="daysIndex" from="0"/>
             <set field="daysBetweenPeriod" from="java.time.temporal.ChronoUnit.DAYS.between(
-                periodFromDateZoned, periodThruDateZoned)"/>
+                periodFromDateZoned, periodThruDateZoned)" type="BigDecimal"/>
             <while condition="daysIndex &lt; daysBetweenPeriod">
                 <set field="dayList" from="dayList + [dateTime:dayList[daysIndex].dateTime.plusDays(1),amount:0L]"/>
                 <set field="daysIndex" from="daysIndex + 1"/>
@@ -954,8 +957,12 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
 
             <!-- Count the number of days that the organization was active for at least minActivationMinutesPerDay minutes-->
-            <set field="activationPeriodCount" from="dayList.sum{it.amount &gt;=
-                minActivationMinutesPerDay * 60 * 1000 ? 1 : 0} / (daysBetweenPeriod+1)" type="BigDecimal"/>
+            <set field="dayCount" from="dayList.sum{it.amount &gt;=
+                minActivationMinutesPerDay * 60.0 * 1000.0 ? 1.0 : 0.0}" type="BigDecimal"/>
+            <set field="totalDays" from="daysBetweenPeriod+1.0" type="BigDecimal"/>
+            <set field="activationPeriodCount" from="dayCount / totalDays" type="BigDecimal"/>
+
+            <set field="dayAmountList" from="dayList*.amount"/>
 
 <!--            <log level="warn" message="calculate#PartyActivationUsage context.toString() ${context.toString()}"/>-->
         </actions>
@@ -968,10 +975,11 @@ along with this software (see the LICENSE.md file). If not, see
             premium features from the PartyActivation records.</description>
         <in-parameters>
             <parameter name="finAccountTypeId" required="true"/>
+            <parameter name="serviceStartTime" type="Timestamp" default="ec.user.nowTimestamp" required="true"/>
         </in-parameters>
         <actions>
 
-            <set field="periodThruDate" from="ec.user.nowTimestamp"/>
+            <set field="periodThruDate" from="serviceStartTime"/>
             <set field="periodFromDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
                 (long) periodThruDate.time), ZoneId.systemDefault()).minusMonths(1).toInstant().toEpochMilli())"/>
 
@@ -1000,6 +1008,8 @@ along with this software (see the LICENSE.md file). If not, see
 
 <!--                    <log level="warn" message="withdraw#FinancialAccountCredits organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
                     <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
+                    <log level="info" message="withdraw dayAmountList ${dayAmountList}"/>
+                    <log level="info" message="withdraw ${activationPeriodCount} for ${dayCount} / ${totalDays} days from financialAccount ${financialAccount} for organization ${organization.partyId} owned by ${financialAccount.ownerPartyId}"/>
                 </iterate>
 
                 <if condition="totalCreditsUsed &gt; 0.0">
