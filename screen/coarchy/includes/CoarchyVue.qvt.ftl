@@ -94,8 +94,9 @@ along with this software (see the LICENSE.md file). If not, see
 <#--            </q-btn>-->
 
             <#-- nav plugins See in root CoarchyComVue.qvt.ftl -->
-            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>
+<#--            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>-->
 
+                <active-org-nav></active-org-nav>
             <#-- notify history See in root CoarchyComVue.qvt.ftl -->
 
             <#-- screen history menu See in root CoarchyComVue.qvt.ftl -->
