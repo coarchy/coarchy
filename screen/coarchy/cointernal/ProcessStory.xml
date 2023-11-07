@@ -155,6 +155,11 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="coarchy.CoarchyServices.create#ChecklistProcessStory" in-map="[processStoryId:processStoryId,name:name,organizationId:activeOrgId]" out-map="checklist"/>
         <default-response url="../Checklist" parameter-map="[checklistId:checklist.rootWorkEffortId]"/></transition>
 
+    <transition name="copyActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context"/>
+        <actions><set field="ec.web.sessionAttributes.clipboardEntryId" from="null"/></actions>
+        <default-response url="."/></transition>
+
     <transition-include name="createActor" location="component://coarchy/screen/coarchy/cointernal/Actor.xml"/>
 
     <actions>
@@ -259,6 +264,19 @@ along with this software (see the LICENSE.md file). If not, see
 
 <!--                <log level="warn" message="form-list ProcessStory context.toString() ${context.toString()}"/>-->
             </row-actions>
+            <row-selection id-field="activityId">
+                <action>
+                    <form-single name="SelectActivities" transition="copyActivities">
+                        <field name="processStoryId"><default-field><hidden/></default-field></field>
+                        <field name="pageIndex"><default-field><hidden/></default-field></field>
+                        <field name="pageSize"><default-field><hidden/></default-field></field>
+                        <field name="orderByField"><default-field><hidden/></default-field></field>
+                        <field name="activityId"><default-field><hidden/></default-field></field>
+                        <field name="submitBtn"><default-field><submit text="Copy"/></default-field></field>
+                        <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>
+                    </form-single>
+                </action>
+            </row-selection>
 
             <hidden-parameters><parameter name="processStoryId"/></hidden-parameters>
             <field name="activityId"><default-field><hidden/></default-field></field>
@@ -274,7 +292,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <link url="activityMoveDown"
                     parameter-map="[processStoryActivityId:processStoryActivityId,sequenceNum:sequenceNum,pageIndex:processStoryActivityListPageRangeLow+processStoryActivityList_index==processStoryActivityListPageRangeHigh?pageIndex.toInteger()+1:pageIndex]"
                     condition="showMoveUpDown &amp;&amp; (processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount || processStoryActivityListPageRangeLow+processStoryActivityList_index!=processStoryActivityListPageRangeHigh)" icon="fa fa-angle-down" text=""/></default-field></field>
-<!--            <field name="sequenceNum"><default-field><display/></default-field></field>-->
+            <field name="sequenceNum"><default-field><display/></default-field></field>
             <field name="implementationId">
                 <header-field title="Implementation Status" show-order-by="case-insensitive">
                     <drop-down allow-empty="true">

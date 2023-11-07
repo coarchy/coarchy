@@ -115,7 +115,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
-            <service-call name="create#coarchy.Activity" in-map="[condition:condition.trim(), action:action.trim(), organizationId:organizationId, implementationId:implementationId]" out-map="newActivity"/>
+            <service-call name="create#coarchy.Activity" in-map="[condition:condition?.trim(), action:action?.trim(), organizationId:organizationId, implementationId:implementationId]" out-map="newActivity"/>
             <set field="activityId" from="newActivity.activityId"/>
 
             <set field="newSequenceNum" from="sequenceNum"/>
@@ -818,7 +818,6 @@ along with this software (see the LICENSE.md file). If not, see
 
         </actions>
     </service>
-
     <service verb="activateOrDeactivate" noun="Organization">
         <in-parameters>
             <parameter name="organizationPartyId" required="true"/>
@@ -854,7 +853,6 @@ along with this software (see the LICENSE.md file). If not, see
             </else></if>
         </actions>
     </service>
-
     <service verb="calculate" noun="PartyActivationUsage">
         <description>This will find all the PartyActivation records that have any time between their from or thru date
             within the given period from and thru dates. For each day that there is activation time, if it is at least
@@ -967,7 +965,6 @@ along with this software (see the LICENSE.md file). If not, see
 <!--            <log level="warn" message="calculate#PartyActivationUsage context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
-
     <service verb="withdraw" noun="FinancialAccountCreditsMonthly" authenticate="anonymous-all">
         <description>This service should run monthly on the first day of the month.
 
@@ -1095,7 +1092,6 @@ along with this software (see the LICENSE.md file). If not, see
 <!--            <log level="warn" message="check#PartyActivation context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
-
     <service verb="check" noun="PartyActivationDaily" authenticate="anonymous-all">
         <in-parameters>
             <parameter name="finAccountTypeId" required="true"/>
@@ -1159,4 +1155,98 @@ along with this software (see the LICENSE.md file). If not, see
 <!--            <log level="warn" message="check#PartyActivationDaily context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
+
+    <service verb="copy" noun="Activities">
+        <in-parameters>
+            <parameter name="activityId"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="activityId"/>
+            <parameter name="clipboardEntryId"/>
+        </out-parameters>
+        <actions>
+            <if condition="!ec.web?.sessionAttributes?.clipboardEntryId">
+                <service-call name="create#coarchy.ClipboardEntry" in-map="[partyId:ec.user.userAccount?.partyId]" out-map="context"/>
+                <set field="ec.web.sessionAttributes.clipboardEntryId" from="clipboardEntryId"/>
+            </if>
+
+            <set field="clipboardEntryId" from="ec.web.sessionAttributes.clipboardEntryId"/>
+            <service-call name="create#coarchy.ClipboardActivity" in-map="[clipboardEntryId:clipboardEntryId,
+                activityId:activityId]"/>
+
+<!--            <log level="warn" message="copy#Activities context.toString() ${context.toString()}"/>-->
+        </actions>
+    </service>
+    <!-- TODO: Improve the index handling on multiple activities inserted -->
+    <service verb="paste" noun="Activities">
+        <in-parameters>
+            <parameter name="pageIndex" required="true"/>
+            <parameter name="downPageIndex" required="true"/>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="sequenceNum" required="true"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="coarchy.ClipboardEntry" list="entryList" limit="1">
+                <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
+                <order-by field-name="-clipboardEntryId"/>
+            </entity-find>
+            <entity-find entity-name="coarchy.ClipboardActivityDetail" list="activityList">
+                <econdition field-name="clipboardEntryId" from="entryList?.getFirst()?.clipboardEntryId"/>
+                <order-by field-name="sequenceNum"/>
+            </entity-find>
+
+            <iterate list="activityList" entry="activity">
+                <service-call name="coarchy.CoarchyServices.insert#Activity" in-map="[context + [condition:activity.condition,
+                    action:activity.action,implementationId:activity.implementationId]]"/>
+            </iterate>
+
+<!--            <log level="warn" message="paste#Activities context.toString() ${context.toString()}"/>-->
+        </actions>
+    </service>
+
+    <service verb="insert" noun="Activity">
+        <in-parameters>
+            <parameter name="pageIndex"/>
+            <parameter name="downPageIndex"/>
+            <parameter name="processStoryId"/>
+            <parameter name="sequenceNum"/>
+            <parameter name="implementationId"/>
+            <parameter name="condition"/>
+            <parameter name="actorIdList"/>
+            <parameter name="action"/>
+            <parameter name="insertType"/>
+            <parameter name="organizationId"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="pageIndex"/>
+            <parameter name="pageSize"/>
+            <parameter name="orderByField"/>
+        </out-parameters>
+        <actions>
+            <if condition="!action"><return type="danger" error="true" message="An action is needed for an activity"/></if>
+            <set field="insertSequenceNum" from="sequenceNum"/>
+            <if condition="insertType=='below'">
+                <set field="pageIndex" from="downPageIndex"/>
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                    <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
+                    <select-field field-name="processStoryActivityId,sequenceNum"/>
+                    <order-by field-name="sequenceNum"/></entity-find>
+                <!-- This might be null, but if it is null then the right behavior will happen anyways -->
+                <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum"/>
+            </if>
+
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
+                <select-field field-name="processStoryActivityId,sequenceNum"/>
+                <order-by field-name="-sequenceNum"/></entity-find>
+            <iterate list="processStoryActivityList" entry="processStoryActivity">
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+            </iterate>
+            <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum,implementationId:implementationId]"/>
+        </actions>
+    </service>
+
 </services>
