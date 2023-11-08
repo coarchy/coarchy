@@ -35,6 +35,60 @@ along with this software (see the LICENSE.md file). If not, see
             <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
 
+    <transition name="getActorList"><actions>
+        <set field="actorList" from="[]"/>
+        <if condition="term == null &amp;&amp; actorIdList ? actorIdList?.size() &gt; 0 : false"><then>
+            <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
+                <econdition field-name="actorId" operator="in" from="actorIdList"/>
+                <order-by field-name="name"/></entity-find>
+        </then><else>
+            <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
+                <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
+                <order-by field-name="name"/></entity-find>
+        </else></if>
+        <script>
+            def outList = []
+            for (def actor in actorList)
+                outList.add([value:actor?.actorId, label:"${actor?.name}".toString()])
+            ec.web.sendJsonResponse(outList)
+        </script>
+    </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getCloneOrganizationList"><actions>
+        <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+<!--            <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>-->
+            <order-by field-name="organizationName"/></entity-find>
+        <set field="cloneOrganizationList" from="[]"/>
+        <iterate list="organizationList" entry="organization">
+            <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+                <econdition field-name="partyId" from="organization.toPartyId"/>
+                <date-filter/>
+            </entity-find-count>
+            <if condition="partyActivationCount &gt; 0">
+                <script>cloneOrganizationList.add([value:organization.toPartyId, label:organization.organizationName])</script>
+            </if>
+        </iterate>
+        <script>
+            ec.web.sendJsonResponse(cloneOrganizationList)
+        </script>
+    </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getProcessStoryList">
+        <service-call name="coarchy.CoarchyServices.get#ProcessStoryList" in-map="[organizationId:organizationId,term:term,activeOrgId:activeOrgId]"/>
+        <actions><script>ec.web.sendJsonResponse(outList)</script></actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getActivityList">
+        <service-call name="coarchy.CoarchyServices.get#ActivityList" in-map="[processStoryId:processStoryId,organizationId:organizationId,term:term,activeOrgId:activeOrgId]"/>
+        <actions><script>ec.web.sendJsonResponse(outList)</script></actions>
+        <default-response type="none"/></transition>
+
     <transition name="newParagraph"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
 
@@ -72,11 +126,12 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum,implementationId:implementationId]" out-map="newActivity"/>
         </actions>
         <default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
-
     <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/>
         <default-response url="."/></transition>
-
+    <transition name="deleteActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
+        <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="context"/>
+    </actions><default-response url="."/></transition>
     <transition name="activityMoveUp"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
             <econdition field-name="sequenceNum" operator="less" from="sequenceNum.toInteger()"/>
@@ -93,7 +148,6 @@ along with this software (see the LICENSE.md file). If not, see
             </else>
         </if>
         </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
-
     <transition name="activityMoveDown"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" limit="1">
             <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
@@ -110,41 +164,13 @@ along with this software (see the LICENSE.md file). If not, see
         </else>
         </if>
         </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
-
-    <transition name="deleteActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
-        <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
-            <then>
-                <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorIdList]"/>
-            </then>
-            <else>
-                <iterate list="actorIdList" entry="actorId">
-                    <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
-                </iterate>
-            </else>
-        </if>
-        <service-call name="delete#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId]"/>
-        </actions><default-response url="."/></transition>
-
-    <transition name="getActorList"><actions>
-            <set field="actorList" from="[]"/>
-            <if condition="term == null &amp;&amp; actorIdList ? actorIdList?.size() &gt; 0 : false"><then>
-                <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
-                    <econdition field-name="actorId" operator="in" from="actorIdList"/>
-                    <order-by field-name="name"/></entity-find>
-            </then><else>
-                <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
-                    <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
-                    <order-by field-name="name"/></entity-find>
-            </else></if>
-            <script>
-                def outList = []
-                for (def actor in actorList)
-                    outList.add([value:actor?.actorId, label:"${actor?.name}".toString()])
-                ec.web.sendJsonResponse(outList)
-            </script>
-        </actions>
-        <default-response type="none"/>
-    </transition>
+    <transition name="copyActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context"/>
+        <actions><set field="ec.web.sessionAttributes.clipboardEntryId" from="null"/></actions>
+        <default-response url="."/></transition>
+    <transition name="deleteActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
+        <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="context" multi="true"/>
+    </actions><default-response url="."/></transition>
 
     <transition name="updateProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <service-call name="update#coarchy.ProcessStory"/>
@@ -154,11 +180,6 @@ along with this software (see the LICENSE.md file). If not, see
 <!--        <service-call name="coarchy.CoarchyServices.create#ChecklistProcessStory" in-map="[processStoryId:processStoryId,name:name,recurStartCron:recurStartCron,organizationId:activeOrgId]" out-map="checklist"/>-->
         <service-call name="coarchy.CoarchyServices.create#ChecklistProcessStory" in-map="[processStoryId:processStoryId,name:name,organizationId:activeOrgId]" out-map="checklist"/>
         <default-response url="../Checklist" parameter-map="[checklistId:checklist.rootWorkEffortId]"/></transition>
-
-    <transition name="copyActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context"/>
-        <actions><set field="ec.web.sessionAttributes.clipboardEntryId" from="null"/></actions>
-        <default-response url="."/></transition>
 
     <transition-include name="createActor" location="component://coarchy/screen/coarchy/cointernal/Actor.xml"/>
 
@@ -266,16 +287,37 @@ along with this software (see the LICENSE.md file). If not, see
             </row-actions>
             <row-selection id-field="activityId">
                 <action>
-                    <form-single name="SelectActivities" transition="copyActivities">
-                        <field name="processStoryId"><default-field><hidden/></default-field></field>
-                        <field name="pageIndex"><default-field><hidden/></default-field></field>
-                        <field name="pageSize"><default-field><hidden/></default-field></field>
-                        <field name="orderByField"><default-field><hidden/></default-field></field>
-                        <field name="activityId"><default-field><hidden/></default-field></field>
+                    <dialog button-text="Copy Activities" title="Copy activities to another organization or process story"/>
+                    <form-single name="AddCategoryFormSelection" transition="copyActivities" pass-through-parameters="true">
+                        <field name="organizationId"><default-field title="Organization">
+                            <label text="Enable premium features to copy to your organizations"/>
+                            <drop-down allow-empty="true" required-manual-select="true">
+                                <dynamic-options transition="getCloneOrganizationList" min-length="0"/></drop-down>
+                        </default-field></field>
+                        <field name="processStoryId" from="null"><default-field title="Process Story"><drop-down allow-empty="true" required-manual-select="true">
+                            <dynamic-options transition="getProcessStoryList" min-length="0">
+                                <depends-on field="organizationId"/></dynamic-options></drop-down>
+                        </default-field></field>
+                        <field name="activityId"><default-field title="Activity">
+                            <drop-down allow-empty="true" required-manual-select="true">
+                                <dynamic-options transition="getActivityList" min-length="0">
+                                    <depends-on field="organizationId"/><depends-on field="processStoryId"/>
+                                </dynamic-options>
+                            </drop-down>
+                        </default-field></field>
                         <field name="submitBtn"><default-field><submit text="Copy"/></default-field></field>
-                        <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>
                     </form-single>
                 </action>
+<!--                <action>-->
+<!--                    <form-single name="DeleteActivities" transition="deleteActivities">-->
+<!--                        <field name="processStoryId"><default-field><hidden/></default-field></field>-->
+<!--                        <field name="pageIndex"><default-field><hidden/></default-field></field>-->
+<!--                        <field name="pageSize"><default-field><hidden/></default-field></field>-->
+<!--                        <field name="orderByField"><default-field><hidden/></default-field></field>-->
+<!--                        <field name="submitBtn"><default-field><submit text="Delete"/></default-field></field>-->
+<!--                        <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>-->
+<!--                    </form-single>-->
+<!--                </action>-->
             </row-selection>
 
             <hidden-parameters><parameter name="processStoryId"/></hidden-parameters>

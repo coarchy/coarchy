@@ -40,9 +40,6 @@ along with this software (see the LICENSE.md file). If not, see
                                         <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">
                                             <q-card-section>
                                                 <div class="text-h2">Log In</div>
-                                                <q-banner class="q-mt-md bg-secondary text-white">
-                                                    <b>Right now, Coarchy is in free preview software status.</b></br></br>Later Coarchy will cost money. When this happens, we will let you know.
-                                                </q-banner>
                                             </q-card-section>
 
                                             <q-card-section>
