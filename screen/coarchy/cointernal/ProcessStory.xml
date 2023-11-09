@@ -143,9 +143,13 @@ along with this software (see the LICENSE.md file). If not, see
         </else>
         </if>
         </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
-    <transition name="copyActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context + [activityIdNum:context.keySet().count { key -> key.startsWith('activityId_') }]" multi="true"/>
+    <transition name="moveActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.move#Activities" in-map="context + [activityIdNum:context.keySet().count { key -> key.startsWith('activityId_') }]" multi="true"/>
         <actions><set field="ec.web.sessionAttributes.activityIdList" from="null"/></actions>
+        <default-response url="."/></transition>
+    <transition name="copyActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context"/>
+        <actions><set field="ec.web.sessionAttributes.clipboardEntryId" from="null"/></actions>
         <default-response url="."/></transition>
     <transition name="deleteActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="context" multi="true"/>
@@ -266,8 +270,8 @@ along with this software (see the LICENSE.md file). If not, see
             </row-actions>
             <row-selection id-field="activityId">
                 <action>
-                    <dialog button-text="Copy Activities" title="Copy activities to another organization or process story"/>
-                    <form-single name="CopyActivities" transition="copyActivities" pass-through-parameters="true">
+                    <dialog button-text="Copy To" title="Copy activities to another organization or process story"/>
+                    <form-single name="CopyActivities" transition="moveActivities" pass-through-parameters="true">
                         <field name="moveType" from="'copy'"><default-field><hidden/></default-field></field>
                         <field name="organizationId"><default-field title="Organization">
                             <label text="Enable premium features to copy to your organizations"/>
@@ -292,8 +296,8 @@ along with this software (see the LICENSE.md file). If not, see
                     </form-single>
                 </action>
                 <action>
-                    <dialog button-text="Cut Activities" title="Cut activities to another organization or process story"/>
-                    <form-single name="CutActivities" transition="copyActivities" pass-through-parameters="true">
+                    <dialog button-text="Move To" title="Cut activities to another organization or process story"/>
+                    <form-single name="CutActivities" transition="moveActivities" pass-through-parameters="true">
                         <field name="moveType" from="'cut'"><default-field><hidden/></default-field></field>
                         <field name="organizationId"><default-field title="Organization">
                             <label text="Enable premium features to copy to your organizations"/>
@@ -318,13 +322,24 @@ along with this software (see the LICENSE.md file). If not, see
                     </form-single>
                 </action>
                 <action>
+                    <form-single name="SelectActivities" transition="copyActivities">
+                        <field name="processStoryId"><default-field><hidden/></default-field></field>
+                        <field name="pageIndex"><default-field><hidden/></default-field></field>
+                        <field name="pageSize"><default-field><hidden/></default-field></field>
+                        <field name="orderByField"><default-field><hidden/></default-field></field>
+                        <field name="activityId"><default-field><hidden/></default-field></field>
+                        <field name="submitBtn"><default-field><submit text="Copy"/></default-field></field>
+                        <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>
+                    </form-single>
+                </action>
+                <action>
                     <form-single name="DeleteActivities" transition="deleteActivities">
                         <field name="processStoryId"><default-field><hidden/></default-field></field>
                         <field name="pageIndex"><default-field><hidden/></default-field></field>
                         <field name="pageSize"><default-field><hidden/></default-field></field>
                         <field name="orderByField"><default-field><hidden/></default-field></field>
-                        <field name="submitBtn"><default-field><submit text="Delete"/></default-field></field>
-                        <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>
+                        <field name="submitBtn"><default-field><submit text="Delete" confirmation="Are you sure? You can't undo deleting an activity."/></default-field></field>
+                        <field-layout><field-row><field-ref name="submitBtn"/></field-row></field-layout>
                     </form-single>
                 </action>
             </row-selection>

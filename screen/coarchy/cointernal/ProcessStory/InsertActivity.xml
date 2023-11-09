@@ -50,23 +50,28 @@ along with this software (see the LICENSE.md file). If not, see
 <!--        <log level="warn" message="insertActivity context.toString() ${context.toString()}"/>-->
     </actions><default-response url=".." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
 
-<!--    <transition name="pasteActivities">-->
-<!--        <service-call name="coarchy.CoarchyServices.paste#Activities" in-map="[pageIndex:pageIndex,-->
-<!--            downPageIndex:downPageIndex,processStoryId:processStoryId,sequenceNum:sequenceNum,organizationId:activeOrgId]"/>-->
-<!--        <default-response url=".." parameter-map="[pageIndex:pageIndex]"/></transition>-->
+    <transition name="pasteActivities">
+        <service-call name="coarchy.CoarchyServices.paste#Activities" in-map="[pageIndex:pageIndex,insertType:insertType,
+            downPageIndex:downPageIndex,processStoryId:processStoryId,sequenceNum:sequenceNum,organizationId:activeOrgId]"/>
+        <default-response url=".." parameter-map="[pageIndex:pageIndex]"/></transition>
 
     <actions>
-<!--        <entity-find entity-name="coarchy.ClipboardEntry" list="entryList" limit="1">-->
-<!--            <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>-->
-<!--            <order-by field-name="-clipboardEntryId"/>-->
-<!--        </entity-find>-->
-<!--        <entity-find-count entity-name="coarchy.ClipboardActivityDetail" count-field="activityCount">-->
-<!--            <econdition field-name="clipboardEntryId" from="entryList?.getFirst()?.clipboardEntryId"/>-->
-<!--        </entity-find-count>-->
+        <entity-find entity-name="coarchy.ClipboardEntry" list="entryList" limit="1">
+            <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
+            <order-by field-name="-clipboardEntryId"/>
+        </entity-find>
+        <if condition="entryList.size() &gt; 0">
+            <set field="activeOrgId" from="ec.user.context?.activeOrgId"/>
+            <set field="ec.user.context?.activeOrgId" from="entryList.getFirst().fromOrganizationId"/>
+            <set field="ec.user.context?.filterOrgIds" from="[entryList.getFirst().fromOrganizationId]"/>
+            <entity-find-count entity-name="coarchy.ClipboardActivityDetail" count-field="activityCount">
+                <econdition field-name="clipboardEntryId" from="entryList?.getFirst()?.clipboardEntryId"/>
+            </entity-find-count>
+            <set field="ec.user.context?.activeOrgId" from="activeOrgId"/>
+            <set field="ec.user.context?.filterOrgIds" from="[activeOrgId]"/>
+        </if>
 
-<!--        <log level="warn" message="InsertCopiedActivities entryList.toString() ${entryList.toString()}"/>-->
-<!--        <log level="warn" message="InsertCopiedActivities activityList.toString() ${activityList.toString()}"/>-->
-        <!--        <log level="warn" message="InsertActivity context.toString() ${context.toString()}"/>-->
+<!--        <log level="warn" message="InsertActivity context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
@@ -99,21 +104,25 @@ along with this software (see the LICENSE.md file). If not, see
                 </form-single>
             </box-body>
         </container-box>
-<!--        <container-box>-->
-<!--            <box-header title="Insert Copied Activities"/>-->
-<!--            <box-body>-->
-<!--                <form-single name="InsertCopiedActivity" transition="pasteActivities">-->
-<!--                    <field name="pageIndex"><default-field><hidden/></default-field></field>-->
-<!--                    <field name="downPageIndex"><default-field><hidden/></default-field></field>-->
-<!--                    <field name="processStoryId"><default-field><hidden/></default-field></field>-->
-<!--                    <field name="sequenceNum"><default-field><hidden/></default-field></field>-->
-<!--                    <field name="insertType" from="'below'"><default-field>-->
-<!--                        <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>-->
-<!--                    </default-field></field>-->
-<!--                    <field name="submit"><default-field><submit text="Paste ${activityCount} Activities" type="success"/></default-field></field>-->
-<!--                </form-single>-->
-<!--            </box-body>-->
-<!--        </container-box>-->
+        <section name="InsertCopiedActivities" condition="activityCount &gt; 0">
+            <widgets>
+                <container-box>
+                    <box-header title="Insert Copied Activities"/>
+                    <box-body>
+                        <form-single name="InsertCopiedActivity" transition="pasteActivities">
+                            <field name="pageIndex"><default-field><hidden/></default-field></field>
+                            <field name="downPageIndex"><default-field><hidden/></default-field></field>
+                            <field name="processStoryId"><default-field><hidden/></default-field></field>
+                            <field name="sequenceNum"><default-field><hidden/></default-field></field>
+                            <field name="insertType" from="'below'"><default-field>
+                                <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
+                            </default-field></field>
+                            <field name="submit"><default-field><submit text="Paste ${activityCount} Activities" type="success"/></default-field></field>
+                        </form-single>
+                    </box-body>
+                </container-box>
+            </widgets>
+        </section>
         <container-box>
             <box-header title="Insert Paragraph Break"/>
             <box-body>
