@@ -1329,9 +1329,45 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum?.toInteger()" ignore-if-empty="true"/>
                     <select-field field-name="processStoryActivityId,sequenceNum,activityId"/>
                     <order-by field-name="-sequenceNum"/></entity-find>
+
+                <if condition="organizationId!=activeOrgId">
+                    <set field="actorIdMap" from="[:]"/>
+                    <set field="ec.user.context?.activeOrgId" from="activeOrgId"/>
+                    <set field="ec.user.context?.filterOrgIds" from="[activeOrgId]"/>
+                    <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList" distinct="true">
+                        <econdition field-name="activityId" from="originalProcessStoryActivityList*.activityId"/>
+                        <select-field field-name="actorId,activityId,name,description"/>
+                        <order-by field-name="name"/></entity-find>
+                    <set field="ec.user.context?.activeOrgId" from="organizationId"/>
+                    <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
+                    <iterate list="activityActorList" entry="activityActor">
+                        <entity-find entity-name="coarchy.ActivityActorDetail" list="insideActivityActorList" distinct="true" limit="1">
+                            <econdition field-name="name" from="activityActor.name" ignore-case="true"/>
+                            <select-field field-name="actorId,name"/>
+                            <order-by field-name="name"/></entity-find>
+                        <if condition="!insideActivityActorList"><then>
+                            <if condition="!actorIdMap.keys?.contains(activityActor.actorId)">
+                                <service-call name="create#coarchy.Actor" in-map="[name:activityActor.name,
+                                description:activityActor.description,organizationId:organizationId]" out-map="actorContext"/>
+                                <script>actorIdMap.put(activityActor.actorId,actorContext.actorId)</script>
+                            </if>
+                        </then><else>
+                            <script>actorIdMap.put(activityActor.actorId,insideActivityActorList.getFirst().actorId)</script>
+                        </else></if>
+                    </iterate>
+                </if>
+<!--                <log level="warn" message="copy#Activities actorIdMap ${actorIdMap}"/>-->
+
                 <iterate list="originalProcessStoryActivityList" entry="activity">
-                    <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,sequenceNum:insertSequenceNum+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
-<!--                    <log level="warn" message="copy#Activities insertSequenceNum ${insertSequenceNum} activity_index ${activity_index}"/>-->
+                    <set field="actorIdList" from="activityActorList.findAll{ it.activityId == activity.activityId }*.actorId"/>
+<!--                    <log level="warn" message="copy#Activities actorIdList ${actorIdList}"/>-->
+                    <if condition="organizationId==activeOrgId"><then>
+                    </then><else>
+                        <set field="actorIdList" from="actorIdList.collect{ actorIdMap[it] }"/>
+<!--                        <log level="warn" message="copy#Activities diff org actorIdList ${actorIdList}"/>-->
+                    </else></if>
+                    <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,actorIdList:actorIdList,sequenceNum:insertSequenceNum+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
+<!--                    <log level="warn" message="copy#Activities activityActorList ${activityActorList}"/>-->
                 </iterate>
 
                 <if condition="moveType=='copy'">

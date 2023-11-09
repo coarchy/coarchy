@@ -314,7 +314,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <field name="insertType" from="'below'"><default-field>
                             <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
                         </default-field></field>
-                        <field name="submitBtn"><default-field><submit text="Copy"/></default-field></field>
+                        <field name="submitBtn"><default-field><submit text="Cut"/></default-field></field>
                     </form-single>
                 </action>
                 <action>
