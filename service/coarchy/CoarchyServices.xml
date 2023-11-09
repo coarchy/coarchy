@@ -107,6 +107,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="action"/>
             <parameter name="sequenceNum"/>
             <parameter name="implementationId"/>
+            <parameter name="ignoreNoAction" default="false"/>
         </in-parameters>
         <out-parameters>
             <parameter name="activityId"/>
@@ -114,7 +115,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="sequenceNum"/>
         </out-parameters>
         <actions>
-            <if condition="!action"><return type="warning" message="An action is needed for an activity"/></if>
+            <if condition="!ignoreNoAction &amp;&amp; !action"><return type="warning" message="An action is needed for an activity"/></if>
             <service-call name="create#coarchy.Activity" in-map="[condition:condition?.trim(), action:action?.trim(), organizationId:organizationId, implementationId:implementationId]" out-map="newActivity"/>
             <set field="activityId" from="newActivity.activityId"/>
 
@@ -1156,23 +1157,56 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-
-    <service verb="get" noun="ProcessStoryList">
+    <service verb="get" noun="CloneOrganizationList">
         <in-parameters>
-            <parameter name="organizationId" required="true"/>
             <parameter name="term"/>
-            <parameter name="activeOrgId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="outList"/>
         </out-parameters>
         <actions>
-            <set field="activeOrgId" from="organizationId"/>
+            <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
+                <date-filter/>
+                <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                <!--                <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>-->
+                <order-by field-name="organizationName"/></entity-find>
+            <set field="outList" from="[]"/>
+            <iterate list="organizationList" entry="organization">
+                <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+                    <econdition field-name="partyId" from="organization.toPartyId"/>
+                    <date-filter/></entity-find-count>
+                <set field="ec.user.context?.activeOrgId" from="organization.toPartyId"/>
+                <set field="ec.user.context?.filterOrgIds" from="[organization.toPartyId]"/>
+                <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="processStoryActivityCount"/>
+                <if condition="partyActivationCount &gt; 0 &amp;&amp; processStoryActivityCount &gt; 0">
+                    <script>outList.add([value:organization.toPartyId, label:organization.organizationName])</script>
+                </if>
+<!--                <log level="warn" message="getCloneOrganizationList context.toString() ${context.toString()}"/>-->
+            </iterate>
+<!--            <log level="warn" message="getCloneOrganizationList context.toString() ${context.toString()}"/>-->
+        </actions>
+    </service>
+    <service verb="get" noun="ProcessStoryList">
+        <description>Internal service needs validation that user can access organizationId</description>
+        <in-parameters>
+            <parameter name="organizationId" required="true"/>
+            <parameter name="term"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="outList"/>
+        </out-parameters>
+        <actions>
+            <set field="ec.user.context?.activeOrgId" from="organizationId"/>
+            <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
             <if condition="!term"><then>
                 <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
+                    <econdition field-name="organizationId"/>
                     <order-by field-name="name"/></entity-find>
             </then><else>
                 <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
+                    <econdition field-name="organizationId"/>
                     <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true"/>
                     <order-by field-name="name"/></entity-find>
             </else></if>
@@ -1186,21 +1220,23 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
     <service verb="get" noun="ActivityList">
+        <description>Internal service needs validation that user can access organizationId</description>
         <in-parameters>
             <parameter name="processStoryId" required="true"/>
             <parameter name="organizationId" required="true"/>
             <parameter name="term"/>
-            <parameter name="activeOrgId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="outList" type="List"/>
         </out-parameters>
         <actions>
-            <set field="activeOrgId" from="organizationId"/>
+            <set field="ec.user.context?.activeOrgId" from="organizationId"/>
+            <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
             <set field="activityList" from="[]"/>
             <if condition="!term"><then>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
                     <econdition field-name="processStoryId"/>
+                    <econdition field-name="action" operator="is-not-null"/>
                     <!--                    <econdition field-name="storyActivityOrganizationId" from="organizationId"/>-->
                     <!--                    <econdition field-name="activityOrganizationId" from="organizationId"/>-->
                     <!--                    <econdition field-name="storyOrganizationId" from="organizationId"/>-->
@@ -1210,6 +1246,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- TODO: Also find by actor name -->
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
                     <econdition field-name="processStoryId"/>
+                    <econdition field-name="action" operator="is-not-null"/>
                     <!--                    <econdition field-name="storyActivityOrganizationId" from="organizationId"/>-->
                     <!--                    <econdition field-name="activityOrganizationId" from="organizationId"/>-->
                     <!--                    <econdition field-name="storyOrganizationId" from="organizationId"/>-->
@@ -1220,7 +1257,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <select-field field-name="activityId,condition,action"/>
                     <order-by field-name="sequenceNum"/></entity-find>
             </else></if>
-            <log level="warn" message="getActivityList context.toString() ${context.toString()}"/>
+<!--            <log level="warn" message="getActivityList context.toString() ${context.toString()}"/>-->
             <set field="outList" from="[]"/>
             <iterate list="activityList" entry="activity">
                 <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
@@ -1233,25 +1270,90 @@ along with this software (see the LICENSE.md file). If not, see
             <!--            <log level="warn" message="getActivityList context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
+    <!-- TODO: Review approach -->
     <service verb="copy" noun="Activities">
+        <description>Internal service needs validation that user can access organizationId</description>
         <in-parameters>
-            <parameter name="activityId"/>
+            <parameter name="activityId" required="true"/>
+            <parameter name="moveType" required="true"/>
+            <parameter name="organizationId" required="true"/>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="insertActivityId"/>
+            <parameter name="insertType" required="true"/>
+            <parameter name="activityIdNum" required="true" type="Integer"/>
         </in-parameters>
         <out-parameters>
             <parameter name="activityId"/>
             <parameter name="clipboardEntryId"/>
         </out-parameters>
         <actions>
-            <if condition="!ec.web?.sessionAttributes?.clipboardEntryId">
-                <service-call name="create#coarchy.ClipboardEntry" in-map="[partyId:ec.user.userAccount?.partyId]" out-map="context"/>
-                <set field="ec.web.sessionAttributes.clipboardEntryId" from="clipboardEntryId"/>
+            <if condition="ec.web?.sessionAttributes?.activityIdList==null">
+                <set field="ec.web.sessionAttributes.activityIdList" from="[]"/>
             </if>
+            <set field="ec.web.sessionAttributes.activityIdList" from="ec.web.sessionAttributes.activityIdList + [activityId]"/>
+            <set field="activityIdList" from="ec.web.sessionAttributes.activityIdList"/>
 
-            <set field="clipboardEntryId" from="ec.web.sessionAttributes.clipboardEntryId"/>
-            <service-call name="create#coarchy.ClipboardActivity" in-map="[clipboardEntryId:clipboardEntryId,
-                activityId:activityId]"/>
+<!--            <log level="warn" message="copy#Activities context.toString() ${context.toString()} activityIdList.size() ${activityIdList.size()}"/>-->
+            <if condition="activityIdList.size() == activityIdNum.toInteger()">
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="originalProcessStoryActivityList" distinct="true">
+                    <econdition field-name="activityId" operator="in" from="activityIdList"/>
+                    <!-- Don't select fields from activityactor (actorId) -->
+                    <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
+                    <order-by field-name="sequenceNum"/>
+                </entity-find>
+                <set field="activeOrgId" from="ec.user.context?.activeOrgId"/>
+                <set field="ec.user.context?.activeOrgId" from="organizationId"/>
+                <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
 
-<!--            <log level="warn" message="copy#Activities context.toString() ${context.toString()}"/>-->
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="insertProcessStoryActivityList" distinct="true" limit="1">
+                    <econdition field-name="activityId" from="insertActivityId"/>
+                    <!-- Don't select fields from activityactor (actorId) -->
+                    <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
+                    <order-by field-name="sequenceNum"/>
+                </entity-find>
+                <set field="insertActivity" from="insertProcessStoryActivityList?.getFirst()"/>
+
+                <set field="insertSequenceNum" from="insertActivity?.sequenceNum?:0"/>
+                <if condition="insertType=='below'">
+                    <set field="pageIndex" from="downPageIndex"/>
+                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                        <econdition field-name="processStoryId"/>
+                        <econdition field-name="sequenceNum" operator="greater" from="insertActivity?.sequenceNum?.toInteger()" ignore="!insertActivity"/>
+                        <select-field field-name="processStoryActivityId,sequenceNum"/>
+                        <order-by field-name="sequenceNum"/></entity-find>
+                    <!-- This might be null, but if it is null then the right behavior will happen anyways -->
+                    <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum?:(insertSequenceNum?:0)+1"/>
+                </if>
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                    <econdition field-name="processStoryId"/>
+                    <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum?.toInteger()" ignore-if-empty="true"/>
+                    <select-field field-name="processStoryActivityId,sequenceNum,activityId"/>
+                    <order-by field-name="-sequenceNum"/></entity-find>
+                <iterate list="originalProcessStoryActivityList" entry="activity">
+                    <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,sequenceNum:insertSequenceNum+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
+<!--                    <log level="warn" message="copy#Activities insertSequenceNum ${insertSequenceNum} activity_index ${activity_index}"/>-->
+                </iterate>
+
+                <if condition="moveType=='copy'">
+                    <iterate list="processStoryActivityList" entry="processStoryActivity">
+                        <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+originalProcessStoryActivityList.size()]"/>
+                    </iterate>
+                </if>
+                <if condition="moveType=='cut'">
+                    <iterate list="activityIdList" entry="activityId">
+                        <set field="ec.user.context?.activeOrgId" from="activeOrgId"/>
+                        <set field="ec.user.context?.filterOrgIds" from="[activeOrgId]"/>
+
+                        <!--                        <log level="warn" message="copy#Activities moveType ${moveType} processStoryActivity.activityId ${processStoryActivity.activityId}"/>-->
+                        <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="[activityId:activityId]"/>
+                        <set field="ec.user.context?.activeOrgId" from="organizationId"/>
+                        <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
+                    </iterate>
+                </if>
+
+                <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationId]"/>
+<!--                <log level="warn" message="copy#Activities context.toString() ${context.toString()}"/>-->
+            </if>
         </actions>
     </service>
     <!-- TODO: Improve the index handling on multiple activities inserted -->
@@ -1283,7 +1385,6 @@ along with this software (see the LICENSE.md file). If not, see
 <!--&lt;!&ndash;            <log level="warn" message="paste#Activities context.toString() ${context.toString()}"/>&ndash;&gt;-->
 <!--        </actions>-->
 <!--    </service>-->
-
     <service verb="delete" noun="Activity">
         <in-parameters>
             <parameter name="activityId" required="true"/>
@@ -1294,7 +1395,6 @@ along with this software (see the LICENSE.md file). If not, see
         <out-parameters>
             <parameter name="pageIndex"/>
             <parameter name="activityId"/>
-            <parameter name="clipboardEntryId"/>
         </out-parameters>
         <actions>
             <if condition="!processStoryActivityId">
@@ -1353,7 +1453,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <select-field field-name="processStoryActivityId,sequenceNum"/>
                 <order-by field-name="-sequenceNum"/></entity-find>
             <iterate list="processStoryActivityList" entry="processStoryActivity">
-                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+sequenceNumDiff]"/>
             </iterate>
             <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum,implementationId:implementationId]"/>
         </actions>

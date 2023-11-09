@@ -55,37 +55,16 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
         <default-response type="none"/>
     </transition>
-    <transition name="getCloneOrganizationList"><actions>
-        <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
-            <date-filter/>
-            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
-            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
-            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
-<!--            <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>-->
-            <order-by field-name="organizationName"/></entity-find>
-        <set field="cloneOrganizationList" from="[]"/>
-        <iterate list="organizationList" entry="organization">
-            <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
-                <econdition field-name="partyId" from="organization.toPartyId"/>
-                <date-filter/>
-            </entity-find-count>
-            <if condition="partyActivationCount &gt; 0">
-                <script>cloneOrganizationList.add([value:organization.toPartyId, label:organization.organizationName])</script>
-            </if>
-        </iterate>
-        <script>
-            ec.web.sendJsonResponse(cloneOrganizationList)
-        </script>
-    </actions>
-        <default-response type="none"/>
-    </transition>
-    <transition name="getProcessStoryList">
-        <service-call name="coarchy.CoarchyServices.get#ProcessStoryList" in-map="[organizationId:organizationId,term:term,activeOrgId:activeOrgId]"/>
+    <transition name="getCloneOrganizationList"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.get#CloneOrganizationList" in-map="[term:term]"/>
         <actions><script>ec.web.sendJsonResponse(outList)</script></actions>
-        <default-response type="none"/>
-    </transition>
-    <transition name="getActivityList">
-        <service-call name="coarchy.CoarchyServices.get#ActivityList" in-map="[processStoryId:processStoryId,organizationId:organizationId,term:term,activeOrgId:activeOrgId]"/>
+        <default-response type="none"/></transition>
+    <transition name="getProcessStoryList"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.get#ProcessStoryList" in-map="[organizationId:organizationId,term:term]"/>
+        <actions><script>ec.web.sendJsonResponse(outList)</script></actions>
+        <default-response type="none"/></transition>
+    <transition name="getActivityList"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.get#ActivityList" in-map="[processStoryId:processStoryId,organizationId:organizationId,term:term]"/>
         <actions><script>ec.web.sendJsonResponse(outList)</script></actions>
         <default-response type="none"/></transition>
 
@@ -165,8 +144,8 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
         </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
     <transition name="copyActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context"/>
-        <actions><set field="ec.web.sessionAttributes.clipboardEntryId" from="null"/></actions>
+        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context + [activityIdNum:context.keySet().count { key -> key.startsWith('activityId_') }]" multi="true"/>
+        <actions><set field="ec.web.sessionAttributes.activityIdList" from="null"/></actions>
         <default-response url="."/></transition>
     <transition name="deleteActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="context" multi="true"/>
@@ -288,7 +267,8 @@ along with this software (see the LICENSE.md file). If not, see
             <row-selection id-field="activityId">
                 <action>
                     <dialog button-text="Copy Activities" title="Copy activities to another organization or process story"/>
-                    <form-single name="AddCategoryFormSelection" transition="copyActivities" pass-through-parameters="true">
+                    <form-single name="CopyActivities" transition="copyActivities" pass-through-parameters="true">
+                        <field name="moveType" from="'copy'"><default-field><hidden/></default-field></field>
                         <field name="organizationId"><default-field title="Organization">
                             <label text="Enable premium features to copy to your organizations"/>
                             <drop-down allow-empty="true" required-manual-select="true">
@@ -298,26 +278,55 @@ along with this software (see the LICENSE.md file). If not, see
                             <dynamic-options transition="getProcessStoryList" min-length="0">
                                 <depends-on field="organizationId"/></dynamic-options></drop-down>
                         </default-field></field>
-                        <field name="activityId"><default-field title="Activity">
+                        <field name="insertActivityId"><default-field title="Activity">
                             <drop-down allow-empty="true" required-manual-select="true">
                                 <dynamic-options transition="getActivityList" min-length="0">
                                     <depends-on field="organizationId"/><depends-on field="processStoryId"/>
                                 </dynamic-options>
                             </drop-down>
                         </default-field></field>
+                        <field name="insertType" from="'below'"><default-field>
+                            <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
+                        </default-field></field>
                         <field name="submitBtn"><default-field><submit text="Copy"/></default-field></field>
                     </form-single>
                 </action>
-<!--                <action>-->
-<!--                    <form-single name="DeleteActivities" transition="deleteActivities">-->
-<!--                        <field name="processStoryId"><default-field><hidden/></default-field></field>-->
-<!--                        <field name="pageIndex"><default-field><hidden/></default-field></field>-->
-<!--                        <field name="pageSize"><default-field><hidden/></default-field></field>-->
-<!--                        <field name="orderByField"><default-field><hidden/></default-field></field>-->
-<!--                        <field name="submitBtn"><default-field><submit text="Delete"/></default-field></field>-->
-<!--                        <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>-->
-<!--                    </form-single>-->
-<!--                </action>-->
+                <action>
+                    <dialog button-text="Cut Activities" title="Cut activities to another organization or process story"/>
+                    <form-single name="CutActivities" transition="copyActivities" pass-through-parameters="true">
+                        <field name="moveType" from="'cut'"><default-field><hidden/></default-field></field>
+                        <field name="organizationId"><default-field title="Organization">
+                            <label text="Enable premium features to copy to your organizations"/>
+                            <drop-down allow-empty="true" required-manual-select="true">
+                                <dynamic-options transition="getCloneOrganizationList" min-length="0"/></drop-down>
+                        </default-field></field>
+                        <field name="processStoryId" from="null"><default-field title="Process Story"><drop-down allow-empty="true" required-manual-select="true">
+                            <dynamic-options transition="getProcessStoryList" min-length="0">
+                                <depends-on field="organizationId"/></dynamic-options></drop-down>
+                        </default-field></field>
+                        <field name="insertActivityId"><default-field title="Activity">
+                            <drop-down allow-empty="true" required-manual-select="true">
+                                <dynamic-options transition="getActivityList" min-length="0">
+                                    <depends-on field="organizationId"/><depends-on field="processStoryId"/>
+                                </dynamic-options>
+                            </drop-down>
+                        </default-field></field>
+                        <field name="insertType" from="'below'"><default-field>
+                            <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
+                        </default-field></field>
+                        <field name="submitBtn"><default-field><submit text="Copy"/></default-field></field>
+                    </form-single>
+                </action>
+                <action>
+                    <form-single name="DeleteActivities" transition="deleteActivities">
+                        <field name="processStoryId"><default-field><hidden/></default-field></field>
+                        <field name="pageIndex"><default-field><hidden/></default-field></field>
+                        <field name="pageSize"><default-field><hidden/></default-field></field>
+                        <field name="orderByField"><default-field><hidden/></default-field></field>
+                        <field name="submitBtn"><default-field><submit text="Delete"/></default-field></field>
+                        <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>
+                    </form-single>
+                </action>
             </row-selection>
 
             <hidden-parameters><parameter name="processStoryId"/></hidden-parameters>
