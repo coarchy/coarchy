@@ -18,7 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <render-mode>
             <text type="html"><![CDATA[
-                <div style="background: linear-gradient(#eeeeee, #d3d3d3);">
+                <div style="background: linear-gradient(#eeeeee, #cccccc);">
                     <q-card class="my-card">
                         <q-parallax src="/cstatic/background.jpg" :height="500"/>
 

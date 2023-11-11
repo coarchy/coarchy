@@ -271,7 +271,7 @@ along with this software (see the LICENSE.md file). If not, see
             <row-selection id-field="activityId">
                 <action>
                     <dialog button-text="Copy To" title="Copy activities to another organization or process story"/>
-                    <form-single name="CopyActivities" transition="moveActivities" pass-through-parameters="true">
+                    <form-single name="CopyToActivities" transition="moveActivities" pass-through-parameters="true">
                         <field name="moveType" from="'copy'"><default-field><hidden/></default-field></field>
                         <field name="organizationId"><default-field title="Organization">
                             <label text="Enable premium features to copy to your organizations"/>
@@ -297,7 +297,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </action>
                 <action>
                     <dialog button-text="Move To" title="Cut activities to another organization or process story"/>
-                    <form-single name="CutActivities" transition="moveActivities" pass-through-parameters="true">
+                    <form-single name="MoveToActivities" transition="moveActivities" pass-through-parameters="true">
                         <field name="moveType" from="'cut'"><default-field><hidden/></default-field></field>
                         <field name="organizationId"><default-field title="Organization">
                             <label text="Enable premium features to copy to your organizations"/>
@@ -322,13 +322,26 @@ along with this software (see the LICENSE.md file). If not, see
                     </form-single>
                 </action>
                 <action>
-                    <form-single name="SelectActivities" transition="copyActivities">
+                    <form-single name="CopyActivities" transition="copyActivities">
+                        <field name="moveTypeEnumId" from="'CbmtCopy'"><default-field><hidden/></default-field></field>
                         <field name="processStoryId"><default-field><hidden/></default-field></field>
                         <field name="pageIndex"><default-field><hidden/></default-field></field>
                         <field name="pageSize"><default-field><hidden/></default-field></field>
                         <field name="orderByField"><default-field><hidden/></default-field></field>
                         <field name="activityId"><default-field><hidden/></default-field></field>
                         <field name="submitBtn"><default-field><submit text="Copy"/></default-field></field>
+                        <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>
+                    </form-single>
+                </action>
+                <action>
+                    <form-single name="CutActivities" transition="copyActivities">
+                        <field name="moveTypeEnumId" from="'CbmtCut'"><default-field><hidden/></default-field></field>
+                        <field name="processStoryId"><default-field><hidden/></default-field></field>
+                        <field name="pageIndex"><default-field><hidden/></default-field></field>
+                        <field name="pageSize"><default-field><hidden/></default-field></field>
+                        <field name="orderByField"><default-field><hidden/></default-field></field>
+                        <field name="activityId"><default-field><hidden/></default-field></field>
+                        <field name="submitBtn"><default-field><submit text="Cut"/></default-field></field>
                         <field-layout><field-row-big><field-ref name="submitBtn"/></field-row-big></field-layout>
                     </form-single>
                 </action>

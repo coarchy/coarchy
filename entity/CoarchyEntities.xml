@@ -246,12 +246,19 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="clipboardEntryId" type="id" is-pk="true"/>
         <field name="partyId" type="id"/>
         <!-- TODO: Review approach -->
+        <field name="moveTypeEnumId" type="id"/>
         <field name="fromOrganizationId" type="id"><description>Clipboard from organization</description></field>
 
         <relationship type="one" title="Party" related="mantle.party.Party" short-alias="party">
             <key-map field-name="partyId"/></relationship>
         <relationship type="one" title="Party" related="mantle.party.Party" short-alias="organizationId">
             <key-map field-name="fromOrganizationId"/></relationship>
+        <seed-data>
+            <moqui.basic.EnumerationType description="Clipboard Move Type" enumTypeId="ClipboardMoveType">
+                <moqui.basic.Enumeration description="Copy" enumId="CbmtCopy"/>
+                <moqui.basic.Enumeration description="Cut" enumId="CbmtCut"/>
+            </moqui.basic.EnumerationType>
+        </seed-data>
     </entity>
     <entity entity-name="ClipboardActivity" package="coarchy">
         <field name="clipboardEntryId" type="id" is-pk="true"/>

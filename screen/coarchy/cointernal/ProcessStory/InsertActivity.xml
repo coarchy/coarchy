@@ -65,7 +65,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="ec.user.context?.activeOrgId" from="entryList.getFirst().fromOrganizationId"/>
             <set field="ec.user.context?.filterOrgIds" from="[entryList.getFirst().fromOrganizationId]"/>
             <entity-find-count entity-name="coarchy.ClipboardActivityDetail" count-field="activityCount">
-                <econdition field-name="clipboardEntryId" from="entryList?.getFirst()?.clipboardEntryId"/>
+                <econdition field-name="clipboardEntryId" from="entryList.getFirst().clipboardEntryId"/>
             </entity-find-count>
             <set field="ec.user.context?.activeOrgId" from="activeOrgId"/>
             <set field="ec.user.context?.filterOrgIds" from="[activeOrgId]"/>
