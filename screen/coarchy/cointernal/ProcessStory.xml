@@ -148,8 +148,10 @@ along with this software (see the LICENSE.md file). If not, see
         <actions><set field="ec.web.sessionAttributes.activityIdList" from="null"/></actions>
         <default-response url="."/></transition>
     <transition name="copyActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context"/>
-        <actions><set field="ec.web.sessionAttributes.clipboardEntryId" from="null"/></actions>
+        <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context +
+            [activityIdNum:context.keySet().count { key -> key.startsWith('activityId_') }]" multi="true"/>
+        <actions><set field="ec.web.sessionAttributes.clipboardEntryId" from="null"/>
+            <set field="ec.web.sessionAttributes.activityIdList" from="null"/></actions>
         <default-response url="."/></transition>
     <transition name="deleteActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="context" multi="true"/>
@@ -247,7 +249,8 @@ along with this software (see the LICENSE.md file). If not, see
             <form-single name="UpdateProcessStory" transition="updateProcessStory">
                 <field name="pageIndex"><default-field><hidden/></default-field></field>
                 <field name="processStoryId"><default-field><hidden/></default-field></field>
-                <field name="name" from="processStory?.name"><default-field title="Process Story Name"><text-line size="50"/></default-field></field>
+                <field name="name" from="processStory?.name"><default-field title="Process Story Name">
+                    <text-line size="50"/></default-field></field>
                 <field name="submit"><default-field><submit text="Edit"/></default-field></field>
             </form-single>
         </container-dialog>

@@ -248,6 +248,7 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- TODO: Review approach -->
         <field name="moveTypeEnumId" type="id"/>
         <field name="fromOrganizationId" type="id"><description>Clipboard from organization</description></field>
+        <field name="entryDate" type="date-time"/>
 
         <relationship type="one" title="Party" related="mantle.party.Party" short-alias="party">
             <key-map field-name="partyId"/></relationship>

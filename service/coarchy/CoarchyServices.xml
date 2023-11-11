@@ -1603,4 +1603,40 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum,implementationId:implementationId]"/>
         </actions>
     </service>
+
+    <service verb="get" noun="ClipboardActivityAndCount">
+        <in-parameters>
+            <parameter name="clipboardEntryId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="activityText"/>
+            <parameter name="activityCount"/>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.ClipboardEntry" value-field="clipboardEntry"
+                    auto-field-map="[clipboardEntryId:clipboardEntryId,partyId:ec.user.userAccount.partyId]"/>
+            <if condition="clipboardEntry==null"><return type="danger" error="true" message="No clipboard entry found"/></if>
+
+            <set field="actualActiveOrgId" from="ec.user.context?.activeOrgId"/>
+            <set field="ec.user.context?.activeOrgId" from="clipboardEntry.fromOrganizationId"/>
+            <set field="ec.user.context?.filterOrgIds" from="[clipboardEntry.fromOrganizationId]"/>
+            <entity-find entity-name="coarchy.ClipboardActivityDetail" list="activityList" limit="1">
+                <econdition field-name="clipboardEntryId"/>
+                <order-by field-name="sequenceNum"/>
+            </entity-find>
+            <if condition="activityList.size() == 0"><return type="danger" error="true" message="No clipboard activity found"/></if>
+            <set field="processStoryActivity" from="activityList.getFirst().getMap()"/>
+            <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                <econdition field-name="activityId" from="processStoryActivity.activityId"/>
+                <order-by field-name="name"/></entity-find>
+            <set field="processStoryActivity" from="processStoryActivity + [actorNames:activityActorList*.name]"/>
+            <set field="activityText" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
+            <entity-find-count entity-name="coarchy.ClipboardActivityDetail" count-field="activityCount">
+                <econdition field-name="clipboardEntryId"/>
+            </entity-find-count>
+            <set field="ec.user.context?.activeOrgId" from="actualActiveOrgId"/>
+            <set field="ec.user.context?.filterOrgIds" from="[actualActiveOrgId]"/>
+            <!--            <log level="warn" message="getClipboardActivityAndCount context.toString() ${context.toString()}"/>-->
+        </actions>
+    </service>
 </services>
