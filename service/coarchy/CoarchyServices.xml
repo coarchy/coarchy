@@ -1413,6 +1413,31 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="enumId" from="moveTypeEnumId"/></entity-find-count>
                 <if condition="enumCount == 0"><return type="danger" error="true" public="true"
                         message="Invalid moveTypeEnumId ${moveTypeEnumId}"/></if>
+
+                <entity-find entity-name="coarchy.ClipboardEntry" list="entryList">
+                    <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
+                    <order-by field-name="-entryDate"/></entity-find>
+                <iterate list="entryList" entry="entry">
+                    <if condition="entry_index &gt;= 4">
+<!--                        <log level="warn" message="copy#Activities deleting old clipboard entry ${entry} ${entry_index}"/>-->
+                        <entity-find entity-name="coarchy.ClipboardActor" list="actorList">
+                            <econdition field-name="clipboardEntryId" from="entry.clipboardEntryId"/>
+                            <order-by field-name="actorSeqId"/></entity-find>
+                        <iterate list="actorList" entry="actor">
+                            <service-call name="delete#coarchy.ClipboardActor" in-map="[clipboardEntryId:entry.clipboardEntryId,
+                                actorSeqId:actor.actorSeqId]"/>
+                        </iterate>
+                        <entity-find entity-name="coarchy.ClipboardActivity" list="activityList">
+                            <econdition field-name="clipboardEntryId" from="entry.clipboardEntryId"/>
+                            <order-by field-name="activitySeqId"/></entity-find>
+                        <iterate list="activityList" entry="activity">
+                            <service-call name="delete#coarchy.ClipboardActivity" in-map="[clipboardEntryId:entry.clipboardEntryId,
+                                activitySeqId:activity.activitySeqId]"/>
+                        </iterate>
+                        <service-call name="delete#coarchy.ClipboardEntry" in-map="[clipboardEntryId:entry.clipboardEntryId]"/>
+                    </if>
+                </iterate>
+
                 <service-call name="create#coarchy.ClipboardEntry" in-map="[partyId:ec.user.userAccount?.partyId,
                     fromOrganizationId:ec.user.context?.activeOrgId,moveTypeEnumId:moveTypeEnumId,entryDate:
                     ec.user.nowTimestamp]" out-map="context"/>
