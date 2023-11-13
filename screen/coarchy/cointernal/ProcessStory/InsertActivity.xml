@@ -52,7 +52,8 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="pasteActivities">
         <service-call name="coarchy.CoarchyServices.paste#Activities" in-map="[pageIndex:pageIndex,insertType:insertType,
-            downPageIndex:downPageIndex,processStoryId:processStoryId,sequenceNum:sequenceNum,organizationId:activeOrgId]"/>
+            downPageIndex:downPageIndex,processStoryId:processStoryId,sequenceNum:sequenceNum,organizationId:activeOrgId,
+            clipboardEntryId:clipboardEntryId]"/>
         <default-response url=".." parameter-map="[pageIndex:pageIndex]"/></transition>
 
     <actions>
@@ -92,30 +93,6 @@ along with this software (see the LICENSE.md file). If not, see
                 </form-single>
             </box-body>
         </container-box>
-        <section name="InsertCopiedActivities" condition="entryList.size() &gt; 0">
-            <widgets>
-                <container-box>
-                    <box-header title="Paste Activities"/>
-                    <box-body>
-                        <form-list name="InsertCopiedActivity" list="entryList" transition="pasteActivities">
-                            <row-actions>
-                                <service-call name="coarchy.CoarchyServices.get#ClipboardActivityAndCount" in-map="[clipboardEntryId:clipboardEntryId]" out-map="context"/>
-                            </row-actions>
-
-                            <field name="pageIndex"><default-field><hidden/></default-field></field>
-                            <field name="downPageIndex"><default-field><hidden/></default-field></field>
-                            <field name="processStoryId"><default-field><hidden/></default-field></field>
-                            <field name="sequenceNum"><default-field><hidden/></default-field></field>
-                            <field name="activityText"><default-field title=""><display/></default-field></field>
-                            <field name="insertType" from="'below'"><default-field title="">
-                                <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
-                            </default-field></field>
-                            <field name="submit"><default-field><submit text="Paste ${activityCount}" type="success"/></default-field></field>
-                        </form-list>
-                    </box-body>
-                </container-box>
-            </widgets>
-        </section>
         <container-box>
             <box-header title="Insert Paragraph Break"/>
             <box-body>
@@ -131,5 +108,30 @@ along with this software (see the LICENSE.md file). If not, see
                 </form-single>
             </box-body>
         </container-box>
+        <section name="InsertCopiedActivities" condition="entryList.size() &gt; 0">
+            <widgets>
+                <container-box>
+                    <box-header title="Paste Activities"/>
+                    <box-body>
+                        <form-list name="InsertCopiedActivity" list="entryList" transition="pasteActivities">
+                            <row-actions>
+                                <service-call name="coarchy.CoarchyServices.get#ClipboardActivityAndCount"
+                                        in-map="[clipboardEntryId:clipboardEntryId]" out-map="context"/>
+                            </row-actions>
+
+                            <field name="activityText"><default-field title=""><display/></default-field></field>
+                            <field name="insertAbove"><default-field><link url="pasteActivities" text="Above ${activityCount}"
+                                    btn-type="success" parameter-map="[pageIndex:pageIndex,downPageIndex:downPageIndex,
+                                    processStoryId:processStoryId,sequenceNum:sequenceNum,insertType:'above',
+                                    clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/></default-field></field>
+                            <field name="insertBelow"><default-field><link url="pasteActivities" text="Below ${activityCount}"
+                                    btn-type="success" parameter-map="[pageIndex:pageIndex,downPageIndex:downPageIndex,
+                                    processStoryId:processStoryId,sequenceNum:sequenceNum,insertType:'below',
+                                    clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/></default-field></field>
+                        </form-list>
+                    </box-body>
+                </container-box>
+            </widgets>
+        </section>
     </widgets>
 </screen>

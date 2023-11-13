@@ -133,11 +133,11 @@ along with this software (see the LICENSE.md file). If not, see
 
             <if condition="actorIdList?.size() != 0 &amp;&amp; actorIdList instanceof String">
                 <then>
-                    <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList, organizationId:organizationId]"/>
+                    <service-call name="store#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorIdList, organizationId:organizationId]"/>
                 </then>
                 <else>
                     <iterate list="actorIdList" entry="actorId">
-                        <service-call name="create#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId, organizationId:organizationId]"/>
+                        <service-call name="store#coarchy.ActivityActor" in-map="[activityId:newActivity.activityId, actorId:actorId, organizationId:organizationId]"/>
                     </iterate>
                 </else>
             </if>
@@ -1288,11 +1288,11 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="clipboardEntryId"/>
         </out-parameters>
         <actions>
-            <if condition="ec.web?.sessionAttributes?.activityIdList==null">
-                <set field="ec.web.sessionAttributes.activityIdList" from="[]"/>
+            <if condition="ec.user.context?.activityIdList==null">
+                <set field="ec.user.context.activityIdList" from="[]"/>
             </if>
-            <set field="ec.web.sessionAttributes.activityIdList" from="ec.web.sessionAttributes.activityIdList + [activityId]"/>
-            <set field="activityIdList" from="ec.web.sessionAttributes.activityIdList"/>
+            <set field="ec.user.context.activityIdList" from="ec.user.context.activityIdList + [activityId]"/>
+            <set field="activityIdList" from="ec.user.context.activityIdList"/>
 
 <!--            <log level="warn" message="copy#Activities context.toString() ${context.toString()} activityIdList.size() ${activityIdList.size()}"/>-->
             <if condition="activityIdList.size() == activityIdNum.toInteger()">
@@ -1399,25 +1399,50 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="activityId" required="true"/>
             <parameter name="moveTypeEnumId" required="true"/>
+            <parameter name="activityIdNum" required="true" type="Integer"/>
         </in-parameters>
         <out-parameters>
             <parameter name="activityId"/>
             <parameter name="clipboardEntryId"/>
         </out-parameters>
         <actions>
-            <if condition="!ec.web?.sessionAttributes?.clipboardEntryId">
+            <if condition="!ec.user.context?.clipboardEntryId">
 <!--                <log level="warn" message="ec.user.context.activeOrgId ${ec.user.context.activeOrgId}"/>-->
                 <entity-find-count entity-name="moqui.basic.Enumeration" count-field="enumCount">
                     <econdition field-name="enumTypeId" value="ClipboardMoveType"/>
                     <econdition field-name="enumId" from="moveTypeEnumId"/></entity-find-count>
-                <if condition="enumCount == 0"><return type="danger" error="true" public="true" message="Invalid moveTypeEnumId ${moveTypeEnumId}"/></if>
-                <service-call name="create#coarchy.ClipboardEntry" in-map="[partyId:ec.user.userAccount?.partyId,fromOrganizationId:ec.user.context?.activeOrgId,moveTypeEnumId:moveTypeEnumId]" out-map="context"/>
-                <set field="ec.web.sessionAttributes.clipboardEntryId" from="clipboardEntryId"/>
+                <if condition="enumCount == 0"><return type="danger" error="true" public="true"
+                        message="Invalid moveTypeEnumId ${moveTypeEnumId}"/></if>
+                <service-call name="create#coarchy.ClipboardEntry" in-map="[partyId:ec.user.userAccount?.partyId,
+                    fromOrganizationId:ec.user.context?.activeOrgId,moveTypeEnumId:moveTypeEnumId,entryDate:
+                    ec.user.nowTimestamp]" out-map="context"/>
+                <set field="ec.user.context.clipboardEntryId" from="clipboardEntryId"/>
             </if>
+            <if condition="ec.user.context?.activityIdList==null">
+                <set field="ec.user.context.activityIdList" from="[]"/>
+            </if>
+            <set field="ec.user.context.activityIdList" from="ec.user.context.activityIdList + [activityId]"/>
+            <set field="activityIdList" from="ec.user.context.activityIdList"/>
 
-            <set field="clipboardEntryId" from="ec.web.sessionAttributes.clipboardEntryId"/>
+            <set field="clipboardEntryId" from="ec.user.context.clipboardEntryId"/>
+            <entity-find-one entity-name="coarchy.Activity" value-field="activity" auto-field-map="[activityId:activityId]"/>
             <service-call name="create#coarchy.ClipboardActivity" in-map="[clipboardEntryId:clipboardEntryId,
-                activityId:activityId]"/>
+                condition:activity.condition,action:activity.action,implementationId:activity.implementationId]" out-map="activityOut"/>
+            <entity-find entity-name="ActivityActorDetail" list="actorList" distinct="true">
+                <econdition field-name="activityId"/>
+                <select-field field-name="actorId,activityId,name,description"/></entity-find>
+<!--            <log level="warn" message="activityId ${activityId}"/>-->
+            <iterate list="actorList" entry="actor">
+<!--                <log level="warn" message="clipboardEntryId ${clipboardEntryId} actor ${actor} actor.actorId ${actor.actorId}"/>-->
+                <service-call name="create#coarchy.ClipboardActor" in-map="[clipboardEntryId:clipboardEntryId,
+                    activitySeqId:activityOut.activitySeqId,name:actor.name,description:actor.description]"/>
+            </iterate>
+
+            <if condition="moveTypeEnumId=='CbmtCut' &amp;&amp; activityIdList.size() == activityIdNum.toInteger()">
+                <iterate list="activityIdList" entry="activityId">
+                    <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="[activityId:activityId]"/>
+                </iterate>
+            </if>
 
 <!--                        <log level="warn" message="copy#Activities context.toString() ${context.toString()}"/>-->
         </actions>
@@ -1425,6 +1450,7 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- TODO: Improve the index handling on multiple activities inserted -->
     <service verb="paste" noun="Activities">
         <in-parameters>
+            <parameter name="clipboardEntryId" required="true"/>
             <parameter name="pageIndex" required="true"/>
             <parameter name="downPageIndex" required="true"/>
             <parameter name="processStoryId" required="true"/>
@@ -1438,19 +1464,25 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <entity-find entity-name="coarchy.ClipboardEntry" list="entryList" limit="1">
                 <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
-                <order-by field-name="-clipboardEntryId"/>
+                <econdition field-name="clipboardEntryId"/>
             </entity-find>
             <if condition="entryList.size() == 0"><return type="error" message="No clipboard entry found"/></if>
-            <set field="moveTypeEnumId" from="entryList.getFirst().moveTypeEnumId"/>
-            <set field="ec.user.context?.activeOrgId" from="entryList.getFirst().fromOrganizationId"/>
-            <set field="ec.user.context?.filterOrgIds" from="[entryList.getFirst().fromOrganizationId]"/>
-            <entity-find entity-name="coarchy.ClipboardActivityDetail" list="activityList">
-                <econdition field-name="clipboardEntryId" from="entryList?.getFirst()?.clipboardEntryId"/>
-                <order-by field-name="sequenceNum"/>
+            <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                <date-filter/>
+                <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                <econdition field-name="toPartyId" from="organizationId"/></entity-find-count>
+            <if condition="partyRelationshipCount == 0"><return type="error" message="User is not a member of organization"/></if>
+
+            <set field="entry" from="entryList.getFirst()"/>
+            <set field="moveTypeEnumId" from="entry.moveTypeEnumId"/>
+            <set field="clipboardEntryId" from="entry.clipboardEntryId"/>
+            <entity-find entity-name="coarchy.ClipboardActivity" list="activityList">
+                <econdition field-name="clipboardEntryId"/>
+                <order-by field-name="activitySeqId"/>
             </entity-find>
 <!--            <log level="warn" message="paste#Activities activityList ${activityList}"/>-->
-            <set field="ec.user.context?.activeOrgId" from="organizationId"/>
-            <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
 
             <set field="insertSequenceNum" from="sequenceNum"/>
             <if condition="insertType=='below'">
@@ -1469,62 +1501,37 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
                 <select-field field-name="processStoryActivityId,sequenceNum,activityId"/>
                 <order-by field-name="-sequenceNum"/></entity-find>
-
-            <if condition="organizationId!=activeOrgId">
-                <set field="actorIdMap" from="[:]"/>
-                <set field="ec.user.context?.activeOrgId" from="entryList.getFirst().fromOrganizationId"/>
-                <set field="ec.user.context?.filterOrgIds" from="[entryList.getFirst().fromOrganizationId]"/>
-                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList" distinct="true">
-                    <econdition field-name="activityId" from="activityList*.activityId"/>
-                    <select-field field-name="actorId,activityId,name,description"/>
-                    <order-by field-name="name"/></entity-find>
-                <set field="ec.user.context?.activeOrgId" from="organizationId"/>
-                <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
-                <iterate list="activityActorList" entry="activityActor">
-                    <entity-find entity-name="coarchy.ActivityActorDetail" list="insideActivityActorList" distinct="true" limit="1">
-                        <econdition field-name="name" from="activityActor.name" ignore-case="true"/>
-                        <select-field field-name="actorId,name"/>
-                        <order-by field-name="name"/></entity-find>
-                    <if condition="!insideActivityActorList"><then>
-                        <if condition="!actorIdMap.keys?.contains(activityActor.actorId)">
-                            <service-call name="create#coarchy.Actor" in-map="[name:activityActor.name,
-                                description:activityActor.description,organizationId:organizationId]" out-map="actorContext"/>
-                            <script>actorIdMap.put(activityActor.actorId,actorContext.actorId)</script>
-                        </if>
-                    </then><else>
-                        <script>actorIdMap.put(activityActor.actorId,insideActivityActorList.getFirst().actorId)</script>
-                    </else></if>
-                </iterate>
-            </if>
-            <!--                <log level="warn" message="copy#Activities actorIdMap ${actorIdMap}"/>-->
-
-            <iterate list="activityList" entry="activity">
-                <set field="actorIdList" from="activityActorList.findAll{ it.activityId == activity.activityId }*.actorId"/>
-                <!--                    <log level="warn" message="copy#Activities actorIdList ${actorIdList}"/>-->
-                <if condition="organizationId!=activeOrgId">
-                    <set field="actorIdList" from="actorIdList.collect{ actorIdMap[it] }"/>
-                    <!--                        <log level="warn" message="copy#Activities diff org actorIdList ${actorIdList}"/>-->
-                </if>
-                <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,actorIdList:actorIdList,sequenceNum:insertSequenceNum.toInteger()+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
-                <!--                    <log level="warn" message="copy#Activities activityActorList ${activityActorList}"/>-->
+            <iterate list="processStoryActivityList" entry="processStoryActivity">
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[
+                    processStoryActivityId:processStoryActivity.processStoryActivityId,
+                    sequenceNum:processStoryActivity.sequenceNum.toInteger()+activityList.size()]"/>
             </iterate>
 
-            <if condition="moveTypeEnumId=='CbmtCopy'">
-                <iterate list="processStoryActivityList" entry="processStoryActivity">
-                    <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum.toInteger()+activityList.size()]"/>
-                </iterate>
-            </if>
-            <if condition="moveTypeEnumId=='CbmtCut'">
-                <iterate list="activityList" entry="activity">
-                    <set field="ec.user.context?.activeOrgId" from="entryList.getFirst().fromOrganizationId"/>
-                    <set field="ec.user.context?.filterOrgIds" from="[entryList.getFirst().fromOrganizationId]"/>
+            <set field="actorIdMap" from="[:]"/>
+            <entity-find entity-name="coarchy.ClipboardActor" list="actorList" distinct="true">
+                <econdition field-name="clipboardEntryId"/>
+                <select-field field-name="actorSeqId,activitySeqId,name,description"/>
+                <order-by field-name="actorSeqId"/></entity-find>
+            <iterate list="actorList" entry="actor">
+                <entity-find entity-name="coarchy.Actor" list="insideActorList" distinct="true" limit="1">
+                    <econdition field-name="name" from="actor.name"/>
+                    <select-field field-name="actorId,name"/>
+                    <order-by field-name="name"/></entity-find>
+                <if condition="!insideActorList"><then>
+                    <service-call name="create#coarchy.Actor" in-map="[name:actor.name,
+                            description:actor.description,organizationId:organizationId]" out-map="actorContext"/>
+                    <script>actorIdMap.put(actor.actorSeqId,actorContext?.actorId)</script>
+                </then><else>
+                    <script>actorIdMap.put(actor.actorSeqId,insideActorList.getFirst().actorId)</script>
+                </else></if>
+            </iterate>
+<!--                <log level="warn" message="copy#Activities actorIdMap ${actorIdMap}"/>-->
 
-                    <!--                        <log level="warn" message="copy#Activities moveType ${moveType} processStoryActivity.activityId ${processStoryActivity.activityId}"/>-->
-                    <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="[activityId:activity.activityId]"/>
-                    <set field="ec.user.context?.activeOrgId" from="organizationId"/>
-                    <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
-                </iterate>
-            </if>
+            <iterate list="activityList" entry="activity">
+                <set field="actorSeqIdList" from="actorList.findAll{ it.activitySeqId == activity.activitySeqId }*.actorSeqId"/>
+                <set field="actorIdList" from="actorSeqIdList.collect{ actorIdMap[it] }"/>
+                <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,actorIdList:actorIdList,sequenceNum:insertSequenceNum.toInteger()+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
+            </iterate>
 
 <!--            <log level="warn" message="paste#Activities context.toString() ${context.toString()}"/>-->
         </actions>
@@ -1617,26 +1624,23 @@ along with this software (see the LICENSE.md file). If not, see
                     auto-field-map="[clipboardEntryId:clipboardEntryId,partyId:ec.user.userAccount.partyId]"/>
             <if condition="clipboardEntry==null"><return type="danger" error="true" message="No clipboard entry found"/></if>
 
-            <set field="actualActiveOrgId" from="ec.user.context?.activeOrgId"/>
-            <set field="ec.user.context?.activeOrgId" from="clipboardEntry.fromOrganizationId"/>
-            <set field="ec.user.context?.filterOrgIds" from="[clipboardEntry.fromOrganizationId]"/>
-            <entity-find entity-name="coarchy.ClipboardActivityDetail" list="activityList" limit="1">
-                <econdition field-name="clipboardEntryId"/>
-                <order-by field-name="sequenceNum"/>
-            </entity-find>
+            <entity-find entity-name="coarchy.ClipboardActivity" list="activityList" limit="1">
+                <econdition field-name="clipboardEntryId"/></entity-find>
             <if condition="activityList.size() == 0"><return type="danger" error="true" message="No clipboard activity found"/></if>
             <set field="processStoryActivity" from="activityList.getFirst().getMap()"/>
-            <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
-                <econdition field-name="activityId" from="processStoryActivity.activityId"/>
-                <order-by field-name="name"/></entity-find>
-            <set field="processStoryActivity" from="processStoryActivity + [actorNames:activityActorList*.name]"/>
-            <set field="activityText" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
-            <entity-find-count entity-name="coarchy.ClipboardActivityDetail" count-field="activityCount">
-                <econdition field-name="clipboardEntryId"/>
-            </entity-find-count>
-            <set field="ec.user.context?.activeOrgId" from="actualActiveOrgId"/>
-            <set field="ec.user.context?.filterOrgIds" from="[actualActiveOrgId]"/>
-            <!--            <log level="warn" message="getClipboardActivityAndCount context.toString() ${context.toString()}"/>-->
+            <if condition="processStoryActivity.action"><then>
+                <entity-find entity-name="coarchy.ClipboardActor" list="actorList">
+                    <econdition field-name="clipboardEntryId"/>
+                    <econdition field-name="activitySeqId" from="processStoryActivity.activitySeqId"/>
+                    <order-by field-name="name"/></entity-find>
+                <set field="processStoryActivity" from="processStoryActivity + [actorNames:actorList*.name]"/>
+                <set field="activityText" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
+            </then><else>
+                <set field="activityText" value="⏎ Paragraph"/>
+            </else></if>
+            <entity-find-count entity-name="coarchy.ClipboardActivity" count-field="activityCount">
+                <econdition field-name="clipboardEntryId"/></entity-find-count>
+<!--            <log level="warn" message="getClipboardActivityAndCount context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
 </services>

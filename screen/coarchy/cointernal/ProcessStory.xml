@@ -145,13 +145,13 @@ along with this software (see the LICENSE.md file). If not, see
         </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
     <transition name="moveActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <service-call name="coarchy.CoarchyServices.move#Activities" in-map="context + [activityIdNum:context.keySet().count { key -> key.startsWith('activityId_') }]" multi="true"/>
-        <actions><set field="ec.web.sessionAttributes.activityIdList" from="null"/></actions>
+        <actions><set field="ec.user.context.activityIdList" from="null"/></actions>
         <default-response url="."/></transition>
     <transition name="copyActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <service-call name="coarchy.CoarchyServices.copy#Activities" in-map="context +
             [activityIdNum:context.keySet().count { key -> key.startsWith('activityId_') }]" multi="true"/>
-        <actions><set field="ec.web.sessionAttributes.clipboardEntryId" from="null"/>
-            <set field="ec.web.sessionAttributes.activityIdList" from="null"/></actions>
+        <actions><set field="ec.user.context.clipboardEntryId" from="null"/>
+            <set field="ec.user.context.activityIdList" from="null"/></actions>
         <default-response url="."/></transition>
     <transition name="deleteActivities"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="context" multi="true"/>
@@ -188,7 +188,7 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="showMoveUpDown" from="(!orderByField || orderByField == 'sequenceNum') &amp;&amp; !actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
 
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
-            <search-form-inputs default-order-by="sequenceNum"/>
+            <search-form-inputs default-order-by="sequenceNum,action"/>
             <econdition field-name="processStoryId"/>
             <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
             <!-- Don't select fields from activityactor (actorId) -->
@@ -363,8 +363,9 @@ along with this software (see the LICENSE.md file). If not, see
             <hidden-parameters><parameter name="processStoryId"/></hidden-parameters>
             <field name="activityId"><default-field><hidden/></default-field></field>
             <field name="pageIndex"><default-field><hidden/></default-field></field>
+            <field name="pageSize"><default-field><hidden/></default-field></field>
             <field name="insertSequenceNum"><last-row-field><hidden default-value="${processStoryActivityList?.size() &gt; 0 ?processStoryActivityList?.last()?.sequenceNum+1:0}"/></last-row-field></field>
-            <field name="newPageIndex"><last-row-field><hidden default-value="${(processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp; processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex}"/></last-row-field></field>
+            <field name="newPageIndex"><last-row-field><hidden default-value="${(processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp; processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex?.toInteger()+1:pageIndex}"/></last-row-field></field>
 
             <!-- TODO: Make reordering drag and drop instead of arrows -->
             <field name="move"><default-field title="Move"><link url="activityMoveUp"

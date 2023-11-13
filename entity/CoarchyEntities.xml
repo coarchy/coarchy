@@ -263,27 +263,27 @@ along with this software (see the LICENSE.md file). If not, see
     </entity>
     <entity entity-name="ClipboardActivity" package="coarchy">
         <field name="clipboardEntryId" type="id" is-pk="true"/>
-        <field name="activityId" type="id" is-pk="true"/>
+        <field name="activitySeqId" type="id" is-pk="true"/>
+
+        <field name="condition" type="text-intermediate"/>
+        <field name="action" type="text-intermediate"/>
+        <field name="implementationId" type="id"/>
 
         <relationship type="one" title="Clipboard" related="coarchy.ClipboardEntry" short-alias="clipboard">
             <key-map field-name="clipboardEntryId"/></relationship>
-        <relationship type="one" title="Activity" related="coarchy.Activity" short-alias="activity">
-            <key-map field-name="activityId"/></relationship>
-<!--        <relationship type="one" title="ProcessStoryActivity" related="coarchy.ProcessStoryActivity" short-alias="storyActivity">-->
-<!--            <key-map field-name="activityId"/></relationship>-->
+        <relationship type="one" related="moqui.basic.Enumeration" short-alias="implementation">
+            <key-map field-name="implementationId" related="enumId"/></relationship>
     </entity>
-    <view-entity entity-name="ClipboardActivityDetail" package="coarchy">
-        <member-entity entity-alias="CLPA" entity-name="coarchy.ClipboardActivity"/>
-        <member-relationship entity-alias="ACT" join-from-alias="CLPA" relationship="activity"/>
-        <member-entity entity-alias="PSA" entity-name="coarchy.ProcessStoryActivity" join-from-alias="CLPA">
-            <key-map field-name="activityId"/></member-entity>
+    <entity entity-name="ClipboardActor" package="coarchy">
+        <field name="clipboardEntryId" type="id" is-pk="true"/>
+        <field name="actorSeqId" type="id" is-pk="true"/>
+        <field name="activitySeqId" type="id"/>
+        <field name="name" type="text-short"/>
+        <field name="description" type="text-medium"/>
 
-        <alias-all entity-alias="CLPA"><exclude field="lastUpdatedStamp"/></alias-all>
-        <alias-all entity-alias="ACT"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
-        <alias-all entity-alias="PSA"><exclude field="organizationId"/><exclude field="activityId"/><exclude field="lastUpdatedStamp"/></alias-all>
-        <alias name="activityOrganizationId" entity-alias="ACT" field="organizationId"/>
-        <alias name="storyActivityOrganizationId" entity-alias="PSA" field="organizationId"/>
-    </view-entity>
+        <relationship type="one" title="Clipboard" related="coarchy.ClipboardEntry" short-alias="clipboard">
+            <key-map field-name="clipboardEntryId"/></relationship>
+    </entity>
 
     <!-- Settings entities -->
     <entity entity-name="PartyActivation" package="mantle.party">
