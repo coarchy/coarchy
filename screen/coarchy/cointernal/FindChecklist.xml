@@ -37,7 +37,7 @@ along with this software (see the LICENSE.md file). If not, see
 <!--        <service-call name="coarchy.CoarchyServices.create#Checklist" in-map="[processStoryId:processStoryId,name:name,recurStartCron:recurStartCron,organizationId:activeOrgId]" out-map="checklist"/>-->
         <service-call name="coarchy.CoarchyServices.create#Checklist" in-map="[processStoryId:processStoryId,name:name,organizationId:activeOrgId]" out-map="checklist"/>
         <default-response url="../Checklist" parameter-map="[checklistId:checklist.rootWorkEffortId]"/>
-        <error-response url="../ProcessStory" parameter-map="[processStoryId:processStoryId]"/></transition>
+        <error-response url="../Process/ProcessStory" parameter-map="[processStoryId:processStoryId]"/></transition>
 
     <widgets>
         <section name="FreemiumBanner" condition="partyActivationCount == 0">

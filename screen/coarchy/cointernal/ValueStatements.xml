@@ -102,7 +102,7 @@ along with this software (see the LICENSE.md file). If not, see
         </section>
 
         <label text="Values" type="h4"/>
-<!--        <link url="../ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
+<!--        <link url="../Process/ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
 
         <container-dialog id="CreateValueDialog" button-text="Add Value" type="success">
             <form-single name="CreateValueForm" transition="createValue">

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-include="false" standalone="true">
+
+    <parameter name="pageIndex"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField"/>
+
+    <transition-include name="getActorList" location="component://coarchy/screen/coarchy/cointernal/Process/EditProcessStory.xml"/>
+
+    <transition name="insertActivity">
+        <service-call name="coarchy.CoarchyServices.insert#Activity" in-map="context + [organizationId:activeOrgId]"/>
+        <default-response url=".." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
+
+    <transition name="insertParagraphBreak"><actions>
+        <set field="insertSequenceNum" from="sequenceNum"/>
+        <if condition="insertType=='below'">
+            <set field="pageIndex" from="downPageIndex"/>
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
+                <select-field field-name="processStoryActivityId,sequenceNum"/>
+                <order-by field-name="sequenceNum"/></entity-find>
+            <!-- This might be null, but if it is null then the right behavior will happen anyways -->
+            <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum?:insertSequenceNum.toInteger()+1"/>
+        </if>
+
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+            <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
+            <select-field field-name="processStoryActivityId,sequenceNum"/>
+            <order-by field-name="-sequenceNum"/></entity-find>
+        <iterate list="processStoryActivityList" entry="processStoryActivity">
+            <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+        </iterate>
+        <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
+        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:activeOrgId]"/>
+
+<!--        <log level="warn" message="insertActivity context.toString() ${context.toString()}"/>-->
+    </actions><default-response url=".." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
+
+    <transition name="pasteActivities">
+        <service-call name="coarchy.CoarchyServices.paste#Activities" in-map="[pageIndex:pageIndex,insertType:insertType,
+            downPageIndex:downPageIndex,processStoryId:processStoryId,sequenceNum:sequenceNum,organizationId:activeOrgId,
+            clipboardEntryId:clipboardEntryId]"/>
+        <default-response url=".." parameter-map="[pageIndex:pageIndex]"/></transition>
+
+    <actions>
+        <entity-find entity-name="coarchy.ClipboardEntry" list="entryList" limit="5">
+            <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
+            <order-by field-name="-entryDate"/></entity-find>
+<!--        <log level="warn" message="InsertActivity context.toString() ${context.toString()}"/>-->
+    </actions>
+
+    <widgets>
+        <container-box>
+            <box-header title="Insert New Activity"/>
+            <box-body>
+                <form-single name="InsertActivity" transition="insertActivity">
+                    <field name="pageIndex"><default-field><hidden/></default-field></field>
+                    <field name="downPageIndex"><default-field><hidden/></default-field></field>
+                    <field name="processStoryId"><default-field><hidden/></default-field></field>
+                    <field name="sequenceNum"><default-field><hidden/></default-field></field>
+                    <field name="implementationId"><default-field title="Implementation Status"><drop-down allow-empty="true">
+                        <entity-options key="${enumId}" text="${description}">
+                            <entity-find entity-name="moqui.basic.Enumeration">
+                                <econdition field-name="enumTypeId" value="ActivityImplementation"/>
+                                <order-by field-name="sequenceNum"/></entity-find>
+                        </entity-options>
+                    </drop-down></default-field></field>
+                    <field name="condition"><default-field title="Condition (optional)"><text-area rows="2" autogrow="true"/></default-field></field>
+                    <field name="actorIdList">
+                        <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
+                            <list-options list="activityActorList" key="${actorId}" text="${name}"/>
+                            <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
+                        </drop-down></default-field></field>
+                    <field name="action"><default-field title="Action"><text-area rows="2" autogrow="true"/></default-field></field>
+                    <field name="insertType" from="'below'"><default-field>
+                        <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
+                    </default-field></field>
+                    <field name="submit"><default-field><submit text="Add Activity" type="success"/></default-field></field>
+                </form-single>
+            </box-body>
+        </container-box>
+        <container-box>
+            <box-header title="Insert Paragraph Break"/>
+            <box-body>
+                <form-single name="InsertParagraphBreak" transition="insertParagraphBreak">
+                    <field name="pageIndex"><default-field><hidden/></default-field></field>
+                    <field name="downPageIndex"><default-field><hidden/></default-field></field>
+                    <field name="processStoryId"><default-field><hidden/></default-field></field>
+                    <field name="sequenceNum"><default-field><hidden/></default-field></field>
+                    <field name="insertType" from="'below'"><default-field>
+                        <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
+                    </default-field></field>
+                    <field name="submit"><default-field><submit text="Add Paragraph Break ⏎"/></default-field></field>
+                </form-single>
+            </box-body>
+        </container-box>
+        <section name="InsertCopiedActivities" condition="entryList.size() &gt; 0">
+            <widgets>
+                <container-box>
+                    <box-header title="Paste Activities"/>
+                    <box-body>
+                        <form-list name="InsertCopiedActivity" list="entryList" transition="pasteActivities">
+                            <row-actions>
+                                <service-call name="coarchy.CoarchyServices.get#ClipboardActivityAndCount"
+                                        in-map="[clipboardEntryId:clipboardEntryId]" out-map="context"/>
+                            </row-actions>
+
+                            <field name="activityText"><default-field title=""><display/></default-field></field>
+                            <field name="insertAbove"><default-field><link url="pasteActivities" text="Above ${activityCount}"
+                                    btn-type="success" parameter-map="[pageIndex:pageIndex,downPageIndex:downPageIndex,
+                                    processStoryId:processStoryId,sequenceNum:sequenceNum,insertType:'above',
+                                    clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/></default-field></field>
+                            <field name="insertBelow"><default-field><link url="pasteActivities" text="Below ${activityCount}"
+                                    btn-type="success" parameter-map="[pageIndex:pageIndex,downPageIndex:downPageIndex,
+                                    processStoryId:processStoryId,sequenceNum:sequenceNum,insertType:'below',
+                                    clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/></default-field></field>
+                        </form-list>
+                    </box-body>
+                </container-box>
+            </widgets>
+        </section>
+    </widgets>
+</screen>

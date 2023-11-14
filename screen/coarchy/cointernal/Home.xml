@@ -25,7 +25,7 @@ along with this software (see the LICENSE.md file). If not, see
     </always-actions>
 
     <transition name="viewProcessStory">
-        <default-response url="../ViewProcessStory" parameter-map="[processStoryId:processStoryId]"/>
+        <default-response url="../Process/ViewProcessStory" parameter-map="[processStoryId:processStoryId]"/>
     </transition>
     
     <actions>
@@ -53,7 +53,7 @@ along with this software (see the LICENSE.md file). If not, see
         </iterate>
         <iterate list="processStoryList" entry="item">
             <if condition="!activityFeedList.find{it.identifier == 'ProcessStory#'+item.processStoryId}">
-                <script>activityFeedList.add(['date':item.activityLastUpdatedStamp,'updateType':'Updated','entityType':'Process Story','name':item.name,'identifier':'ProcessStory#'+item.processStoryId,'link':'/coapp/ProcessStory?processStoryId='+item.processStoryId])</script>
+                <script>activityFeedList.add(['date':item.activityLastUpdatedStamp,'updateType':'Updated','entityType':'Process Story','name':item.name,'identifier':'ProcessStory#'+item.processStoryId,'link':'/coapp/Process/EditProcessStory?processStoryId='+item.processStoryId])</script>
             </if>
         </iterate>
         <iterate list="checklistList" entry="item">
