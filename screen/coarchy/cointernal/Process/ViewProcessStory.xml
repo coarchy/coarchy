@@ -42,24 +42,27 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="name"/></entity-find>
             <set field="detailProcessStoryName" from="null"/>
             <set field="detailProcessStoryId" from="processStoryActivity.detailProcessStoryId"/>
-            <if condition="processStoryActivity.detailProcessStoryId">
+            <set field="detailProcessStoryActivityList" from="[]"/>
+            <if condition="processStoryActivity.detailProcessStoryId"><then>
                 <entity-find-one entity-name="coarchy.ProcessStory" value-field="detailProcessStory" auto-field-map="[processStoryId:processStoryActivity.detailProcessStoryId]"/>
                 <set field="detailProcessStoryName" from="detailProcessStory.name"/>
-                <set field="detailProcessStoryActivityList" from="[]"/>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupDetailProcessStoryActivityList">
                     <econdition field-name="processStoryId" from="processStoryActivity.detailProcessStoryId"/>
                     <select-field field-name="activityId,condition,action"/>
                     <order-by field-name="sequenceNum"/></entity-find>
                 <iterate list="setupDetailProcessStoryActivityList" entry="detailProcessStoryActivity">
                     <entity-find entity-name="coarchy.ActivityActorDetail" list="detailActivityActorList">
-                        <econdition field-name="activityId" from="processStoryActivity.activityId"/>
+                        <econdition field-name="activityId" from="detailProcessStoryActivity.activityId"/>
                         <order-by field-name="name"/></entity-find>
                     <script>detailProcessStoryActivityList.add([sequenceNum:detailProcessStoryActivity.sequenceNum,condition:detailProcessStoryActivity.condition,actorNames:detailActivityActorList*.name,action:detailProcessStoryActivity.action])</script>
                 </iterate>
             </if>
 
             <if condition="hasSubstories==false&amp;&amp;detailProcessStoryId!=null"><set field="hasSubstories" from="true"/></if>
-            <script>processStoryActivityList.add([processStoryId:processStoryActivity.processStoryId,sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,actorNames:activityActorList*.name,action:processStoryActivity.action,detailProcessStoryId:detailProcessStoryId,detailProcessStoryName:detailProcessStoryName,detailProcessStoryActivityList:detailProcessStoryActivityList])</script>
+            <script>processStoryActivityList.add([processStoryId:processStoryActivity.processStoryId,
+                sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,
+                actorNames:activityActorList*.name,action:processStoryActivity.action,detailProcessStoryId:detailProcessStoryId,
+                detailProcessStoryName:detailProcessStoryName,detailProcessStoryActivityList:detailProcessStoryName!=null?detailProcessStoryActivityList?.clone():[]])</script>
         </iterate>
 
         <set field="showSubstoriesActual" from="showSubstories=='Y' &amp;&amp; hasSubstories"/>
@@ -83,7 +86,7 @@ along with this software (see the LICENSE.md file). If not, see
                         condition="showSubstories == 'Y' &amp;&amp; partyActivationCount &gt; 0 &amp;&amp; hasSubstories"/>
                 <link url="." text="Show Substories" parameter-map="[showSubstories:'Y']" btn-type="success"
                         condition="showSubstories != 'Y' &amp;&amp; partyActivationCount &gt; 0 &amp;&amp; hasSubstories"/>
-                <link url="../ProcessStory" text="Go Back to Process Story" parameter-map="[processStoryId:processStoryId]"/>
+                <link url="../EditProcessStory" text="Go Back to Process Story" parameter-map="[processStoryId:processStoryId]"/>
 
                 <!-- TODO: Add filter parameters for the activity -->
                 <render-mode><text><![CDATA[<h5>]]></text></render-mode>

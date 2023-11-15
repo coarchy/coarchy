@@ -9,12 +9,12 @@
     <hr/>
     <h4>Substories</h4>
     <#list processStoryActivityList! as processStoryActivity>
-<#--        ${processSubstoryActivity}-->
         <#if processStoryActivity.detailProcessStoryName!?has_content>
-            <a id="${processStoryActivity.detailProcessStoryId!}" href="#${processStoryActivity.processStoryId!}">${processStoryActivity.detailProcessStoryName}</a>
+            <a id="${processStoryActivity.detailProcessStoryId!}" href="/coapp/Process/EditProcessStory?processStoryId=${processStoryActivity.detailProcessStoryId!}">${processStoryActivity.detailProcessStoryName}</a>
             <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity>
-                <h6><#include "ActivityStyled.html.ftl"/></h6>
+                <#include "ActivityStyled.html.ftl"/>
             </#list>
+            <br/>
         </#if>
     </#list>
 </#if>
