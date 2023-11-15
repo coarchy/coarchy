@@ -62,7 +62,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <actions>
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
-        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/FindProcessStory')</script></if>
+        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script></if>
 
         <if condition="pageIndex==null"><set field="pageIndex" from="0"/></if>
 
@@ -121,7 +121,7 @@ along with this software (see the LICENSE.md file). If not, see
         </container-dialog>
 
         <link url="../EditProcessStory" parameter-map="[processStoryId:detailActivityList?.getFirst()?.processStoryId]" text="Go to Parent Story: ${detailActivityList?.getFirst()?.story?.name}" condition="detailActivityList?.getFirst()?.processStoryId"/>
-        <!--        <link url="../FindProcessStory" text="Find Process Story"/>-->
+        <!--        <link url="../Process/FindProcessStory" text="Find Process Story"/>-->
         <!--        <link url="../Actor" parameter-map="[processStoryId:processStoryId]" text="Go to Actors"/>-->
         <container-dialog id="AddActorDialogue" button-text="Add Actor" type="success" condition="partyRelationshipCount &gt; 0">
             <form-single name="AddActor" transition="createActor">

@@ -170,7 +170,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <actions>
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
-        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/FindProcessStory')</script></if>
+        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script></if>
 
         <if condition="pageIndex==null"><set field="pageIndex" from="0"/></if>
 

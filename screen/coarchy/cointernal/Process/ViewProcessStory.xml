@@ -43,7 +43,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="detailProcessStoryName" from="null"/>
             <set field="detailProcessStoryId" from="processStoryActivity.detailProcessStoryId"/>
             <set field="detailProcessStoryActivityList" from="[]"/>
-            <if condition="processStoryActivity.detailProcessStoryId"><then>
+            <if condition="processStoryActivity.detailProcessStoryId">
                 <entity-find-one entity-name="coarchy.ProcessStory" value-field="detailProcessStory" auto-field-map="[processStoryId:processStoryActivity.detailProcessStoryId]"/>
                 <set field="detailProcessStoryName" from="detailProcessStory.name"/>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupDetailProcessStoryActivityList">
