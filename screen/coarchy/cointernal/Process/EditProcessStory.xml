@@ -164,7 +164,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <dialog button-text="Copy To" title="Copy activities to another organization or process story"/>
                     <form-single name="CopyToActivities" transition="moveActivities" pass-through-parameters="true">
                         <field name="moveType" from="'copy'"><default-field><hidden/></default-field></field>
-                        <field name="organizationId"><default-field title="Organization">
+                        <field name="organizationId" from="activeOrgId"><default-field title="Organization">
                             <label text="Enable premium features to copy to your organizations"/>
                             <drop-down allow-empty="true" required-manual-select="true">
                                 <dynamic-options transition="getCloneOrganizationList" min-length="0"/></drop-down>
@@ -190,7 +190,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <dialog button-text="Move To" title="Cut activities to another organization or process story"/>
                     <form-single name="MoveToActivities" transition="moveActivities" pass-through-parameters="true">
                         <field name="moveType" from="'cut'"><default-field><hidden/></default-field></field>
-                        <field name="organizationId"><default-field title="Organization">
+                        <field name="organizationId" from="activeOrgId"><default-field title="Organization">
                             <label text="Enable premium features to copy to your organizations"/>
                             <drop-down allow-empty="true" required-manual-select="true">
                                 <dynamic-options transition="getCloneOrganizationList" min-length="0"/></drop-down>

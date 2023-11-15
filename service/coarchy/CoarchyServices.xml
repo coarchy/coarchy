@@ -1216,7 +1216,7 @@ along with this software (see the LICENSE.md file). If not, see
                 for (def story in processStoryList)
                     outList.add([value:story?.processStoryId, label:story?.name])
             </script>
-            <log level="warn" message="getProcessStoryList context.toString() ${context.toString()}"/>
+<!--            <log level="warn" message="getProcessStoryList context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
     <service verb="get" noun="ActivityList">
@@ -1323,40 +1323,47 @@ along with this software (see the LICENSE.md file). If not, see
                         <select-field field-name="processStoryActivityId,sequenceNum"/>
                         <order-by field-name="sequenceNum"/></entity-find>
                     <!-- This might be null, but if it is null then the right behavior will happen anyways -->
-                    <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum?:(insertSequenceNum?:0)+1"/>
+                    <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum?:(insertSequenceNum?:0)"/>
                 </if>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
                     <econdition field-name="processStoryId"/>
                     <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum?.toInteger()" ignore-if-empty="true"/>
                     <select-field field-name="processStoryActivityId,sequenceNum,activityId"/>
                     <order-by field-name="-sequenceNum"/></entity-find>
+                <iterate list="processStoryActivityList" entry="processStoryActivity">
+                    <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:
+                            processStoryActivity.processStoryActivityId,sequenceNum:
+                            processStoryActivity.sequenceNum+originalProcessStoryActivityList.size()]"/>
+                </iterate>
 
+                <set field="actorIdMap" from="[:]"/>
                 <if condition="organizationId!=activeOrgId">
-                    <set field="actorIdMap" from="[:]"/>
                     <set field="ec.user.context?.activeOrgId" from="activeOrgId"/>
                     <set field="ec.user.context?.filterOrgIds" from="[activeOrgId]"/>
-                    <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList" distinct="true">
-                        <econdition field-name="activityId" from="originalProcessStoryActivityList*.activityId"/>
-                        <select-field field-name="actorId,activityId,name,description"/>
-                        <order-by field-name="name"/></entity-find>
+                </if>
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList" distinct="true">
+                    <econdition field-name="activityId" from="originalProcessStoryActivityList*.activityId"/>
+                    <select-field field-name="actorId,activityId,name,description"/>
+                    <order-by field-name="name"/></entity-find>
+                <if condition="organizationId!=activeOrgId">
                     <set field="ec.user.context?.activeOrgId" from="organizationId"/>
                     <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
-                    <iterate list="activityActorList" entry="activityActor">
-                        <entity-find entity-name="coarchy.ActivityActorDetail" list="insideActivityActorList" distinct="true" limit="1">
-                            <econdition field-name="name" from="activityActor.name" ignore-case="true"/>
-                            <select-field field-name="actorId,name"/>
-                            <order-by field-name="name"/></entity-find>
-                        <if condition="!insideActivityActorList"><then>
-                            <if condition="!actorIdMap.keys?.contains(activityActor.actorId)">
-                                <service-call name="create#coarchy.Actor" in-map="[name:activityActor.name,
-                                description:activityActor.description,organizationId:organizationId]" out-map="actorContext"/>
-                                <script>actorIdMap.put(activityActor.actorId,actorContext.actorId)</script>
-                            </if>
-                        </then><else>
-                            <script>actorIdMap.put(activityActor.actorId,insideActivityActorList.getFirst().actorId)</script>
-                        </else></if>
-                    </iterate>
                 </if>
+                <iterate list="activityActorList" entry="activityActor">
+                    <entity-find entity-name="coarchy.ActivityActorDetail" list="insideActivityActorList" distinct="true" limit="1">
+                        <econdition field-name="name" from="activityActor.name" ignore-case="true"/>
+                        <select-field field-name="actorId,name"/>
+                        <order-by field-name="name"/></entity-find>
+                    <if condition="!insideActivityActorList"><then>
+                        <if condition="!actorIdMap.keys?.contains(activityActor.actorId)">
+                            <service-call name="create#coarchy.Actor" in-map="[name:activityActor.name,
+                                description:activityActor.description,organizationId:organizationId]" out-map="actorContext"/>
+                            <script>actorIdMap.put(activityActor.actorId,actorContext.actorId)</script>
+                        </if>
+                    </then><else>
+                        <script>actorIdMap.put(activityActor.actorId,insideActivityActorList.getFirst().actorId)</script>
+                    </else></if>
+                </iterate>
 <!--                <log level="warn" message="copy#Activities actorIdMap ${actorIdMap}"/>-->
 
                 <iterate list="originalProcessStoryActivityList" entry="activity">
@@ -1371,13 +1378,6 @@ along with this software (see the LICENSE.md file). If not, see
 <!--                    <log level="warn" message="copy#Activities activityActorList ${activityActorList}"/>-->
                 </iterate>
 
-                <if condition="moveType=='copy'">
-                    <iterate list="processStoryActivityList" entry="processStoryActivity">
-                        <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:
-                            processStoryActivity.processStoryActivityId,sequenceNum:
-                            processStoryActivity.sequenceNum+originalProcessStoryActivityList.size()]"/>
-                    </iterate>
-                </if>
                 <if condition="moveType=='cut'">
                     <iterate list="activityIdList" entry="activityId">
                         <set field="ec.user.context?.activeOrgId" from="activeOrgId"/>
