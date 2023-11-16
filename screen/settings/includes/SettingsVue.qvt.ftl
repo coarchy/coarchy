@@ -103,6 +103,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <q-btn color="secondary" class="text-black" label="${(ec.user.userAccount.userFullName)!'Account'}">
                     <q-menu auto-close>
                         <q-list dense style="min-width: 100px">
+                            <#-- NOTE: this has issues with template injection (something like {{constructor.constructor('alert(1)')()}} in the text),
+                                AND there is an issue with dynamic data like this being in the SPA shell that never gets reloaded, even want this here?
                             <#if organizationName!?has_content>
                                 <q-item clickable>
                                     <q-item-section><q-btn flat label="View ${organizationName}" type="a" href="${sri.buildUrl("/coapp/Home").url}">
@@ -110,6 +112,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     </q-item-section>
                                 </q-item>
                             </#if>
+                            -->
                             <q-item clickable>
                                 <q-item-section>
                                     <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"
