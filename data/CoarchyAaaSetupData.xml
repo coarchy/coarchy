@@ -51,6 +51,7 @@ along with this software (see the LICENSE.md file). If not, see
     <artifactGroups artifactGroupId="COARCHY_SETTINGS" description="Coarchy Settings (via root screen)">
         <artifacts artifactName="component://coarchy/screen/settings/settingsinternal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
         <artifacts artifactName="coarchy.StripeServices.create#PaymentIntent" artifactTypeEnumId="AT_SERVICE" inheritAuthz="Y" nameIsPattern="N"/>
+        <artifacts artifactName="coarchy.CoarchyServices.get#OrderProgress" artifactTypeEnumId="AT_SERVICE" inheritAuthz="Y" nameIsPattern="N"/>
         <artifacts artifactName="mantle.party.Party" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>
         <artifacts artifactName="mantle.party.Organization" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>
         <artifacts artifactName="mantle.order.OrderHeaderAndPart" artifactTypeEnumId="AT_ENTITY" inheritAuthz="N" nameIsPattern="N"/>

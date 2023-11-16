@@ -52,11 +52,11 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response type="none" save-parameters="true"/>
     </transition>
 
-    <transition name="stripeWebhook" method="post">
-        <service-call name="coarchy.StripeServices.handle#Webhook" in-map="context" out-map="context"/>
-        <!-- NOTE DEJ 20200806 use save-parameters="true" to re-save parameters otherwise lost from the menuData request under vapps, qapps, etc -->
-        <default-response type="none"/>
-    </transition>
+    <!-- TODO: Review Approach -->
+    <transition name="orderStatus">
+        <service-call name="coarchy.CoarchyServices.get#OrderProgress" in-map="[orderId:orderId]" out-map="orderOut"/>
+        <actions><script>ec.web.sendJsonResponse(orderOut)</script></actions>
+        <default-response type="none" save-parameters="true"/></transition>
 
     <!--
     <transition name="serviceWorker.js" read-only="true">

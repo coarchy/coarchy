@@ -26,6 +26,8 @@ along with this software (see the LICENSE.md file). If not, see
         <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
             <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
     </always-actions>
+    <transition-include name="getCloneOrganizationList" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
+    <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
 
     <actions>
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
@@ -74,7 +76,12 @@ along with this software (see the LICENSE.md file). If not, see
             <widgets>
                 <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
                     <label text="To enable all the features upgrade organization '${activeOrg.organizationName}' to Premium" type="b"/>
-                    <container type="template v-slot:action"><container type="q-btn flat color='primary' label='Upgrade' href='/settings/Organizations?toPartyId=${activeOrgId}'"/></container>
+                    <container type="template v-slot:action">
+                        <form-single name="UpgradeForm" transition="upgradeParty">
+                            <field name="upgrade"><default-field><submit text="Upgrade" type="success"
+                                    confirmation="Activating will cost 1 Organization-Month Credit per month while ${activeOrg.organizationName} is upgraded. Are you sure?"/></default-field></field>
+                        </form-single>
+                    </container>
                 </container>
             </widgets>
         </section>

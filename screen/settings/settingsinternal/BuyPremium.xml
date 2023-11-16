@@ -20,13 +20,6 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response url="../Checkout" parameter-map="[orderId:orderId]"/></transition>
 
     <actions>
-        <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">
-            <econdition field-name="orderId"/>
-            <econdition field-name="statusId" value="OrderOpen"/>
-            <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
-            <select-field field-name="orderId"/><select-field field-name="orderPartSeqId"/>
-            <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
-
         <entity-find-one entity-name="mantle.product.Product" value-field="product" auto-field-map="[productId:'c100000']"/>
 
         <entity-find entity-name="mantle.product.ProductPrice" list="priceList">
@@ -55,6 +48,15 @@ along with this software (see the LICENSE.md file). If not, see
             [featureName:'Process Task Checklist',free:'',premium:'X'],
             [featureName:'Unlimited Checklists per Process Story',free:'',premium:'X'],
         ]"/>
+
+        <!-- When the user is in a checkout flow and disengages from it, to prevent future confusion remove the
+            checkoutOrganizationId and beforeCheckoutUrl session attributes -->
+        <if condition="!creditsNeeded &amp;&amp; ec.web.sessionAttributes.checkoutOrganizationId">
+            <script>ec.web.sessionAttributes.remove('checkoutOrganizationId')</script>
+        </if>
+        <if condition="!creditsNeeded &amp;&amp; ec.web.sessionAttributes.beforeCheckoutUrl">
+            <script>ec.web.sessionAttributes.remove('beforeCheckoutUrl')</script>
+        </if>
     </actions>
 
     <widgets>

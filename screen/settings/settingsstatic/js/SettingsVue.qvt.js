@@ -34,7 +34,9 @@ Vue.component('m-stripe', {
                 referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
             })
 
-            const { clientSecret } = await response.json();
+            const { clientSecret, messages, errors } = await response.json();
+            // console.log("Messages from createPaymentIntent:\n"+messages)
+            moqui.notifyMessages(null, errors, null);
 
             const appearance = {
                 theme: 'stripe',
@@ -182,4 +184,110 @@ Vue.component('m-stripe', {
         });
         location.reload();
     }
+});
+Vue.component('m-order-progress', {
+    name: "mOrderProgress",
+    props: {
+        return_url: String,
+        progress_url: String,
+        order_id: String,
+        organization_name: String,
+    },
+    template:
+        // Display a payment form
+        // '<q-circular-progress v-if="showProgress" :value="value" size="50px" ' +
+        // '   :thickness="0.6" color="primary" center-color="grey-8" class="q-ma-md"/>' +
+        '<div>' +
+        '   <h6 class="q-pb-sm">Processing Order Payment is {{description}}</h6>' +
+        '   <q-linear-progress :indeterminate="indeterminate" :value="value" class="q-mt-xs"/>' +
+        '   <div v-if="showButtons" class="q-pt-md">' +
+        '       <a v-if="return_url" :href="return_url">' +
+        '           <q-btn dense outline no-caps color="positive" class="m-link">Return to App</q-btn>' +
+        '       </a>' +
+        '       <a v-if="!return_url&&organization_name!=null" href="/coapp/Home">' +
+        '           <q-btn dense outline no-caps color="positive" class="m-link">View {{organization_name}}</q-btn>' +
+        '       </a>' +
+        '       <m-link :href="orderLinkHref">' +
+        '           <q-btn dense outline no-caps color="primary" class="m-link">View Order</q-btn>' +
+        '       </m-link>' +
+        '       <m-link :href="transactionLinkHref">' +
+        '           <q-btn dense outline no-caps color="primary" class="m-link">View Transaction</q-btn>' +
+        '       </m-link>' +
+        '   </div>' +
+        '</div>',
+    data () {
+        return {
+            index: 0,
+            indeterminate: null,
+            value: 0,
+            moquiSessionToken: null,
+            description: 'Unknown',
+            interval: null,
+            showButtons: false,
+        }
+    },
+    computed: {
+        transactionLinkHref: function() { return "/settingsinternal/TransactionHistory?orderId="+this.order_id; },
+        orderLinkHref: function() { return "/settingsinternal/OrderHistory?orderId="+this.order_id; },
+    },
+    methods: {
+        async loopFunction() {
+            if (this.index === 0) {
+                this.indeterminate = false;
+            }
+            if (this.index % 5 === 0) {
+                // console.log("progress_url "+this.progress_url)
+                let _data = new URLSearchParams()
+                _data.append("orderId", this.order_id)
+                _data.append("moquiSessionToken", this.moquiSessionToken)
+
+                // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
+                const response = await fetch(this.progress_url, {
+                    cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                    credentials: "same-origin", // include, *same-origin, omit
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    redirect: "follow",
+                    referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                    body: _data // See: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+                })
+
+                const { statusId, description, messages, errors } = await response.json();
+                moqui.notifyMessages(messages, errors, null);
+
+                this.description = description;
+                if (['OrderCompleted','OrderApproved'].includes(statusId)) {
+                    this.value = 1;
+                    clearInterval(this.interval); // Clear the interval
+                    moqui.notifyMessages(messages, errors, null);
+                    this.showButtons = true;
+                    return;
+                }
+                // console.log(statusId)
+            }
+            this.value = this.value + ((200/15000))+.000000001;
+            if (this.value >= 1 || this.index === 74) {
+                this.indeterminate = true;
+            }
+            // console.log("This message shows every 200 ms for 15 seconds: value " + this.value);
+        }
+    },
+    mounted: function() {
+        this.moquiSessionToken = $("#confMoquiSessionToken").val();
+        var vm = this;
+
+        // This interval will run every 200 ms
+        vm.interval = setInterval(vm.loopFunction, 200);
+
+        // This timeout will clear the interval after 15 seconds
+        setTimeout(() => {
+            clearInterval(vm.interval);
+            this.showButtons = true;
+            console.log("The loop has stopped after 15 seconds");
+        }, 15000);
+
+    },
 });

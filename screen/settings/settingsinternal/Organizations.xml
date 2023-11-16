@@ -219,6 +219,12 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="activateOrDeactivateOrganization">
         <service-call name="coarchy.CoarchyServices.activateOrDeactivate#Organization" in-map="[organizationPartyId:toPartyId]" out-map="context"/>
+        <actions>
+            <if condition="needsCredits">
+                <set field="ec.web.sessionAttributes.checkoutOrganizationId" from="toPartyId"/>
+                <script>ec.user.setPreference('ACTIVE_ORGANIZATION', toPartyId)</script>
+            </if>
+        </actions>
         <conditional-response  url="../BuyPremium" parameter-map="[creditsNeeded:creditsNeeded]"><condition>
             <expression>needsCredits</expression></condition></conditional-response>
         <default-response/>
@@ -259,7 +265,15 @@ along with this software (see the LICENSE.md file). If not, see
     <transition name="goToApplication"><actions>
         <entity-find-one entity-name="moqui.security.UserPreference" value-field="userPreference" auto-field-map="[userId:ec.user.userId,preferenceKey:'ACTIVE_ORGANIZATION']"/>
         <if condition="partyId &amp;&amp; userPreference?.preferenceValue != partyId">
-            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
+            <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                <date-filter/>
+                <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                <econdition field-name="toPartyId" from="partyId"/></entity-find-count>
+            <if condition="partyRelationshipCount &gt; 0">
+                <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
+            </if>
         </if>
     </actions><default-response url="/coapp/Home" url-type="plain"/></transition>
 

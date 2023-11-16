@@ -15,8 +15,10 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Checkout" default-menu-index="25" menu-image="fa fa-shopping-cart" menu-image-type="icon" default-menu-include="false">
 
+    <parameter name="orderId" required="true"/>
     <always-actions>
         <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="existingOrderList" limit="1">
+            <econdition field-name="orderId"/>
             <econdition field-name="statusId" value="OrderOpen"/>
             <econdition field-name="customerPartyId" from="ec.user.userAccount.partyId"/>
             <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId,productStoreId"/>
@@ -27,7 +29,6 @@ along with this software (see the LICENSE.md file). If not, see
             <return/>
         </if>
         <set field="headerAndPart" from="existingOrderList.getFirst()"/>
-        <set field="orderId" from="headerAndPart.orderId"/>
     </always-actions>
 
     <actions>
@@ -57,7 +58,7 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="stripeRemote" from="paymentGateway.remote"/>
 
         <set field="public_key" from="stripeRemote.publicKey"/>
-        <set field="return_url" from="sri.buildUrl('/settings/OrderHistory').url"/>
+        <set field="return_url" from="sri.buildUrl('/settings/ThankYou').url+'?orderId='+orderId"/>
     </actions>
 
     <widgets>

@@ -61,7 +61,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <field name="placedDate"><header-field><date-find type="date-time"/></header-field>
                         <default-field title="Date"><label text="${ec.l10n.format(placedDate ?: entryDate, 'dd MMM yyyy hh:mm a')}"/></default-field></field>
                     <field name="statusId"><default-field title="Status"><label text="${shouldReload&amp;&amp;
-                        existingOrderList_index==0?'Order Processing...':status.description}"/></default-field></field>
+                        existingOrderList_index==0?'Payment Processing...':status.description}"/></default-field></field>
                     <field name="quantity"><default-field title="Quantity">
                         <label text="${ec.l10n.formatNumber((Number)orderItem.quantity,null,null)} ${orderItem.itemDescription}"/></default-field></field>
                     <field name="total"><default-field title="Total">

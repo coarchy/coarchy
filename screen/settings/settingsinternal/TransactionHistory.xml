@@ -67,7 +67,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <label text="${ec.l10n.formatNumber((Number)amount,null,null)} Organization-Month Credits"/></default-field></field>
                     <field name="transactionDate"><header-field title="Date"><date-find type="date-time"/></header-field>
                         <default-field title="Date"><label text="${ec.l10n.format(transactionDate, 'dd MMM yyyy hh:mm a')}"/></default-field></field>
-                    <field name="orderId"><header-field title=""><text-find/></header-field>
+                    <field name="orderId"><header-field title="Order"><text-find/></header-field>
                         <conditional-field condition="orderId != null" title="Order">
                         <link url="../OrderHistory?orderId=${orderId}" text="Order"/></conditional-field></field>
                     <field name="submit"><header-field><submit text="Find"/></header-field></field>

@@ -245,7 +245,6 @@ along with this software (see the LICENSE.md file). If not, see
     <entity entity-name="ClipboardEntry" package="coarchy">
         <field name="clipboardEntryId" type="id" is-pk="true"/>
         <field name="partyId" type="id"/>
-        <!-- TODO: Review approach -->
         <field name="moveTypeEnumId" type="id"/>
         <field name="fromOrganizationId" type="id"><description>Clipboard from organization</description></field>
         <field name="entryDate" type="date-time"/>
