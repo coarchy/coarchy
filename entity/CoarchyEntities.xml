@@ -137,6 +137,14 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="actorOrganizationId" entity-alias="ACT" field="organizationId"/>
     </view-entity>
 
+<!--    <view-entity entity-name="ActorWithActivityCount" package="coarchy">-->
+<!--        <member-entity entity-alias="ACT" entity-name="coarchy.Actor"/>-->
+<!--        <member-relationship entity-alias="ACAC" join-from-alias="ACT" relationship="activities"/>-->
+<!--        <alias-all name="actorId" entity-alias="ACT"/>-->
+<!--        <alias name="activityCount" entity-alias="ACAC" field="actorId" function="count"/>-->
+<!--        <alias name="activityOrganizationId" entity-alias="ACAC" field="organizationId"/>-->
+<!--    </view-entity>-->
+
     <entity entity-name="ActorParty" package="coarchy">
         <field name="actorId" type="id" is-pk="true"/>
         <field name="partyId" type="id" is-pk="true"/>
