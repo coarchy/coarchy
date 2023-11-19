@@ -194,6 +194,13 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="delete"><default-field title="">
                 <link url="deleteActor" parameter-map="[actorId:actorId]" icon="fa fa-trash" btn-type="danger"
                         text=" " tooltip="Delete Actor" confirmation="Delete Actor '${name}'?"/></default-field></field>
+<!--            <columns>-->
+<!--                <column><field-ref name="name" /></column>-->
+<!--                <column><field-ref name="description" /><field-ref name="partyIdList" /></column>-->
+<!--                <column><field-ref name="activityCount" /></column>-->
+<!--                <column><field-ref name="submit" /></column>-->
+<!--                <column><field-ref name="delete" /></column>-->
+<!--            </columns>-->
         </form-list>
     </widgets>
 </screen>
