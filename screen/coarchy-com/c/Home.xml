@@ -57,7 +57,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </q-card>
                     </section>
 
-                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                    <section>
                         <q-card class="desktop-only text-h6 bg-grey-9 q-mt-xl q-mb-xl" dark bordered style="min-width:1000px;" flat bordered>
                             <q-card-section horizontal>
                                 <q-card-section class="q-mt-md" style="max-width:300px">
@@ -84,7 +84,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </q-card>
                     </section>
 
-                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                    <section>
                         <q-card class="desktop-only text-h6 bg-grey-9 q-mt-xl q-mb-xl" dark bordered style="min-width:1000px;" flat bordered>
                             <q-card-section horizontal>
                                 <q-card-section class="q-mt-md" style="max-width:300px">
@@ -110,20 +110,20 @@ along with this software (see the LICENSE.md file). If not, see
                         </q-card>
                     </section>
 
-                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                    <section>
 <!--                        <div class="text-h2 q-mt-xl">Design</div>-->
-                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
                             <q-card-section>The core principle of Coarchy is <strong>design</strong> based on <strong>requirements</strong>.</q-card-section>
                         </q-card>
-                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
                             <q-card-section>The <i>requirements</i> for an organization are its <strong>origin, vision, and values</q-card-section>
                         </q-card>
-                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;" data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                        <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
                             <q-card-section>The <i>design</i> based on these are <strong>process stories</strong> with <u>activities</u> that organize roles and responsibilities.</q-card-section>
                         </q-card>
                     </section>
 
-                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                    <section>
                         <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
                             <q-card-section data-aos="fade-in" data-aos-easing="ease-in-out-cubic"><div class="text-h2">Implement</div></q-card-section>
                             <q-separator class="q-mt-md" dark inset data-aos="fade-in" data-aos-easing="ease-in-out-cubic"></q-separator>
@@ -137,7 +137,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </q-card>
                     </section>
 
-                    <section data-aos="slide-right" data-aos-easing="ease-in-out-cubic">
+                    <section>
                         <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
                             <q-card-section data-aos="fade-in" data-aos-easing="ease-in-out-cubic"><div class="text-h2">Concepts</div></q-card-section>
                             <q-separator class="q-mt-md" dark inset data-aos="fade-in" data-aos-easing="ease-in-out-cubic"></q-separator>
