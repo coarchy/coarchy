@@ -51,11 +51,11 @@ along with this software (see the LICENSE.md file). If not, see
     <mantle.party.PartyRelationship fromPartyId="c100510" toRoleTypeId="OrgInternal" partyRelationshipId="c100102" relationshipTypeEnumId="PrtMember" toPartyId="c100511"/>
     <mantle.party.PartyRelationship fromPartyId="c100612" toRoleTypeId="OrgInternal" partyRelationshipId="c100153" relationshipTypeEnumId="PrtMember" toPartyId="c100613"/>
     <mantle.party.PartyRelationship fromPartyId="c100614" toRoleTypeId="OrgInternal" partyRelationshipId="c100154" relationshipTypeEnumId="PrtMember" toPartyId="c100613"/>
-    <coarchy.ProcessStory processStoryId="c100000"/>
-    <coarchy.ProcessStory name="Marketing" organizationId="coarchy" processStoryId="c100051"/>
-    <coarchy.ProcessStory name="Product" organizationId="coarchy" processStoryId="c100102"/>
-    <coarchy.ProcessStory name="test" organizationId="coarchy" processStoryId="c100103"/>
-    <coarchy.ProcessStory name="New User" organizationId="c100613" processStoryId="c100153"/>
+    <coarchy.ProcessStory processStoryId="c100000" disabled="N"/>
+    <coarchy.ProcessStory name="Marketing" organizationId="coarchy" processStoryId="c100051" disabled="N"/>
+    <coarchy.ProcessStory name="Product" organizationId="coarchy" processStoryId="c100102" disabled="N"/>
+    <coarchy.ProcessStory name="test" organizationId="coarchy" processStoryId="c100103" disabled="N"/>
+    <coarchy.ProcessStory name="New User" organizationId="c100613" processStoryId="c100153" disabled="N"/>
     <coarchy.Actor name="Programmer" actorId="c100051"/>
     <coarchy.Actor name="System" organizationId="coarchy" actorId="c100102"/>
     <coarchy.Actor name="Customer" organizationId="coarchy" actorId="c100103"/>

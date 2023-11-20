@@ -72,13 +72,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <field name="downPageIndex"><default-field><hidden/></default-field></field>
                     <field name="processStoryId"><default-field><hidden/></default-field></field>
                     <field name="sequenceNum"><default-field><hidden/></default-field></field>
-                    <field name="implementationId"><default-field title="Implementation Status"><drop-down allow-empty="true">
-                        <entity-options key="${enumId}" text="${description}">
-                            <entity-find entity-name="moqui.basic.Enumeration">
-                                <econdition field-name="enumTypeId" value="ActivityImplementation"/>
-                                <order-by field-name="sequenceNum"/></entity-find>
-                        </entity-options>
-                    </drop-down></default-field></field>
                     <field name="condition"><default-field title="Condition (optional)"><text-area rows="2" autogrow="true"/></default-field></field>
                     <field name="actorIdList">
                         <default-field title="Actor"><drop-down allow-empty="true" allow-multiple="true">
@@ -86,6 +79,13 @@ along with this software (see the LICENSE.md file). If not, see
                             <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                         </drop-down></default-field></field>
                     <field name="action"><default-field title="Action"><text-area rows="2" autogrow="true"/></default-field></field>
+                    <field name="implementationId"><default-field title="Implementation Status"><drop-down allow-empty="true">
+                        <entity-options key="${enumId}" text="${description}">
+                            <entity-find entity-name="moqui.basic.Enumeration">
+                                <econdition field-name="enumTypeId" value="ActivityImplementation"/>
+                                <order-by field-name="sequenceNum"/></entity-find>
+                        </entity-options>
+                    </drop-down></default-field></field>
                     <field name="insertType" from="'below'"><default-field>
                         <radio><option key="above" text="Above"/><option key="below" text="Below"/></radio>
                     </default-field></field>
