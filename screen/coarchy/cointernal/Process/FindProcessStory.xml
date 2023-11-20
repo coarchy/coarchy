@@ -34,13 +34,17 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response/></transition>
 
     <actions>
+        <if condition="disabled==null"><set field="disabled" from="'N'"/></if>
+
         <entity-find entity-name="coarchy.ProcessStoryActivityAndDetail" list="processStoryActivityList">
-            <search-form-inputs/>
+            <search-form-inputs><default-parameters disabled="N"/></search-form-inputs>
             <econdition field-name="detailProcessStoryId" operator="is-not-null"/>
+            <econdition field-name="detailDisabled" from="disabled"/>
+            <econdition field-name="detailName" operator="like" value="%${name}%" ignore="!name"/>
             <order-by field-name="processStoryId,sequenceNum"/>
         </entity-find>
         <entity-find entity-name="coarchy.ProcessStory" list="processStoryInputList">
-            <search-form-inputs><default-parameters disabled="N" /></search-form-inputs>
+            <search-form-inputs><default-parameters disabled="N"/></search-form-inputs>
             <econdition field-name="processStoryId" operator="not-in" from="processStoryActivityList?.detailProcessStoryId"/>
         </entity-find>
         <set field="processStoryList" from="[]"/>

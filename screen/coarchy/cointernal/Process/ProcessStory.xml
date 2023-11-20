@@ -462,15 +462,9 @@ along with this software (see the LICENSE.md file). If not, see
                         newPageIndex:((processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp;
                         processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex)]"/></last-row-field></field>
 
-            <form-list-column><field-ref name="condition"/></form-list-column>
-            <form-list-column><field-ref name="actorIdList"/></form-list-column>
-            <form-list-column><field-ref name="action"/></form-list-column>
-            <form-list-column><field-ref name="implementationId"/></form-list-column>
-            <form-list-column><field-ref name="submit"/></form-list-column>
-
             <columns>
                 <column><field-ref name="move"/></column>
-                <column><field-ref name="condition"/></column><column><field-ref name="sequenceNum"/><field-ref name="condition"/></column>
+                <column><field-ref name="sequenceNum"/><field-ref name="condition"/></column>
                 <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
                 <column><field-ref name="submit"/></column>
                 <column><field-ref name="actionMenu"/><field-ref name="newParagraph"/></column>

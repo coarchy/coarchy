@@ -53,9 +53,11 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition-include name="updateProcessStory" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
 
-    <transition name="enableProcessStory"><service-call name="coarchy.CoarchyServices.enable#ProcessStory"/>
+    <transition name="enableProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.enable#ProcessStory"/>
         <default-response url="."/></transition>
-    <transition name="disableProcessStory"><service-call name="coarchy.CoarchyServices.disable#ProcessStory"/>
+    <transition name="disableProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.disable#ProcessStory"/>
         <default-response url="."/></transition>
 
     <transition-include name="createChecklist" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
@@ -92,7 +94,6 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- Don't select fields from activityactor (actorId) -->
             <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
         </entity-find>
-
     </actions>
 
     <widgets>
@@ -179,8 +180,8 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <link url="enableProcessStory" text="Enable Process Story" parameter-map="[processStoryId:processStoryId]" condition="processStory.disabled == 'Y'"/>
-        <link url="disableProcessStory" text="Disable Process Story" parameter-map="[processStoryId:processStoryId]" condition="processStory.disabled != 'Y'"/>
+        <link url="enableProcessStory" text="Show Process Story" parameter-map="[processStoryId:processStoryId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; processStory.disabled == 'Y'"/>
+        <link url="disableProcessStory" text="Hide Process Story" parameter-map="[processStoryId:processStoryId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; processStory.disabled != 'Y'"/>
 
         <form-list name="ProcessStory" header-dialog="true" list="processStoryActivityList"
                 show-csv-button="true" show-page-size="true" select-columns="true"
