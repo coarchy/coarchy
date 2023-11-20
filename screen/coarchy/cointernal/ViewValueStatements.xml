@@ -80,7 +80,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <section name="ViewValueStatements" condition="partyActivationCount &gt; 0">
                     <widgets>
                         <!-- TODO: Add filter parameters for the activity -->
-                        <render-mode><text><![CDATA[<h5>]]></text></render-mode>
+                        <render-mode><text><![CDATA[<h5 v-pre>]]></text></render-mode>
                         <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/Values.html.ftl"/></render-mode>
                         <render-mode><text><![CDATA[</h5>]]></text></render-mode>
                     </widgets>

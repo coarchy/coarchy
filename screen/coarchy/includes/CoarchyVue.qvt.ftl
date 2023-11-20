@@ -112,7 +112,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <#if activeOrg.organizationName!?has_content>
                                 <q-item clickable>
                                     <q-item-section><q-btn flat label="Edit ${activeOrg.organizationName}" type="a" href="${sri.buildUrl("/settings/EditOrganization").url+'?organizationId='+activeOrgId}">
-                                            <q-tooltip>${activeOrg.organizationName} Settings</q-tooltip></q-btn>
+                                            <q-tooltip><span v-pre>${activeOrg.organizationName} Settings</span></q-tooltip></q-btn>
                                     </q-item-section>
                                 </q-item>
                             </#if>
@@ -120,7 +120,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 <q-item-section>
                                     <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"
                                            onclick="return confirm('${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}?')">
-                                        <q-tooltip>${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}</q-tooltip></q-btn>
+                                        <q-tooltip><span v-pre>${ec.l10n.localize("Logout")} ${(ec.user.userAccount.userFullName)!''}</span></q-tooltip></q-btn>
                                 </q-item-section>
                             </q-item>
                         </q-list>

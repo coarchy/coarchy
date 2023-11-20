@@ -136,7 +136,7 @@ along with this software (see the LICENSE.md file). If not, see
             <section-iterate name="FeedSection" list="activityFeedList" entry="item">
                 <widgets>
                     <container type="q-card" style="q-pa-sm q-mb-xs">
-                        <render-mode><text><![CDATA[<h6>${item.entityType}: <m-link href="${item.link}">${item.name}</h6></m-link>]]></text></render-mode>
+                        <render-mode><text><![CDATA[<h6>${item.entityType}: <m-link href="${item.link}"><span v-pre>${item.name}</span></m-link></h6>]]></text></render-mode>
 
                         <label text="${item.updateType} on ${ec.l10n.format(item.date,'MMMM dd, HH:mm')}"/>
                     </container>
