@@ -437,7 +437,6 @@ along with this software (see the LICENSE.md file). If not, see
 
             <field name="submit"><header-field title="Update"><submit/></header-field>
                 <conditional-field condition="action"><submit text="Update"/></conditional-field>
-                <!-- TODO: Figure out how to run row-actions for the last row field -->
                 <last-row-field><submit text="Add Activity" type="success"/></last-row-field></field>
 
             <field name="actionMenu"><default-field title="Actions">

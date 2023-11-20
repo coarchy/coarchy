@@ -34,26 +34,26 @@ along with this software (see the LICENSE.md file). If not, see
         <entity-find entity-name="coarchy.Actor" list="prepPrepActorList">
             <order-by field-name="name"/></entity-find>
         <set field="actorList" from="[]"/>
+        <set field="hasActivities" from="false"/>
         <iterate list="prepPrepActorList" entry="actor">
-            <if condition="showActivities == 'Y'">
-                <entity-find entity-name="coarchy.ActivityActorDetail" list="actorActivityList" distinct="true">
-                    <econdition field-name="actorId" from="actor.actorId"/>
-                    <!-- Don't select fields from activityactor (actorId) -->
-                    <select-field field-name="actorId,name,description,activityId,condition,action,implementationId,"/>
-                    <order-by field-name="sequenceNum"/>
-                </entity-find>
-                <!--            <set field="activityIdList" from="actorActivityList*.activityId"/>-->
-                <set field="processStoryActivityList" from="[]"/>
-                <iterate list="actorActivityList" entry="actorActivity">
-                    <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
-                        <econdition field-name="activityId" from="actorActivity.activityId"/>
-                        <order-by field-name="name"/></entity-find>
-                    <entity-find-one entity-name="coarchy.Activity" value-field="activity" auto-field-map="[activityId:actorActivity.activityId]"/>
-                    <set field="actorActivity" from="activity.getMap() + [actorNames:activityActorList*.name]"/>
-                    <script>processStoryActivityList.add(actorActivity)</script>
-                </iterate>
-            </if>
+            <entity-find entity-name="coarchy.ActivityActorDetail" list="actorActivityList" distinct="true">
+                <econdition field-name="actorId" from="actor.actorId"/>
+                <!-- Don't select fields from activityactor (actorId) -->
+                <select-field field-name="actorId,name,description,activityId,condition,action,implementationId,"/>
+                <order-by field-name="sequenceNum"/>
+            </entity-find>
+            <!--            <set field="activityIdList" from="actorActivityList*.activityId"/>-->
+            <set field="processStoryActivityList" from="[]"/>
+            <iterate list="actorActivityList" entry="actorActivity">
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                    <econdition field-name="activityId" from="actorActivity.activityId"/>
+                    <order-by field-name="name"/></entity-find>
+                <entity-find-one entity-name="coarchy.Activity" value-field="activity" auto-field-map="[activityId:actorActivity.activityId]"/>
+                <set field="actorActivity" from="activity.getMap() + [actorNames:activityActorList*.name]"/>
+                <script>processStoryActivityList.add(actorActivity)</script>
+            </iterate>
 
+            <if condition="!hasActivities &amp;&amp; processStoryActivityList?.size() &gt; 0"><set field="hasActivities" from="true"/></if>
             <script>actorList.add([actorId:actor.actorId, name:actor.name, description:actor.description, processStoryActivityList:processStoryActivityList])</script>
         </iterate>
     </actions>
@@ -77,14 +77,10 @@ along with this software (see the LICENSE.md file). If not, see
             <row-col md="8">
                 <label text="View Actors" type="h4" style="q-pb-md"/>
 
-                <container-dialog id="ViewActorsDialog" button-text="Show Activities" type="success" condition="partyActivationCount &gt; 0">
-                    <form-single name="ViewActorsForm">
-                        <field name="showActivities" from="showActivities?:'Y'"><default-field>
-                            <radio><option key="Y" text="Yes"/><option key="N" text="No"/></radio>
-                        </default-field></field>
-                        <field name="submit"><default-field><submit/></default-field></field>
-                    </form-single>
-                </container-dialog>
+                <link url="." text="Hide Activities" parameter-map="[showActivities:'N']" btn-type="success"
+                        condition="showActivities == 'Y' &amp;&amp; partyActivationCount &gt; 0 &amp;&amp; hasActivities"/>
+                <link url="." text="Show Activities" parameter-map="[showActivities:'Y']" btn-type="success"
+                        condition="showActivities != 'Y' &amp;&amp; partyActivationCount &gt; 0 &amp;&amp; hasActivities"/>
 
                 <!-- TODO: Add filter parameters for the activity -->
                 <render-mode><text><![CDATA[<h5 v-pre>]]></text></render-mode>
