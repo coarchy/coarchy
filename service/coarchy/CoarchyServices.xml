@@ -98,6 +98,21 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="enable" noun="ProcessStory">
+        <description>Disable a process story (set disabled=Y, disabledDateTime=now)</description>
+        <in-parameters><parameter name="processStoryId" required="true"/></in-parameters>
+        <actions>
+            <service-call name="update#coarchy.ProcessStory" in-map="[processStoryId:processStoryId, disabled:'N']"/>
+        </actions>
+    </service>
+    <service verb="disable" noun="ProcessStory">
+        <description>Disable a process story (set disabled=Y, disabledDateTime=now)</description>
+        <in-parameters><parameter name="processStoryId" required="true"/></in-parameters>
+        <actions>
+            <service-call name="update#coarchy.ProcessStory" in-map="[processStoryId:processStoryId, disabled:'Y']"/>
+        </actions>
+    </service>
+
     <service verb="create" noun="Activity">
         <in-parameters>
             <parameter name="processStoryId" required="true"/>

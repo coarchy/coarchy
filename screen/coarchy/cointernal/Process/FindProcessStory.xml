@@ -40,7 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
             <order-by field-name="processStoryId,sequenceNum"/>
         </entity-find>
         <entity-find entity-name="coarchy.ProcessStory" list="processStoryInputList">
-            <search-form-inputs/>
+            <search-form-inputs><default-parameters disabled="N" /></search-form-inputs>
             <econdition field-name="processStoryId" operator="not-in" from="processStoryActivityList?.detailProcessStoryId"/>
         </entity-find>
         <set field="processStoryList" from="[]"/>
@@ -67,6 +67,10 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="processStoryId"><default-field><hidden/></default-field></field>
             <field name="name"><header-field><text-find size="25"/></header-field>
                 <default-field title="Process Story Name"><link url="../EditProcessStory" parameter-map="[processStoryId:processStoryId]" text="${name}"/></default-field></field>
+            <field name="disabled">
+                <header-field title="Hidden"><drop-down allow-empty="true" ><option key="Y"/><option key="N"/></drop-down></header-field>
+                <default-field><hidden/></default-field>
+            </field>
             <field name="submit"><header-field><submit/></header-field></field>
         </form-list>
     </widgets>

@@ -161,6 +161,11 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="update#coarchy.ProcessStory"/>
         <default-response url="."/></transition>
 
+    <transition name="enableProcessStory"><service-call name="coarchy.CoarchyServices.enable#ProcessStory"/>
+        <default-response url="."/></transition>
+    <transition name="disableProcessStory"><service-call name="coarchy.CoarchyServices.disable#ProcessStory"/>
+        <default-response url="."/></transition>
+
     <transition name="createChecklist"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
         <!--        <service-call name="coarchy.CoarchyServices.create#ChecklistProcessStory" in-map="[processStoryId:processStoryId,name:name,recurStartCron:recurStartCron,organizationId:activeOrgId]" out-map="checklist"/>-->
         <service-call name="coarchy.CoarchyServices.create#ChecklistProcessStory" in-map="[processStoryId:processStoryId,name:name,organizationId:activeOrgId]" out-map="checklist"/>
@@ -263,6 +268,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="submit"><default-field><submit text="Edit"/></default-field></field>
             </form-single>
         </container-dialog>
+
+        <link url="enableProcessStory" text="Enable Process Story" parameter-map="[processStoryId:processStoryId]" condition="processStory.disabled == 'Y'"/>
+        <link url="disableProcessStory" text="Disable Process Story" parameter-map="[processStoryId:processStoryId]" condition="processStory.disabled != 'Y'"/>
 
         <form-list name="ProcessStory" header-dialog="true" list="processStoryActivityList"
                 show-csv-button="true" show-page-size="true" select-columns="true"
@@ -426,23 +434,27 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25"/></header-field>
                 <conditional-field condition="action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-            <field name="substory"><header-field title="Substory"/><conditional-field condition="action">
-                <dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
-                        parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"
-                        condition="!detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0"/>
-                <link url="../ProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"
-                        condition="detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId"/></conditional-field></field>
-            <field name="insert"><default-field title="Insert"><dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
-                    parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"
-                    condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown"/></default-field></field>
-            <field name="values"><header-field title="Values"/><conditional-field condition="action">
-                <dynamic-dialog id="ManageValues" button-text="Values" transition="ManageValues"
-                        parameter-map="[activityId:activityId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/></conditional-field></field>
+
             <field name="submit"><header-field title="Update"><submit/></header-field>
                 <conditional-field condition="action"><submit text="Update"/></conditional-field>
                 <!-- TODO: Figure out how to run row-actions for the last row field -->
                 <last-row-field><submit text="Add Activity" type="success"/></last-row-field></field>
-            <field name="delete"><default-field title="Delete"><link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="" tooltip="Delete Activity"/></default-field></field>
+
+            <field name="actionMenu"><default-field title="Actions">
+                <button-menu text="Actions">
+                    <dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
+                                    parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"
+                                    condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown"/>
+                    <dynamic-dialog id="ManageValues" button-text="Values" transition="ManageValues"
+                                    parameter-map="[activityId:activityId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/>
+                    <dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
+                                    parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"
+                                    condition="action &amp;&amp; !detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0"/>
+                    <link url="../EditProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"
+                          condition="detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId"/>
+                    <link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="Delete" tooltip="Delete Activity"/>
+                </button-menu></default-field></field>
+
             <field name="newParagraph"><header-field title="New Paragraph"/>
                 <default-field></default-field>
                 <last-row-field><link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break"
@@ -458,11 +470,10 @@ along with this software (see the LICENSE.md file). If not, see
 
             <columns>
                 <column><field-ref name="move"/></column>
-                <column><field-ref name="condition"/></column>
-                <!--                <column><field-ref name="sequenceNum"/><field-ref name="condition"/></column>-->
+                <column><field-ref name="condition"/></column><column><field-ref name="sequenceNum"/><field-ref name="condition"/></column>
                 <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
-                <column><field-ref name="submit"/><field-ref name="insert"/><field-ref name="values"/></column>
-                <column><field-ref name="newParagraph"/><field-ref name="substory"/><field-ref name="delete"/></column>
+                <column><field-ref name="submit"/></column>
+                <column><field-ref name="actionMenu"/><field-ref name="newParagraph"/></column>
             </columns>
         </form-list>
     </widgets>

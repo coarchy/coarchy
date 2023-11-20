@@ -91,6 +91,24 @@ along with this software (see the LICENSE.md file). If not, see
     <actions>
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
         <entity-find-count entity-name="coarchy.Actor" count-field="actorCount"/>
+
+        <entity-find entity-name="coarchy.Actor" list="preActorList">
+            <search-form-inputs default-order-by="name"/>
+            <!--                <econdition field-name="activityCount" operator="greater-equals" from="activityCount_from" ignore-if-empty="true"/>-->
+            <!--                <econdition field-name="activityCount" operator="less-equals" from="activityCount_thru" ignore-if-empty="true"/>-->
+        </entity-find>
+        <set field="actorList" from="[]"/>
+        <iterate list="preActorList" entry="actor">
+            <entity-find-count entity-name="coarchy.ActivityActor" count-field="activityCount">
+            <econdition field-name="actorId" from="actor.actorId"/></entity-find-count>
+            <if condition="(activityCount_from==null &amp;&amp; activityCount_thru==null)
+            || ((activityCount_from==null &amp;&amp; activityCount&lt;=activityCount_thru?.toInteger())
+                || (activityCount_thru==null &amp;&amp; activityCount_from?.toInteger()&lt;=activityCount)
+                || (activityCount&lt;=activityCount_thru?.toInteger() &amp;&amp; activityCount_from?.toInteger()&lt;=activityCount))">
+                <script>actorList.add(actor.getMap()+[activityCount:activityCount])</script>
+            </if>
+        </iterate>
+
     </actions>
 
     <widgets>
@@ -126,10 +144,8 @@ along with this software (see the LICENSE.md file). If not, see
         <link url="../ViewActors" text="View/Print Actors" tooltip="View Actors Text" btn-type="info"
                 condition="actorCount &gt; 0"/>
 
-        <form-list name="ActorForm" header-dialog="true" show-page-size="true" show-csv-button="true"
-                list="actorList" transition="updateActor" transition-last-row="createActor" map-last-row="[name:null,description:null]">
-            <entity-find entity-name="coarchy.Actor" list="actorList">
-                <search-form-inputs default-order-by="name"/></entity-find>
+        <form-list name="ActorForm" header-dialog="true" show-page-size="true" select-columns="true" saved-finds="true"
+                   show-csv-button="true" list="actorList" transition="updateActor" transition-last-row="createActor" map-last-row="[name:null,description:null]">
 
             <row-actions>
                 <entity-find entity-name="coarchy.ActorParty" list="prepActorPartyList">
@@ -156,7 +172,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
                 <last-row-field><text-area rows="2" cols="80" autogrow="true"/></last-row-field>
             </field>
-            <field name="partyIdList"><conditional-field condition="(partyActivationCount == 0 &amp;&amp; activeOrg.ownerPartyId==ec.user.userAccount.partyId) || activeOrg.ownerPartyId!=ec.user.userAccount.partyId"
+            <field name="partyIdList"><header-field title="Parties"></header-field><conditional-field condition="(partyActivationCount == 0 &amp;&amp; activeOrg.ownerPartyId==ec.user.userAccount.partyId) || activeOrg.ownerPartyId!=ec.user.userAccount.partyId"
                     title="${(partyActivationCount == 0 &amp;&amp; activeOrg.ownerPartyId==ec.user.userAccount.partyId)||activeOrg.ownerPartyId!=ec.user.userAccount.partyId?'Assigned Users':''}">
                 <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/UserLinkList.html.ftl"/></render-mode>
             </conditional-field><conditional-field condition="partyActivationCount &gt; 0 &amp;&amp; activeOrg.ownerPartyId==ec.user.userAccount.partyId" title="${activeOrg.ownerPartyId==ec.user.userAccount.partyId?'Assigned Users':''}">
@@ -168,6 +184,9 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="actorId">
                 <header-field title="Id"><text-find size="30"/></header-field>
                 <default-field><hidden/></default-field></field>
+            <field name="activityCount">
+                <header-field show-order-by="true"><range-find/></header-field>
+                <default-field><display/></default-field></field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>
@@ -175,6 +194,13 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="delete"><default-field title="">
                 <link url="deleteActor" parameter-map="[actorId:actorId]" icon="fa fa-trash" btn-type="danger"
                         text=" " tooltip="Delete Actor" confirmation="Delete Actor '${name}'?"/></default-field></field>
+<!--            <columns>-->
+<!--                <column><field-ref name="name" /></column>-->
+<!--                <column><field-ref name="description" /><field-ref name="partyIdList" /></column>-->
+<!--                <column><field-ref name="activityCount" /></column>-->
+<!--                <column><field-ref name="submit" /></column>-->
+<!--                <column><field-ref name="delete" /></column>-->
+<!--            </columns>-->
         </form-list>
     </widgets>
 </screen>
