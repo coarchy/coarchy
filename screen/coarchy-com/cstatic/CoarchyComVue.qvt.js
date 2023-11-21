@@ -133,6 +133,11 @@ Vue.component('c-change-password', {
         '            <q-icon :name="isNewPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isNewPwd = !isNewPwd"/>\n' +
         '        </template>\n' +
         '    </q-input>\n' +
+        '    <p v-if="this.cameFromEmail && agreementlist!=null && agreementlist.length > 0" class="text-muted text-left">By signing up, you agree to our <template v-for="{contentContentLocation, typeDescription, index} in agreementlist">' +
+        '       <a :href="contentContentLocation">{{ typeDescription }}{{ index }}</a>\n' +
+        '       <template v-if="index < agreementlist.length - 2">,&nbsp;</template>\n' +
+        '      <template v-else-if="index === agreementlist.length - 2">, and&nbsp;</template>' +
+        '   </template></p>' +
         '    <div>\n' +
         '        <q-btn label="Create Account" type="submit" color="primary"/>\n' +
         '    </div>\n' +
@@ -147,9 +152,30 @@ Vue.component('c-change-password', {
             newPassword: null,
             isOldPwd: true,
             isNewPwd: true,
+            agreementlist: null
+
         }
     },
     methods: {
+        async getData(url = "") {
+            // console.log(this.moquiSessionToken)
+
+            // console.log(_data.toString())
+            // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
+            const response = await fetch(url, {
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: "same-origin", // include, *same-origin, omit
+                method: 'get',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                redirect: "follow",
+                referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            })
+
+            return response.json();
+        },
         onSubmit () {
             this.moqui.webrootVue.postData('/c/ChangePassword/changePassword', new URLSearchParams(this._data).toString())
                 .then((data) => {
@@ -167,6 +193,13 @@ Vue.component('c-change-password', {
         if (urlParams.get('username')) this.username = urlParams.get('username')
         if (urlParams.get('oldPassword')) this.oldPassword = urlParams.get('oldPassword')
         if (this.username && this.oldPassword) this.cameFromEmail = true
+
+        this.getData("/c/SignUp/actions").then((response) => {
+            // console.log(response)
+            this.agreementlist = response.agreementList
+
+            // console.log(response.agreementList)
+        })
     },
 });
 Vue.component('c-create-organization', {

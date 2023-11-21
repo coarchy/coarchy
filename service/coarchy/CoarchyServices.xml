@@ -48,6 +48,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="!existingUaList"><then>
                     <service-call name="mantle.party.PartyServices.create#Account" out-map="newUser"
                             in-map="[emailAddress:emailAddress,firstName:firstName?:'Coarchy',lastName:lastName?:'Customer',username:emailAddress]"/>
+                    <service-call name="create#mantle.party.PartyRole" in-map="[partyId:newUser.partyId,roleTypeId:'Customer']"/>
                     <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
                 </then><else>
                     <set field="newUser" from="existingUaList?.getFirst()"/>
