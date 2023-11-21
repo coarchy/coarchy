@@ -124,7 +124,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <container-dialog id="InviteUser" type="success" button-text="Invite User">
                     <form-single name="InviteUser" transition="inviteUser">
                         <field name="organizationId"><default-field><hidden/></default-field></field>
-                        <field name="emailAddress"><default-field><text-line/></default-field></field>
+                        <field name="emailAddress"><default-field><text-line input-type="email"/></default-field></field>
                         <field name="submit"><default-field><submit/></default-field></field>
                     </form-single>
                 </container-dialog>

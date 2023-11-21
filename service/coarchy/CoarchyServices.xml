@@ -47,16 +47,18 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="emailAddress" ignore-case="true"/></entity-find>
                 <if condition="!existingUaList"><then>
                     <service-call name="mantle.party.PartyServices.create#Account" out-map="newUser"
-                            in-map="[emailAddress:emailAddress,firstName:firstName?:'Coarchy',lastName:lastName?:'Customer',username:emailAddress]"/>
+                        in-map="[emailAddress:emailAddress,firstName:firstName?:'Coarchy',lastName:lastName?:'Customer',username:emailAddress]"/>
                     <service-call name="create#mantle.party.PartyRole" in-map="[partyId:newUser.partyId,roleTypeId:'Customer']"/>
-                    <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
+                    <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS',
+                        userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
                 </then><else>
                     <set field="newUser" from="existingUaList?.getFirst()"/>
                 </else></if>
                 <set field="newPartyId" from="newUser.partyId"/>
                 <set field="newUserId" from="newUser.userId"/>
 
-                <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:partyId,fromDate:ec.user.nowTimestamp]"/>
+                <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',
+                    fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:partyId,fromDate:ec.user.nowTimestamp]"/>
                 <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
 
                 <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
