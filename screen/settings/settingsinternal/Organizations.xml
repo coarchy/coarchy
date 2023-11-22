@@ -100,7 +100,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="organizationId" from="oldOrganization.partyId"/>
                 </entity-find>
                 <iterate list="processStoryList" entry="processStory">
-                    <service-call name="create#coarchy.ProcessStory" in-map="[name:processStory.name,organizationId:newOrganization.partyId]" out-map="processStoryContext"/>
+                    <service-call name="create#coarchy.ProcessStory" in-map="[name:processStory.name,organizationId:newOrganization.partyId,disabled:processStory.disabled]" out-map="processStoryContext"/>
                     <script>processStoryIdMap.put(processStory.processStoryId,processStoryContext.processStoryId)</script>
                 </iterate>
 

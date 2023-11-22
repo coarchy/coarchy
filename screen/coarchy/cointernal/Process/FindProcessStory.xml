@@ -36,25 +36,38 @@ along with this software (see the LICENSE.md file). If not, see
     <actions>
         <if condition="disabled==null"><set field="disabled" from="'N'"/></if>
 
-        <entity-find entity-name="coarchy.ProcessStoryActivityAndDetail" list="processStoryActivityList">
-            <search-form-inputs><default-parameters disabled="N"/></search-form-inputs>
-            <econdition field-name="detailProcessStoryId" operator="is-not-null"/>
-            <econdition field-name="detailDisabled" from="disabled"/>
-            <econdition field-name="detailName" operator="like" value="%${name}%" ignore="!name"/>
-            <order-by field-name="processStoryId,sequenceNum"/>
+        <entity-find entity-name="coarchy.ProcessStoryActivityAndDetail" list="processStoryInputList" distinct="true">
+            <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true" ignore="!name"/>
+            <select-field field-name="processStoryId,detailProcessStoryId,detail2ProcessStoryId,detail3ProcessStoryId,
+                name,detailName,detail2Name,detail3Name,disabled"/>
         </entity-find>
-        <entity-find entity-name="coarchy.ProcessStory" list="processStoryInputList">
-            <search-form-inputs><default-parameters disabled="N"/></search-form-inputs>
-            <econdition field-name="processStoryId" operator="not-in" from="processStoryActivityList?.detailProcessStoryId"/>
-        </entity-find>
-        <set field="processStoryList" from="[]"/>
-        <iterate list="processStoryInputList" entry="processStoryInput">
-            <script>processStoryList.add([processStoryId:processStoryInput.processStoryId,name:processStoryInput.name])</script>
-            <set field="processStoryActivityDetailList" from="processStoryActivityList.findAll{ it.processStoryId == processStoryInput.processStoryId }"/>
-            <iterate list="processStoryActivityDetailList" entry="processStoryActivityDetail">
-                <script>processStoryList.add([processStoryId:processStoryActivityDetail.detailProcessStoryId,name:processStoryInput.name+' - '+processStoryActivityDetail.detailName])</script>
-            </iterate>
-        </iterate>
+
+        <script>
+            // Function to validate parent hierarchy before adding to sorted list
+            def isValidParentHierarchy(story, currentBranch) {
+                if (story.detailProcessStoryId != currentBranch.processStoryId) return false
+                if (story.detail2ProcessStoryId != null &amp;&amp;
+                        story.detail2ProcessStoryId != currentBranch.detailProcessStoryId) return false
+                if (story.detail3ProcessStoryId != null &amp;&amp;
+                        story.detail3ProcessStoryId != currentBranch.detail2ProcessStoryId) return false
+                return true
+            }
+
+            // Function to find and sort children recursively
+            def sortProcessStories(processStories, currentBranch) {
+                def sortedStories = []
+                processStories.findAll { isValidParentHierarchy(it, currentBranch) }.sort { it.name }.each { story ->
+//                    ec.logger.warn("story: ${story}")
+                    if (story.disabled == disabled) sortedStories.add(story)
+                    sortedStories.addAll(sortProcessStories(processStories, story))
+                }
+                return sortedStories
+            }
+            def rootBranch = [processStoryId: null, detailProcessStoryId: null, detail2ProcessStoryId: null, detail3ProcessStoryId: null]
+        </script>
+        <set field="processStoryList" from="sortProcessStories(processStoryInputList, rootBranch)"/>
+
+<!--        <log level="warn" message="FindProcessStory context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
@@ -66,13 +79,13 @@ along with this software (see the LICENSE.md file). If not, see
                 <field name="submit"><default-field><submit text="Add Process Story"/></default-field></field>
             </form-single></container-dialog>
 
-        <form-list name="ProcessStory" header-dialog="true" show-page-size="true" show-csv-button="true" list="processStoryList"
+        <form-list name="ProcessStory" header-dialog="true" show-page-size="true" list="processStoryList"
                 transition-last-row="createProcessStory">
-            <field name="processStoryId"><default-field><hidden/></default-field></field>
-            <field name="name"><header-field><text-find size="25"/></header-field>
-                <default-field title="Process Story Name"><link url="../EditProcessStory" parameter-map="[processStoryId:processStoryId]" text="${name}"/></default-field></field>
+            <field name="name"><header-field><text-line/></header-field>
+                <default-field title="Process Story Name"><link url="../EditProcessStory" parameter-map="[processStoryId:processStoryId]"
+                    text="${detail3ProcessStoryId?detail3Name+' - ':''}${detail2ProcessStoryId?detail2Name+' - ':''}${detailProcessStoryId?detailName+' - ':''}${name}"/></default-field></field>
             <field name="disabled">
-                <header-field title="Hidden"><drop-down allow-empty="true" ><option key="Y"/><option key="N"/></drop-down></header-field>
+                <header-field title="Hidden"><drop-down><option key="Y"/><option key="N"/></drop-down></header-field>
                 <default-field><hidden/></default-field>
             </field>
             <field name="submit"><header-field><submit/></header-field></field>

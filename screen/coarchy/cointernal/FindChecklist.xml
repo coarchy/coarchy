@@ -61,7 +61,8 @@ along with this software (see the LICENSE.md file). If not, see
             <form-single name="CreateChecklist" transition="createChecklist">
                 <field name="processStoryId"><default-field title="Process Story"><drop-down required-manual-select="true" submit-on-select="true"><entity-options key="${processStoryId}" text="${name}">
                     <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
-                        <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                        <econdition field-name="disabled" value="N"/>
+                        <order-by field-name="name"/></entity-find>
                 </entity-options></drop-down></default-field></field>
 <!--                <field name="recurStartCron"><default-field title="Repeat (optional)">-->
 <!--                    <drop-down allow-empty="true" required-manual-select="true">-->

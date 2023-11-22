@@ -92,15 +92,14 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="20">
-                <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true"/>
+                <econdition field-name="name" ignore-case="true"/>
                 <order-by field-name="^name"/>
             </entity-find>
-            <if condition="processStoryList?.size() &gt; 0"><return type="warning" message="Process Story '${processStoryList?.getFirst()?.name}' already exists"/></if>
+            <if condition="processStoryList?.size() &gt; 0"><return type="danger" error="true" message="Process Story '${processStoryList?.getFirst()?.name}' already exists"/></if>
 
             <service-call name="create#coarchy.ProcessStory" in-map="[name:name,organizationId:organizationId]" out-map="context"/>
         </actions>
     </service>
-
     <service verb="enable" noun="ProcessStory">
         <description>Disable a process story (set disabled=Y, disabledDateTime=now)</description>
         <in-parameters><parameter name="processStoryId" required="true"/></in-parameters>

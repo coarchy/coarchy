@@ -35,6 +35,14 @@ along with this software (see the LICENSE.md file). If not, see
             <order-by field-name="name"/></entity-find>
 
         <set field="processStoryActivity" from="processStoryActivityEntity.getMap() + [actorNames:activityActorList*.name]"/>
+
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryList" distinct="true">
+            <econdition field-name="detailProcessStoryId" operator="is-not-null"/>
+            <econdition field-name="disabled" value="N"/>
+            <select-field field-name="processStoryId"/>
+        </entity-find>
+        <set field="processStoryIdList" from="processStoryList*.processStoryId" type="List"/>
+<!--        <log level="warn" message="context.toString() ${context.toString()}"/>-->
     </actions>
 
     <widgets>
@@ -56,9 +64,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <field name="detailProcessStoryId"><default-field title="Select Story"><drop-down submit-on-select="true" required-manual-select="true">
                         <entity-options text="${name}" key="${processStoryId}">
                             <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="20">
-                                <econdition field-name="processStoryId" operator="not-in" from="parentProcessStoryIdList ? (parentProcessStoryIdList.getClass() == String ? [parentProcessStoryIdList] : parentProcessStoryIdList) + processStoryId : [processStoryId]"/>
+                                <econdition field-name="disabled" value="N"/>
+                                <econdition field-name="processStoryId" operator="not-in" from="processStoryIdList + [processStoryId]"/>
                                 <select-field field-name="name,processStoryId"/>
-                                <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                                <order-by field-name="name"/></entity-find>
                         </entity-options>
                     </drop-down></default-field></field>
                 </form-single>

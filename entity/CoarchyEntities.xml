@@ -188,10 +188,10 @@ along with this software (see the LICENSE.md file). If not, see
 
         <relationship type="many" related="coarchy.ProcessStoryActivity" short-alias="activities">
             <key-map field-name="processStoryId"/></relationship>
-        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
-            <key-map field-name="organizationId" related="partyId"/></relationship>
         <relationship type="many" related="coarchy.ProcessStoryActivity" short-alias="detailActivities">
             <key-map field-name="processStoryId" related="detailProcessStoryId"/></relationship>
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId"/></relationship>
     </entity>
 
     <!-- TODO: Review approach -->
@@ -206,14 +206,12 @@ along with this software (see the LICENSE.md file). If not, see
 
         <relationship type="one" related="coarchy.ProcessStory" short-alias="story">
             <key-map field-name="processStoryId"/></relationship>
+        <relationship type="one" related="coarchy.ProcessStory" short-alias="detailStory">
+            <key-map field-name="detailProcessStoryId"/></relationship>
         <relationship type="one" related="coarchy.Activity" short-alias="activity">
             <key-map field-name="activityId"/></relationship>
         <relationship type="many" related="coarchy.ActivityActor" short-alias="actors">
             <key-map field-name="activityId"/></relationship>
-        <relationship type="one" related="coarchy.ProcessStory" short-alias="detailStory">
-            <key-map field-name="detailProcessStoryId"/></relationship>
-
-        <!-- TODO: Perhaps add an index for sequenceNum here -->
     </entity>
 
     <view-entity entity-name="ProcessStoryActivityDetail" package="coarchy">
@@ -238,17 +236,23 @@ along with this software (see the LICENSE.md file). If not, see
     </view-entity>
 
     <view-entity entity-name="ProcessStoryActivityAndDetail" package="coarchy">
-        <member-entity entity-alias="PSA" entity-name="coarchy.ProcessStoryActivity"/>
-        <member-relationship entity-alias="PS" join-from-alias="PSA" relationship="story"/>
-        <member-relationship entity-alias="DPS" join-from-alias="PSA" relationship="detailStory"/>
+        <member-entity entity-alias="PS" entity-name="coarchy.ProcessStory"/>
+        <member-relationship entity-alias="PSA" join-from-alias="PS" relationship="detailActivities" join-optional="true"/>
+        <member-relationship entity-alias="DPS" join-from-alias="PSA" relationship="story" join-optional="true"/>
+        <member-relationship entity-alias="PSA2" join-from-alias="DPS" relationship="detailActivities" join-optional="true"/>
+        <member-relationship entity-alias="DPS2" join-from-alias="PSA2" relationship="story" join-optional="true"/>
+        <member-relationship entity-alias="PSA3" join-from-alias="DPS2" relationship="detailActivities" join-optional="true"/>
+        <member-relationship entity-alias="DPS3" join-from-alias="PSA3" relationship="story" join-optional="true"/>
 
-        <alias-all entity-alias="PSA"><exclude field="lastUpdatedStamp"/></alias-all>
-        <alias-all entity-alias="PS"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
-        <alias-all entity-alias="DPS" prefix="detail"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
-        <alias name="storyOrganizationId" entity-alias="PS" field="organizationId"/>
-        <alias name="storyLastUpdatedStamp" entity-alias="PS" field="lastUpdatedStamp"/>
-        <alias name="detailStoryOrganizationId" entity-alias="PS" field="organizationId"/>
-        <alias name="detailStoryLastUpdatedStamp" entity-alias="PS" field="lastUpdatedStamp"/>
+        <alias-all entity-alias="PS"><exclude field="lastUpdatedStamp"/></alias-all>
+        <alias-all entity-alias="PSA"><exclude field="detailProcessStoryId"/><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="DPS" prefix="detail"><exclude field="processStoryId"/></alias-all>
+        <alias-all entity-alias="PSA2" prefix="activity2"/>
+        <alias-all entity-alias="DPS2" prefix="detail2"/>
+        <alias-all entity-alias="PSA3" prefix="activity3"/>
+        <alias-all entity-alias="DPS3" prefix="detail3"/>
+        <alias name="detailProcessStoryId" entity-alias="PSA" field="processStoryId"/>
+        <alias name="activityOrganizationId" entity-alias="PSA" field="organizationId"/>
     </view-entity>
 
     <entity entity-name="ClipboardEntry" package="coarchy">

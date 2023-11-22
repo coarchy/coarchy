@@ -53,14 +53,13 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition-include name="updateProcessStory" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
 
-    <transition name="enableProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.enable#ProcessStory"/>
-        <default-response url="."/></transition>
-    <transition name="disableProcessStory"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.disable#ProcessStory"/>
-        <default-response url="."/></transition>
+    <transition-include name="enableProcessStory" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
+    <transition-include name="disableProcessStory" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
 
     <transition-include name="createChecklist" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
+
+    <transition name="goProcessStory">
+        <default-response url="../EditProcessStory" parameter-map="[processStoryId:processStoryId]"/></transition>
 
     <transition-include name="createActor" location="component://coarchy/screen/coarchy/cointernal/Actor.xml"/>
     <transition-include name="getCloneOrganizationList" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
@@ -80,9 +79,9 @@ along with this software (see the LICENSE.md file). If not, see
         <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="activityCount">
             <econdition field-name="processStoryId"/></entity-find-count>
 
-        <!-- Currently this only supports one parent process story -->
-        <entity-find entity-name="coarchy.ProcessStoryActivity" list="detailActivityList" limit="1">
+        <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="detailActivityList">
             <econdition field-name="detailProcessStoryId" from="processStoryId"/>
+            <select-field field-name="processStoryId,name"/>
             <order-by field-name="-lastUpdatedStamp"/></entity-find>
 
         <set field="showMoveUpDown" from="(!orderByField || orderByField == 'sequenceNum') &amp;&amp; !actorIdList &amp;&amp; !condition &amp;&amp; !action"/>
@@ -157,7 +156,17 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <link url="../EditProcessStory" parameter-map="[processStoryId:detailActivityList?.getFirst()?.processStoryId]" text="Go to Parent Story: ${detailActivityList?.getFirst()?.story?.name}" condition="detailActivityList?.getFirst()?.processStoryId"/>
+        <link url="../EditProcessStory" parameter-map="[processStoryId:detailActivityList?.getFirst()?.processStoryId]"
+                text="Go to Parent Story: ${detailActivityList?.getFirst()?.name}"
+                condition="detailActivityList.size() == 1 &amp;&amp; detailActivityList?.getFirst()?.processStoryId"/>
+        <container-dialog id="GoProcessStoryDialogue" button-text="Go to Parent Story" condition="detailActivityList.size() &gt; 1">
+            <form-single name="GoProcessStoryForm" transition="goProcessStory">
+                <field name="pageIndex"><default-field><hidden/></default-field></field>
+                <field name="processStoryId" from="null"><default-field title="Process Story"><drop-down allow-empty="true" required-manual-select="true"
+                    submit-on-select="true"><list-options list="detailActivityList" key="${processStoryId}"
+                    text="${name}"/></drop-down></default-field></field>
+            </form-single>
+        </container-dialog>
         <!--        <link url="../Process/FindProcessStory" text="Find Process Story"/>-->
         <!--        <link url="../Actor" parameter-map="[processStoryId:processStoryId]" text="Go to Actors"/>-->
         <container-dialog id="AddActorDialogue" button-text="Add Actor" type="success" condition="partyRelationshipCount &gt; 0">
@@ -374,11 +383,13 @@ along with this software (see the LICENSE.md file). If not, see
                     <dynamic-dialog id="ManageValues" button-text="Values" transition="ManageValues"
                             parameter-map="[activityId:activityId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/>
                     <dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
-                            parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"
-                            condition="action &amp;&amp; !detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId &amp;&amp; partyRelationshipCount &gt; 0"/>
+                            parameter-map="[processStoryActivityId:processStoryActivityId]"
+                            condition="action &amp;&amp; !detailProcessStoryId &amp;&amp; partyRelationshipCount &gt; 0"/>
                     <link url="../EditProcessStory" parameter-map="[processStoryId:detailProcessStoryId]" text="Substory"
-                            condition="detailProcessStoryId &amp;&amp; !detailActivityList?.getFirst()?.processStoryId"/>
-                    <link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity." parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]" icon="fa fa-trash" btn-type="danger" text="Delete" tooltip="Delete Activity"/>
+                            condition="detailProcessStoryId"/>
+                    <link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity."
+                            icon="fa fa-trash" btn-type="danger" text="Delete" tooltip="Delete Activity"
+                            parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]"/>
                 </button-menu></default-field>
                 <last-row-field><link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break"
                     parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,
