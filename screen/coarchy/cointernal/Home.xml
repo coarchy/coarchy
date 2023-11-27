@@ -44,7 +44,6 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <if condition="needsCredits">
                 <set field="ec.web.sessionAttributes.beforeCheckoutUrl" from="ec.web.screenHistory.getAt(0)?.pathWithParams?.replace('cointernal','coapp')?:null"/>
-<!--                <log level="warn" message="beforeCheckoutUrl = ${ec.web.sessionAttributes.beforeCheckoutUrl} ${ec.web.pathInfo} ${ec.web.screenHistory}"/>-->
                 <set field="ec.web.sessionAttributes.checkoutOrganizationId" from="activeOrgId"/>
             </if>
         </actions>

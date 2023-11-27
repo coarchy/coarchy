@@ -91,6 +91,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="processStoryId"/>
         </out-parameters>
         <actions>
+            <set field="name" from="name?.trim()"/>
             <entity-find entity-name="coarchy.ProcessStory" list="processStoryList" limit="20">
                 <econdition field-name="name" ignore-case="true"/>
                 <order-by field-name="^name"/>
@@ -98,6 +99,20 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="processStoryList?.size() &gt; 0"><return type="danger" error="true" message="Process Story '${processStoryList?.getFirst()?.name}' already exists"/></if>
 
             <service-call name="create#coarchy.ProcessStory" in-map="[name:name,organizationId:organizationId]" out-map="context"/>
+        </actions>
+    </service>
+    <service verb="update" noun="ProcessStory">
+        <in-parameters>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="name" required="true"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <actions>
+            <set field="name" from="name?.trim()"/>
+            <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
+            <if condition="!processStory"><return type="danger" error="true" message="Process Story does not exist"/></if>
+
+            <service-call name="update#coarchy.ProcessStory" in-map="[processStoryId:processStoryId,name:name]"/>
         </actions>
     </service>
     <service verb="enable" noun="ProcessStory">
@@ -112,6 +127,58 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters><parameter name="processStoryId" required="true"/></in-parameters>
         <actions>
             <service-call name="update#coarchy.ProcessStory" in-map="[processStoryId:processStoryId, disabled:'Y']"/>
+        </actions>
+    </service>
+    <service verb="find" noun="ProcessStoryActivityList">
+        <description>
+            Find list of activities of process story
+            For each activity that has a detailProcessStory, call this function with that processStoryId, return the list of activities
+            Add the necessary fields for the activity and the detail process story name, and detail process story activity list
+        </description>
+        <in-parameters>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="showSubstories" required="true"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processStoryActivityList"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupProcessStoryActivityList">
+                <econdition field-name="processStoryId"/>
+                <select-field field-name="activityId,condition,action,detailProcessStoryId,processStoryId"/>
+                <order-by field-name="sequenceNum"/></entity-find>
+            <set field="processStoryActivityList" from="[]"/>
+            <iterate list="setupProcessStoryActivityList" entry="processStoryActivity">
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                    <econdition field-name="activityId" from="processStoryActivity.activityId"/>
+                    <order-by field-name="name"/></entity-find>
+                <set field="detailProcessStoryName" from="null"/>
+                <set field="detailProcessStoryId" from="processStoryActivity.detailProcessStoryId"/>
+                <set field="detailProcessStoryActivityList" from="[]"/>
+                <if condition="processStoryActivity.detailProcessStoryId &amp;&amp; showSubstories!='N'">
+                    <service-call name="coarchy.CoarchyServices.find#ProcessStoryActivityList" out-map="detail"
+                            in-map="[processStoryId:processStoryActivity.detailProcessStoryId,showSubstories:showSubstories,
+                            organizationId:organizationId]"/>
+                    <entity-find-one entity-name="coarchy.ProcessStory" value-field="detailProcessStory" auto-field-map="[processStoryId:processStoryActivity.detailProcessStoryId]"/>
+                    <set field="detailProcessStoryName" from="detailProcessStory.name"/>
+                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupDetailProcessStoryActivityList">
+                        <econdition field-name="processStoryId" from="processStoryActivity.detailProcessStoryId"/>
+                        <select-field field-name="activityId,condition,action"/>
+                        <order-by field-name="sequenceNum"/></entity-find>
+                    <iterate list="setupDetailProcessStoryActivityList" entry="detailProcessStoryActivity">
+                        <entity-find entity-name="coarchy.ActivityActorDetail" list="detailActivityActorList">
+                            <econdition field-name="activityId" from="detailProcessStoryActivity.activityId"/>
+                            <order-by field-name="name"/></entity-find>
+                        <script>detailProcessStoryActivityList.add([sequenceNum:detailProcessStoryActivity.sequenceNum,condition:detailProcessStoryActivity.condition,actorNames:detailActivityActorList*.name,action:detailProcessStoryActivity.action])</script>
+                    </iterate>
+                </if>
+
+                <script>processStoryActivityList.add([processStoryId:processStoryActivity.processStoryId,
+                    sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,
+                    actorNames:activityActorList*.name,action:processStoryActivity.action,detailProcessStoryId:detailProcessStoryId,
+                    detailProcessStoryName:detailProcessStoryName,detailProcessStoryActivityList:detail?.processStoryActivityList?.clone()])</script>
+            </iterate>
         </actions>
     </service>
 

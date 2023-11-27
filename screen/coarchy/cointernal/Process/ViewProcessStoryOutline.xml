@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="View" default-menu-index="30" menu-image="fa fa-align-left" menu-image-type="icon">
+        default-menu-title="View Outline" default-menu-index="35" menu-image="fa fa-align-left" menu-image-type="icon">
 
     <parameter name="processStoryId" required="true"/>
     <parameter name="showSubstories" from="showSubstories?:'Y'"/>
@@ -44,7 +44,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <set field="hasSubstories" from="processStoryActivityList*.detailProcessStoryId.any{ it != null }"/>
         <set field="showSubstoriesActual" from="partyActivationCount!=0 &amp;&amp; showSubstories=='Y' &amp;&amp; hasSubstories"/>
-<!--        <log level="warn" message="viewProcessStory context.toString(): ${context.toString()}"/>-->
+<!--        <log level="warn" message="viewProcessStoryOutline context.toString(): ${context.toString()}"/>-->
     </actions>
 
     <widgets>
@@ -73,7 +73,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <!-- TODO: Add filter parameters for the activity -->
                 <render-mode><text><![CDATA[<h5 v-pre>]]></text></render-mode>
-                <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ProcessStory.html.ftl"/></render-mode>
+                <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ProcessStoryOutline.html.ftl"/></render-mode>
                 <render-mode><text><![CDATA[</h5>]]></text></render-mode>
             </row-col>
             <row-col md="2"/>
