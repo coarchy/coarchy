@@ -33,11 +33,6 @@ along with this software (see the LICENSE.md file). If not, see
     <#-- to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder -->
     <q-layout view="hHh LpR fFf">
         <q-header class="${headerClass}" id="top">
-
-            <q-bar class="bg-secondary text-black">
-                <div class="justify-center text-bold">For feedback or support, contact our customer service at <a href="mailto:customer@coarchy.com">customer@coarchy.com</a> or <a href="sms:+14242627249">(424) COARCHY</a></div>
-            </q-bar>
-
             <q-toolbar style="font-size:15px;">
                 <q-btn flat icon="menu" @click="toggleLeftOpen()" size="lg"></q-btn>
 
@@ -84,14 +79,17 @@ along with this software (see the LICENSE.md file). If not, see
 <#--            <component :is="qzVue" ref="qzVue"></component>-->
 
             <#-- screen documentation/help -->
-<#--            <q-btn push icon="help_outline" color="info" :class="{hidden:!documentMenuList.length}">-->
-<#--                <q-tooltip>${ec.l10n.localize("Documentation")}</q-tooltip>-->
-<#--                <q-menu><q-list dense class="q-my-md">-->
-<#--                    <q-item v-for="screenDoc in documentMenuList" :key="screenDoc.index"><q-item-section>-->
-<#--                        <m-dynamic-dialog :url="currentPath + '/screenDoc?docIndex=' + screenDoc.index" :button-text="screenDoc.title" :title="screenDoc.title"></m-dynamic-dialog>-->
-<#--                    </q-item-section></q-item>-->
-<#--                </q-list></q-menu>-->
-<#--            </q-btn>-->
+            <q-btn push icon="help_outline" color="info">
+                <q-tooltip>${ec.l10n.localize("Documentation")}</q-tooltip>
+                <q-menu>
+                    <q-list dense class="q-my-md">
+                        <q-item v-for="screenDoc in documentMenuList" :key="screenDoc.index"><q-item-section>
+                                <m-dynamic-dialog :url="currentPath + '/screenDoc?docIndex=' + screenDoc.index" :button-text="screenDoc.title" :title="screenDoc.title"></m-dynamic-dialog>
+                            </q-item-section></q-item>
+                    </q-list>
+                    <div class="justify-center text-bold q-pa-sm" style="max-width: 200px">For feedback or support, contact our customer service at <a href="mailto:customer@coarchy.com" class="text-blue">customer@coarchy.com</a> or <a href="sms:+14242627249" class="text-blue">(424) COARCHY</a></div>
+                </q-menu>
+            </q-btn>
 
             <#-- nav plugins See in root CoarchyComVue.qvt.ftl -->
 <#--            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>-->
