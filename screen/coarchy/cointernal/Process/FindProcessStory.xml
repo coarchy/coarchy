@@ -38,9 +38,9 @@ along with this software (see the LICENSE.md file). If not, see
 
         <entity-find entity-name="coarchy.ProcessStoryActivityAndDetail" list="processStoryInputList" distinct="true">
             <econdition field-name="name" operator="like" value="%${name}%" ignore-case="true" ignore="!name"/>
+            <econdition field-name="organizationId" from="activeOrgId"/>
             <select-field field-name="processStoryId,detailProcessStoryId,detail2ProcessStoryId,detail3ProcessStoryId,
-                name,detailName,detail2Name,detail3Name,disabled"/>
-        </entity-find>
+                name,detailName,detail2Name,detail3Name,disabled"/></entity-find>
 
         <script>
             // Function to validate parent hierarchy before adding to sorted list
