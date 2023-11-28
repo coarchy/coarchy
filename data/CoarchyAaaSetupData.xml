@@ -68,6 +68,12 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.screen.ScreenThemeResource screenThemeId="DEFAULT" sequenceNum="100" resourceTypeEnumId="STRT_HEADER_LOGO"
             resourceValue="/coarchy120.png"/>
 
+    <!-- Screen Documentation -->
+    <moqui.screen.ScreenDocument screenLocation="component://coarchy/screen/settings/settingsinternal/Organizations.xml"
+                                 docIndex="100" docLocation="component://coarchy/document/Organizations.md"/>
+    <moqui.screen.ScreenDocument screenLocation="component://coarchy/screen/coarchy/cointernal/Process/FindProcessStory.xml"
+                                 docIndex="100" docLocation="component://coarchy/document/Coarchy App.md"/>
+
     <!-- EmailTemplates and Notifications -->
     <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE_RESET_PASSWORD" description="User Invite with Reset Password" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteResetPasswordEmail.xml" webappName="webroot"
