@@ -282,5 +282,4 @@ along with this software (see the LICENSE.md file). If not, see
     <mantle.party.agreement.Agreement agreementId="TermsOfUseTemplate" agreementTypeEnumId="AgrTermsOfUse" isTemplate="Y">
         <mantle.party.agreement.AgreementContent contentTypeEnumId="AcntDocument" agreementContentId="TermsOfUseTemplateContent" contentLocation="/content/TermsOfUse"/>
     </mantle.party.agreement.Agreement>
-
 </entity-facade-xml>

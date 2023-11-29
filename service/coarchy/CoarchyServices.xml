@@ -1154,6 +1154,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="periodFromDate" type="Timestamp" required="true">
                 <description>(inclusive) Start of the period to calculate activation. Rounded to midnight in default system timezone.</description></parameter>
             <parameter name="periodThruDate" type="Timestamp" required="true">
+                <description>(exclusive) End of the period to calculate time period. Rounded to midnight subtracted 1 millisecond in default system timezone.</description></parameter>
+            <parameter name="activationThruDate" type="Timestamp" default="periodThruDate" required="true">
                 <description>(exclusive) End of the period to calculate activation. Rounded to midnight subtracted 1 millisecond in default system timezone.</description></parameter>
             <parameter name="minActivationMinutesPerDay" type="Long" default-value="5" required="true"/>
         </in-parameters>
@@ -1168,6 +1170,8 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <if condition="periodFromDate &gt;= periodThruDate"><return type="danger" error="true"
                     message="Period From Date must be before Period Thru Date"/></if>
+            <if condition="activationThruDate &gt;= periodThruDate">
+                <set field="activationThruDate" from="periodThruDate"/></if>
 
             <!-- Create a list of all the days between the period from and thru dates with the start of day at midnight
             timestamp and amount of milliseconds (defaulted to 0)-->
@@ -1175,10 +1179,13 @@ along with this software (see the LICENSE.md file). If not, see
                 (long) periodFromDate.time), ZoneId.systemDefault()).with(LocalTime.MIN)"/>
             <set field="periodThruDateZoned" from="ZonedDateTime.ofInstant(Instant.ofEpochMilli(
                 (long) periodThruDate.time-1L), ZoneId.systemDefault()).with(LocalTime.MIN)"/>
+            <set field="activationThruDateZoned" from="ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) activationThruDate.time-1L), ZoneId.systemDefault()).with(LocalTime.MIN)"/>
             <set field="dayList" from="[[dateTime:periodFromDateZoned,amount:0L]]" type="List"/>
             <set field="daysIndex" from="0"/>
             <set field="daysBetweenPeriod" from="java.time.temporal.ChronoUnit.DAYS.between(
                 periodFromDateZoned, periodThruDateZoned)" type="BigDecimal"/>
+            <if condition="daysBetweenPeriod==0"><set field="daysBetweenPeriod" from="1.0"/></if>
             <while condition="daysIndex &lt; daysBetweenPeriod">
                 <set field="dayList" from="dayList + [dateTime:dayList[daysIndex].dateTime.plusDays(1),amount:0L]"/>
                 <set field="daysIndex" from="daysIndex + 1"/>
@@ -1219,8 +1226,8 @@ along with this software (see the LICENSE.md file). If not, see
 
 <!--                <log level="warn" message="calculate#PartyActivationUsage partyActivation ${partyActivation}"/>-->
                 <set field="partyActivationThruDate" from="partyActivation.thruDate ?: new Timestamp(dayList[dayList.size()-1].dateTime.plusDays(1).toInstant().toEpochMilli())"/>
-                <if condition="partyActivationThruDate.toInstant() &gt; periodThruDateZoned.toInstant()">
-                    <set field="partyActivationThruDate" from="new Timestamp(periodThruDateZoned.toInstant().toEpochMilli())"/>
+                <if condition="partyActivationThruDate.toInstant() &gt; activationThruDateZoned.toInstant()">
+                    <set field="partyActivationThruDate" from="new Timestamp(activationThruDateZoned.toInstant().toEpochMilli())"/>
                 </if>
 
                 <while condition="daysIndex &lt;= daysBetweenPeriod">
@@ -1243,15 +1250,13 @@ along with this software (see the LICENSE.md file). If not, see
                         <break/>
                     </else></if>
                 </while>
-
-<!--                <log level="warn" message="calculate#PartyActivationUsage context.toString() ${context.toString()}"/>-->
-
             </iterate>
 
             <!-- Count the number of days that the organization was active for at least minActivationMinutesPerDay minutes-->
             <set field="dayCount" from="dayList.sum{it.amount &gt;=
                 minActivationMinutesPerDay * 60.0 * 1000.0 ? 1.0 : 0.0}" type="BigDecimal"/>
-            <set field="totalDays" from="daysBetweenPeriod" type="BigDecimal"/>
+            <!-- Check if 0 and set to 1 to avoid division error -->
+            <set field="totalDays" from="daysBetweenPeriod!=0?daysBetweenPeriod:1" type="BigDecimal"/>
             <set field="activationPeriodCount" from="dayCount / totalDays" type="BigDecimal"/>
 
             <set field="dayAmountList" from="dayList*.amount"/>
@@ -1316,19 +1321,24 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="check" noun="PartyActivation" authenticate="anonymous-all">
         <in-parameters>
             <parameter name="organizationPartyId" required="true"/>
-            <parameter name="finAccountTypeId" required="true"/>
+            <parameter name="finAccountTypeId" required="true" default-value="OrganizationMonthCredit"/>
             <parameter name="currentTimestamp" default="ec.user.nowTimestamp" type="Timestamp" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="needsCredits" type="Boolean"/>
             <parameter name="creditsNeeded" type="Integer"/>
             <parameter name="totalCreditsUsed" type="BigDecimal"/>
+            <parameter name="periodFromDate" type="Timestamp"/>
+            <parameter name="periodThruDate" type="Timestamp"/>
+            <parameter name="activationThruDate" type="Timestamp"/>
         </out-parameters>
         <actions>
-            <set field="periodThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                (long) currentTimestamp.time), ZoneId.systemDefault()).plusDays(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
+            <set field="activationThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) currentTimestamp.time), ZoneId.systemDefault()).plusDays(1).toInstant().toEpochMilli())"/>
             <set field="periodFromDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                (long) currentTimestamp.time), ZoneId.systemDefault()).withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
+                (long) currentTimestamp.time), ZoneId.systemDefault()).withDayOfMonth(1).toInstant().toEpochMilli())"/>
+            <set field="periodThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) currentTimestamp.time), ZoneId.systemDefault()).plusMonths(1).withDayOfMonth(1).toInstant().toEpochMilli())"/>
 
             <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:organizationPartyId]"/>
             <if condition="!organization"><return type="warning" message="No organization found for ${organizationPartyId}"/></if>
@@ -1343,7 +1353,7 @@ along with this software (see the LICENSE.md file). If not, see
 <!--            <log level="warn" message="check#PartyActivation financialAccountList ${financialAccountList}"/>-->
             <if condition="financialAccountList.size() == 0">
                 <set field="needsCredits" from="true"/>
-                <set field="creditsNeeded" from="1.0" type="BigDecimal"/>
+                <set field="creditsNeeded" from="1" type="Integer"/>
                 <return/>
             </if>
 
@@ -1355,6 +1365,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
                 <econdition field-name="disabled" value="N" or-null="true"/>
                 <econdition field-name="ownerPartyId" from="organization.ownerPartyId"/>
+                <econdition field-name="partyId" value="coarchy"/>
             </entity-find>
             <if condition="organizationList.size() == 0">
                 <set field="needsCredits" from="true"/>
@@ -1362,8 +1373,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <return/>
             </if>
             <iterate list="organizationList" entry="organization">
-                <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[organizationPartyId:
-                        organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
+                <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[
+                    organizationPartyId:organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate,
+                    activationThruDate:activationThruDate]" out-map="context"/>
 
                 <!--                    <log level="warn" message="check#PartyActivation organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
                 <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
@@ -1387,17 +1399,23 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
     <service verb="check" noun="PartyActivationDaily" authenticate="anonymous-all">
         <in-parameters>
-            <parameter name="finAccountTypeId" required="true"/>
+            <parameter name="finAccountTypeId" required="true" default-value="OrganizationMonthCredit"/>
             <parameter name="currentTimestamp" default="ec.user.nowTimestamp" type="Timestamp" required="true"/>
         </in-parameters>
         <out-parameters>
-
+            <parameter name="organizationChangeList" type="List"/>
+            <parameter name="ownerChangeList" type="List"/>
+            <parameter name="periodFromDate" type="Timestamp"/>
+            <parameter name="periodThruDate" type="Timestamp"/>
+            <parameter name="activationThruDate" type="Timestamp"/>
         </out-parameters>
         <actions>
-            <set field="periodThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                (long) currentTimestamp.time), ZoneId.systemDefault()).plusDays(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
+            <set field="activationThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) currentTimestamp.time), ZoneId.systemDefault()).plusDays(1).toInstant().toEpochMilli())"/>
             <set field="periodFromDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                (long) currentTimestamp.time), ZoneId.systemDefault()).withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
+                (long) currentTimestamp.time), ZoneId.systemDefault()).withDayOfMonth(1).toInstant().toEpochMilli())"/>
+            <set field="periodThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                (long) currentTimestamp.time), ZoneId.systemDefault()).plusMonths(1).withDayOfMonth(1).toInstant().toEpochMilli())"/>
 
             <entity-find entity-name="mantle.account.financial.FinancialAccount" list="financialAccountList" distinct="true">
                 <econdition field-name="finAccountTypeId"/>
@@ -1408,6 +1426,8 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if there are multiple financial accounts for an organization, then remove all but the one with the most credits -->
             <set field="financialAccountList" from="financialAccountList.groupBy{it.ownerPartyId}.collect{it.value.max{it.availableBalance}}"/>
 
+            <set field="organizationChangeList" from="[]"/>
+            <set field="ownerChangeList" from="[]"/>
             <iterate list="financialAccountList" entry="financialAccount">
                 <set field="totalCreditsUsed" from="0.0" type="BigDecimal"/>
                 <entity-find entity-name="mantle.party.Party" list="organizationList">
@@ -1420,14 +1440,18 @@ along with this software (see the LICENSE.md file). If not, see
                     <continue/></if>
                 <iterate list="organizationList" entry="organization">
                     <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[organizationPartyId:
-                        organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
+                        organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate,
+                        activationThruDate:activationThruDate]" out-map="context"/>
 
                     <!--                    <log level="warn" message="check#PartyActivationDaily organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
+                    <set field="organizationChangeList" from="organizationChangeList + [organizationId:organization.partyId,activationPeriodCount:activationPeriodCount,deactivated:'N']"/>
                     <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
                 </iterate>
+                <set field="ownerChangeList" from="ownerChangeList + [ownerPartyId:financialAccount.ownerPartyId,totalCreditsUsed:totalCreditsUsed,availableBalance:financialAccount.availableBalance]"/>
 
 <!--                <log level="warn" message="check#PartyActivationDaily organizationList.size() ${organizationList.size()} totalCreditsUsed ${totalCreditsUsed} financialAccount.availableBalance ${financialAccount.availableBalance}"/>-->
                 <if condition="totalCreditsUsed &gt; 0.0 &amp;&amp; totalCreditsUsed &gt; financialAccount.availableBalance">
+                    <log message="${financialAccount.ownerPartyId} used ${totalCreditsUsed} / ${financialAccount.availableBalance} credits this month for organizations ${organizationList*.partyId}. Deactivating all of the organizations."/>
                     <iterate list="organizationList" entry="organization">
                         <entity-find entity-name="mantle.party.PartyActivation" list="partyActivationList" limit="1" for-update="true">
                             <econdition field-name="partyId" from="organization.partyId"/>
@@ -1439,6 +1463,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <continue/></if>
 
 <!--                        <log level="warn" message="check#PartyActivationDaily partyActivationList ${partyActivationList}"/>-->
+                        <set field="organizationChangeList.find{it.organizationId == organization.partyId}.deactivated" value="Y"/>
 
                         <set field="partyActivationList.getFirst().thruDate" from="currentTimestamp"/>
                         <entity-update value-field="partyActivationList.getFirst()"/>
