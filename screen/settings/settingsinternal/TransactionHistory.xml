@@ -50,7 +50,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <label text="Transaction History" type="h4"/>
 
                 <label condition="finAccountAndTrans.getFirst() != null&amp;&amp;finAccountAndTrans.getFirst().availableBalance&gt;0"
-                        text="Used ~${ec.l10n.formatNumber((Number)(totalCreditsUsed.setScale(2, BigDecimal.ROUND_HALF_UP)),null,null)} / ${ec.l10n.formatNumber((Number)finAccountAndTrans.getFirst().availableBalance,null,null)} Organization-Month Credits this month"/>
+                        text="Used ${ec.l10n.formatNumber((Number)(totalCreditsUsed.setScale(2, BigDecimal.ROUND_HALF_UP)),null,null)} / ${ec.l10n.formatNumber((Number)finAccountAndTrans.getFirst().availableBalance,null,null)} Organization-Month Credits this month"/>
 
                 <form-list name="OrderItemPartForm" list="finAccountAndTrans" header-dialog="true" show-csv-button="true">
                     <row-actions>

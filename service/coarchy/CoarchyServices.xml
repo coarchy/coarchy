@@ -1219,14 +1219,17 @@ along with this software (see the LICENSE.md file). If not, see
 
 <!--                <log level="warn" message="calculate#PartyActivationUsage partyActivation ${partyActivation}"/>-->
                 <set field="partyActivationThruDate" from="partyActivation.thruDate ?: new Timestamp(dayList[dayList.size()-1].dateTime.plusDays(1).toInstant().toEpochMilli())"/>
+                <if condition="partyActivationThruDate.toInstant() &gt; periodThruDateZoned.toInstant()">
+                    <set field="partyActivationThruDate" from="new Timestamp(periodThruDateZoned.toInstant().toEpochMilli())"/>
+                </if>
 
                 <while condition="daysIndex &lt;= daysBetweenPeriod">
                     <set field="dayActivationFromDate" from="partyActivation.fromDate.toInstant() &lt;
-                    dayList[daysIndex].dateTime.toInstant() ? dayList[daysIndex].dateTime.toInstant() :
-                    partyActivation.fromDate.toInstant()"/>
+                        dayList[daysIndex].dateTime.toInstant() ? dayList[daysIndex].dateTime.toInstant() :
+                        partyActivation.fromDate.toInstant()"/>
                     <set field="dayActivationThruDate" from="partyActivationThruDate.toInstant() &gt;
-                    dayList[daysIndex].dateTime.plusDays(1).toInstant() ? dayList[daysIndex].dateTime.plusDays(1).toInstant() :
-                    partyActivationThruDate.toInstant()"/>
+                        dayList[daysIndex].dateTime.plusDays(1).toInstant() ? dayList[daysIndex].dateTime.plusDays(1).toInstant() :
+                        partyActivationThruDate.toInstant()"/>
 
                     <set field="dayActivationAmount" from="Duration.between(dayActivationFromDate,dayActivationThruDate).toMillis()"/>
                     <if condition="dayActivationAmount &lt; 0"><set field="dayActivationAmount" from="0L"/>
@@ -1248,7 +1251,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- Count the number of days that the organization was active for at least minActivationMinutesPerDay minutes-->
             <set field="dayCount" from="dayList.sum{it.amount &gt;=
                 minActivationMinutesPerDay * 60.0 * 1000.0 ? 1.0 : 0.0}" type="BigDecimal"/>
-            <set field="totalDays" from="daysBetweenPeriod+1.0" type="BigDecimal"/>
+            <set field="totalDays" from="daysBetweenPeriod" type="BigDecimal"/>
             <set field="activationPeriodCount" from="dayCount / totalDays" type="BigDecimal"/>
 
             <set field="dayAmountList" from="dayList*.amount"/>
@@ -1262,7 +1265,7 @@ along with this software (see the LICENSE.md file). If not, see
             This service withdraws FinancialAccount Credits from each organization that has had any activation of
             premium features from the PartyActivation records.</description>
         <in-parameters>
-            <parameter name="finAccountTypeId" required="true"/>
+            <parameter name="finAccountTypeId" required="true" default-value="OrganizationMonthCredit"/>
             <parameter name="serviceStartTime" type="Timestamp" default="ec.user.nowTimestamp" required="true"/>
         </in-parameters>
         <actions>
@@ -1292,7 +1295,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <continue/></if>
                 <iterate list="organizationList" entry="organization">
                     <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[organizationPartyId:
-                    organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
+                        organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate]" out-map="context"/>
 
 <!--                    <log level="warn" message="withdraw#FinancialAccountCredits organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
                     <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
@@ -1306,9 +1309,8 @@ along with this software (see the LICENSE.md file). If not, see
                         out-map="context"/>
                 </if>
 
-<!--                <log level="warn" message="withdraw#FinancialAccountCredits context.toString() ${context.toString()}"/>-->
-
             </iterate>
+<!--                <log level="warn" message="withdraw#FinancialAccountCredits context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
     <service verb="check" noun="PartyActivation" authenticate="anonymous-all">
