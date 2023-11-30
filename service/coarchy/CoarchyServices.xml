@@ -1170,7 +1170,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <if condition="periodFromDate &gt;= periodThruDate"><return type="danger" error="true"
                     message="Period From Date must be before Period Thru Date"/></if>
-            <if condition="activationThruDate &gt;= periodThruDate">
+            <if condition="activationThruDate &gt; periodThruDate">
                 <set field="activationThruDate" from="periodThruDate"/></if>
 
             <!-- Create a list of all the days between the period from and thru dates with the start of day at midnight
@@ -1324,6 +1324,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="currentTimestamp" default="ec.user.nowTimestamp" type="Timestamp" required="true"/>
         </in-parameters>
         <out-parameters>
+            <parameter name="organizationChangeList" type="List"/>
             <parameter name="needsCredits" type="Boolean"/>
             <parameter name="creditsNeeded" type="Integer"/>
             <parameter name="totalCreditsUsed" type="BigDecimal"/>
@@ -1346,7 +1347,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="ownerPartyId" from="organization.ownerPartyId"/>
                 <econdition field-name="finAccountTypeId"/>
                 <econdition field-name="statusId" value="FaActive"/>
-                <date-filter/>
+                <date-filter valid-date="currentTimestamp"/>
                 <select-field field-name="ownerPartyId,finAccountId,availableBalance"/>
             </entity-find>
 <!--            <log level="warn" message="check#PartyActivation financialAccountList ${financialAccountList}"/>-->
@@ -1359,6 +1360,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if there are multiple financial accounts for an organization, then remove all but the one with the most credits -->
             <set field="financialAccount" from="financialAccountList.groupBy{it.ownerPartyId}.collect{it.value.max{it.availableBalance}}[0]"/>
 
+            <set field="organizationChangeList" from="[]"/>
             <set field="totalCreditsUsed" from="0.0" type="BigDecimal"/>
             <entity-find entity-name="mantle.party.Party" list="organizationList">
                 <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
@@ -1367,7 +1369,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <if condition="organizationList.size() == 0">
                 <set field="needsCredits" from="true"/>
-                <set field="creditsNeeded" from="1.0" type="BigDecimal"/>
+                <set field="creditsNeeded" from="1" type="Integer"/>
                 <return/>
             </if>
             <iterate list="organizationList" entry="organization">
@@ -1375,6 +1377,7 @@ along with this software (see the LICENSE.md file). If not, see
                     organizationPartyId:organization.partyId, periodFromDate:periodFromDate, periodThruDate:periodThruDate,
                     activationThruDate:activationThruDate]" out-map="context"/>
 
+                <set field="organizationChangeList" from="organizationChangeList + [organizationId:organization.partyId,activationPeriodCount:activationPeriodCount]"/>
                 <!--                    <log level="warn" message="check#PartyActivation organization ${organization} activationPeriodCount ${activationPeriodCount}"/>-->
                 <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
             </iterate>
