@@ -1274,7 +1274,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="serviceStartTime" type="Timestamp" default="ec.user.nowTimestamp" required="true"/>
         </in-parameters>
         <actions>
-
             <set field="periodThruDate" from="serviceStartTime"/>
             <set field="periodFromDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
                 (long) periodThruDate.time), ZoneId.systemDefault()).minusMonths(1).toInstant().toEpochMilli())"/>
@@ -1365,7 +1364,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
                 <econdition field-name="disabled" value="N" or-null="true"/>
                 <econdition field-name="ownerPartyId" from="organization.ownerPartyId"/>
-                <econdition field-name="partyId" value="coarchy"/>
             </entity-find>
             <if condition="organizationList.size() == 0">
                 <set field="needsCredits" from="true"/>
