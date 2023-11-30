@@ -1,13 +1,17 @@
+<ol>
 <#list processStoryActivityList! as processStoryActivity>
-    <#include "ActivityStyledSpan.html.ftl"/>
+    <#if processStoryActivity.action!?has_content><li></#if><#include "ActivityStyledSpan.html.ftl"/><#if processStoryActivity.activity!?has_content></li></#if>
     <#if processStoryActivity.detailProcessStoryId!?has_content && showSubstoriesActual>
         <@substory processStoryActivity 1/>
     </#if>
-    <br/>
+    <#if !processStoryActivity.detailProcessStoryId!?has_content><br/></#if>
 </#list>
+</ol>
 
 <#macro substory processStoryActivity levels>
-    <br/><#list 1..(levels) as level>&nbsp;&nbsp;</#list><a id="${processStoryActivity.detailProcessStoryId!}" href="/coapp/Process/EditProcessStory?processStoryId=${processStoryActivity.detailProcessStoryId!}">${processStoryActivity.detailProcessStoryName} Story</a>
-    <#if processStoryActivity.detailProcessStoryActivityList!?size == 0><br/><#list 1..(levels+1) as level>&nbsp;&nbsp;</#list>No Activities</#if>
-    <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity><br/><#list 1..(levels) as level>&nbsp;&nbsp;</#list><#include "ActivityStyledSpan.html.ftl"/><#if processStoryActivity.detailProcessStoryId!?has_content><@substory processStoryActivity levels+1/></#if></#list>
+    <#if processStoryActivity.detailProcessStoryActivityList!?size == 0><#list 1..(levels+1) as level>&nbsp;&nbsp;</#list>No Activities<#else>
+        <ol>
+        <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity><li><#include "ActivityStyledSpan.html.ftl"/></li><#if processStoryActivity.detailProcessStoryId!?has_content><@substory processStoryActivity levels+1/></#if></#list>
+        </ol>
+    </#if>
 </#macro>

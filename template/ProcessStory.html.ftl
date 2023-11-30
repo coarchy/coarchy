@@ -6,7 +6,9 @@
     </#if>
 </#list>
 <#if showSubstoriesActual!>
+    <br/>
     <hr/>
+    <br/>
     <h4>${processStory.name!} Substories</h4>
     <#list processStoryActivityList! as processStoryActivity>
         <@substory processStoryActivity/>
@@ -24,8 +26,7 @@
             </#if>
         </#list>
         <#if processStoryActivity.detailProcessStoryActivityList!?size == 0><br/>No activities</#if>
-        <br/>
-        <#if processStoryActivity.detailProcessStoryActivityList!?size == 0><br/></#if>
+        <hr/>
         <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity>
             <@substory processStoryActivity/>
         </#list>
