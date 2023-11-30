@@ -27,6 +27,16 @@
         <script src="${srcUrl}<#if !scriptLocation?starts_with("http") && !srcUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" type="text/javascript"></script>
     </#list>
     <script defer data-domain="coarchy.com" src="https://plausible.io/js/script.js"></script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3HKP870ZN">
+    </script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-E3HKP870ZN');
+    </script>
     <#-- Icon -->
     <#list sri.getThemeValues("STRT_SHORTCUT_ICON") as iconLocation>
         <link rel="shortcut icon" href="${sri.buildUrl(iconLocation).url}">
