@@ -1,3 +1,13 @@
+<#macro substory processStoryActivity levels>
+    <#if processStoryActivity.detailProcessStoryActivityList!?size == 0><#list 1..(levels+1) as level>&nbsp;&nbsp;</#list>No Activities<br/><#else>
+        <ol>
+        <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity>
+            <li><#include "ActivityStyledSpan.html.ftl"/><#if processStoryActivity.detailProcessStoryId!?has_content><@substory processStoryActivity levels+1/></#if></li>
+        </#list>
+        </ol>
+    </#if>
+</#macro>
+
 <div class="numbered-list">
 <ol>
 <#list processStoryActivityList! as processStoryActivity>
@@ -10,14 +20,4 @@
     <#if !processStoryActivity.detailProcessStoryId!?has_content><br/></#if>
 </#list>
 </ol>
-
-<#macro substory processStoryActivity levels>
-    <#if processStoryActivity.detailProcessStoryActivityList!?size == 0><#list 1..(levels+1) as level>&nbsp;&nbsp;</#list>No Activities<#else>
-        <ol>
-        <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity>
-            <li><#include "ActivityStyledSpan.html.ftl"/><#if processStoryActivity.detailProcessStoryId!?has_content><@substory processStoryActivity levels+1/></#if></li>
-        </#list>
-        </ol>
-    </#if>
-</#macro>
 </div>
