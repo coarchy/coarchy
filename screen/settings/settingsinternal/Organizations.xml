@@ -287,22 +287,12 @@ along with this software (see the LICENSE.md file). If not, see
             <date-filter/>
             <order-by field-name="-transactionDate"/>
         </entity-find>
-
-        <set field="totalCreditsUsed" from="0.0" type="BigDecimal"/>
-        <entity-find entity-name="mantle.party.Party" list="otherOrganizationList">
-            <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
-            <econdition field-name="disabled" value="N" or-null="true"/>
-            <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
-            <select-field field-name="partyId"/>
-        </entity-find>
-        <set field="periodThruDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).plusDays(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
-        <set field="periodFromDate" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant().toEpochMilli())"/>
-        <iterate list="otherOrganizationList" entry="organization">
-            <service-call name="coarchy.CoarchyServices.calculate#PartyActivationUsage" in-map="[organizationPartyId:organization.partyId,periodFromDate:periodFromDate,periodThruDate:periodThruDate]" out-map="context"/>
-            <set field="totalCreditsUsed" from="totalCreditsUsed + activationPeriodCount" type="BigDecimal"/>
-        </iterate>
+        
+        <service-call name="mantle.party.PartyServices.get#PartyOrganizationInfo" out-map="context"/> 
+        <service-call name="coarchy.CoarchyServices.check#PartyActivation" 
+            in-map="[organizationPartyId: activeOrgId?:userOrgIds[0],finAccountTypeId:'OrganizationMonthCredit']" 
+            out-map="partyActivationOut" />
+        <set field="totalCreditsUsed" type="BigDecimal" from="partyActivationOut.totalCreditsUsed?:0.0" />
     </actions>
 
     <widgets>
