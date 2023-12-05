@@ -82,7 +82,7 @@ along with this software (see the LICENSE.md file). If not, see
         <form-list name="ProcessStory" header-dialog="true" show-page-size="true" list="processStoryList"
                 transition-last-row="createProcessStory">
             <field name="name"><header-field><text-line/></header-field>
-                <default-field title="Process Story Name"><link url="../EditProcessStory" parameter-map="[processStoryId:processStoryId]"
+                <default-field title="Process Story Name"><link url="../EditProcessStory" link-type="anchor" parameter-map="[processStoryId:processStoryId]"
                     text="${detail3ProcessStoryId?detail3Name+' - ':''}${detail2ProcessStoryId?detail2Name+' - ':''}${detailProcessStoryId?detailName+' - ':''}${name}"/></default-field></field>
             <field name="disabled">
                 <header-field title="Hidden"><drop-down><option key="Y"/><option key="N"/></drop-down></header-field>
