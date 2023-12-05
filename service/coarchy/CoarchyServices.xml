@@ -71,102 +71,94 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
                     <entity-update value-field="userAccount"/>
 
-                    <entity-find-one entity-name="mantle.marketing.contact.ContactList" value-field="invitationContact" auto-field-map="[contactListId:'CoarchyInvitation']"/>
-                    <if condition="!invitationContact">
-                        <log level="info" message="No ContactList found with contactListId of CoarchyInvitation"/>
-                        <message error="true" type="danger" public="true">Cannot send invitation email, please contact support for help</message>
-                    </if>
-                    <entity-find entity-name="mantle.marketing.contact.ContactListEmail" list="invitationContactListEmailList" limit="1">
-                        <econdition field-name="emailTemplateId" value="USER_INVITE_RESET_PASSWORD"/>
-                        <econdition field-name="emailTypeEnumId" value="CONT_EMAIL_TEMPLATE"/>
-                        <date-filter/>
-                        <order-by field-name="-fromDate"/>
-                    </entity-find>
-                    <set field="invitationContactListEmail" from="invitationContactListEmailList?.getFirst()"/>
-                    <if condition="!invitationContactListEmail">
-                        <log level="info" message="No ContactListEmail found for emailTemplateId USER_INVITE_RESET_PASSWORD and emailTypeEnumId CONT_EMAIL_TEMPLATE"/>
-                        <message error="true" type="danger" public="true">Cannot send invitation email, please contact support for help</message>
-                    </if>
-                    <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="inviteContactListPartyList" limit="1" for-update="true">
-                        <econdition field-name="contactListId" value="CoarchyInvitation"/>
-                        <econdition field-name="partyId" from="newPartyId"/>
-                        <date-filter/>
-                        <order-by field-name="-fromDate"/>
-                    </entity-find>
-                    <set field="inviteContactListParty" from="inviteContactListPartyList?.getFirst()"/>
-                    <if condition="!inviteContactListParty"><then>
-                        <service-call name="create#mantle.marketing.contact.ContactListParty" in-map="[
-                            contactListId:'CoarchyInvitation',partyId:newPartyId,statusId:'CLPT_IN_USE',
-                            preferredContactMechId:newUser.emailContactMechId,optInVerifyCode:getRandomString(63)]" out-map="inviteContactListPartyOut"/>
-                        <entity-find-one entity-name="mantle.marketing.contact.ContactListParty" value-field="inviteContactListParty"
-                                auto-field-map="[contactListId:'CoarchyInvitation',partyId:newPartyId,fromDate:inviteContactListPartyOut.fromDate]"/>
-                    </then><else-if condition="inviteContactListParty.optInVerifyCode">
-                        <set field="inviteContactListParty.optInVerifyCode" from="getRandomString(63)"/>
-                        <entity-update value-field="inviteContactListParty"/>
-                    </else-if></if>
-
-                    <if condition="inviteContactListParty.statusId != 'CLPT_IN_USE'"><then>
-                        <log level="info" message="Not sending invitation email because not in 'In Use' status"/>
-                    </then><else>
-
-                        <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[
-                            emailTemplateId:invitationContactListEmail.emailTemplateId,toAddresses:emailAddress,bodyParameters:[
-                            linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
-                            title:'You\'re invited to join the '+organization.organizationName+' Organization',
-                            currentYear:ec.user.nowTimestamp.format('yyyy'),contactListName:invitationContact.contactListName,
-                            unsubscribeLink:baseLinkUrl+invitationContact.optOutScreen+'?optInVerifyCode='+inviteContactListParty.optInVerifyCode]]"/>
-                    </else></if>
+                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                        contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
+                        partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
+                        bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
+                        title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
                 </then><else>
-                    <entity-find-one entity-name="mantle.marketing.contact.ContactList" value-field="invitationContact" auto-field-map="[contactListId:'CoarchyInvitation']"/>
-                    <if condition="!invitationContact">
-                        <log level="info" message="No ContactList found with contactListId of CoarchyInvitation"/>
-                        <message error="true" type="danger" public="true">Cannot send invitation email, please contact support for help</message>
-                    </if>
-                    <entity-find entity-name="mantle.marketing.contact.ContactListEmail" list="invitationContactListEmailList" limit="1">
-                        <econdition field-name="emailTemplateId" value="USER_INVITE"/>
-                        <econdition field-name="emailTypeEnumId" value="CONT_EMAIL_TEMPLATE"/>
-                        <date-filter/>
-                        <order-by field-name="-fromDate"/>
-                    </entity-find>
-                    <set field="invitationContactListEmail" from="invitationContactListEmailList?.getFirst()"/>
-                    <if condition="!invitationContactListEmail">
-                        <log level="info" message="No ContactListEmail found for emailTemplateId USER_INVITE_RESET_PASSWORD and emailTypeEnumId CONT_EMAIL_TEMPLATE"/>
-                        <message error="true" type="danger" public="true">Cannot send invitation email, please contact support for help</message>
-                    </if>
-                    <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="inviteContactListPartyList" limit="1" for-update="true">
-                        <econdition field-name="contactListId" value="CoarchyInvitation"/>
-                        <econdition field-name="partyId" from="newPartyId"/>
-                        <date-filter/>
-                        <order-by field-name="-fromDate"/>
-                    </entity-find>
-                    <set field="inviteContactListParty" from="inviteContactListPartyList?.getFirst()"/>
-                    <if condition="!inviteContactListParty"><then>
-                        <service-call name="create#mantle.marketing.contact.ContactListParty" in-map="[
-                            contactListId:'CoarchyInvitation',partyId:newPartyId,statusId:'CLPT_IN_USE',
-                            preferredContactMechId:newUser.emailContactMechId,optInVerifyCode:getRandomString(63)]" out-map="inviteContactListPartyOut"/>
-                        <entity-find-one entity-name="mantle.marketing.contact.ContactListParty" value-field="inviteContactListParty"
-                                auto-field-map="[contactListId:'CoarchyInvitation',partyId:newPartyId,fromDate:inviteContactListPartyOut.fromDate]"/>
-                    </then><else-if condition="inviteContactListParty.optInVerifyCode">
-                        <set field="inviteContactListParty.optInVerifyCode" from="getRandomString(63)"/>
-                        <entity-update value-field="inviteContactListParty"/>
-                    </else-if></if>
-
-                    <if condition="inviteContactListParty.statusId != 'CLPT_IN_USE'"><then>
-                        <log level="info" message="Not sending invitation email because not in 'In Use' status"/>
-                    </then><else>
-<!--                        <log level="warn" message="invite#User 1 context.toString() ${context.toString()}"/>-->
-
-                        <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[
-                            emailTemplateId:invitationContactListEmail.emailTemplateId,toAddresses:emailAddress,bodyParameters:
-                            [linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
-                            title:'You\'re invited to join the '+organization.organizationName+' Organization',
-                            currentYear:ec.user.nowTimestamp.format('yyyy'),contactListName:invitationContact.contactListName,
-                            unsubscribeLink:baseLinkUrl+invitationContact.optOutScreen+'?optInVerifyCode='+inviteContactListParty.optInVerifyCode]]"/>
-                    </else></if>
+                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                        contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
+                        partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
+                        bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
+                        title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
                 </else></if>
-
+                
                 <else><return type="danger" error="true" message="Not allowed"/></else>
             </if>
+        </actions>
+    </service>
+    <service verb="send" noun="ContactListEmail">
+        <in-parameters>
+            <parameter name="contactListId" required="true"/>
+            <parameter name="emailTemplateId" required="true"/>
+            <parameter name="partyId" required="true"/>
+            <parameter name="bodyParameters" required="true" type="Map"/>
+            
+            <parameter name="preferredContactMechId"/>
+            <parameter name="toAddresses"/>
+
+            <parameter name="emailTypeEnumId" required="true" default-value="CONT_EMAIL_TEMPLATE"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="sentEmail"/>
+        </out-parameters>
+        <actions>
+            <set field="sentEmail" from="false"/>
+            <entity-find-one entity-name="mantle.marketing.contact.ContactList" value-field="invitationContact" auto-field-map="[contactListId:contactListId]"/>
+            <if condition="!invitationContact">
+                <log level="info" message="No ContactList found with contactListId of ${contactListId}"/>
+                <message error="true" type="danger" public="true">Cannot send invitation email, please contact support for help</message>
+            </if>
+            <entity-find entity-name="mantle.marketing.contact.ContactListEmail" list="invitationContactListEmailList" limit="1">
+                <econdition field-name="emailTemplateId"/>
+                <econdition field-name="emailTypeEnumId"/>
+                <date-filter/>
+                <order-by field-name="-fromDate"/>
+            </entity-find>
+            <set field="invitationContactListEmail" from="invitationContactListEmailList?.getFirst()"/>
+            <if condition="!invitationContactListEmail">
+                <log level="info" message="No ContactListEmail found for emailTemplateId ${emailTemplateId} and emailTypeEnumId ${emailTypeEnumId}"/>
+                <message error="true" type="danger" public="true">Cannot send invitation email, please contact support for help</message>
+            </if>
+            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="inviteContactListPartyList" limit="1" for-update="true">
+                <econdition field-name="contactListId"/>
+                <econdition field-name="partyId"/>
+                <date-filter/>
+                <order-by field-name="-fromDate"/>
+            </entity-find>
+            <set field="inviteContactListParty" from="inviteContactListPartyList?.getFirst()"/>
+            <if condition="!inviteContactListParty"><then>
+                <if condition="!preferredContactMechId">
+                    <entity-find entity-name="mantle.party.contact.PartyContactMech" list="partyContactMechList" limit="1">
+                        <econdition field-name="partyId" from="newPartyId"/>
+                        <econdition field-name="contactMechPurposeId" value="EmailPrimary"/>
+                        <date-filter/>
+                        <order-by field-name="-fromDate"/>
+                    </entity-find>
+                    <set field="preferredContactMechId" from="partyContactMechList?.getFirst()?.contactMechId"/>
+                </if>
+                <service-call name="create#mantle.marketing.contact.ContactListParty" in-map="[
+                            contactListId:contactListId,partyId:partyId,statusId:'CLPT_IN_USE',
+                            preferredContactMechId:preferredContactMechId,optInVerifyCode:getRandomString(63)]" out-map="inviteContactListPartyOut"/>
+                <entity-find-one entity-name="mantle.marketing.contact.ContactListParty" value-field="inviteContactListParty"
+                        auto-field-map="[contactListId:contactListId,partyId:partyId,fromDate:inviteContactListPartyOut.fromDate]"/>
+            </then><else-if condition="!inviteContactListParty.optInVerifyCode">
+                <set field="inviteContactListParty.optInVerifyCode" from="getRandomString(63)"/>
+                <entity-update value-field="inviteContactListParty"/>
+            </else-if></if>
+
+            <if condition="inviteContactListParty.statusId != 'CLPT_IN_USE'"><then>
+                <log level="info" message="Not sending invitation email because not in 'In Use' status"/>
+                <message type="warning" public="true">Not sending email. User is unsubscribed from Invitation emails</message>
+            </then><else>
+                <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[
+                            emailTemplateId:emailTemplateId,toAddresses:toAddresses,bodyParameters:bodyParameters+[
+                                currentYear:ec.user.nowTimestamp.format('yyyy'),contactListName:invitationContact.contactListName,
+                                unsubscribeLink:bodyParameters.baseLinkUrl+invitationContact.optOutScreen+'?optInVerifyCode='+inviteContactListParty.optInVerifyCode]]"
+                    out-map="context"/>
+                <if condition="emailMessageId"><set field="sentEmail" from="true"/></if>
+            </else></if>
         </actions>
     </service>
 
@@ -2108,6 +2100,37 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <!--            <log level="warn" message="get#OrderProgress context.toString() ${context.toString()}"/>-->
+        </actions>
+    </service>
+
+    <service verb="unsubscribe" noun="ContactList">
+        <in-parameters>
+            <parameter name="optInVerifyCode" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="statusId"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="contactListPartyList" limit="1" for-update="true">
+                <econdition field-name="optInVerifyCode" operator="is-not-null"/>
+                <econdition field-name="optInVerifyCode"/>
+                <date-filter/>
+                <order-by field-name="-fromDate"/>
+            </entity-find>
+            <set field="contactListParty" from="contactListPartyList?.getFirst()"/>
+
+            <if condition="contactListParty &amp;&amp; contactListParty.statusId!='CLPT_UNSUBSCRIBED'"><then>
+                <set field="contactListParty.statusId" value="CLPT_UNSUBSCRIBED"/>
+                <set field="statusId" from="contactListParty.statusId"/>
+                <entity-update value-field="contactListParty"/>
+                <message type="success">You have been unsubscribed from the contact list.</message>
+            </then><else>
+                <set field="statusId" from="contactListParty?.statusId"/>
+                <message>You are already unsubscribed from the contact list.</message>
+            </else></if>
+
+            <log level="warn" message="unsubscribe#contactlist context.toString(): ${context.toString()}"/>
+
         </actions>
     </service>
 </services>

@@ -371,20 +371,26 @@ Vue.component('c-unsubscribe', {
     name: "cUnsubscribe",
     template:
     // Could include type="email" for email, but then wouldn't allow john.doe to login
-        '<q-form v-if="contact_list_party_exists" @submit="onSubmit" class="q-gutter-md" >\n' +
+        '<q-form v-if="contact_list_party_exists!==false_string && contact_list_status!==unsubscribed_string" @submit="onSubmit" class="q-gutter-md" >\n' +
         '    <div>\n' +
         '        <div class="text-h6 q-pb-md">Unsubscribe from {{contact_list_name_label}} emails</div>\n' +
         '        <q-btn label="Unsubscribe" type="submit" color="primary"/>\n' +
         '    </div>\n' +
-        '</q-form>',
+        '</q-form>' +
+        '<div v-else-if="contact_list_party_exists===false_string && contact_list_status!==unsubscribed_string" class="text-h6 q-pb-md">No subscription found</div>\n' +
+        '<div v-else-if="contact_list_status===unsubscribed_string" class="text-h6 q-pb-md">Already unsubscribed</div>\n' +
+        '',
     data () {
         return {
             optInVerifyCode: null,
+            false_string: 'false',
+            unsubscribed_string: 'CLPT_UNSUBSCRIBED',
         }
     },
     props: {
         contact_list_party_exists: String,
         contact_list_name_label: String,
+        contact_list_status: String,
     },
     methods: {
         async getData(url = "") {
@@ -407,14 +413,10 @@ Vue.component('c-unsubscribe', {
             return response.json();
         },
         onSubmit () {
+            // console.log(this._data)
             this.moqui.webrootVue.postData('/c/Unsubscribe/unsubscribe', new URLSearchParams(this._data).toString())
                 .then((data) => {
                     this.moqui.webrootVue.handleNotificationOther(data)
-                    const paths = window.location.href.split("/").filter(entry => entry !== "")
-                    if (data.screenPathList.at(data.screenPathList.length-1) !== paths[paths.length - 1] && data.screenUrl != "") {
-                        // redirect https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#javascript_redirections
-                        window.location = data.screenUrl;
-                    }
                 })
         },
     },

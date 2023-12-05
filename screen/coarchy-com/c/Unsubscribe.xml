@@ -19,23 +19,24 @@ along with this software (see the LICENSE.md file). If not, see
         <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="contactListPartyList" limit="1">
             <econdition field-name="optInVerifyCode" operator="is-not-null"/>
             <econdition field-name="optInVerifyCode"/>
-            <date-filter/>
             <order-by field-name="-fromDate"/>
         </entity-find>
         <set field="contactListPartyExists" from="contactListPartyList.size() &gt; 0" type="Boolean"/>
     </always-actions>
 
-    <!-- TODO: Change these to use ec.web.sendJsonResponse instead of the default response that leaks request input parameters back to the client. -->
     <transition name="unsubscribe"><condition><expression>contactListPartyExists</expression></condition>
-        <default-response url="/settings"/><error-response url="." save-parameters="true"/>
+        <service-call name="coarchy.CoarchyServices.unsubscribe#ContactList" in-map="[optInVerifyCode:optInVerifyCode]"
+            out-map="context"/>
+        <default-response url="." parameter-map="[statusId:statusId]"/><error-response url="." save-parameters="true"/>
     </transition>
 
     <actions>
         <entity-find-one entity-name="mantle.marketing.contact.ContactList" value-field="contactList"
                 auto-field-map="[contactListId:contactListPartyList?.getFirst()?.contactListId]"/>
-        <set field="contactListNameLabel" from="contactList?.contactListName"/>
+        <set field="contact_list_name_label" from="contactList?.contactListName"/>
 
-        <set field="contactListPartyExistsLabel" from="contactListPartyExists?'true':'false'"/>
+        <set field="contact_list_party_exists" from="contactListPartyExists?'true':'false'"/>
+        <set field="contact_list_status" from="contactListPartyList?.getFirst()?.statusId"/>
 
         <log level="warn" message="Unsubscribe context.toString(): ${context.toString()}"/>
     </actions>
@@ -53,7 +54,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     </q-card-section>
 
                                     <q-card-section>
-                                        <c-unsubscribe contact_list_party_exists="${contactListPartyExistsLabel}" contact_list_name_label="${contactListNameLabel}"></c-unsubscribe>
+                                        <c-unsubscribe contact_list_party_exists="${contact_list_party_exists}" contact_list_status="${contact_list_status!}" contact_list_name_label="${contact_list_name_label!}"></c-unsubscribe>
                                     </q-card-section>
                                 </q-card>
                             </div>
