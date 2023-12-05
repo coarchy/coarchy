@@ -1,0 +1,19 @@
+/* hierarchial numbered list (1.1, 1.1.1, 1.1.1.1, etc..) */
+/* wrap ol tags with a <div class="numbered-list"></div> to activate */
+/* see https://stackoverflow.com/a/16270270 for more info */
+.numbered-list ol {
+  counter-reset: item;
+}
+
+.numbered-list li {
+  display: block;
+  position: relative;
+}
+
+.numbered-list li:before {
+  content: counters(item, ".") " ";
+  counter-increment: item;
+  position: absolute;
+  margin-right: 100%;
+  right: 10px; /* space between number and text */
+}
