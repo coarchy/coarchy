@@ -288,11 +288,12 @@ along with this software (see the LICENSE.md file). If not, see
             <order-by field-name="-transactionDate"/>
         </entity-find>
         
-        <service-call name="mantle.party.PartyServices.get#PartyOrganizationInfo" out-map="context"/> 
-        <service-call name="coarchy.CoarchyServices.check#PartyActivation" 
-            in-map="[organizationPartyId: activeOrgId?:userOrgIds[0],finAccountTypeId:'OrganizationMonthCredit']" 
-            out-map="partyActivationOut" />
-        <set field="totalCreditsUsed" type="BigDecimal" from="partyActivationOut.totalCreditsUsed?:0.0" />
+        <if condition="ec.user.userAccount?.partyId">
+            <service-call name="coarchy.CoarchyServices.check#PartyActivation" 
+                in-map="[userPartyId:ec.user.userAccount?.partyId, finAccountTypeId:'OrganizationMonthCredit']" 
+                out-map="partyActivationOut" />
+        </if>
+        <set field="totalCreditsUsed" type="BigDecimal" from="partyActivationOut?.totalCreditsUsed?:0.0" />
     </actions>
 
     <widgets>
