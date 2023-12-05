@@ -1,4 +1,3 @@
-<div class="numbered-list">
 <ol>
 <#list processStoryActivityList! as processStoryActivity>
     <#if processStoryActivity.action!?has_content><li></#if><#include "ActivityStyledSpan.html.ftl"/><#if processStoryActivity.activity!?has_content></li></#if>
@@ -16,4 +15,3 @@
         </ol>
     </#if>
 </#macro>
-</div>
