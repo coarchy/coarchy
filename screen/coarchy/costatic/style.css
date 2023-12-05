@@ -5,6 +5,10 @@
   counter-reset: item;
 }
 
+.numbered-list ol > li:before {
+  content: counters(item, ".") ". ";
+}
+
 .numbered-list li {
   display: block;
   position: relative;
