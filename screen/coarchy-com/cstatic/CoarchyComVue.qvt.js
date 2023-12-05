@@ -367,6 +367,62 @@ Vue.component('c-list-organizations', {
         })
     }
 });
+Vue.component('c-unsubscribe', {
+    name: "cUnsubscribe",
+    template:
+    // Could include type="email" for email, but then wouldn't allow john.doe to login
+        '<q-form v-if="contact_list_party_exists" @submit="onSubmit" class="q-gutter-md" >\n' +
+        '    <div>\n' +
+        '        <div class="text-h6 q-pb-md">Unsubscribe from {{contact_list_name_label}} emails</div>\n' +
+        '        <q-btn label="Unsubscribe" type="submit" color="primary"/>\n' +
+        '    </div>\n' +
+        '</q-form>',
+    data () {
+        return {
+            optInVerifyCode: null,
+        }
+    },
+    props: {
+        contact_list_party_exists: String,
+        contact_list_name_label: String,
+    },
+    methods: {
+        async getData(url = "") {
+            // console.log(this.moquiSessionToken)
+
+            // console.log(_data.toString())
+            // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
+            const response = await fetch(url, {
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: "same-origin", // include, *same-origin, omit
+                method: 'get',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                redirect: "follow",
+                referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            })
+
+            return response.json();
+        },
+        onSubmit () {
+            this.moqui.webrootVue.postData('/c/Unsubscribe/unsubscribe', new URLSearchParams(this._data).toString())
+                .then((data) => {
+                    this.moqui.webrootVue.handleNotificationOther(data)
+                    const paths = window.location.href.split("/").filter(entry => entry !== "")
+                    if (data.screenPathList.at(data.screenPathList.length-1) !== paths[paths.length - 1] && data.screenUrl != "") {
+                        // redirect https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#javascript_redirections
+                        window.location = data.screenUrl;
+                    }
+                })
+        },
+    },
+    mounted: function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('optInVerifyCode')) this.optInVerifyCode = urlParams.get('optInVerifyCode')
+    },
+});
 
 // App
 moqui.webrootVue = new Vue({

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-include="false" require-authentication="anonymous-all" history="false">
+
+    <always-actions>
+        <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="contactListPartyList" limit="1">
+            <econdition field-name="optInVerifyCode" operator="is-not-null"/>
+            <econdition field-name="optInVerifyCode"/>
+            <date-filter/>
+            <order-by field-name="-fromDate"/>
+        </entity-find>
+        <set field="contactListPartyExists" from="contactListPartyList.size() &gt; 0" type="Boolean"/>
+    </always-actions>
+
+    <!-- TODO: Change these to use ec.web.sendJsonResponse instead of the default response that leaks request input parameters back to the client. -->
+    <transition name="unsubscribe"><condition><expression>contactListPartyExists</expression></condition>
+        <default-response url="/settings"/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="mantle.marketing.contact.ContactList" value-field="contactList"
+                auto-field-map="[contactListId:contactListPartyList?.getFirst()?.contactListId]"/>
+        <set field="contactListNameLabel" from="contactList?.contactListName"/>
+
+        <set field="contactListPartyExistsLabel" from="contactListPartyExists?'true':'false'"/>
+
+        <log level="warn" message="Unsubscribe context.toString(): ${context.toString()}"/>
+    </actions>
+
+    <widgets>
+        <render-mode>
+            <text type="html"><![CDATA[
+                <div class="row">
+                    <div class="col-md-4 offset-md-4 col-xs-12 offset-xs-0">
+                        <div class="column justify-center" style="height: 150px">
+                            <div class="col-4">
+                                <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1">
+                                    <q-card-section>
+                                        <div class="text-h2">Unsubscribe</div>
+                                    </q-card-section>
+
+                                    <q-card-section>
+                                        <c-unsubscribe contact_list_party_exists="${contactListPartyExistsLabel}" contact_list_name_label="${contactListNameLabel}"></c-unsubscribe>
+                                    </q-card-section>
+                                </q-card>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ]]></text></render-mode>
+    </widgets>
+</screen>
