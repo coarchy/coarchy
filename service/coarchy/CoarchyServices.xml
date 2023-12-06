@@ -128,16 +128,16 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="-fromDate"/>
             </entity-find>
             <set field="inviteContactListParty" from="inviteContactListPartyList?.getFirst()"/>
+            <if condition="!preferredContactMechId">
+                <entity-find entity-name="mantle.party.contact.PartyContactMech" list="partyContactMechList" limit="1">
+                    <econdition field-name="partyId"/>
+                    <econdition field-name="contactMechPurposeId" value="EmailPrimary"/>
+                    <date-filter/>
+                    <order-by field-name="-fromDate"/>
+                </entity-find>
+                <set field="preferredContactMechId" from="partyContactMechList?.getFirst()?.contactMechId"/>
+            </if>
             <if condition="!inviteContactListParty"><then>
-                <if condition="!preferredContactMechId">
-                    <entity-find entity-name="mantle.party.contact.PartyContactMech" list="partyContactMechList" limit="1">
-                        <econdition field-name="partyId" from="newPartyId"/>
-                        <econdition field-name="contactMechPurposeId" value="EmailPrimary"/>
-                        <date-filter/>
-                        <order-by field-name="-fromDate"/>
-                    </entity-find>
-                    <set field="preferredContactMechId" from="partyContactMechList?.getFirst()?.contactMechId"/>
-                </if>
                 <service-call name="create#mantle.marketing.contact.ContactListParty" in-map="[
                             contactListId:contactListId,partyId:partyId,statusId:'CLPT_IN_USE',
                             preferredContactMechId:preferredContactMechId,optInVerifyCode:getRandomString(63)]" out-map="inviteContactListPartyOut"/>
@@ -157,7 +157,18 @@ along with this software (see the LICENSE.md file). If not, see
                                 currentYear:ec.user.nowTimestamp.format('yyyy'),contactListName:invitationContact.contactListName,
                                 unsubscribeLink:bodyParameters.baseLinkUrl+invitationContact.optOutScreen+'?optInVerifyCode='+inviteContactListParty.optInVerifyCode]]"
                     out-map="context"/>
-                <if condition="emailMessageId"><set field="sentEmail" from="true"/></if>
+                <if condition="emailMessageId">
+                    <set field="sentEmail" from="true"/>
+                </if>
+
+                <!-- TODO: Review approach -->
+                <service-call name="mantle.party.CommunicationServices.create#Message" in-map="[
+                    communicationEventTypeId:'Email',contactMechTypeEnumId:'CmtEmailAddress',statusId:'CeSent',
+                    toContactMechId:preferredContactMechId,toPartyId:partyId,emailMessageId:emailMessageId,contactListId:contactListId]"
+                    out-map="communicationEventOut"/>
+                <service-call name="create#mantle.marketing.contact.ContactListCommStatus" in-map="[
+                    contactListId:contactListId,communicationEventId:communicationEventOut.communicationEventId,
+                    contactMechId:preferredContactMechId,partyId:partyId]"/>
             </else></if>
         </actions>
     </service>

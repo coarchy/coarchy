@@ -29,7 +29,7 @@ along with this software (see the LICENSE.md file). If not, see
   <mj-body>
     <mj-section border-left="1px solid #aaaaaa" border-right="1px solid #aaaaaa" padding="20px" border-bottom="1px solid #aaaaaa">
       <mj-column>
-        <mj-image src="https://coarchy.com/coarchyText113.png" alt="header image" padding="0px">
+        <mj-image src="https://coarchy.com/coarchyText113.png" width="354px" alt="Coarchy Logo" padding="0px">
         </mj-image>
         <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b">
           <span data-gjs-type="default" draggable="true" id="i9c3m" style="font-size:24px;"><span data-gjs-type="default" draggable="true" id="iqd77" style="color:#000000;"><strong data-gjs-type="text" draggable="true" id="iv8kx-3">Welcome back to Coarchy!</strong></span></span>
@@ -166,8 +166,8 @@ along with this software (see the LICENSE.md file). If not, see
                                                             <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
                                                                 <tbody>
                                                                 <tr>
-                                                                    <td style="width:558px;">
-                                                                        <img alt="header image" src="https://coarchy.com/coarchyText113.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="558" height="auto">
+                                                                    <td style="width:354px;">
+                                                                        <img alt="Coarchy Logo" src="https://coarchy.com/coarchyText113.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="354" height="auto">
                                                                     </td>
                                                                 </tr>
                                                                 </tbody>
