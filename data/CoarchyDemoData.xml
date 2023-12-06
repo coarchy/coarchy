@@ -31,6 +31,9 @@ along with this software (see the LICENSE.md file). If not, see
         <toRelationships fromPartyId="EX_JOHN_DOE" toRoleTypeId="OrgInternal" fromDate="1691687280000" partyRelationshipId="c100001" relationshipTypeEnumId="PrtMember" toPartyId="coarchy"/>
     </parties>
 
+    <mantle.party.PartyRole partyId="EX_JOHN_DOE" roleTypeId="Customer"/>
+    <mantle.party.ContactServices.create-EmailAddress partyId="EX_JOHN_DOE" emailAddress="john.doe@moqui.org" contactMechPurposeId="EmailPrimary"/>
+
     <parties pseudoId="c100051" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100051"/>
     <parties pseudoId="c100104" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100104"/>
     <parties pseudoId="c100167" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100167"/>

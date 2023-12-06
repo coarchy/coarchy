@@ -512,7 +512,11 @@ along with this software (see the LICENSE.md file). If not, see
                         <if condition="userAccountList?.getFirst()?.emailAddress == null"><then>
                             <message type="danger">Can't send email to notify about assignment</message>
                         </then><else>
-                            <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'TASK_ASSIGNED_NOTIFICATION',toAddresses:userAccountList.getFirst().emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+task.rootWorkEffortId,title:'You\'ve been assigned a task'+(ec.user.userAccount.userFullName?' by '+ec.user.userAccount.userFullName:'')]]"/>
+                            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                contactListId:'CoarchyTaskReminder',emailTemplateId:'TASK_ASSIGNED_NOTIFICATION',
+                                partyId:partyIdCreate,toAddresses:userAccountList.getFirst().emailAddress,
+                                bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+task.rootWorkEffortId,baseLinkUrl:baseLinkUrl,
+                                title:'You\'ve been assigned a task'+(ec.user.userAccount.userFullName?' by '+ec.user.userAccount.userFullName:'')]]" out-map="context"/>
                         </else></if>
                     </if>
                 </iterate>
@@ -554,7 +558,13 @@ along with this software (see the LICENSE.md file). If not, see
                                 <if condition="userAccountList.size() &gt; 0 &amp;&amp;
                                         userAccountList?.getFirst()?.partyId != ec.user.userAccount.partyId
                                         &amp;&amp; userAccountList?.getFirst()?.emailAddress != null">
-                                    <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'TASK_NOTIFICATION',toAddresses:userAccountList.getFirst().emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,title:'Task '+taskList?.getFirst().workEffortName+' is ready']]"/>
+                                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                        contactListId:'CoarchyTaskReminder',emailTemplateId:'TASK_NOTIFICATION',
+                                        partyId:userAccountList?.getFirst()?.partyId,
+                                        toAddresses:userAccountList.getFirst().emailAddress,
+                                        bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,
+                                        baseLinkUrl:baseLinkUrl,
+                                        title:'Task '+taskList?.getFirst().workEffortName+' is ready']]" out-map="context"/>
                                 </if>
 
                                 <entity-find entity-name="mantle.work.effort.WorkEffortAndPartyDetail" list="userAccountOwnerList" limit="1">
@@ -567,11 +577,16 @@ along with this software (see the LICENSE.md file). If not, see
                                     <if condition="(userAccountOwnerList.size() &gt; 0) &amp;&amp;
                                         userAccountOwnerList?.getFirst()?.partyId != ec.user.userAccount.partyId
                                         &amp;&amp; userAccountOwnerList?.getFirst()?.emailAddress != null">
-                                        <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'TASK_NEEDS_ASSIGNMENT_NOTIFICATION',toAddresses:userAccountOwnerList.getFirst().emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,title:'Task '+taskList?.getFirst().workEffortName+' is ready to be assigned']]"/>
+                                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                            contactListId:'CoarchyTaskReminder',emailTemplateId:'TASK_NEEDS_ASSIGNMENT_NOTIFICATION',
+                                            partyId:userAccountOwnerList?.getFirst()?.partyId,
+                                            toAddresses:userAccountOwnerList.getFirst().emailAddress,
+                                            bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,
+                                            baseLinkUrl:baseLinkUrl,
+                                            title:'Task '+taskList?.getFirst().workEffortName+' is ready to be assigned']]" out-map="context"/>
                                     </if>
                                 </if>
                             </if>
-
                         </else>
                     </if>
                 </if>

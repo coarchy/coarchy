@@ -284,12 +284,19 @@ along with this software (see the LICENSE.md file). If not, see
     </mantle.party.agreement.Agreement>
 
     <!-- ========== Contact List Entities ========== -->
+    <!-- TODO: Review approach -->
     <moqui.basic.Enumeration enumId="ONBOARDING" description="Onboarding" enumTypeId="ContactListType"/>
     <moqui.basic.Enumeration enumId="INVITATION" description="Invitation" enumTypeId="ContactListType"/>
+    <moqui.basic.Enumeration enumId="TASK_REMINDER" description="Task Reminder" enumTypeId="ContactListType"/>
     <mantle.marketing.contact.ContactList contactListId="CoarchyOnboarding" contactListTypeEnumId="ONBOARDING" contactListName="Onboarding" ownerPartyId="coarchy" optOutScreen="/Unsubscribe"/>
     <mantle.marketing.contact.ContactList contactListId="CoarchyInvitation" contactListTypeEnumId="INVITATION" contactListName="Invitation" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220000" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="USER_INVITE_RESET_PASSWORD"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220001" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="USER_INVITE"/>
+    </mantle.marketing.contact.ContactList>
+    <mantle.marketing.contact.ContactList contactListId="CoarchyTaskReminder" contactListTypeEnumId="TASK_REMINDER" contactListName="Task Reminder" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800220002" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"/>
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800220003" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_NEEDS_ASSIGNMENT_NOTIFICATION"/>
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800220004" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_NOTIFICATION"/>
     </mantle.marketing.contact.ContactList>
 
 </entity-facade-xml>
