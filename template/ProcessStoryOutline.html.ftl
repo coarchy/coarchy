@@ -1,5 +1,5 @@
 <#macro substory processStoryActivity levels>
-    <#if processStoryActivity.detailProcessStoryActivityList!?size == 0><#list 1..(levels+1) as level>&nbsp;&nbsp;</#list>No Activities<br/><#else>
+    <#if processStoryActivity.detailProcessStoryActivityList!?size == 0><#list 1..(levels+1) as level>&nbsp;&nbsp;</#list><br/>No Activities<br/><#else>
         <ol>
         <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity>
             <li><#include "ActivityStyledSpan.html.ftl"/><#if processStoryActivity.detailProcessStoryId!?has_content><@substory processStoryActivity levels+1/></#if></li>
