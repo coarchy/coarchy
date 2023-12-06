@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entity-facade-xml type="seed-initial">
+   
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyGeneralError" localized="Something went wrong.. please try again."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyBuyCreditMin" localized="The minimum amount of credits you can buy is 1 Organization-Month."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyBuyCreditMax" localized="We're sorry, you cannot buy more than 18 Organization-Month credits at a time."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyInvalidOrder" localized="Something went wrong with your order, please try again."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgUnauthorizedUser" localized="You are not authorized to view this Organization, you will be redirected shortly."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyUserNotRemovable" localized="This user cannot be removed."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgNotEditable" localized="Only organization owners can it this information."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyGeneralNotAllowed" localized="You are not allowed to perform this action."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgNameInvalid" localized="Please enter a valid organization name."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgCreateSuccess" localized="Your organization has been created succesfully!"/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgActivateUnauthorized" localized="You are not authorized to activate this organization."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgActivateInsuffCredits" localized="Insufficient credits to activate this organization. Buy at least ${creditsNeeded} Organization-Month credits to get premium."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgActivateAutoPremium" localized="We've automatically activated premium features for ${organizationName}!"/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgPaymentGatewayUnavailable" localized="Payment is not available at this time, please try again at a later time."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgPaymentFailed" localized="We could not process your payment, please try again."/>
+    
+    
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchySelectAnOrg" localized="Please select an organization to continue."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessStoryNotFound" localized="Something went wrong while loading the process story."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessStoryNameExists" localized="A process story already exists with the same name (${name})."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityMoveError" localized="This activity could not be moved."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityNotFound" localized="Something went wrong while loading the activity."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityMultiFound" localized="This activity is part of multiple process stories."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityActionRequired" localized="Action is mandatory when creating an Activity."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessChecklistInvalidDate" localized="The project dates are not valid. Please correct them before continuing"/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessChecklistActivityRequired" localized="Please add at least one activity to create a checklist."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessChecklistSubActivityRequired" localized="At least one actor is required for Activity '${taskName}' in Process Story '${name}'."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessChecklistActivityUsersRequired" localized="At least one user is required for each of these actors: '${activityActorList*.name.join(', ')}'"/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardEmpty" localized="Your clipboard is empty."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardActivityEmpty" localized="Your clipboard contains no activities."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityValueDeleteError" localized="Something went wrong while deleting value."/>
+   
+</entity-facade-xml>

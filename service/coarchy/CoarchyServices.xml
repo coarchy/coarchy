@@ -84,7 +84,7 @@ along with this software (see the LICENSE.md file). If not, see
                         title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
                 </else></if>
                 
-                <else><return type="danger" error="true" message="Not allowed"/></else>
+                <else><return type="danger" error="true" message="${ec.resource.expand('CoarchyGeneralNotAllowed', null)}"/></else>
             </if>
         </actions>
     </service>
@@ -187,7 +187,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="name" ignore-case="true"/>
                 <order-by field-name="^name"/>
             </entity-find>
-            <if condition="processStoryList?.size() &gt; 0"><return type="danger" error="true" message="Process Story '${processStoryList?.getFirst()?.name}' already exists"/></if>
+            <if condition="processStoryList?.size() &gt; 0"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessStoryNameExists', null, [name:processStoryList?.getFirst()?.name])}"/></if>
 
             <service-call name="create#coarchy.ProcessStory" in-map="[name:name,organizationId:organizationId]" out-map="context"/>
         </actions>
@@ -201,7 +201,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <set field="name" from="name?.trim()"/>
             <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
-            <if condition="!processStory"><return type="danger" error="true" message="Process Story does not exist"/></if>
+            <if condition="!processStory"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessStoryNotFound', null)}"/></if>
 
             <service-call name="update#coarchy.ProcessStory" in-map="[processStoryId:processStoryId,name:name]"/>
         </actions>
@@ -290,7 +290,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="sequenceNum"/>
         </out-parameters>
         <actions>
-            <if condition="!ignoreNoAction &amp;&amp; !action"><return type="warning" message="An action is needed for an activity"/></if>
+            <if condition="!ignoreNoAction &amp;&amp; !action"><return type="warning" message="${ec.resource.expand('CoarchyProcessActivityActionRequired',null)}"/></if>
             <service-call name="create#coarchy.Activity" in-map="[condition:condition?.trim(), action:action?.trim(), organizationId:organizationId, implementationId:implementationId]" out-map="newActivity"/>
             <set field="activityId" from="newActivity.activityId"/>
 
@@ -384,14 +384,14 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="name" from="name?.trim()"/>
             <if condition="estimatedStartDate != null &amp;&amp; estimatedCompletionDate != null &amp;&amp;
                            estimatedCompletionDate &lt; estimatedStartDate">
-                <return error="true" message="Project date range is not valid."/>
+                <return error="true" message="${ec.resource.expand('CoarchyProcessChecklistInvalidDate', null)}"/>
             </if>
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
                 <econdition field-name="processStoryId"/>
                 <select-field field-name="activityId,condition,action"/>
                 <order-by field-name="sequenceNum"/></entity-find>
             <if condition="processStoryActivityList?.size() == 0">
-                <return error="true" message="Need at least 1 activity to create a checklist"/></if>
+                <return error="true" message="${ec.resource.expand('CoarchyProcessChecklistActivityRequired', null)}"/></if>
 
             <if condition="!name">
                 <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory" auto-field-map="[processStoryId:processStoryId]"/>
@@ -420,7 +420,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <iterate list="taskWorkEffortIdList" entry="taskWorkEffortId">
                             <service-call name="delete#mantle.work.effort.WorkEffort" in-map="[workEffortId:taskWorkEffortId]"/></iterate>
                         <service-call name="delete#mantle.work.effort.WorkEffort" in-map="[workEffortId:projectWorkEffort.workEffortId]"/>
-                        <return error="true" message="Need at least 1 actor for Activity '${taskName}' in Process Story '${name}'"/></if>
+                        <return error="true" message="${ec.resource.expand('CoarchyProcessChecklistSubActivityRequired', null, [taskName:taskName, name:name])}"/></if>
 
                     <entity-find entity-name="coarchy.ActorPartyDetail" list="actorPartyList">
                         <econdition field-name="actorId" from="activityActorList*.actorId"/></entity-find>
@@ -430,7 +430,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <iterate list="taskWorkEffortIdList" entry="taskWorkEffortId">
                             <service-call name="delete#mantle.work.effort.WorkEffort" in-map="[workEffortId:taskWorkEffortId]"/></iterate>
                         <service-call name="delete#mantle.work.effort.WorkEffort" in-map="[workEffortId:projectWorkEffort.workEffortId]"/>
-                        <return error="true" message="Need at least 1 user for each of these actors '${activityActorList*.name.join(', ')}'"/></if>
+                        <return error="true" message="${ec.resource.expand('CoarchyProcessChecklistActivityUsersRequired', null, [activityActorList:activityActorList])}"/></if>
 
                     <set field="seqName" value="Project_${projectWorkEffort.workEffortId}"/>
                     <set field="workEffortId" value="${projectWorkEffort.workEffortId}-${ec.entity.sequencedIdPrimary(seqName, null, 10)}"/>
@@ -750,7 +750,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="valueStatementActivity"><then>
                         <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity.valueStatementActivityId]"/>
                     </then><else>
-                        <message type="warning" error="true">Unable to delete value connection ${valueId}</message>
+                        <log level="warning" message="Unable to delete value connection ${valueIdDelete}"/>
+                        <message type="warning" error="true">${ec.resource.expand('CoarchyProcessActivityValueDeleteError', null)}</message>
                     </else></if>
                 </iterate>
             </if>
@@ -1154,8 +1155,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="orderItemSeqId" required="true"/>
         </out-parameters>
         <actions>
-            <if condition="quantity &lt; 1"><return type="danger" message="Organization-Month Quantity must at least 1" error="true" public="true"/></if>
-            <if condition="quantity &gt; 18"><return type="danger" message="Cannot buy more than 18 Organization-Month Credits" error="true" public="true"/></if>
+            <if condition="quantity &lt; 1"><return type="danger" message="${ec.resource.expand('CoarchyBuyCreditMin', null)}" error="true" public="true"/></if>
+            <if condition="quantity &gt; 18"><return type="danger" message="${ec.resource.expand('CoarchyBuyCreditMax', null)}" error="true" public="true"/></if>
             <entity-find entity-name="mantle.product.store.ProductStoreProduct" list="productStoreProductList" limit="1">
                 <econdition field-name="productId"/><order-by field-name="-lastUpdatedStamp"/></entity-find>
             <service-call name="coarchy.CoarchyServices.add#OrderProductQuantity" in-map="[quantity:quantity,productId:productId,
@@ -1223,7 +1224,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="coarchy.CoarchyServices.check#PartyActivation" in-map="[userPartyId:ec.user.userAccount?.partyId, finAccountTypeId:'OrganizationMonthCredit']" out-map="context"/>
                 <if condition="needsCredits"><then>
                     <return type="warning" public="true"
-                            message="Can't activate organization. Buy at least ${creditsNeeded} Organization-Month Credits to get premium"/>
+                            message="${ec.resource.expand('CoarchyOrgActivateInsuffCredits', null, [creditsNeeded: creditsNeeded])}"/>
                 </then><else>
                     <service-call name="create#mantle.party.PartyActivation" in-map="[partyId:organizationPartyId,
                         fromDate:ec.user.nowTimestamp]"/>
@@ -1258,8 +1259,11 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="totalDays" type="BigDecimal" required="true"/>
         </out-parameters>
         <actions>
-            <if condition="periodFromDate &gt;= periodThruDate"><return type="danger" error="true"
-                    message="Period From Date must be before Period Thru Date"/></if>
+            <if condition="periodFromDate &gt;= periodThruDate">
+                <log level="warn" message="Period From Date must be before Period Thru Date"/>
+                <return type="danger" error="true"
+                    message="${ec.resource.expand('CoarchyGeneralError', null)}"/>
+            </if>
             <if condition="activationThruDate &gt; periodThruDate">
                 <set field="activationThruDate" from="periodThruDate"/></if>
 
@@ -1434,7 +1438,10 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.party.Party" value-field="userParty">
                 <field-map field-name="partyId" from="userPartyId" />
             </entity-find-one>
-            <if condition="!userPartyId"><return type="warning" message="Party ${userParty} was not found"/></if>
+            <if condition="!userPartyId">
+                <log level="warn" message="Party ${userPartyId} was not found"/>
+                <return type="warning" message="${ec.resource.expand('CoarchyGeneralError',null)}"/>
+            </if>
 
             <entity-find entity-name="mantle.account.financial.FinancialAccount" list="financialAccountList" distinct="true">
                 <econdition field-name="ownerPartyId" from="userPartyId"/>
@@ -1821,8 +1828,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-find-count entity-name="moqui.basic.Enumeration" count-field="enumCount">
                     <econdition field-name="enumTypeId" value="ClipboardMoveType"/>
                     <econdition field-name="enumId" from="moveTypeEnumId"/></entity-find-count>
-                <if condition="enumCount == 0"><return type="danger" error="true" public="true"
-                        message="Invalid moveTypeEnumId ${moveTypeEnumId}"/></if>
+                <if condition="enumCount == 0">
+                    <log level="warn" message="Invalid moveTypeEnumId ${moveTypeEnumId}"/>
+                    <return type="danger" error="true" public="true"
+                        message="${ec.resource.expand('CoarchyGeneralError', null)}"/>
+                </if>
 
                 <entity-find entity-name="coarchy.ClipboardEntry" list="entryList">
                     <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
@@ -1901,14 +1911,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
                 <econdition field-name="clipboardEntryId"/>
             </entity-find>
-            <if condition="entryList.size() == 0"><return type="error" message="No clipboard entry found"/></if>
+            <if condition="entryList.size() == 0"><return error="true" message="${ec.resource.expand('CoarchyProcessClipboardEmpty', null)}"/></if>
             <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
                 <date-filter/>
                 <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
                 <econdition field-name="toRoleTypeId" value="OrgInternal"/>
                 <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
                 <econdition field-name="toPartyId" from="organizationId"/></entity-find-count>
-            <if condition="partyRelationshipCount == 0"><return type="error" message="User is not a member of organization"/></if>
+            <if condition="partyRelationshipCount == 0"><return error="true" message="${ec.resource.expand('CoarchyOrgUnauthorizedUser', null)}"/></if>
 
             <set field="entry" from="entryList.getFirst()"/>
             <set field="moveTypeEnumId" from="entry.moveTypeEnumId"/>
@@ -1987,8 +1997,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-find entity-name="coarchy.ProcessStoryActivity" list="activityList">
                     <econdition field-name="activityId"/>
                 </entity-find>
-                <if condition="activityList.size() == 0"><return type="danger" error="true" message="No ProcessStoryActivity found for Activity"/></if>
-                <if condition="activityList.size() &gt; 1"><return type="info" message="Multiple ProcessStoryActivity found for Activity"/></if>
+                <if condition="activityList.size() == 0"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessActivityNotFound', null)}"/></if>
+                <if condition="activityList.size() &gt; 1"><return type="info" message="${ec.resource.expand('CoarchyProcessActivityMultiFound', null)}"/></if>
                 <set field="processStoryActivityId" from="activityList.getFirst().processStoryActivityId"/>
             </if>
             <if condition="!actorIdList">
@@ -2023,7 +2033,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="orderByField"/>
         </out-parameters>
         <actions>
-            <if condition="!action"><return type="danger" error="true" message="An action is needed for an activity"/></if>
+            <if condition="!action"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessActivityActionRequired',null)}"/></if>
             <set field="insertSequenceNum" from="sequenceNum"/>
             <if condition="insertType=='below'">
                 <set field="pageIndex" from="downPageIndex"/>
@@ -2057,11 +2067,11 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <entity-find-one entity-name="coarchy.ClipboardEntry" value-field="clipboardEntry"
                     auto-field-map="[clipboardEntryId:clipboardEntryId,partyId:ec.user.userAccount.partyId]"/>
-            <if condition="clipboardEntry==null"><return type="danger" error="true" message="No clipboard entry found"/></if>
+            <if condition="clipboardEntry==null"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessClipboardEmpty', null)}"/></if>
 
             <entity-find entity-name="coarchy.ClipboardActivity" list="activityList" limit="1">
                 <econdition field-name="clipboardEntryId"/></entity-find>
-            <if condition="activityList.size() == 0"><return type="danger" error="true" message="No clipboard activity found"/></if>
+            <if condition="activityList.size() == 0"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessClipboardActivityEmpty', null)}"/></if>
             <set field="processStoryActivity" from="activityList.getFirst().getMap()"/>
             <if condition="processStoryActivity.action"><then>
                 <entity-find entity-name="coarchy.ClipboardActor" list="actorList">
@@ -2095,7 +2105,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
 
             <set field="statusId" from="existingOrder1List.getFirst()?.statusId"/>
-            <if condition="statusId==null"><return type="danger" error="true" message="No order found"/></if>
+            <if condition="statusId==null"><return type="danger" error="true" message="${ec.resource.expand('CoarchyInvalidOrder', null)}"/></if>
             <entity-find-one entity-name="moqui.basic.StatusItem" value-field="status" auto-field-map="[statusTypeId:'OrderHeader',statusId:statusId]" cache="true"/>
             <set field="description" from="status.description"/>
 
@@ -2109,7 +2119,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="ec.user.context?.filterOrgIds" from="[checkoutOrganizationId]"/>
                 <service-call name="coarchy.CoarchyServices.activateOrDeactivate#Organization" in-map="[organizationPartyId:checkoutOrganizationId]"/>
                 <entity-find-one entity-name="mantle.party.Organization" value-field="organization" auto-field-map="[partyId:checkoutOrganizationId]"/>
-                <message public="true">Automatically activated Premium Features for ${organization.organizationName}</message>
+                <message public="true">${ec.resource.expand('CoarchyOrgActivateAutoPremium', null, [organizationName:organization.organizationName])}</message>
             </if>
 
             <!--            <log level="warn" message="get#OrderProgress context.toString() ${context.toString()}"/>-->

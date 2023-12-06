@@ -22,7 +22,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <always-actions>
         <if condition="!activeOrgId">
-            <message>Select an Organization before moving forward.</message>
+            <message>${ec.resource.expand('CoarchySelectAnOrg', null)}</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
         <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
@@ -123,7 +123,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:sequenceNum]"/>
                 <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum]"/>
             </then><else>
-            <return type="warning" message="Cannot move activity up"/>
+            <return type="warning" message="${ec.resource.expand('CoarchyProcessActivityMoveError', null)}"/>
         </else>
         </if>
     </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>
@@ -139,7 +139,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:sequenceNum]"/>
                 <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum]"/>
             </then><else>
-            <return type="warning" message="Cannot move activity down"/>
+            <return type="warning" message="${ec.resource.expand('CoarchyProcessActivityMoveError', null)}"/>
         </else>
         </if>
     </actions><default-response url="." parameter-map="[pageIndex:pageIndex]"/></transition>

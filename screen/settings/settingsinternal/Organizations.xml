@@ -31,14 +31,14 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <set field="organizationName" from="organizationName.trim()"/>
             <if condition="!organizationName">
-                <return type="warning" error="true" message="Must have a valid organization name"/>
+                <return type="warning" error="true" message="${ec.resource.expand('CoarchyOrgNameInvalid', null)}"/>
             </if>
             <if condition="!organizationId">
                 <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,partyTypeEnumId:'PtyOrganization',visibilityEnumId:'PvOrganization']" out-map="newOrganization"/>
                 <service-call name="create#mantle.party.Organization" in-map="[partyId:newOrganization.partyId,organizationName:organizationName]"/>
                 <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:newOrganization.partyId]"/>
                 <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:newOrganization.partyId]"/>
-                <return type="success" message="Successfully created Organization!"/>
+                <return type="success" message="${ec.resource.expand('CoarchyOrgCreateSuccess', null)}"/>
             </if>
 
             <entity-find-one entity-name="mantle.party.Party" value-field="oldOrganization" auto-field-map="[partyId:organizationId]"/>
@@ -209,7 +209,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
             </if>
 
-            <message type="success">Successfully created Organization!</message>
+            <message type="success">${ec.resource.expand('CoarchyOrgCreateSuccess', null)}</message>
         </actions><default-response url="."/>
     </transition>
 
