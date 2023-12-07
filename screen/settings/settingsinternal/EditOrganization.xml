@@ -43,6 +43,7 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="fromPartyId == ec.user.userAccount.partyId || organization.ownerPartyId != ec.user.userAccount.partyId"><return message="${ec.resource.expand('CoarchyUserNotRemovable',null)}" type="warning"/></if>
 
         <entity-find entity-name="mantle.party.PartyRelationship" list="partyRelationshipList">
+            <date-filter />
             <econdition field-name="toPartyId"/>
             <econdition field-name="fromPartyId"/>
             <econdition field-name="toRoleTypeId" value="OrgInternal"/>
@@ -50,7 +51,7 @@ along with this software (see the LICENSE.md file). If not, see
         </entity-find>
 
         <iterate list="partyRelationshipList" entry="partyRelationship">
-            <service-call name="delete#mantle.party.PartyRelationship" in-map="[partyRelationshipId:partyRelationship.partyRelationshipId]"/>
+            <service-call name="update#mantle.party.PartyRelationship" in-map="[partyRelationshipId:partyRelationship.partyRelationshipId, thruDate:ec.user.nowTimestamp]"/>
         </iterate>
     </actions><default-response/></transition>
 
@@ -134,6 +135,24 @@ along with this software (see the LICENSE.md file). If not, see
                     <form-single name="CloneFromOrganization" transition="createOrganization">
                     <field name="organizationId"><default-field><hidden/></default-field></field>
                     <field name="organizationName" from="null"><default-field title="New Organization Name"><text-line/></default-field></field>
+                    <field name="copyChecklists">
+                        <default-field title="What do you want to do with your existing checklists?">
+                            <radio no-current-selected-key="none">
+                                <option key="none" text="Do nothing" />
+                                <option key="copy" text="Copy to new values" />
+                                <option key="move" text="Move to new organization" />
+                            </radio>
+                        </default-field>
+                    </field>
+                    <field name="copyUsers">
+                        <default-field title="Do you want to do with your existing users?">
+                            <radio no-current-selected-key="none">
+                                <option key="none" text="Do nothing" />
+                                <option key="copy" text="Copy to new values" />
+                                <option key="move" text="Move to new organization" />
+                            </radio>
+                        </default-field>
+                    </field>
                     <field name="clone"><default-field><submit/></default-field></field>
                 </form-single></container-dialog>
 
@@ -150,6 +169,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <form-list name="Users" list="usersList" header-dialog="true" show-csv-button="false" transition="updateUser">
                     <entity-find entity-name="mantle.party.PartyFromAndRelationship" list="usersList" distinct="true">
                         <search-form-inputs default-order-by="-lastUpdatedStamp"/>
+                        <date-filter />
                         <econdition field-name="toPartyId" from="organizationId"/>
                         <select-field field-name="fromPartyId,firstName,lastName"/></entity-find>
 
