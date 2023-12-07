@@ -16,53 +16,53 @@ along with this software (see the LICENSE.md file). If not, see
         default-menu-include="false" require-authentication="true">
 
 
-    <transition name="findOrganizationUsers">
-        <actions>
-            <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,partyTypeEnumId:'PtyOrganization']" out-map="organization"/>
-            <service-call name="create#mantle.party.Organization" in-map="[partyId:organization.partyId,organizationName:organizationName]"/>
-            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:organization.partyId]"/>
-            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organization.partyId]"/>
+<!--    <transition name="findOrganizationUsers">-->
+<!--        <actions>-->
+<!--            <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,partyTypeEnumId:'PtyOrganization']" out-map="organization"/>-->
+<!--            <service-call name="create#mantle.party.Organization" in-map="[partyId:organization.partyId,organizationName:organizationName]"/>-->
+<!--            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:organization.partyId]"/>-->
+<!--            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organization.partyId]"/>-->
 
-            <message type="success">Successfully created Organization!</message>
-        </actions><default-response url="."/>
-    </transition>
+<!--            <message type="success">Successfully created Organization!</message>-->
+<!--        </actions><default-response url="."/>-->
+<!--    </transition>-->
 
-    <transition name="invitePeople"><actions>
-        <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:toPartyId]"/>
-        <if condition="!organization || !organization.ownerPartyId"><return/></if>
-        <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
-            <service-call name="mantle.party.PartyServices.create#Account" out-map="newUser"
-                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress]"/>
-            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
+<!--    <transition name="invitePeople"><actions>-->
+<!--        <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:toPartyId]"/>-->
+<!--        <if condition="!organization || !organization.ownerPartyId"><return/></if>-->
+<!--        <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">-->
+<!--            <service-call name="mantle.party.PartyServices.create#Account" out-map="newUser"-->
+<!--                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress]"/>-->
+<!--            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>-->
 
-            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:toPartyId,fromDate:ec.user.nowTimestamp]"/>
-            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:toPartyId]"/>
+<!--            <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:toPartyId,fromDate:ec.user.nowTimestamp]"/>-->
+<!--            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:toPartyId]"/>-->
 
-            <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
-            <!-- reset the password to a random value -->
-            <set field="resetPassword" from="getRandomString(12)"/>
-            <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
-            <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
-            <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
-            <entity-update value-field="userAccount"/>
+<!--            <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>-->
+<!--            &lt;!&ndash; reset the password to a random value &ndash;&gt;-->
+<!--            <set field="resetPassword" from="getRandomString(12)"/>-->
+<!--            <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>-->
+<!--            <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>-->
+<!--            <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>-->
+<!--            <entity-update value-field="userAccount"/>-->
 
-            <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'USER_INVITE',toAddresses:emailAddress,bodyParameters:[linkUrl:'https://coarchy.com/Login?username='+emailAddress+'&amp;oldPassword='+resetPassword+'#change',title:'You\'ve been invited to join Coarchy']]"/>
-            <else><return type="danger" error="true" message="Not allowed"/></else>
-        </if>
-    </actions><default-response url="."/></transition>
+<!--            <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'USER_INVITE',toAddresses:emailAddress,bodyParameters:[linkUrl:'https://coarchy.com/Login?username='+emailAddress+'&amp;oldPassword='+resetPassword+'#change',title:'You\'ve been invited to join Coarchy']]"/>-->
+<!--            <else><return type="danger" error="true" message="Not allowed"/></else>-->
+<!--        </if>-->
+<!--    </actions><default-response url="."/></transition>-->
 
-    <actions>
-        <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
-            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
-            <select-field field-name="toPartyId,ownerPartyId,organizationName"/>
-            <order-by field-name="-lastUpdatedStamp"/></entity-find>
-        <set field="ownerOfAnyOrganization" from="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)"/>
-        <if condition="!ownerOfAnyOrganization &amp;&amp; organizationList?.size() == 1">
-            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationList.getFirst().toPartyId]"/>
-            <message type="info">Redirected from Organizations</message>
-            <script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script>
-        </if>
-    </actions>
+<!--    <actions>-->
+<!--        <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">-->
+<!--            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>-->
+<!--            <select-field field-name="toPartyId,ownerPartyId,organizationName"/>-->
+<!--            <order-by field-name="-lastUpdatedStamp"/></entity-find>-->
+<!--        <set field="ownerOfAnyOrganization" from="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)"/>-->
+<!--        <if condition="!ownerOfAnyOrganization &amp;&amp; organizationList?.size() == 1">-->
+<!--            <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationList.getFirst().toPartyId]"/>-->
+<!--            <message type="info">Redirected from Organizations</message>-->
+<!--            <script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script>-->
+<!--        </if>-->
+<!--    </actions>-->
 
     <widgets>
         <render-mode>
@@ -72,8 +72,8 @@ along with this software (see the LICENSE.md file). If not, see
                         <div class="column justify-top" style="height: 150px">
                             <div class="col-4">
                                 <div class="text-h4 q-pb-lg">Organizations and People</div>
-                                <c-create-organization></c-create-organization>
-                                <c-list-organizations></c-list-organizations>
+<!--                                <c-create-organization></c-create-organization>-->
+<!--                                <c-list-organizations></c-list-organizations>-->
                             </div>
                         </div>
                     </div>

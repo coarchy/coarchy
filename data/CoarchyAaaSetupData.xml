@@ -75,6 +75,10 @@ along with this software (see the LICENSE.md file). If not, see
                                  docIndex="100" docLocation="component://coarchy/document/Coarchy App.md"/>
 
     <!-- EmailTemplates and Notifications -->
+    <moqui.basic.email.EmailTemplate emailTemplateId="WELCOME" description="Welcome" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/WelcomeEmail.xml" webappName="webroot"
+            fromAddress="onboarding@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+
     <moqui.basic.email.EmailTemplate emailTemplateId="USER_INVITE_RESET_PASSWORD" description="User Invite with Reset Password" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/coarchy/UserInviteResetPasswordEmail.xml" webappName="webroot"
             fromAddress="invitation@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
@@ -284,12 +288,31 @@ along with this software (see the LICENSE.md file). If not, see
     </mantle.party.agreement.Agreement>
 
     <!-- ========== Contact List Entities ========== -->
+    <!-- TODO: Review approach -->
     <moqui.basic.Enumeration enumId="ONBOARDING" description="Onboarding" enumTypeId="ContactListType"/>
     <moqui.basic.Enumeration enumId="INVITATION" description="Invitation" enumTypeId="ContactListType"/>
-    <mantle.marketing.contact.ContactList contactListId="CoarchyOnboarding" contactListTypeEnumId="ONBOARDING" contactListName="Onboarding" ownerPartyId="coarchy" optOutScreen="/Unsubscribe"/>
+    <moqui.basic.Enumeration enumId="TASK_REMINDER" description="Task Reminder" enumTypeId="ContactListType"/>
+    <mantle.marketing.contact.ContactList contactListId="CoarchyOnboarding" contactListTypeEnumId="ONBOARDING" contactListName="Onboarding" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800219999" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="WELCOME"/>
+    </mantle.marketing.contact.ContactList>
     <mantle.marketing.contact.ContactList contactListId="CoarchyInvitation" contactListTypeEnumId="INVITATION" contactListName="Invitation" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220000" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="USER_INVITE_RESET_PASSWORD"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220001" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="USER_INVITE"/>
     </mantle.marketing.contact.ContactList>
+    <mantle.marketing.contact.ContactList contactListId="CoarchyTaskReminder" contactListTypeEnumId="TASK_REMINDER" contactListName="Task Reminder" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800220002" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"/>
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800220003" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_NEEDS_ASSIGNMENT_NOTIFICATION"/>
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800220004" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_NOTIFICATION"/>
+    </mantle.marketing.contact.ContactList>
+
+    <!-- ========== Sales Party Classifications ========== -->
+    <enums enumId="PcltSales" description="Sales Journey" enumTypeId="PartyClassificationType"/>
+    <mantle.party.PartyClassification partyClassificationId="HotLead" description="Hot Lead" classificationTypeEnumId="PcltSales"/>
+    <mantle.party.PartyClassification partyClassificationId="ColdLead" description="Cold Lead" classificationTypeEnumId="PcltSales"/>
+    <mantle.party.PartyClassification partyClassificationId="DirectReferral" description="Direct Referral" classificationTypeEnumId="PcltSales"/>
+    <mantle.party.PartyClassification partyClassificationId="DoNotContact" description="Do Not Contact" classificationTypeEnumId="PcltSales"/>
+    <mantle.party.PartyClassification partyClassificationId="PayingCustomer" description="Paying Customer" classificationTypeEnumId="PcltSales"/>
+    <mantle.party.PartyClassification partyClassificationId="PreviouslyPayingCustomer" description="Previously Paying Customer" classificationTypeEnumId="PcltSales"/>
+    <mantle.party.PartyClassification partyClassificationId="Prospect" description="Prospect" classificationTypeEnumId="PcltSales"/>
 
 </entity-facade-xml>

@@ -51,39 +51,64 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="create#mantle.party.PartyRole" in-map="[partyId:newUser.partyId,roleTypeId:'Customer']"/>
                     <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS',
                         userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
+                    <!-- Sales Journey Prospect for invited user -->
+                    <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:newUser.partyId,partyClassificationId:'Prospect']"/>
                 </then><else>
                     <set field="newUser" from="existingUaList?.getFirst()"/>
                 </else></if>
                 <set field="newPartyId" from="newUser.partyId"/>
                 <set field="newUserId" from="newUser.userId"/>
 
-                <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',
-                    fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:partyId,fromDate:ec.user.nowTimestamp]"/>
+                <!-- find if invited user is already an existing member of organization -->
+                <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                    <date-filter/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                    <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                    <econdition field-name="fromPartyId" from="newPartyId"/>
+                    <econdition field-name="toPartyId" from="partyId"/>
+                </entity-find-count>
+                <set field="isInvitedUserOrgMember" from="partyRelationshipCount > 0"/>
+                <if condition="!isInvitedUserOrgMember">
+                    <then>
+                        <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',
+                            fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:partyId,fromDate:ec.user.nowTimestamp]"/>
+                    </then>
+                </if>
+
                 <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
 
                 <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
-                <if condition="!existingUaList"><then>
-                    <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
-                    <!-- reset the password to a random value -->
-                    <set field="resetPassword" from="getRandomString(12)"/>
-                    <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
-                    <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
-                    <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
-                    <entity-update value-field="userAccount"/>
+                <if condition="!existingUaList">
+                    <then>
+                        <!-- if account does not exist (ie, new user), create one & send a USER_INVITE_RESET_PASSWORD email -->
+                        <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
+                        <!-- reset the password to a random value -->
+                        <set field="resetPassword" from="getRandomString(12)"/>
+                        <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
+                        <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
+                        <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
+                        <entity-update value-field="userAccount"/>
 
-                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+
+                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
                         contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
                         partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
                         bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
                         title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
-                </then><else>
-                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                    </then>
+                    <else-if condition="existingUaList &amp;&amp; !isInvitedUserOrgMember">
+                        <!-- if account DOES exist, existing/invited user, but NOT part of inviting organization, send a USER_INVITE email -->
+                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
                         contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
                         partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
                         bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
                         title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
-                </else></if>
-                
+                    </else-if>
+                    <else>
+                        <!-- otherwise, do nothing (account exists, and is member of inviting org)-->
+                        <return type="warning" message="The invitation was not sent. ${emailAddress} is already a member of ${organization.organizationName}."/>
+                    </else>
+                </if>
                 <else><return type="danger" error="true" message="${ec.resource.expand('CoarchyGeneralNotAllowed', null)}"/></else>
             </if>
         </actions>
@@ -153,9 +178,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <message type="warning" public="true">Not sending email. User is unsubscribed from Invitation emails</message>
             </then><else>
                 <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[
-                            emailTemplateId:emailTemplateId,toAddresses:toAddresses,bodyParameters:bodyParameters+[
-                                currentYear:ec.user.nowTimestamp.format('yyyy'),contactListName:invitationContact.contactListName,
-                                unsubscribeLink:bodyParameters.baseLinkUrl+invitationContact.optOutScreen+'?optInVerifyCode='+inviteContactListParty.optInVerifyCode]]"
+                    emailTemplateId:emailTemplateId,toAddresses:toAddresses,bodyParameters:bodyParameters+[
+                    currentYear:ec.user.nowTimestamp.format('yyyy'),contactListName:invitationContact.contactListName,
+                    unsubscribeLink:bodyParameters.baseLinkUrl+invitationContact.optOutScreen+'?optInVerifyCode='+inviteContactListParty.optInVerifyCode]]"
                     out-map="context"/>
                 <if condition="emailMessageId">
                     <set field="sentEmail" from="true"/>
@@ -512,7 +537,11 @@ along with this software (see the LICENSE.md file). If not, see
                         <if condition="userAccountList?.getFirst()?.emailAddress == null"><then>
                             <message type="danger">Can't send email to notify about assignment</message>
                         </then><else>
-                            <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'TASK_ASSIGNED_NOTIFICATION',toAddresses:userAccountList.getFirst().emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+task.rootWorkEffortId,title:'You\'ve been assigned a task'+(ec.user.userAccount.userFullName?' by '+ec.user.userAccount.userFullName:'')]]"/>
+                            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                contactListId:'CoarchyTaskReminder',emailTemplateId:'TASK_ASSIGNED_NOTIFICATION',
+                                partyId:partyIdCreate,toAddresses:userAccountList.getFirst().emailAddress,
+                                bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+task.rootWorkEffortId,baseLinkUrl:baseLinkUrl,
+                                title:'You\'ve been assigned a task'+(ec.user.userAccount.userFullName?' by '+ec.user.userAccount.userFullName:'')]]" out-map="context"/>
                         </else></if>
                     </if>
                 </iterate>
@@ -554,7 +583,13 @@ along with this software (see the LICENSE.md file). If not, see
                                 <if condition="userAccountList.size() &gt; 0 &amp;&amp;
                                         userAccountList?.getFirst()?.partyId != ec.user.userAccount.partyId
                                         &amp;&amp; userAccountList?.getFirst()?.emailAddress != null">
-                                    <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'TASK_NOTIFICATION',toAddresses:userAccountList.getFirst().emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,title:'Task '+taskList?.getFirst().workEffortName+' is ready']]"/>
+                                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                        contactListId:'CoarchyTaskReminder',emailTemplateId:'TASK_NOTIFICATION',
+                                        partyId:userAccountList?.getFirst()?.partyId,
+                                        toAddresses:userAccountList.getFirst().emailAddress,
+                                        bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,
+                                        baseLinkUrl:baseLinkUrl,
+                                        title:'Task '+taskList?.getFirst().workEffortName+' is ready']]" out-map="context"/>
                                 </if>
 
                                 <entity-find entity-name="mantle.work.effort.WorkEffortAndPartyDetail" list="userAccountOwnerList" limit="1">
@@ -567,11 +602,16 @@ along with this software (see the LICENSE.md file). If not, see
                                     <if condition="(userAccountOwnerList.size() &gt; 0) &amp;&amp;
                                         userAccountOwnerList?.getFirst()?.partyId != ec.user.userAccount.partyId
                                         &amp;&amp; userAccountOwnerList?.getFirst()?.emailAddress != null">
-                                        <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[emailTemplateId:'TASK_NEEDS_ASSIGNMENT_NOTIFICATION',toAddresses:userAccountOwnerList.getFirst().emailAddress,bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,title:'Task '+taskList?.getFirst().workEffortName+' is ready to be assigned']]"/>
+                                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                            contactListId:'CoarchyTaskReminder',emailTemplateId:'TASK_NEEDS_ASSIGNMENT_NOTIFICATION',
+                                            partyId:userAccountOwnerList?.getFirst()?.partyId,
+                                            toAddresses:userAccountOwnerList.getFirst().emailAddress,
+                                            bodyParameters:[linkUrl:baseLinkUrl+'/coapp/Checklist?checklistId='+taskList?.getFirst().rootWorkEffortId,
+                                            baseLinkUrl:baseLinkUrl,
+                                            title:'Task '+taskList?.getFirst().workEffortName+' is ready to be assigned']]" out-map="context"/>
                                     </if>
                                 </if>
                             </if>
-
                         </else>
                     </if>
                 </if>
@@ -1199,6 +1239,8 @@ along with this software (see the LICENSE.md file). If not, see
 
             <service-call name="mantle.order.OrderServices.complete#Order" in-map="[orderId:orderId]"/>
 
+            <!-- Sales Journey Paying Customer user -->
+            <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:partyId,partyClassificationId:'PayingCustomer']" out-map="context"/>
         </actions>
     </service>
     <service verb="activateOrDeactivate" noun="Organization">
@@ -2152,7 +2194,75 @@ along with this software (see the LICENSE.md file). If not, see
                 <message>You are already unsubscribed from the contact list.</message>
             </else></if>
 
-            <log level="warn" message="unsubscribe#contactlist context.toString(): ${context.toString()}"/>
+<!--            <log level="warn" message="unsubscribe#contactlist context.toString(): ${context.toString()}"/>-->
+        </actions>
+    </service>
+
+    <service verb="change" noun="UserPassword">
+        <in-parameters>
+            <parameter name="username" required="true" default="ec.web?.sessionAttributes?.moquiPreAuthcUsername ?: username"/>
+            <parameter name="firstName" required="true"/>
+            <parameter name="lastName" required="true"/>
+            <parameter name="oldPassword" required="true"/>
+            <parameter name="newPassword" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="updateSuccessful"/>
+            <parameter name="loginSuccess"/>
+            <parameter name="passwordIssues"/>
+        </out-parameters>
+        <actions>
+            <service-call name="org.moqui.impl.UserServices.update#Password" in-map="[username:username,
+                oldPassword:oldPassword,newPassword:newPassword,newPasswordVerify:newPassword]" out-map="context"/>
+
+            <!-- password change success, login the user -->
+            <if condition="updateSuccessful">
+                <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount">
+                    <field-map field-name="username"/>
+                    <select-field field-name="userId,partyId"/></entity-find-one>
+                <service-call name="update#moqui.security.UserAccount" in-map="[userId:userAccount.userId,userFullName:(firstName?firstName+' ':'')+lastName?:'']"/>
+                <service-call name="mantle.party.PartyServices.update#Account" in-map="[userId:userAccount.userId,firstName:firstName,lastName:lastName]"/>
+                <set field="loginSuccess" from="ec.user.internalLoginUser(username)"/>
+
+                <!-- Sales Journey Hot Lead user -->
+                <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:userAccount.partyId,partyClassificationId:'HotLead']" out-map="context"/>
+
+                <!-- Send welcome email -->
+<!--                <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[-->
+<!--                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',-->
+<!--                        partyId:userAccount.partyId,preferredContactMechId:null,toAddresses:username,-->
+<!--                        bodyParameters:[title:'Welcome to Coarchy']]" out-map="context"/>-->
+            </if>
+        </actions>
+    </service>
+
+    <service verb="signUp" noun="User">
+        <in-parameters>
+            <parameter name="emailAddress" required="true"/>
+            <parameter name="username" required="true" default="emailAddress"/>
+            <parameter name="firstName" required="true"/>
+            <parameter name="lastName" required="true"/>
+            <parameter name="newPassword" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="partyId"/>
+            <parameter name="partyClassificationId"/>
+        </out-parameters>
+        <actions>
+            <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
+                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,newPassword:newPassword,newPasswordVerify:newPassword]"/>
+            <service-call name="update#mantle.party.Party" in-map="[partyId:partyId,visibilityEnumId:'PvOrganization']"/>
+            <service-call name="create#mantle.party.PartyRole" in-map="[partyId:partyId,roleTypeId:'Customer']"/>
+            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
+
+            <!-- Sales Journey Hot Lead user -->
+            <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:partyId,partyClassificationId:'HotLead']" out-map="context"/>
+
+            <!-- Send welcome email -->
+<!--            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[-->
+<!--                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',-->
+<!--                        partyId:partyId,preferredContactMechId:null,toAddresses:username,-->
+<!--                        bodyParameters:[title:'Welcome to Coarchy']]" out-map="context"/>-->
 
         </actions>
     </service>
