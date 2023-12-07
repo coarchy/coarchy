@@ -18,6 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="pageIndex"/>
     <parameter name="pageSize"/>
     <parameter name="orderByField"/>
+    <parameter name="isEmptyStory"/>
 
     <transition-include name="getActorList" location="component://coarchy/screen/coarchy/cointernal/Process/EditProcessStory.xml"/>
 
@@ -108,30 +109,6 @@ along with this software (see the LICENSE.md file). If not, see
                 </form-single>
             </box-body>
         </container-box>
-        <section name="InsertCopiedActivities" condition="entryList.size() &gt; 0">
-            <widgets>
-                <container-box>
-                    <box-header title="Paste Activities"/>
-                    <box-body>
-                        <form-list name="InsertCopiedActivity" list="entryList" transition="pasteActivities">
-                            <row-actions>
-                                <service-call name="coarchy.CoarchyServices.get#ClipboardActivityAndCount"
-                                        in-map="[clipboardEntryId:clipboardEntryId]" out-map="context"/>
-                            </row-actions>
-
-                            <field name="activityText"><default-field title=""><display/></default-field></field>
-                            <field name="insertAbove"><default-field><link url="pasteActivities" text="Above ${activityCount}"
-                                    btn-type="success" parameter-map="[pageIndex:pageIndex,downPageIndex:downPageIndex,
-                                    processStoryId:processStoryId,sequenceNum:sequenceNum,insertType:'above',
-                                    clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/></default-field></field>
-                            <field name="insertBelow"><default-field><link url="pasteActivities" text="Below ${activityCount}"
-                                    btn-type="success" parameter-map="[pageIndex:pageIndex,downPageIndex:downPageIndex,
-                                    processStoryId:processStoryId,sequenceNum:sequenceNum,insertType:'below',
-                                    clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/></default-field></field>
-                        </form-list>
-                    </box-body>
-                </container-box>
-            </widgets>
-        </section>
+        <section-include  name="PasteActivitiesSection" location="component://coarchy/screen/coarchy/cointernal/Process/EditProcessStory/PasteActivity.xml"  />        
     </widgets>
 </screen>

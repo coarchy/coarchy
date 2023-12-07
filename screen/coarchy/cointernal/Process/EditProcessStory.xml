@@ -93,6 +93,10 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- Don't select fields from activityactor (actorId) -->
             <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
         </entity-find>
+
+        <entity-find-count entity-name="coarchy.ClipboardEntry" count-field="clipboardEntryCount" >
+            <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
+        </entity-find-count>
     </actions>
 
     <widgets>
@@ -378,7 +382,7 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="actionMenu"><default-field title="Actions">
                 <button-menu text="Actions">
                     <dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
-                            parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"
+                            parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,isEmptyStory:!processStoryActivityList,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"
                             condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown"/>
                     <dynamic-dialog id="ManageValues" button-text="Values" transition="ManageValues"
                             parameter-map="[activityId:activityId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/>
@@ -391,7 +395,12 @@ along with this software (see the LICENSE.md file). If not, see
                             icon="fa fa-trash" btn-type="danger" text="Delete" tooltip="Delete Activity"
                             parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]"/>
                 </button-menu></default-field>
-                <last-row-field><link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break"
+                <last-row-field>
+                    <dynamic-dialog id="PasteActivity" button-text="Paste" transition="PasteActivity"
+                    parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId, isEmptyStory:!processStoryActivityList]"
+                    condition="clipboardEntryCount &gt; 0 &amp;&amp; !processStoryActivityList"/>
+
+                    <link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break"
                     parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,
                         newPageIndex:((processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp;
                         processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex)]"/></last-row-field></field>

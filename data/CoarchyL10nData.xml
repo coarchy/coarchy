@@ -45,6 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessChecklistActivityUsersRequired" localized="At least one user is required for each of these actors: '${activityActorList*.name.join(', ')}'"/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardEmpty" localized="Your clipboard is empty."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardActivityEmpty" localized="Your clipboard contains no activities."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardPasteError" localized="Something went wrong while pasting this activity."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityValueDeleteError" localized="Something went wrong while deleting value."/>
    
 </entity-facade-xml>

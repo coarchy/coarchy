@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+    default-menu-include="false" standalone="true">
+
+    <parameter name="processStoryId"/>
+    <parameter name="sequenceNum"/>
+    <parameter name="isEmptyStory"/>
+    <parameter name="pageIndex"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField"/>
+
+    <transition-include name="getActorList" location="component://coarchy/screen/coarchy/cointernal/Process/EditProcessStory.xml"/>
+
+    <transition name="pasteActivities">
+        <service-call name="coarchy.CoarchyServices.paste#Activities" in-map="[pageIndex:pageIndex,insertType:insertType,
+            downPageIndex:downPageIndex,processStoryId:processStoryId,sequenceNum:sequenceNum,organizationId:activeOrgId,
+            clipboardEntryId:clipboardEntryId]"/>
+        <default-response url=".." parameter-map="[pageIndex:pageIndex]"/>
+    </transition>
+
+    <actions>
+        <entity-find entity-name="coarchy.ClipboardEntry" list="entryList" limit="5">
+            <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
+            <order-by field-name="-entryDate"/>
+        </entity-find>
+        <!--        <log level="warn" message="InsertActivity context.toString()
+        ${context.toString()}"/>-->
+    </actions>
+
+    <widgets>
+        <section name="PasteActivitiesSection" condition="entryList.size() &gt; 0">
+            <widgets>
+                <container-box>
+                    <box-header title="Paste Activities"/>
+                    <box-body>
+                        <section name="PasteActivitiesNotEmptyProcess" condition="!(isEmptyStory.toBoolean())">
+                            <widgets>
+                                <form-list name="PasteActivitiesNotEmptyFormList" list="entryList" transition="pasteActivities">
+                                    <row-actions>
+                                        <service-call name="coarchy.CoarchyServices.get#ClipboardActivityAndCount" in-map="[clipboardEntryId:clipboardEntryId]" out-map="context"/>
+                                    </row-actions>
+
+                                    <field name="activityText">
+                                        <default-field title="">
+                                            <display/>
+                                        </default-field>
+                                    </field>
+                                    <field name="insertAbove">
+                                        <default-field >
+                                            <link url="pasteActivities" text="Above ${activityCount}" btn-type="success" parameter-map="[pageIndex:pageIndex,downPageIndex:downPageIndex,
+                                                processStoryId:processStoryId,sequenceNum:sequenceNum,insertType:'above', isEmptyStory:false,
+                                                clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/>
+                                        </default-field>
+                                    </field>
+                                    <field name="insertBelow">
+                                        <default-field >
+                                            <link url="pasteActivities" text="Below ${activityCount}" btn-type="success" parameter-map="
+                                        [pageIndex:pageIndex,downPageIndex:downPageIndex, processStoryId:processStoryId,sequenceNum:sequenceNum,insertType:'below', isEmptyStory:false,
+                                        clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/>
+                                        </default-field>
+                                    </field>
+                                </form-list>
+                            </widgets>
+                        </section>
+                        <section name="PasteActivitiesEmptyProcess" condition="(isEmptyStory.toBoolean())">
+                            <widgets>
+                                <form-list name="PasteActivitiesEmptyFormList" list="entryList" transition="pasteActivities">
+                                    <row-actions>
+                                        <service-call name="coarchy.CoarchyServices.get#ClipboardActivityAndCount" in-map="[clipboardEntryId:clipboardEntryId]" out-map="context"/>
+                                    </row-actions>
+
+                                    <field name="activityText">
+                                        <default-field title="">
+                                            <display/>
+                                        </default-field>
+                                    </field>
+
+                                    <field name="insertFirst">
+                                        <default-field title="">
+                                            <link url="pasteActivities" text="Insert" btn-type="success" parameter-map="
+                                        [pageIndex:pageIndex,downPageIndex:downPageIndex, processStoryId:processStoryId,sequenceNum:sequenceNum, isEmptyStory:true,
+                                        clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/>
+                                        </default-field>
+                                    </field>
+                                </form-list>
+                            </widgets>
+                        </section>
+                    </box-body>
+                </container-box>
+            </widgets>
+        </section>
+    </widgets>
+</screen>
