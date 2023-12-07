@@ -13,6 +13,333 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+    
+    <service verb="create" noun="Organization">
+        <in-parameters>
+            <parameter name="organizationId" />
+            <parameter name="organizationName" />
+            <parameter name="copyUsers" type="String" default-value="none">
+                <description>Copies/moves user and roles. Value should be one of 'none', 'copy', 'move'</description>
+            </parameter>
+            <parameter name="copyChecklists" type="String" default-value="none">
+                <description>Copies/moves checklists. Value should be one of 'none', 'copy', 'move'</description>
+            </parameter>
+        </in-parameters>
+        <actions>
+            <!-- find user organization list -->
+            <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
+                <date-filter/>
+                <econditions combine="or">
+                    <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                    <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                </econditions>
+                <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
+                <order-by field-name="-visibilityEnumId"/>
+            </entity-find>
+
+            <!-- make sure org name is valid/non-empty -->
+            <set field="organizationName" from="organizationName.trim()"/>
+            <if condition="!organizationName">
+                <return type="warning" error="true" message="${ec.resource.expand('CoarchyOrgNameInvalid', null)}"/>
+            </if>
+
+            <!-- if no clone/move from organizationId, create new org & return -->
+            <if condition="!organizationId">
+                <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,partyTypeEnumId:'PtyOrganization',visibilityEnumId:'PvOrganization']" out-map="newOrganization"/>
+                <service-call name="create#mantle.party.Organization" in-map="[partyId:newOrganization.partyId,organizationName:organizationName]"/>
+                <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromDate:ec.user.nowTimestamp, fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:newOrganization.partyId]"/>
+                <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:newOrganization.partyId]"/>
+                <return type="success" message="${ec.resource.expand('CoarchyOrgCreateSuccess', null)}"/>
+            </if>
+
+            <!-- clone old org -->
+            <entity-find-one entity-name="mantle.party.Party" value-field="oldOrganization" auto-field-map="[partyId:organizationId]"/>
+            <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+                <date-filter/>
+                <econdition field-name="partyId" from="organizationId"/>
+            </entity-find-count>
+            
+            <if condition="(oldOrganization.visibilityEnumId || (oldOrganization.ownerPartyId == ec.user.userAccount.partyId) ||
+                    organizationList*.toPartyId?.contains(organizationId)) &amp;&amp; (partyActivationCount &gt; 0 || oldOrganization.visibilityEnumId=='PvPublic')">
+
+                <service-call name="create#mantle.party.Party" in-map="[ownerPartyId:ec.user.userAccount.partyId,
+                    disabled:oldOrganization.disabled,partyTypeEnumId:oldOrganization.partyTypeEnumId,
+                    visibilityEnumId:'PvOrganization']" out-map="newOrganization"/>
+                <service-call name="create#mantle.party.Organization" in-map="[partyId:newOrganization.partyId,organizationName:organizationName]"/>
+                <service-call name="coarchy.CoarchyServices.activateOrDeactivate#Organization" in-map="[organizationPartyId:newOrganization.partyId]" out-map="context"/>
+                <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:newOrganization.partyId]"/>
+                <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromDate:ec.user.nowTimestamp, fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:newOrganization.partyId]"/>
+
+                <!-- find partyRelationship list for old org -->
+                <entity-find entity-name="mantle.party.PartyRelationship" list="partyRelationshipList">
+                    <date-filter />
+                    <econdition field-name="toPartyId" from="oldOrganization.partyId"/>
+                    <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                    <!-- <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId" ignore="oldOrganization.visibilityEnumId=='PvOrganization'"/> -->
+                </entity-find>
+
+                <set field="referencedPartyIdSet" from="new TreeSet()" />
+
+                <!-- &amp;&amp; (partyRelationship.fromPartyId != ec.user.userAccount?.partyId) -->
+                
+                <!-- not sure why this is here? -->
+                <!-- <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                    <econdition field-name="toPartyId" from="oldOrganization.partyId"/>
+                    <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                    <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                </entity-find-count>
+                <if condition="partyRelationshipCount==0">
+                    <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:newOrganization.partyId]"/>
+                </if> -->
+                                
+                <!-- copy PartyContent (Vision, Mission, Origin Story)-->
+                <entity-find entity-name="mantle.party.PartyContent" list="partyContentList">
+                    <econdition field-name="partyId" from="oldOrganization.partyId"/>
+                    <econdition field-name="partyContentTypeEnumId" operator="in" value="PcntVision,PcntMission,PcntOriginStory"/>
+                </entity-find>
+                <iterate list="partyContentList" entry="partyContent">
+                    <service-call name="create#mantle.party.PartyContent" in-map="[partyId:newOrganization.partyId,
+                        partyContentTypeEnumId:partyContent.partyContentTypeEnumId,description:partyContent.description]"/>
+                </iterate>
+
+                <!-- copy ValueStatement -->
+                <set field="valueStatementIdMap" from="[:]"/>
+                <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="valueStatementList" entry="valueStatement">
+                    <service-call name="create#coarchy.ValueStatement" in-map="[value:valueStatement.value,typeEnumId:
+                        valueStatement.typeEnumId,organizationId:newOrganization.partyId]" out-map="valueStatementContext"/>
+                    <script>valueStatementIdMap.put(valueStatement.valueStatementId,valueStatementContext.valueStatementId)</script>
+                </iterate>
+
+                <!-- copy ProcessStory -->
+                <set field="processStoryIdMap" from="[:]"/>
+                <entity-find entity-name="coarchy.ProcessStory" list="processStoryList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="processStoryList" entry="processStory">
+                    <service-call name="create#coarchy.ProcessStory" in-map="[name:processStory.name,organizationId:newOrganization.partyId,disabled:processStory.disabled]" out-map="processStoryContext"/>
+                    <script>processStoryIdMap.put(processStory.processStoryId,processStoryContext.processStoryId)</script>
+                </iterate>
+
+                <!-- copy Actors -->
+                <set field="actorIdMap" from="[:]"/>
+                <entity-find entity-name="coarchy.Actor" list="actorList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="actorList" entry="actor">
+                    <service-call name="create#coarchy.Actor" in-map="[name:actor.name,description:actor.description,organizationId:newOrganization.partyId]" out-map="actorContext"/>
+                    <script>actorIdMap.put(actor.actorId,actorContext.actorId)</script>
+                </iterate>
+
+                <!-- copy/move ActorParty assignments -->                
+                <if condition="copyUsers != 'none'">
+                    <entity-find entity-name="coarchy.ActorParty" list="actorPartyList">
+                        <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                    </entity-find>
+                    <iterate list="actorPartyList" entry="actorParty">
+                        <if condition="(copyUsers == 'copy') || (copyUsers == 'move')">
+                            <then>
+                                <script>referencedPartyIdSet.add(actorParty.partyId)</script>
+                                <!-- copy ActoryParty to new org -->
+                                <service-call name="create#coarchy.ActorParty" 
+                                    in-map="[actorId:actorIdMap[actorParty.actorId], partyId:actorParty.partyId, organizationId:newOrganization.partyId]" />
+                                <if condition="(copyUsers == 'move')">
+                                    <!-- if this is a move, delete the old value -->
+                                    <entity-delete value-field="actorParty" />
+                                </if>
+                            </then>
+                        </if>
+                    </iterate>
+                </if>
+
+                <!-- copy Activities -->
+                <set field="activityIdMap" from="[:]"/>
+                <entity-find entity-name="coarchy.Activity" list="activityList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="activityList" entry="activity">
+                    <service-call name="create#coarchy.Activity" in-map="[condition:activity.condition,action:activity.action,implementationId:activity.implementationId,organizationId:newOrganization.partyId]" out-map="activityContext"/>
+                    <script>activityIdMap.put(activity.activityId,activityContext.activityId)</script>
+                </iterate>
+
+                <!-- copy ActivityActor -->   
+                <entity-find entity-name="coarchy.ActivityActor" list="activityActorList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="activityActorList" entry="activityActor">
+                    <service-call name="create#coarchy.ActivityActor" 
+                        in-map="[activityId:activityIdMap[activityActor.activityId], actorId:actorIdMap[activityActor.actorId], organizationId:newOrganization.partyId]" />
+                </iterate>
+               
+                <!-- copy ValueStatementActivity -->                
+                <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="valueStatementActivityList" entry="valueStatementActivity">
+                    <service-call name="create#coarchy.ValueStatementActivity" 
+                        in-map="[valueStatementId:valueStatementIdMap[valueStatementActivity.valueStatementId],activityId:activityIdMap[valueStatementActivity.activityId],organizationId:newOrganization.partyId]"/>
+                </iterate>
+
+                <!-- copy ProcessStoryActivity -->                
+                <entity-find entity-name="coarchy.ProcessStoryActivity" list="processStoryActivityList">
+                    <econdition field-name="organizationId" from="oldOrganization.partyId"/>
+                </entity-find>
+                <iterate list="processStoryActivityList" entry="processStoryActivity">
+                    <service-call name="create#coarchy.ProcessStoryActivity" 
+                        in-map="[processStoryId:processStoryIdMap[processStoryActivity.processStoryId],activityId:activityIdMap[processStoryActivity.activityId],sequenceNum:processStoryActivity.sequenceNum,detailProcessStoryId:processStoryIdMap[processStoryActivity.detailProcessStoryId],organizationId:newOrganization.partyId]"/>
+                </iterate>
+
+                <set field="checklistWorkEffortIdMap" from="[:]"/>
+                <if condition="copyChecklists != 'none'">
+                    <entity-find entity-name="mantle.work.effort.WorkEffort" list="checklistWorkEffortList">
+                        <econdition field-name="workEffortTypeEnumId" value="WetChecklist"/>
+                        <econdition field-name="ownerPartyId" from="oldOrganization.partyId"/>
+                    </entity-find>
+                    
+                    <iterate list="checklistWorkEffortList" entry="checklistWorkEffort">
+                        <if condition="copyChecklists == 'copy'">
+                            <then>
+                                <!-- create a new copy of each work effort -->
+                                <service-call name="create#mantle.work.effort.WorkEffort" in-map="[workEffortName:checklistWorkEffort.workEffortName,
+                                    actualStartDate:checklistWorkEffort.actualStartDate,workEffortTypeEnumId:checklistWorkEffort.workEffortTypeEnumId,
+                                    actualCompletionDate:checklistWorkEffort.actualCompletionDate,ownerPartyId:newOrganization.partyId]" out-map="checklistWorkEffortContext"/>
+                                <script>checklistWorkEffortIdMap.put(checklistWorkEffort.workEffortId,checklistWorkEffortContext.workEffortId)</script>
+                            </then>
+                            <else-if condition="copyChecklists == 'move'">
+                                <!-- move checklist by changing ownerPartyId to new org -->
+                                <service-call name="update#mantle.work.effort.WorkEffort" 
+                                    in-map="[workEffortId:checklistWorkEffort.workEffortId, ownerPartyId:newOrganization.partyId]" 
+                                    out-map="checklistWorkEffortContext"/>
+                                <script>checklistWorkEffortIdMap.put(checklistWorkEffort.workEffortId,checklistWorkEffort.workEffortId)</script>
+                            </else-if>                           
+                        </if>
+                    </iterate>
+              
+                    <!-- move checklist (workeffort) parties -->
+                    <entity-find entity-name="mantle.work.effort.WorkEffortParty" list="checklistWorkEffortPartyList">
+                        <econdition field-name="workEffortId" operator="in" from="checklistWorkEffortIdMap*.key"/>
+                    </entity-find>
+
+                    <iterate list="checklistWorkEffortPartyList" entry="checklistWorkEffortParty">
+                        <if condition="partyRelationshipList*.fromPartyId?.contains(checklistWorkEffortParty.partyId)">
+                            <then>
+                                <script>referencedPartyIdSet.add(checklistWorkEffortParty.partyId)</script>
+                                <if condition="copyChecklists == 'copy'">
+                                    <then>
+                                        <!-- create new WorkEffortParty to new org -->
+                                        <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                                            workEffortId:checklistWorkEffortIdMap[checklistWorkEffortParty.workEffortId],
+                                            partyId:checklistWorkEffortParty.partyId,roleTypeId:checklistWorkEffortParty.roleTypeId,
+                                            fromDate:ec.user.nowTimestamp,thruDate:checklistWorkEffortParty.thruDate]"/>
+                                    </then>
+                                    <else-if condition="copyChecklists == 'move'">
+                                        <!-- do nothing, WorkEffort is now owned by new org, WorkEffortParty is still valid -->
+                                    </else-if>
+                                </if>
+                            </then>
+                            <else>
+                                <!-- <log level="warn" message="WorkEffortParty ${checklistWorkEffortParty} not created because party is not a member of the organization"/>-->
+                            </else>
+                        </if>
+                    </iterate>
+                </if>
+               
+                <set field="itemWorkEffortIdMap" from="[:]"/>
+                <if condition="copyChecklists != 'none'">
+                    <entity-find entity-name="mantle.work.effort.WorkEffort" list="itemWorkEffortList">
+                        <econdition field-name="workEffortTypeEnumId" value="WetChecklistItem"/>
+                        <econdition field-name="ownerPartyId" from="oldOrganization.partyId"/>
+                    </entity-find>
+                                     
+                    <iterate list="itemWorkEffortList" entry="itemWorkEffort">
+                        <if condition="copyChecklists == 'copy'">
+                            <then>
+                                <!-- create a new copy of each work effort -->
+                                <service-call name="create#mantle.work.effort.WorkEffort" in-map="[workEffortName:itemWorkEffort.workEffortName,
+                                actualStartDate:itemWorkEffort.actualStartDate,workEffortTypeEnumId:itemWorkEffort.workEffortTypeEnumId,
+                                actualCompletionDate:itemWorkEffort.actualCompletionDate,ownerPartyId:newOrganization.partyId,
+                                rootWorkEffortId:checklistWorkEffortIdMap[itemWorkEffort.rootWorkEffortId],
+                                activityId:activityIdMap[itemWorkEffort.activityId],resolutionEnumId:itemWorkEffort.resolutionEnumId]" out-map="itemWorkEffortContext"/>
+                                <script>itemWorkEffortIdMap.put(itemWorkEffort.workEffortId,itemWorkEffortContext.workEffortId)</script>
+                            </then>
+                            <else-if condition="copyChecklists == 'move'">
+                                <!-- move checklist item by changing ownerPartyId to new org -->
+                                <service-call name="update#mantle.work.effort.WorkEffort" 
+                                    in-map="[workEffortId:itemWorkEffort.workEffortId, ownerPartyId:newOrganization.partyId,activityId: activityIdMap[itemWorkEffort.activityId]]" 
+                                    out-map="itemWorkEffortContext"/>
+                                <script>itemWorkEffortIdMap.put(itemWorkEffort.workEffortId,itemWorkEffort.workEffortId)</script>
+                            </else-if>                           
+                        </if>
+                    </iterate>
+              
+                    <!-- move checklist item (workeffort) parties -->
+                    <entity-find entity-name="mantle.work.effort.WorkEffortParty" list="itemWorkEffortPartyList">
+                        <econdition field-name="workEffortId" operator="in" from="itemWorkEffortIdMap*.key"/>
+                    </entity-find>
+                   
+                    <iterate list="itemWorkEffortPartyList" entry="itemWorkEffortParty">
+                        <if condition="partyRelationshipList*.fromPartyId?.contains(itemWorkEffortParty.partyId)">
+                            <then>
+                                <script>referencedPartyIdSet.add(itemWorkEffortParty.partyId)</script>
+                                <if condition="copyChecklists == 'copy'">
+                                    <then>
+                                        <!-- create new WorkEffortParty to new org -->
+                                        <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                                            workEffortId:itemWorkEffortIdMap[itemWorkEffortParty.workEffortId],
+                                            partyId:itemWorkEffortParty.partyId,roleTypeId:itemWorkEffortParty.roleTypeId,
+                                            fromDate:ec.user.nowTimestamp,thruDate:itemWorkEffortParty.thruDate]"/>                                       
+                                    </then>
+                                    <else-if condition="copyChecklists == 'move'">
+                                        <!-- do nothing, WorkEffort is now owned by new org, WorkEffortParty is still valid -->
+                                    </else-if>
+                                </if>
+                            </then>
+                            <else>
+                                <!-- <log level="warn" message="Checklist item WorkEffortParty ${itemWorkEffortParty} not created because party is not a member of the organization"/>-->
+                            </else>
+                        </if>
+                    </iterate>
+                </if>
+
+                <if condition="copyUsers != 'none'">         
+                    <!-- <econdition field-name="fromPartyId" operator="in" from="referencedPartyIdSet"/> -->
+                    <entity-find entity-name="mantle.party.PartyRelationship" list="referencedPartyRelationshipList">
+                        <date-filter />
+                        <econdition field-name="toPartyId" from="oldOrganization.partyId"/>
+                        <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                        <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                        <econdition field-name="fromPartyId" operator="in" from="referencedPartyIdSet"/>
+                    </entity-find>
+
+                    <iterate list="referencedPartyRelationshipList" entry="partyRelationship">
+                        <if condition="(copyUsers == 'copy') || (copyUsers == 'move') &amp;&amp; (partyRelationship.fromPartyId != ec.user.userAccount?.partyId)">
+                            <then>
+                                <!-- create new relationship to new org -->
+                                <service-call name="create#mantle.party.PartyRelationship" in-map="[
+                                    relationshipTypeEnumId:partyRelationship.relationshipTypeEnumId,fromPartyId:partyRelationship.fromPartyId,
+                                    toRoleTypeId:partyRelationship.toRoleTypeId,toPartyId:newOrganization.partyId,fromDate:partyRelationship.fromDate,
+                                    thruDate:partyRelationship.thruDate]"/>
+                                <!-- end old relationship if this is a move operation -->
+                                <if condition="(copyUsers == 'move')">
+                                    <set field="partyRelationship.thruDate" from="ec.user.nowTimestamp" />
+                                    <entity-update value-field="partyRelationship" />
+                                </if>
+                            </then>
+                        </if>
+                    </iterate>
+                </if>
+            </if>
+
+            <message type="success">
+                ${ec.resource.expand('CoarchyOrgCreateSuccess', null)}
+            </message>
+        </actions>
+    </service>
+
     <service verb="invite" noun="NewUser">
         <in-parameters>
             <parameter name="partyId" required="true"/>
