@@ -51,6 +51,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="create#mantle.party.PartyRole" in-map="[partyId:newUser.partyId,roleTypeId:'Customer']"/>
                     <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS',
                         userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
+                    <!-- Sales Journey Prospect for invited user -->
+                    <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:newUser.partyId,partyClassificationId:'Prospect']"/>
                 </then><else>
                     <set field="newUser" from="existingUaList?.getFirst()"/>
                 </else></if>
@@ -153,9 +155,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <message type="warning" public="true">Not sending email. User is unsubscribed from Invitation emails</message>
             </then><else>
                 <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[
-                            emailTemplateId:emailTemplateId,toAddresses:toAddresses,bodyParameters:bodyParameters+[
-                                currentYear:ec.user.nowTimestamp.format('yyyy'),contactListName:invitationContact.contactListName,
-                                unsubscribeLink:bodyParameters.baseLinkUrl+invitationContact.optOutScreen+'?optInVerifyCode='+inviteContactListParty.optInVerifyCode]]"
+                    emailTemplateId:emailTemplateId,toAddresses:toAddresses,bodyParameters:bodyParameters+[
+                    currentYear:ec.user.nowTimestamp.format('yyyy'),contactListName:invitationContact.contactListName,
+                    unsubscribeLink:bodyParameters.baseLinkUrl+invitationContact.optOutScreen+'?optInVerifyCode='+inviteContactListParty.optInVerifyCode]]"
                     out-map="context"/>
                 <if condition="emailMessageId">
                     <set field="sentEmail" from="true"/>
@@ -1213,6 +1215,8 @@ along with this software (see the LICENSE.md file). If not, see
 
             <service-call name="mantle.order.OrderServices.complete#Order" in-map="[orderId:orderId]"/>
 
+            <!-- Sales Journey Paying Customer user -->
+            <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:partyId,partyClassificationId:'PayingCustomer']" out-map="context"/>
         </actions>
     </service>
     <service verb="activateOrDeactivate" noun="Organization">
@@ -2157,7 +2161,75 @@ along with this software (see the LICENSE.md file). If not, see
                 <message>You are already unsubscribed from the contact list.</message>
             </else></if>
 
-            <log level="warn" message="unsubscribe#contactlist context.toString(): ${context.toString()}"/>
+<!--            <log level="warn" message="unsubscribe#contactlist context.toString(): ${context.toString()}"/>-->
+        </actions>
+    </service>
+
+    <service verb="change" noun="UserPassword">
+        <in-parameters>
+            <parameter name="username" required="true" default="ec.web?.sessionAttributes?.moquiPreAuthcUsername ?: username"/>
+            <parameter name="firstName" required="true"/>
+            <parameter name="lastName" required="true"/>
+            <parameter name="oldPassword" required="true"/>
+            <parameter name="newPassword" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="updateSuccessful"/>
+            <parameter name="loginSuccess"/>
+            <parameter name="passwordIssues"/>
+        </out-parameters>
+        <actions>
+            <service-call name="org.moqui.impl.UserServices.update#Password" in-map="[username:username,
+                oldPassword:oldPassword,newPassword:newPassword,newPasswordVerify:newPassword]" out-map="context"/>
+
+            <!-- password change success, login the user -->
+            <if condition="updateSuccessful">
+                <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount">
+                    <field-map field-name="username"/>
+                    <select-field field-name="userId,partyId"/></entity-find-one>
+                <service-call name="update#moqui.security.UserAccount" in-map="[userId:userAccount.userId,userFullName:(firstName?firstName+' ':'')+lastName?:'']"/>
+                <service-call name="mantle.party.PartyServices.update#Account" in-map="[userId:userAccount.userId,firstName:firstName,lastName:lastName]"/>
+                <set field="loginSuccess" from="ec.user.internalLoginUser(username)"/>
+
+                <!-- Sales Journey Hot Lead user -->
+                <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:userAccount.partyId,partyClassificationId:'HotLead']" out-map="context"/>
+
+                <!-- Send welcome email -->
+<!--                <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[-->
+<!--                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',-->
+<!--                        partyId:userAccount.partyId,preferredContactMechId:null,toAddresses:username,-->
+<!--                        bodyParameters:[title:'Welcome to Coarchy']]" out-map="context"/>-->
+            </if>
+        </actions>
+    </service>
+
+    <service verb="signUp" noun="User">
+        <in-parameters>
+            <parameter name="emailAddress" required="true"/>
+            <parameter name="username" required="true" default="emailAddress"/>
+            <parameter name="firstName" required="true"/>
+            <parameter name="lastName" required="true"/>
+            <parameter name="newPassword" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="partyId"/>
+            <parameter name="partyClassificationId"/>
+        </out-parameters>
+        <actions>
+            <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
+                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,newPassword:newPassword,newPasswordVerify:newPassword]"/>
+            <service-call name="update#mantle.party.Party" in-map="[partyId:partyId,visibilityEnumId:'PvOrganization']"/>
+            <service-call name="create#mantle.party.PartyRole" in-map="[partyId:partyId,roleTypeId:'Customer']"/>
+            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
+
+            <!-- Sales Journey Hot Lead user -->
+            <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:partyId,partyClassificationId:'HotLead']" out-map="context"/>
+
+            <!-- Send welcome email -->
+<!--            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[-->
+<!--                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',-->
+<!--                        partyId:partyId,preferredContactMechId:null,toAddresses:username,-->
+<!--                        bodyParameters:[title:'Welcome to Coarchy']]" out-map="context"/>-->
 
         </actions>
     </service>

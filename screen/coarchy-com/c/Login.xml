@@ -18,7 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="login" location="component://webroot/screen/webroot/rest.xml" method="post"/>
     <transition name="logout"><actions><script>ec.user.logoutUser()</script></actions>
         <default-response url="/"/><error-response url="."/></transition>
-    <transition name="createInitialAdminAccount">
+    <transition name="createInitialAdminAccount"><condition><expression>ec.entity.find('moqui.security.UserAccount').disableAuthz().count() == 1</expression></condition>
         <service-call name="org.moqui.impl.UserServices.create#InitialAdminAccount"/>
         <default-response url="../Login"/>
         <error-response url="."/>
