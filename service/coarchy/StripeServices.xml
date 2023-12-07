@@ -30,7 +30,9 @@ along with this software (see the LICENSE.md file). If not, see
                     message="${ec.resource.expand('CoarchyInvalidOrder', null)}"/>
             </if>
             <if condition="existingOrderList.size() &gt; 1">
-                <message type="warning">Multiple open orders or parts found for user. This should not happen.</message></if>
+                <log level="warn" message="Multiple open orders or parts found for user. This should not happen." />
+                <!-- <message type="warning">Multiple open orders or parts found for user. This should not happen.</message> -->
+            </if>
 
             <set field="orderHeaderAndPart" from="existingOrderList.getFirst()"/>
             <set field="orderId" from="orderHeaderAndPart.orderId"/>
