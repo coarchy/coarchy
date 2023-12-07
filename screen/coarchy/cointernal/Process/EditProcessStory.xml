@@ -396,15 +396,22 @@ along with this software (see the LICENSE.md file). If not, see
                             parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]"/>
                 </button-menu></default-field>
                 <last-row-field>
-                    <dynamic-dialog id="PasteActivity" button-text="Paste" transition="PasteActivity"
-                    parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId, isEmptyStory:!processStoryActivityList]"
-                    condition="clipboardEntryCount &gt; 0 &amp;&amp; !processStoryActivityList"/>
-
-                    <link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break"
-                    parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,
+                    <button-menu text="Actions" condition="!processStoryActivityList">
+                        <dynamic-dialog id="PasteActivity" button-text="Paste" transition="PasteActivity"
+                        parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId, isEmptyStory:!processStoryActivityList]"
+                        condition="clipboardEntryCount &gt; 0 &amp;&amp; !processStoryActivityList"/>
+                        
+                        <link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break"
+                        parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,
                         newPageIndex:((processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp;
-                        processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex)]"/></last-row-field></field>
-
+                        processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex)]"/>
+                    </button-menu>
+                    <link url="newParagraph" text="⏎ Paragraph" tooltip="Add Paragraph Break" condition="processStoryActivityList"
+                    parameter-map="[insertSequenceNum:processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0,
+                    newPageIndex:((processStoryActivityListPageRangeHigh &lt; processStoryActivityListCount) || (processStoryActivityListPageRangeHigh == processStoryActivityListCount &amp;&amp;
+                    processStoryActivityListCount == pageSize.toInteger()*(processStoryActivityListPageMaxIndex.toInteger()+1))?pageIndex.toInteger()+1:pageIndex)]"/>
+                </last-row-field>
+            </field>
             <columns>
                 <column><field-ref name="activity"/></column>
                 <column><field-ref name="submit"/></column>
