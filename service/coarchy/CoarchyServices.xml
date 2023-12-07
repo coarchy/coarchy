@@ -59,34 +59,58 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="newPartyId" from="newUser.partyId"/>
                 <set field="newUserId" from="newUser.userId"/>
 
-                <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',
-                    fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:partyId,fromDate:ec.user.nowTimestamp]"/>
+                <!-- find if invited user is already an existing member of organization -->
+                <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                    <date-filter/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                    <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                    <econdition field-name="fromPartyId" from="newPartyId"/>
+                    <econdition field-name="toPartyId" from="partyId"/>
+                </entity-find-count>
+                <set field="isInvitedUserOrgMember" from="partyRelationshipCount > 0"/>
+                <if condition="!isInvitedUserOrgMember">
+                    <then>
+                        <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',
+                            fromPartyId:newUser.partyId,toRoleTypeId:'OrgInternal',toPartyId:partyId,fromDate:ec.user.nowTimestamp]"/>
+                    </then>
+                </if>
+
                 <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
 
                 <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
-                <if condition="!existingUaList"><then>
-                    <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
-                    <!-- reset the password to a random value -->
-                    <set field="resetPassword" from="getRandomString(12)"/>
-                    <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
-                    <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
-                    <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
-                    <entity-update value-field="userAccount"/>
+                <if condition="!existingUaList">
+                    <then>
+                        <!-- if account does not exist (ie, new user), create one & send a USER_INVITE_RESET_PASSWORD email -->
+                        <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
+                        <!-- reset the password to a random value -->
+                        <set field="resetPassword" from="getRandomString(12)"/>
+                        <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
+                        <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
+                        <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
+                        <entity-update value-field="userAccount"/>
 
-                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+
+                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
                         contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
                         partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
                         bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
                         title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
-                </then><else>
-                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                    </then>
+                    <else-if condition="existingUaList &amp;&amp; !isInvitedUserOrgMember">
+                        <!-- if account DOES exist, existing/invited user, but NOT part of inviting organization, send a USER_INVITE email -->
+                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
                         contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
                         partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
                         bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
                         title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
-                </else></if>
-                
-                <else><return type="danger" error="true" message="Not allowed"/></else>
+                    </else-if>
+                    <else>
+                        <!-- otherwise, do nothing (account exists, and is member of inviting org)-->
+                        <return type="warning" message="The invitation was not sent. ${emailAddress} is already a member of ${organization.organizationName}."/>
+                    </else>
+                </if>
+
+                <else><return type="danger" error="true" message="Not allowed" /></else>
             </if>
         </actions>
     </service>
