@@ -30,6 +30,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgPaymentGatewayUnavailable" localized="Payment is not available at this time, please try again at a later time."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgPaymentFailed" localized="We could not process your payment, please try again."/>
     
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyOrgInviteAlreadyInvited" localized="The invitation was not sent. ${emailAddress} is already a member of ${organizationName}."/>    
     
     <moqui.basic.LocalizedMessage locale="default" original="CoarchySelectAnOrg" localized="Please select an organization to continue."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessStoryNotFound" localized="Something went wrong while loading the process story."/>

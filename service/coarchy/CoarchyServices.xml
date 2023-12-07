@@ -106,7 +106,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </else-if>
                     <else>
                         <!-- otherwise, do nothing (account exists, and is member of inviting org)-->
-                        <return type="warning" message="The invitation was not sent. ${emailAddress} is already a member of ${organization.organizationName}."/>
+                        <return type="warning" message="${ec.resource.expand('CoarchyOrgInviteAlreadyInvited', null, [emailAddress:emailAddress, organizationName:organization.organizationName])}"/>
                     </else>
                 </if>
                 <else><return type="danger" error="true" message="${ec.resource.expand('CoarchyGeneralNotAllowed', null)}"/></else>
