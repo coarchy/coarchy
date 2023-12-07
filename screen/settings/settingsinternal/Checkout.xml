@@ -24,7 +24,7 @@ along with this software (see the LICENSE.md file). If not, see
             <select-field field-name="orderId,orderPartSeqId,grandTotal,currencyUomId,productStoreId"/>
             <order-by field-name="-entryDate"/><!-- get most recent open order --></entity-find>
         <if condition="existingOrderList.size() == 0">
-            <message type="danger" public="true" error="true">No order found for user.</message>
+            <message type="danger" public="true" error="true">${ec.resource.expand('CoarchyInvalidOrder',null)}</message>
             <script>sri.sendRedirectAndStopRender('/settings/BuyPremium')</script>
             <return/>
         </if>
@@ -45,7 +45,8 @@ along with this software (see the LICENSE.md file). If not, see
 
         <!-- Should never happen, but if it does an error would happen so redirect them -->
         <if condition="orderItemList.size() &lt; 1">
-            <message type="danger" public="true" error="true">No order item found for user.</message>
+            <log level="warn" message="No order items found for user." />
+            <message type="danger" public="true" error="true">${ec.resource.expand('CoarchyInvalidOrder',null)}</message>
             <script>sri.sendRedirectAndStopRender('/settings/BuyPremium')</script>
         </if>
 

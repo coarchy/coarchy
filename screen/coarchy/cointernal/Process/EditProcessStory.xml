@@ -22,7 +22,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <always-actions>
         <if condition="!activeOrgId">
-            <message>Select an Organization before moving forward.</message>
+            <message>${ec.resource.expand('CoarchySelectAnOrg', null)}</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>
         <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">

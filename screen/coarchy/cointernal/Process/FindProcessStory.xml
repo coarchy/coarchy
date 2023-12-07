@@ -17,7 +17,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <always-actions>
         <if condition="!activeOrgId">
-            <message>Select an Organization before moving forward.</message>
+            <message>${ec.resource.expand('CoarchySelectAnOrg', null)}</message>
             <!-- TODO: Fix this redirect on this and other screens to not redirect to /coapp -->
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if>

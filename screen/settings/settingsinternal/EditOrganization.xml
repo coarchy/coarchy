@@ -25,7 +25,7 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
             <econdition field-name="toPartyId" from="organizationId"/></entity-find-count>
         <if condition="partyRelationshipCount == null || partyRelationshipCount == 0">
-            <message type="warning">You are not authorized to view this Organization</message>
+            <message type="warning">${ec.resource.expand('CoarchyOrgUnauthorizedUser',null)}</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script></if>
 
         <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:organizationId]"/>
@@ -40,7 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="removeUser"><actions>
         <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:organizationId]"/>
-        <if condition="fromPartyId == ec.user.userAccount.partyId || organization.ownerPartyId != ec.user.userAccount.partyId"><return message="Cannot remove user" type="warning"/></if>
+        <if condition="fromPartyId == ec.user.userAccount.partyId || organization.ownerPartyId != ec.user.userAccount.partyId"><return message="${ec.resource.expand('CoarchyUserNotRemovable',null)}" type="warning"/></if>
 
         <entity-find entity-name="mantle.party.PartyRelationship" list="partyRelationshipList">
             <econdition field-name="toPartyId"/>
@@ -56,7 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="updateOrganization"><actions>
         <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
-        <if condition="!organization || organization.ownerPartyId != ec.user.userAccount.partyId"><return type="warning" error="true" message="You can't change an organization you don't own"/></if>
+        <if condition="!organization || organization.ownerPartyId != ec.user.userAccount.partyId"><return type="warning" error="true" message="${ec.resource.expand('CoarchyOrgNotEditable',null)}"/></if>
         <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
             <service-call name="update#mantle.party.Organization" in-map="[partyId:partyId,organizationName:organizationName]"/>
         </if>
