@@ -15,7 +15,52 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         require-authentication="anonymous-view" allow-extra-path="true">
 
-    <transition-include name="login" location="component://webroot/screen/webroot/rest.xml" method="post"/>
+    <!-- login: for client applications that use a Moqui UserAccount -->
+    <transition name="login" method="post" require-session-token="false">
+        <!-- NOTE: login is a transition here instead of a Service REST endpoint under /rest/s1/moqui/... as a special case to not require session token -->
+        <parameter name="username" required="true"/>
+        <parameter name="password" required="true"/>
+        <parameter name="code"/>
+        <actions>
+            <set field="loggedIn" from="ec.user.loginUser(username, password)"/>
+            <if condition="ec.message.hasError()"><script>ec.web.sendJsonResponse([loggedIn:false])</script></if>
+
+            <if condition="ec.web.sessionAttributes.moquiAuthcFactorRequired"><then>
+                <if condition="code"><then>
+                    <service-call name="org.moqui.impl.UserServices.validate#ExternalUserAuthcCode"
+                            in-map="[code:code]" out-map="validateOut"/>
+                    <if condition="validateOut.verified"><then>
+                        <script>ec.user.internalLoginUser(validateOut.username)</script>
+                        <return/>
+                    </then><else>
+                        <message type="danger" public="true">Authentication code is not valid</message>
+                    </else></if>
+                </then></if>
+
+                <!-- if we didn't return above send back info about user's authc factors -->
+                <service-call name="org.moqui.impl.UserServices.get#ExternalUserAuthcFactorInfo" out-map="factorInfoOut"/>
+                <script>ec.web.sendJsonResponse(factorInfoOut)</script>
+            </then><else>
+                <script>ec.web.sendJsonResponse([loggedIn:loggedIn])</script>
+            </else></if>
+
+            <if condition="loggedIn">
+                <entity-find-count entity-name="mantle.party.PartyClassificationAppl" count-field="partyClassificationCount">
+                    <econdition field-name="partyId" from="ec.user.userAccount.partyId"/></entity-find-count>
+                <entity-find entity-name="mantle.party.PartyClassificationAppl" list="partyClassificationList">
+                    <econdition field-name="partyId" from="ec.user.userAccount.partyId"/>
+                    <econdition field-name="partyClassificationId" operator="in" from="['ColdLead','Prospect']"/>
+                    <date-filter/></entity-find>
+
+                <if condition="partyClassificationList.size() &gt; 0 || (partyClassificationCount == 0 &amp;&amp; partyClassificationList.size() == 0)">
+                    <service-call name="coarchy.CoarchyServices.set#PartyClassification" in-map="[partyClassificationId:'HotLead']" out-map="context"/>
+                </if>
+                <log level="warn" message="login context.toString() ${context.toString()}"/>
+            </if>
+
+        </actions>
+        <default-response type="none"/>
+    </transition>
     <transition name="logout"><actions><script>ec.user.logoutUser()</script></actions>
         <default-response url="/"/><error-response url="."/></transition>
     <transition name="createInitialAdminAccount"><condition><expression>ec.entity.find('moqui.security.UserAccount').disableAuthz().count() == 1</expression></condition>

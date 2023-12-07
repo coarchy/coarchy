@@ -186,15 +186,85 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="sentEmail" from="true"/>
                 </if>
 
-                <!-- TODO: Review approach -->
                 <service-call name="mantle.party.CommunicationServices.create#Message" in-map="[
                     communicationEventTypeId:'Email',contactMechTypeEnumId:'CmtEmailAddress',statusId:'CeSent',
-                    toContactMechId:preferredContactMechId,toPartyId:partyId,emailMessageId:emailMessageId,contactListId:contactListId]"
+                    toContactMechId:preferredContactMechId,toPartyId:partyId,fromPartyId:'coarchy',emailMessageId:emailMessageId,contactListId:contactListId]"
                     out-map="communicationEventOut"/>
                 <service-call name="create#mantle.marketing.contact.ContactListCommStatus" in-map="[
                     contactListId:contactListId,communicationEventId:communicationEventOut.communicationEventId,
                     contactMechId:preferredContactMechId,partyId:partyId]"/>
             </else></if>
+        </actions>
+    </service>
+    <service verb="change" noun="UserPassword">
+        <in-parameters>
+            <parameter name="username" required="true" default="ec.web?.sessionAttributes?.moquiPreAuthcUsername ?: username"/>
+            <parameter name="firstName" required="true"/>
+            <parameter name="lastName" required="true"/>
+            <parameter name="oldPassword" required="true"/>
+            <parameter name="newPassword" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="updateSuccessful"/>
+            <parameter name="loginSuccess"/>
+            <parameter name="passwordIssues"/>
+        </out-parameters>
+        <actions>
+            <service-call name="org.moqui.impl.UserServices.update#Password" in-map="[username:username,
+                oldPassword:oldPassword,newPassword:newPassword,newPasswordVerify:newPassword]" out-map="context"/>
+
+            <!-- password change success, login the user -->
+            <if condition="updateSuccessful">
+                <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount">
+                    <field-map field-name="username"/>
+                    <select-field field-name="userId,partyId"/></entity-find-one>
+                <service-call name="update#moqui.security.UserAccount" in-map="[userId:userAccount.userId,userFullName:(firstName?firstName+' ':'')+lastName?:'']"/>
+                <service-call name="mantle.party.PartyServices.update#Account" in-map="[userId:userAccount.userId,firstName:firstName,lastName:lastName]"/>
+                <set field="loginSuccess" from="ec.user.internalLoginUser(username)"/>
+
+                <!-- Sales Journey Hot Lead user -->
+                <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:userAccount.partyId,partyClassificationId:'HotLead']" out-map="context"/>
+
+                <!-- Send welcome email -->
+                <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+                <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',
+                        partyId:userAccount.partyId,preferredContactMechId:null,toAddresses:username,
+                        bodyParameters:[title:'Welcome to Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+            </if>
+        </actions>
+    </service>
+    <service verb="signUp" noun="User">
+        <in-parameters>
+            <parameter name="emailAddress" required="true"/>
+            <parameter name="username" required="true" default="emailAddress"/>
+            <parameter name="firstName" required="true"/>
+            <parameter name="lastName" required="true"/>
+            <parameter name="newPassword" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="partyId"/>
+            <parameter name="partyClassificationId"/>
+        </out-parameters>
+        <actions>
+            <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
+                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,newPassword:newPassword,newPasswordVerify:newPassword]"/>
+            <service-call name="update#mantle.party.Party" in-map="[partyId:partyId,visibilityEnumId:'PvOrganization']"/>
+            <service-call name="create#mantle.party.PartyRole" in-map="[partyId:partyId,roleTypeId:'Customer']"/>
+            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
+
+            <!-- Sales Journey Hot Lead user -->
+            <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:partyId,partyClassificationId:'HotLead']" out-map="context"/>
+
+            <!-- Send welcome email -->
+
+            <!-- TODO: Get help on this -->
+            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+            <!--            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[-->
+            <!--                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',-->
+            <!--                        partyId:partyId,preferredContactMechId:null,toAddresses:username,-->
+            <!--                        bodyParameters:[title:'Welcome to Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>-->
+
         </actions>
     </service>
 
@@ -790,7 +860,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="valueStatementActivity"><then>
                         <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity.valueStatementActivityId]"/>
                     </then><else>
-                        <log level="warning" message="Unable to delete value connection ${valueIdDelete}"/>
+                        <log level="warn" message="Unable to delete value connection ${valueIdDelete}"/>
                         <message type="warning" error="true">${ec.resource.expand('CoarchyProcessActivityValueDeleteError', null)}</message>
                     </else></if>
                 </iterate>
@@ -2198,72 +2268,119 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="change" noun="UserPassword">
+    <service verb="set" noun="PartyClassification">
         <in-parameters>
-            <parameter name="username" required="true" default="ec.web?.sessionAttributes?.moquiPreAuthcUsername ?: username"/>
-            <parameter name="firstName" required="true"/>
-            <parameter name="lastName" required="true"/>
-            <parameter name="oldPassword" required="true"/>
-            <parameter name="newPassword" required="true"/>
+            <parameter name="partyClassificationId" required="true"/>
         </in-parameters>
-        <out-parameters>
-            <parameter name="updateSuccessful"/>
-            <parameter name="loginSuccess"/>
-            <parameter name="passwordIssues"/>
-        </out-parameters>
         <actions>
-            <service-call name="org.moqui.impl.UserServices.update#Password" in-map="[username:username,
-                oldPassword:oldPassword,newPassword:newPassword,newPasswordVerify:newPassword]" out-map="context"/>
-
-            <!-- password change success, login the user -->
-            <if condition="updateSuccessful">
-                <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount">
-                    <field-map field-name="username"/>
-                    <select-field field-name="userId,partyId"/></entity-find-one>
-                <service-call name="update#moqui.security.UserAccount" in-map="[userId:userAccount.userId,userFullName:(firstName?firstName+' ':'')+lastName?:'']"/>
-                <service-call name="mantle.party.PartyServices.update#Account" in-map="[userId:userAccount.userId,firstName:firstName,lastName:lastName]"/>
-                <set field="loginSuccess" from="ec.user.internalLoginUser(username)"/>
-
-                <!-- Sales Journey Hot Lead user -->
-                <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:userAccount.partyId,partyClassificationId:'HotLead']" out-map="context"/>
-
-                <!-- Send welcome email -->
-<!--                <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[-->
-<!--                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',-->
-<!--                        partyId:userAccount.partyId,preferredContactMechId:null,toAddresses:username,-->
-<!--                        bodyParameters:[title:'Welcome to Coarchy']]" out-map="context"/>-->
-            </if>
+            <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:ec.user.userAccount.partyId,partyClassificationId:partyClassificationId]" out-map="context"/>
         </actions>
     </service>
 
-    <service verb="signUp" noun="User">
-        <in-parameters>
-            <parameter name="emailAddress" required="true"/>
-            <parameter name="username" required="true" default="emailAddress"/>
-            <parameter name="firstName" required="true"/>
-            <parameter name="lastName" required="true"/>
-            <parameter name="newPassword" required="true"/>
-        </in-parameters>
+    <service verb="update" noun="SalesJourneyClassification">
         <out-parameters>
-            <parameter name="partyId"/>
-            <parameter name="partyClassificationId"/>
+            <parameter name="newColdLeadPartyIdList" type="List"/>
+            <parameter name="newPreviouslyPayingCustomerPartyIdList" type="List"/>
         </out-parameters>
         <actions>
-            <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
-                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,newPassword:newPassword,newPasswordVerify:newPassword]"/>
-            <service-call name="update#mantle.party.Party" in-map="[partyId:partyId,visibilityEnumId:'PvOrganization']"/>
-            <service-call name="create#mantle.party.PartyRole" in-map="[partyId:partyId,roleTypeId:'Customer']"/>
-            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
+            <set field="lastMonth" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                    (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).minusMonths(1).toInstant().toEpochMilli())" type="Timestamp"/>
 
-            <!-- Sales Journey Hot Lead user -->
-            <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:partyId,partyClassificationId:'HotLead']" out-map="context"/>
+            <!-- After 30 days of User not logging in, if User is a hot lead, Organization automatically assigns the User to be a cold lead. -->
+            <set field="newColdLeadPartyIdList" from="[]"/>
+            <entity-find entity-name="mantle.party.PartyClassificationAppl" list="hotLeadList">
+                <econdition field-name="partyClassificationId" value="HotLead"/>
+                <date-filter/><order-by field-name="-fromDate"/></entity-find>
+            <iterate list="hotLeadList" entry="partyClassification">
+                <!-- assume only one user per party -->
+                <entity-find entity-name="moqui.security.UserAccount" list="userAccountList" limit="1">
+                    <econdition field-name="partyId" from="partyClassification.partyId"/>
+                    <select-field field-name="userId"/>
+                    <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                <set field="userAccount" from="userAccountList?.getFirst()"/>
+                <if condition="!userAccount">
+<!--                    <log level="warn" message="update#SalesJourneyClassification userAccount not found for partyClassification ${partyClassification}"/>-->
+                    <continue/>
+                </if>
 
-            <!-- Send welcome email -->
-<!--            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[-->
-<!--                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',-->
-<!--                        partyId:partyId,preferredContactMechId:null,toAddresses:username,-->
-<!--                        bodyParameters:[title:'Welcome to Coarchy']]" out-map="context"/>-->
+                <entity-find entity-name="moqui.security.UserLoginHistory" list="historyList" limit="1">
+                    <econdition field-name="userId" from="userAccount.userId"/>
+                    <order-by field-name="-fromDate"/></entity-find>
+
+                <if condition="historyList.getFirst()?.fromDate != null &amp;&amp; historyList.getFirst().fromDate.toInstant() &lt; lastMonth.toInstant()">
+                    <set field="newColdLeadPartyIdList" from="newColdLeadPartyIdList + [partyClassification.partyId]"/>
+                    <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[
+                        partyId:partyClassification.partyId,partyClassificationId:'ColdLead']" out-map="context"/>
+                </if>
+            </iterate>
+
+            <!-- If the User is a Paying Customer in the sales journey and (has no organization credits, or hasn't had
+                an organization active for 30 days), Organization automatically assigns the user to be a Previously Paying Customer. -->
+            <set field="newPreviouslyPayingCustomerPartyIdList" from="[]"/>
+            <entity-find entity-name="mantle.party.PartyClassificationAppl" list="payingCustomerList">
+                <econdition field-name="partyClassificationId" value="PayingCustomer"/>
+                <date-filter/><order-by field-name="-fromDate"/></entity-find>
+            <iterate list="payingCustomerList" entry="partyClassification">
+                <entity-find entity-name="mantle.account.financial.FinancialAccount" list="financialAccountList" distinct="true">
+                    <econdition field-name="ownerPartyId" from="partyClassification.partyId"/>
+                    <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
+                    <econdition field-name="statusId" value="FaActive"/>
+                    <date-filter/>
+                    <select-field field-name="ownerPartyId,finAccountId,availableBalance"/>
+                </entity-find>
+                <if condition="financialAccountList.size() == 0"><continue/></if>
+
+                <if condition="financialAccountList.getFirst().availableBalance &lt; .01">
+                    <set field="newPreviouslyPayingCustomerPartyIdList" from="newPreviouslyPayingCustomerPartyIdList + [partyClassification.partyId]"/>
+                    <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[
+                        partyId:partyClassification.partyId,partyClassificationId:'NonPayingCustomer']" out-map="context"/>
+                    <continue/>
+                </if>
+
+                <entity-find-count entity-name="mantle.party.PartyActivationAndParty" count-field="partyActivationAndPartyCount">
+                    <econdition field-name="ownerPartyId" from="partyClassification.partyId"/><date-filter/>
+                </entity-find-count>
+                <if condition="partyActivationAndPartyCount &gt; 0">
+                    <!-- Paying Customer has had an organization active for 30 days -->
+<!--                    <log level="warn" message="Paying Customer ${partyClassification.partyId} has had an organization active for 30 days"/>-->
+                    <continue/>
+                </if>
+
+                <entity-find entity-name="mantle.party.Party" list="partyList">
+                    <econdition field-name="ownerPartyId" from="partyClassification.partyId"/>
+                    <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                </entity-find>
+                <set field="hasAnyFromDateLessThanLastMonth" from="false"/>
+                <iterate list="partyList" entry="party">
+                    <entity-find entity-name="mantle.party.PartyActivation" list="partyActivationList" limit="1">
+                        <econdition field-name="partyId" from="party.partyId"/>
+                        <order-by field-name="-fromDate"/></entity-find>
+                    <if condition="partyActivationList.size() == 0"><continue/></if>
+                    <if condition="lastMonth.toInstant() &lt; partyActivationList.getFirst().thruDate.toInstant()">
+                        <set field="hasAnyFromDateLessThanLastMonth" value="true"/>
+                        <break/>
+                    </if>
+                </iterate>
+                <if condition="!hasAnyFromDateLessThanLastMonth">
+                    <set field="newPreviouslyPayingCustomerPartyIdList" from="newPreviouslyPayingCustomerPartyIdList + [partyClassification.partyId]"/>
+<!--                    <log level="warn" message="Paying Customer ${partyClassification.partyId} has no organization active for 30 days"/>-->
+                    <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[
+                        partyId:partyClassification.partyId,partyClassificationId:'PreviouslyPayingCustomer']" out-map="context"/>
+                </if>
+
+<!--                <log level="warn" message="update#SalesJourneyClassification context.toString() ${context.toString()}"/>-->
+
+            </iterate>
+        </actions>
+    </service>
+
+    <service verb="send" noun="DailyEmails">
+        <out-parameters>
+
+        </out-parameters>
+        <actions>
 
         </actions>
     </service>
+
 </services>
