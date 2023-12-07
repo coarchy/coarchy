@@ -91,7 +91,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                                     <field name="insertFirst">
                                         <default-field title="">
-                                            <link url="pasteActivities" text="Insert" btn-type="success" parameter-map="
+                                            <link url="pasteActivities" text="Paste ${activityCount}" btn-type="success" parameter-map="
                                         [pageIndex:pageIndex,downPageIndex:downPageIndex, processStoryId:processStoryId,sequenceNum:sequenceNum, isEmptyStory:true,
                                         clipboardEntryId:clipboardEntryId,pageSize:pageSize]"/>
                                         </default-field>
