@@ -89,20 +89,19 @@ along with this software (see the LICENSE.md file). If not, see
                         <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
                         <entity-update value-field="userAccount"/>
 
-
                         <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                        contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
-                        partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
-                        bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
-                        title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                            contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
+                            partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
+                            bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
+                            title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
                     </then>
                     <else-if condition="existingUaList &amp;&amp; !isInvitedUserOrgMember">
                         <!-- if account DOES exist, existing/invited user, but NOT part of inviting organization, send a USER_INVITE email -->
                         <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                        contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
-                        partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
-                        bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
-                        title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                            contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
+                            partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
+                            bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
+                            title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
                     </else-if>
                     <else>
                         <!-- otherwise, do nothing (account exists, and is member of inviting org)-->
@@ -127,6 +126,7 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <out-parameters>
             <parameter name="sentEmail"/>
+            <parameter name="emailTemplateId"/>
         </out-parameters>
         <actions>
             <set field="sentEmail" from="false"/>
@@ -2397,9 +2397,79 @@ along with this software (see the LICENSE.md file). If not, see
 
     <service verb="send" noun="DailyEmails">
         <out-parameters>
-
+            <parameter name="emailsSentList" type="List"/>
         </out-parameters>
         <actions>
+            <set field="emailsSentList" from="[]"/>
+            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+
+            <!-- after sign up, Lead are nurtured through marketing emails -->
+            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="onboardingPartyList">
+                <econdition field-name="contactListId" value="CoarchyOnboarding"/>
+                <econdition field-name="statusId" value="CLPT_IN_USE"/>
+                <date-filter/></entity-find>
+
+            <set field="twoDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                    (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).minusDays(2).toInstant().toEpochMilli())" type="Timestamp"/>
+            <iterate list="onboardingPartyList" entry="listParty">
+                <!-- If the user hasn't already created an Organization 2 days after sign up, Lead gets sent an activation email to setup an organization. -->
+                <entity-find entity-name="mantle.party.Party" list="organizationOwnedList" limit="1">
+                    <econdition field-name="ownerPartyId" from="listParty.partyId"/>
+                    <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                    <econdition field-name="disabled" operator="not-equals" value="Y"/>
+                    <order-by field-name="-lastUpdatedStamp"/></entity-find>
+<!--                <if condition="organizationOwnedList.size() &gt; 0">-->
+<!--                    <log level="warn" message="Organization already created for party ${listParty.partyId}"/>-->
+<!--                    <continue/></if>-->
+
+                <!-- Just assume one user per party -->
+                <entity-find entity-name="moqui.security.UserAccount" list="userAccountList">
+                    <econdition field-name="partyId" from="listParty.partyId"/>
+                    <econdition field-name="disabled" operator="not-equals" value="Y"/>
+                </entity-find>
+                <if condition="userAccountList.size() &gt; 1">
+                    <log level="warn" message="Multiple user accounts found for party ${listParty.partyId}"/>
+                </if>
+                <set field="userAccount" from="userAccount?.getFirst()"/>
+                <if condition="!userAccount">
+                    <log level="warn" message="User account not found for party ${listParty.partyId}"/>
+                    <continue/></if>
+
+                <entity-find entity-name="moqui.security.UserLoginHistory" list="historyList" limit="1">
+                    <econdition field-name="userId" from="userAccount.userId"/>
+                    <order-by field-name="fromDate"/></entity-find>
+                <log level="warn" message="send#DailyEmails context.toString() ${context.toString()}"/>
+                <if condition="historyList.size() == 0"><continue/></if>
+                <if condition="twoDaysAgo &lt; historyList.getFirst().fromDate.toInstant()">
+                    <log level="warn" message="User ${userAccount.userId} has signed up within the last 2 days"/>
+                    <continue/></if>
+
+                <!-- check if email has already been sent -->
+
+                <!-- if email hasn't already been sent -->
+                <!-- TODO: Start tracking emails conversions -->
+                <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                    contactListId:listParty.contactListId,emailTemplateId:'CREATE_ORGANIZATION',
+                    partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                    bodyParameters:[linkUrl:baseLinkUrl+'/settings/Organizations',
+                    title:'Get started with Coarchy. Create an Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                    emailAddress:userAccount.emailAddress,emailTemplateId:emailTemplateId]"/>
+
+
+
+
+
+
+
+
+            </iterate>
+
+            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="invitationPartyList">
+                <econdition field-name="contactListId" value="CoarchyInvitation"/>
+                <econdition field-name="statusId" value="CLPT_IN_USE"/>
+                <date-filter/></entity-find>
+
 
         </actions>
     </service>
