@@ -2295,14 +2295,17 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="update" noun="SalesJourneyClassification">
+    <service verb="update" noun="SalesJourneyClassification" authenticate="anonymous-all">
+        <in-parameters>
+            <parameter name="currentTimestamp" default="ec.user.nowTimestamp" type="Timestamp" required="true"/>
+        </in-parameters>
         <out-parameters>
             <parameter name="newColdLeadPartyIdList" type="List"/>
             <parameter name="newPreviouslyPayingCustomerPartyIdList" type="List"/>
         </out-parameters>
         <actions>
             <set field="lastMonth" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                    (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).minusMonths(1).toInstant().toEpochMilli())" type="Timestamp"/>
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusMonths(1).toInstant().toEpochMilli())" type="Timestamp"/>
 
             <!-- After 30 days of User not logging in, if User is a hot lead, Organization automatically assigns the User to be a cold lead. -->
             <set field="newColdLeadPartyIdList" from="[]"/>
