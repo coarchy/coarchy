@@ -2007,13 +2007,13 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- TODO: Improve the index handling on multiple activities inserted -->
     <service verb="paste" noun="Activities">
         <in-parameters>
-            <parameter name="clipboardEntryId" required="true"/>
-            <parameter name="pageIndex" required="true"/>
-            <parameter name="downPageIndex" required="true"/>
             <parameter name="processStoryId" required="true"/>
-            <parameter name="sequenceNum" required="true"/>
+            <parameter name="clipboardEntryId" required="true"/>
             <parameter name="organizationId" required="true"/>
-            <parameter name="insertType" required="true"/>
+            <parameter name="pageIndex" />
+            <parameter name="downPageIndex" />
+            <parameter name="sequenceNum" />
+            <parameter name="insertType"/>
         </in-parameters>
         <out-parameters>
             <parameter name="pageIndex"/>
@@ -2041,6 +2041,24 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
 <!--            <log level="warn" message="paste#Activities activityList ${activityList}"/>-->
 
+            <!-- check if we're pasting into a store with zero activities -->
+            <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="processActivityCount">
+                <econdition field-name="processStoryId" />
+            </entity-find-count>
+            <if condition="processActivityCount">
+                <then>
+                    <if condition="((pageIndex == null) || (downPageIndex == null) || (sequenceNum == null) || (insertType == null))">
+                        <log level="warn" message="Missing required parameters [pageIndex: ${pageIndex}, downPageIndex: ${downPageIndex}, sequenceNum: ${sequenceNum}, insertType: ${insertType}]"/>
+                        <return error="true" message="${ec.resource.expand('CoarchyProcessClipboardPasteError', null)}"/>
+                    </if>
+                </then>
+                <else>
+                    <set field="pageIndex" from="0"/>
+                    <set field="downPageIndex" from="0"/>
+                    <set field="sequenceNum" from="0"/>
+                    <set field="insertType" value="first"/>
+                </else>
+            </if>
             <set field="insertSequenceNum" from="sequenceNum"/>
             <if condition="insertType=='below'">
                 <set field="pageIndex" from="downPageIndex"/>
