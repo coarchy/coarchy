@@ -137,11 +137,18 @@ along with this software (see the LICENSE.md file). If not, see
                     </form-single>
                 </container-dialog>
 
-                <container-dialog id="CreateOrganization" button-text="Copy or Create Organization" type="success">
-                    <form-single name="CreateOrganization" transition="createOrganization">
-                        <field name="organizationId"><default-field title="Copy from Organization (optional)">
+                <container-dialog id="CreateOrganization" button-text="Create Organization" type="success">
+                    <form-single name="CreateOrganization" transition="createOrganization">                        
+                        <field name="organizationName"><default-field><text-line/></default-field></field>                
+                        <field name="create"><default-field><submit/></default-field></field>
+                    </form-single>
+                </container-dialog>
+
+                <container-dialog id="CloneOrganization" button-text="Clone Organization" type="success" icon="fa fa-clone">
+                    <form-single name="CloneOrganization" transition="createOrganization">
+                        <field name="organizationId"><default-field title="Copy from Organization">
                             <label text="Enable premium features to copy from your organizations"/>
-                            <drop-down allow-empty="true" required-manual-select="true">
+                            <drop-down allow-empty="false" required-manual-select="true">
                                 <dynamic-options server-search="true" transition="getCloneOrganizationList" min-length="0"/></drop-down>
                         </default-field></field>
                         <field name="organizationName"><default-field><text-line/></default-field></field>
