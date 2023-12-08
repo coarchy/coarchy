@@ -44,6 +44,7 @@ along with this software (see the LICENSE.md file). If not, see
     <artifactGroups artifactGroupId="COARCHY_COM" description="Coarchy.com (via root screen)">
         <artifacts artifactName="component://coarchy/screen/coarchy-com/c.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
         <artifacts artifactName="org.moqui.impl.UserServices.set#Preference" artifactTypeEnumId="AT_SERVICE" inheritAuthz="N" nameIsPattern="N"/>
+        <artifacts artifactName="coarchy.CoarchyServices.set#PartyClassification" artifactTypeEnumId="AT_SERVICE" inheritAuthz="Y" nameIsPattern="N"/>
         <authz artifactAuthzId="COARCHY_COM_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
         <authz artifactAuthzId="COARCHY_COM_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
     </artifactGroups>
@@ -75,6 +76,9 @@ along with this software (see the LICENSE.md file). If not, see
                                  docIndex="100" docLocation="component://coarchy/document/Coarchy App.md"/>
 
     <!-- EmailTemplates and Notifications -->
+    <moqui.basic.email.EmailTemplate emailTemplateId="BLOG" description="Blog" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/BlogEmail.xml" webappName="webroot"
+            fromAddress="newsletter@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
     <moqui.basic.email.EmailTemplate emailTemplateId="WELCOME" description="Welcome" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/coarchy/WelcomeEmail.xml" webappName="webroot"
             fromAddress="onboarding@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
@@ -288,18 +292,19 @@ along with this software (see the LICENSE.md file). If not, see
     </mantle.party.agreement.Agreement>
 
     <!-- ========== Contact List Entities ========== -->
-    <!-- TODO: Review approach -->
-    <moqui.basic.Enumeration enumId="ONBOARDING" description="Onboarding" enumTypeId="ContactListType"/>
-    <moqui.basic.Enumeration enumId="INVITATION" description="Invitation" enumTypeId="ContactListType"/>
-    <moqui.basic.Enumeration enumId="TASK_REMINDER" description="Task Reminder" enumTypeId="ContactListType"/>
-    <mantle.marketing.contact.ContactList contactListId="CoarchyOnboarding" contactListTypeEnumId="ONBOARDING" contactListName="Onboarding" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
+    <moqui.resource.wiki.WikiPageCategory wikiPageCategoryId="Newsletter" categoryName="Newsletter"/>
+
+    <mantle.marketing.contact.ContactList contactListId="CoarchyNewsletter" contactListName="Newsletter" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800219998" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="BLOG" wikiPageCategoryId="Newsletter"/>
+    </mantle.marketing.contact.ContactList>
+    <mantle.marketing.contact.ContactList contactListId="CoarchyOnboarding" contactListName="Onboarding" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
         <mantle.marketing.contact.ContactListEmail fromDate="1701800219999" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="WELCOME"/>
     </mantle.marketing.contact.ContactList>
-    <mantle.marketing.contact.ContactList contactListId="CoarchyInvitation" contactListTypeEnumId="INVITATION" contactListName="Invitation" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
+    <mantle.marketing.contact.ContactList contactListId="CoarchyInvitation" contactListName="Invitation" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220000" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="USER_INVITE_RESET_PASSWORD"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220001" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="USER_INVITE"/>
     </mantle.marketing.contact.ContactList>
-    <mantle.marketing.contact.ContactList contactListId="CoarchyTaskReminder" contactListTypeEnumId="TASK_REMINDER" contactListName="Task Reminder" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
+    <mantle.marketing.contact.ContactList contactListId="CoarchyTaskReminder" contactListName="Task Reminder" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220002" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220003" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_NEEDS_ASSIGNMENT_NOTIFICATION"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220004" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_NOTIFICATION"/>
