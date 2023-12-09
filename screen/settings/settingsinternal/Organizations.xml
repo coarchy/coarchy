@@ -28,8 +28,15 @@ along with this software (see the LICENSE.md file). If not, see
     </always-actions>
 
     <transition name="createOrganization">
-        <service-call name="coarchy.CoarchyServices.create#Organization"/>       
-        <default-response url="."/> 
+        <actions>
+            <service-call name="coarchy.CoarchyServices.create#Organization" in-map="context" out-map="createOrgOut"/>       
+        </actions>
+        <conditional-response url="../EditOrganization" parameter-map="[organizationId:createOrgOut.newOrganizationId]">
+            <condition>
+                <expression>!ownerOfAnyOrganization</expression>
+            </condition>
+        </conditional-response>
+        <default-response url="."/>
     </transition>
 
     <transition name="inviteUser">

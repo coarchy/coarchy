@@ -25,6 +25,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <description>Copies/moves checklists. Value should be one of 'none', 'copy', 'move'</description>
             </parameter>
         </in-parameters>
+        <out-parameters>
+            <parameter name="newOrganizationId" />
+        </out-parameters>
         <actions>
             <!-- find user organization list -->
             <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
@@ -38,7 +41,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
 
             <!-- make sure org name is valid/non-empty -->
-            <set field="organizationName" from="organizationName.trim()"/>
+            <set field="organizationName" from="organizationName?.trim()"/>
             <if condition="!organizationName">
                 <return type="warning" error="true" message="${ec.resource.expand('CoarchyOrgNameInvalid', null)}"/>
             </if>
@@ -49,6 +52,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="create#mantle.party.Organization" in-map="[partyId:newOrganization.partyId,organizationName:organizationName]"/>
                 <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromDate:ec.user.nowTimestamp, fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:newOrganization.partyId]"/>
                 <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:newOrganization.partyId]"/>
+                <set field="newOrganizationId" from="newOrganization.partyId" />
                 <return type="success" message="${ec.resource.expand('CoarchyOrgCreateSuccess', null)}"/>
             </if>
 
@@ -69,6 +73,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="coarchy.CoarchyServices.activateOrDeactivate#Organization" in-map="[organizationPartyId:newOrganization.partyId]" out-map="context"/>
                 <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:newOrganization.partyId]"/>
                 <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtMember',fromDate:ec.user.nowTimestamp, fromPartyId:ec.user.userAccount.partyId,toRoleTypeId:'OrgInternal',toPartyId:newOrganization.partyId]"/>
+                <set field="newOrganizationId" from="newOrganization.partyId" />
 
                 <!-- find partyRelationship list for old org -->
                 <entity-find entity-name="mantle.party.PartyRelationship" list="partyRelationshipList">
