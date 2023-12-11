@@ -2420,6 +2420,8 @@ along with this software (see the LICENSE.md file). If not, see
                     (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(6).toInstant().toEpochMilli())" type="Timestamp"/>
             <set field="eightDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
                     (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(8).toInstant().toEpochMilli())" type="Timestamp"/>
+            <set field="twoWeeksAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusWeeks(2).toInstant().toEpochMilli())" type="Timestamp"/>
             <iterate list="onboardingPartyList" entry="listParty">
                 <if condition="listParty.partyId==null"><continue/></if>
 
@@ -2672,18 +2674,73 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
             </iterate>
 
-            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="newsletterPartyList">
-                <econdition field-name="contactListId" value="CoarchyNewsletter"/>
-                <econdition field-name="statusId" value="CLPT_IN_USE"/>
-                <date-filter/></entity-find>
-            <iterate list="invitationPartyList" entry="listParty">
-                <!-- Find last time when email was sent -->
+            <!-- Find last time when newsletter email was sent -->
 
+            <!-- If a newsletter email hasn't been sent in 2 weeks, send a newsletter email. -->
+            <entity-find entity-name="moqui.resource.wiki.WikiBlogCategory" list="wikiBlogCategoryList">
+                <econdition field-name="wikiPageCategoryId" value="Newsletter"/>
+                <econdition field-name="sentDate" operator="is-null"/>
+                <order-by field-name="lastUpdatedStamp"/></entity-find>
+            <entity-find entity-name="moqui.resource.wiki.WikiBlogCategory" list="sentWikiBlogCategoryList" limit="1">
+                <econdition field-name="wikiPageCategoryId" value="Newsletter"/>
+                <econdition field-name="sentDate" operator="is-not-null"/>
+                <order-by field-name="-sentDate"/></entity-find>
+            <set field="wikiBlogCategory" from="wikiBlogCategoryList?.getFirst()"/>
+            <set field="didSendBlogEmail" from="false"/>
+            <if condition="wikiBlogCategoryList.size() == 0">
+                <log level="warn" message="No non sent blog posts found for newsletter"/>
+                <else-if condition="sentWikiBlogCategoryList.size() == 0 ||
+                    sentWikiBlogCategoryList.getFirst().sentDate.toInstant() &lt; twoWeeksAgo.toInstant()">
+                    <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="newsletterPartyList">
+                        <econdition field-name="contactListId" value="CoarchyNewsletter"/>
+                        <econdition field-name="statusId" value="CLPT_IN_USE"/>
+                        <date-filter/></entity-find>
+                    <iterate list="invitationPartyList" entry="listParty">
+                        <entity-find-one entity-name="moqui.resource.wiki.WikiBlog" value-field="wikiBlog" for-update="true"
+                            auto-field-map="[wikiBlogId:wikiBlogCategory.wikiBlogId]"/>
+                        <entity-find entity-name="moqui.resource.wiki.WikiPage" list="wikiPageList">
+                            <econdition field-name="wikiPageId" from="wikiBlog.wikiPageId"/>
+                            <econdition field-name="restrictView" operator="not-equals" value="Y"/>
+                        </entity-find>
+                        <set field="wikiPage" from="wikiPageList?.getFirst()"/>
+                        <if condition="!wikiPage">
+                            <log level="warn" message="Wiki page not found for blog ${wikiBlog.wikiBlogId}"/>
+                            <continue/>
+                        </if>
+                        <entity-find-one entity-name="moqui.resource.wiki.WikiSpace" value-field="wikiSpace">
+                            <field-map field-name="wikiSpaceId" from="wikiPage.wikiSpaceId"/></entity-find-one>
+                        <set field="rootPageRef" from="ec.resource.getLocationReference(wikiSpace.rootPageLocation)"/>
+                        <set field="pageReference" from="rootPageRef.findChildFile(wikiPage.pagePath)"/>
 
-                <!-- If a newsletter email hasn't been sent in 2 weeks, send a newsletter email. -->
-            </iterate>
+                        <!-- Just assume one user per party -->
+                        <entity-find entity-name="moqui.security.UserAccount" list="userAccountList" limit="2" for-update="true">
+                            <econdition field-name="partyId" from="listParty.partyId"/>
+                            <econdition field-name="disabled" operator="not-equals" value="Y"/>
+                        </entity-find>
+                        <if condition="userAccountList.size() &gt; 1">
+                            <log level="warn" message="Multiple user accounts found for party ${listParty.partyId}"/>
+                        </if>
+                        <set field="userAccount" from="userAccountList?.getFirst()"/>
 
-
+                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                contactListId:'CoarchyNewsletter',emailTemplateId:'BLOG',
+                                partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                                bodyParameters:[imageUrl:baseLinkUrl+'/content/downloadSmallImage?wikiBlogId='+wikiBlog.wikiBlogId,
+                                title:wikiBlog.title,author:wikiBlog.author,publishDate:ec.l10n.format(wikiBlog.publishDate, 'MMM dd, yyyy'),
+                                pageText:pageReference.getText(wikiPage.publishedVersionName),summary:wikiBlog.summary,
+                                baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                        <if condition="sentEmail">
+                            <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                            emailAddress:userAccount.emailAddress,emailTemplateId:'BLOG']"/>
+                            <set field="didSendBlogEmail" value="true"/>
+                        </if>
+                    </iterate>
+                </else-if>
+            </if>
+            <if condition="didSendBlogEmail">
+                <set field="wikiBlogCategory.sentDate" from="currentTimestamp"/>
+                <entity-update value-field="wikiBlogCategory"/>
+            </if>
 
         </actions>
     </service>
