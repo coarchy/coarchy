@@ -33,6 +33,20 @@ along with this software (see the LICENSE.md file). If not, see
             <date-filter/><econdition field-name="partyId" from="organizationId"/></entity-find-count>
     </always-actions>
 
+    <transition name="upgradeParty">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.activateOrDeactivate#Organization" in-map="[organizationPartyId:organizationId]" out-map="context"/>
+        <actions>
+            <if condition="needsCredits">
+                <set field="ec.web.sessionAttributes.beforeCheckoutUrl" from="ec.web.screenHistory.getAt(0)?.pathWithParams?.replace('cointernal','coapp')?:null"/>
+                <set field="ec.web.sessionAttributes.checkoutOrganizationId" from="organizationId"/>
+            </if>
+        </actions>
+        <conditional-response url="/settings/BuyPremium" url-type="plain" parameter-map="[creditsNeeded:creditsNeeded]"><condition>
+            <expression>needsCredits</expression></condition></conditional-response>
+        <default-response/>
+    </transition>
+
     <transition name="updateUser"><condition><expression>organization.ownerPartyId==ec.user.userAccount.partyId</expression></condition>
         <service-call name="coarchy.CoarchyServices.update#User" in-map="[partyId:partyId,actorIdList:actorIdList,organizationId:organizationId]"/>
         <default-response/>
@@ -101,7 +115,15 @@ along with this software (see the LICENSE.md file). If not, see
             <widgets>
                 <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
                     <label text="To enable all the features upgrade organization '${organization.organizationName}' to Premium" type="b"/>
-                    <container type="template v-slot:action"><container type="q-btn flat color='primary' label='Upgrade' href='/settings/Organizations?toPartyId=${organizationId}'"/></container>
+                    <container type="template v-slot:action">
+                        <form-single name="UpgradeForm" transition="upgradeParty">
+                            <field name="organizationId" from="organizationId">
+                                <default-field><hidden /></default-field>
+                            </field>
+                            <field name="upgrade"><default-field><submit text="Upgrade" type="success"
+                                    confirmation="Activating will cost 1 Organization-Month Credit per month while ${organization.organizationName} is upgraded. Are you sure?"/></default-field></field>
+                        </form-single>
+                    </container>
                 </container>
             </widgets>
         </section>
