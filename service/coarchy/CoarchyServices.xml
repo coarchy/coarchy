@@ -2396,6 +2396,9 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="send" noun="DailyEmails">
+        <in-parameters>
+            <parameter name="currentTimestamp" default="ec.user.nowTimestamp" type="Timestamp" required="true"/>
+        </in-parameters>
         <out-parameters>
             <parameter name="emailsSentList" type="List"/>
         </out-parameters>
@@ -2403,20 +2406,20 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="emailsSentList" from="[]"/>
             <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
 
-            <!-- after sign up, Lead are nurtured through marketing emails -->
+            <!-- after sign up, Leads are nurtured through marketing emails -->
             <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="onboardingPartyList">
                 <econdition field-name="contactListId" value="CoarchyOnboarding"/>
                 <econdition field-name="statusId" value="CLPT_IN_USE"/>
                 <date-filter/></entity-find>
 
             <set field="twoDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                    (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).minusDays(2).toInstant().toEpochMilli())" type="Timestamp"/>
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(2).toInstant().toEpochMilli())" type="Timestamp"/>
             <set field="fourDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                    (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).minusDays(4).toInstant().toEpochMilli())" type="Timestamp"/>
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(4).toInstant().toEpochMilli())" type="Timestamp"/>
             <set field="sixDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                    (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).minusDays(6).toInstant().toEpochMilli())" type="Timestamp"/>
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(6).toInstant().toEpochMilli())" type="Timestamp"/>
             <set field="eightDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
-                    (long) ec.user.nowTimestamp.time), ZoneId.systemDefault()).minusDays(8).toInstant().toEpochMilli())" type="Timestamp"/>
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(8).toInstant().toEpochMilli())" type="Timestamp"/>
             <iterate list="onboardingPartyList" entry="listParty">
                 <if condition="listParty.partyId==null"><continue/></if>
 
@@ -2593,6 +2596,93 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="contactListId" value="CoarchyInvitation"/>
                 <econdition field-name="statusId" value="CLPT_IN_USE"/>
                 <date-filter/></entity-find>
+            <iterate list="invitationPartyList" entry="listParty">
+                <!-- check when first invitiation email has was sent -->
+                <entity-find entity-name="mantle.marketing.contact.ContactListCommStatus" list="commStatusList">
+                    <econdition field-name="partyId" from="listParty.partyId"/>
+                    <econdition field-name="contactListId" from="listParty.contactListId"/>
+                    <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                <set field="invitationList" from="[]"/>
+                <iterate list="commStatusList" entry="commStatus">
+                    <entity-find-one entity-name="mantle.party.communication.CommunicationEvent" value-field="communicationEvent"
+                            auto-field-map="[communicationEventId:commStatus.communicationEventId]">
+                        <select-field field-name="emailMessageId,entryDate"/>
+                    </entity-find-one>
+                    <entity-find-one entity-name="moqui.basic.email.EmailMessage" value-field="emailMessage"
+                            auto-field-map="[emailMessageId:communicationEvent.emailMessageId]">
+                        <select-field field-name="emailTemplateId,subject"/>
+                    </entity-find-one>
+                    <if condition="['USER_INVITE_RESET_PASSWORD','USER_INVITE'].contains(emailMessage?.emailTemplateId)">
+                        <set field="invitationDate" from="communicationEvent.entryDate"/>
+                        <set field="emailTemplateId" from="emailMessage.emailTemplateId"/>
+                        <set field="invitationList" from="invitationList + [invitationDate:invitationDate,
+                            emailTemplateId:emailTemplateId,subject:emailMessage.subject]"/>
+                    </if>
+                </iterate>
+
+                <!-- Just assume one user per party -->
+                <entity-find entity-name="moqui.security.UserAccount" list="userAccountList" limit="2" for-update="true">
+                    <econdition field-name="partyId" from="listParty.partyId"/>
+                    <econdition field-name="disabled" operator="not-equals" value="Y"/>
+                </entity-find>
+                <if condition="userAccountList.size() &gt; 1">
+                    <log level="warn" message="Multiple user accounts found for party ${listParty.partyId}"/>
+                </if>
+                <set field="userAccount" from="userAccountList?.getFirst()"/>
+
+                <entity-find entity-name="moqui.security.UserLoginHistory" list="historyList" limit="1">
+                    <econdition field-name="userId" from="userAccount.userId"/>
+                    <order-by field-name="fromDate"/></entity-find>
+
+                <set field="invitation" from="invitationList.max{ it.invitationDate }"/>
+                <set field="invitationDate" from="invitation?.invitationDate"/>
+
+                <if condition="invitationList.size() &lt; 3 &amp;&amp; userAccount &amp;&amp;
+                     twoDaysAgo.toInstant() &gt; invitationDate?.toInstant() &amp;&amp;
+                    (historyList.size() == 0 || (historyList.size() &gt; 0 &amp;&amp; historyList.getFirst().fromDate.toInstant() &lt; invitationDate?.toInstant() ))">
+                    <if condition="historyList.size() == 0">
+                        <then>
+                            <!-- if account has not logged in yet (ie, new user), create one & send a USER_INVITE_RESET_PASSWORD email -->
+                            <!-- reset the password to a random value -->
+                            <set field="resetPassword" from="getRandomString(12)"/>
+                            <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
+                            <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
+                            <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
+                            <entity-update value-field="userAccount"/>
+
+                            <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                                emailAddress:userAccount.emailAddress,emailTemplateId:'USER_INVITE_RESET_PASSWORD']"/>
+                            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
+                                partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                                bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+userAccount.emailAddress+'&amp;oldPassword='+resetPassword,
+                                title:invitation?.subject?:'You\'re invited to join Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                        </then>
+                        <else>
+                            <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                                emailAddress:userAccount.emailAddress,emailTemplateId:'USER_INVITE']"/>
+                            <!-- if account has logged in, existing/invited user, but NOT part of inviting organization, send a USER_INVITE email -->
+                            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
+                                partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                                bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+userAccount.username?:userAccount.emailAddress,
+                                title:invitation?.subject?:'You\'re invited to join Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                        </else>
+                    </if>
+                </if>
+            </iterate>
+
+            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="newsletterPartyList">
+                <econdition field-name="contactListId" value="CoarchyNewsletter"/>
+                <econdition field-name="statusId" value="CLPT_IN_USE"/>
+                <date-filter/></entity-find>
+            <iterate list="invitationPartyList" entry="listParty">
+                <!-- Find last time when email was sent -->
+
+
+                <!-- If a newsletter email hasn't been sent in 2 weeks, send a newsletter email. -->
+            </iterate>
+
 
 
         </actions>
