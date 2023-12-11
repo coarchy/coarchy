@@ -36,6 +36,9 @@ along with this software (see the LICENSE.md file). If not, see
     <financialAccounts negativeBalanceLimit="0" finAccountTypeId="OrganizationMonthCredit" isRefundable="Y" availableBalance="6000" ownerPartyId="EX_JOHN_DOE" finAccountId="c100051" currencyUomId="USD" statusId="FaActive" finAccountName="Michael Jones Organization-Month Credit" actualBalance="6000" organizationPartyId="coarchy">
         <transactions finAccountTransTypeEnumId="FattAdjustment" reasonEnumId="FatrDisbursement" finAccountTransId="c100001" amount="6000" entryDate="1701991628293" acctgTransResultEnumId="AtrSuccess" transactionDate="1701991628293" postBalance="6000" performedByUserId="EX_JOHN_DOE"/>
     </financialAccounts>
+    <mantle.marketing.contact.ContactListParty contactListId="CoarchyNewsletter" partyId="EX_JOHN_DOE" fromDate="1701800219999" statusId="CLPT_IN_USE"/>
+    <mantle.marketing.contact.ContactListParty contactListId="CoarchyOnboarding" partyId="EX_JOHN_DOE" fromDate="1701800219999" statusId="CLPT_IN_USE"/>
+    <mantle.marketing.contact.ContactListParty contactListId="CoarchyInvitation" partyId="EX_JOHN_DOE" fromDate="1701800219999" statusId="CLPT_IN_USE"/>
 
     <parties pseudoId="c100051" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100051"/>
     <parties pseudoId="c100104" partyTypeEnumId="PtyPerson" disabled="N" partyId="c100104"/>

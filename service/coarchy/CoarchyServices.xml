@@ -421,20 +421,19 @@ along with this software (see the LICENSE.md file). If not, see
                         <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
                         <entity-update value-field="userAccount"/>
 
-
                         <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                        contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
-                        partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
-                        bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
-                        title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                            contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
+                            partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
+                            bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
+                            title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
                     </then>
                     <else-if condition="existingUaList &amp;&amp; !isInvitedUserOrgMember">
                         <!-- if account DOES exist, existing/invited user, but NOT part of inviting organization, send a USER_INVITE email -->
                         <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                        contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
-                        partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
-                        bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
-                        title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                            contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
+                            partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
+                            bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
+                            title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
                     </else-if>
                     <else>
                         <!-- otherwise, do nothing (account exists, and is member of inviting org)-->
@@ -459,6 +458,7 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <out-parameters>
             <parameter name="sentEmail"/>
+            <parameter name="emailTemplateId"/>
         </out-parameters>
         <actions>
             <set field="sentEmail" from="false"/>
@@ -2728,10 +2728,351 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="send" noun="DailyEmails">
+        <in-parameters>
+            <parameter name="currentTimestamp" default="ec.user.nowTimestamp" type="Timestamp" required="true"/>
+        </in-parameters>
         <out-parameters>
-
+            <parameter name="emailsSentList" type="List"/>
         </out-parameters>
         <actions>
+            <set field="emailsSentList" from="[]"/>
+            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+
+            <!-- after sign up, Leads are nurtured through marketing emails -->
+            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="onboardingPartyList">
+                <econdition field-name="contactListId" value="CoarchyOnboarding"/>
+                <econdition field-name="statusId" value="CLPT_IN_USE"/>
+                <date-filter/></entity-find>
+
+            <set field="twoDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(2).toInstant().toEpochMilli())" type="Timestamp"/>
+            <set field="fourDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(4).toInstant().toEpochMilli())" type="Timestamp"/>
+            <set field="sixDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(6).toInstant().toEpochMilli())" type="Timestamp"/>
+            <set field="eightDaysAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusDays(8).toInstant().toEpochMilli())" type="Timestamp"/>
+            <set field="twoWeeksAgo" from="new Timestamp(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+                    (long) currentTimestamp.time), ZoneId.systemDefault()).minusWeeks(2).toInstant().toEpochMilli())" type="Timestamp"/>
+            <iterate list="onboardingPartyList" entry="listParty">
+                <if condition="listParty.partyId==null"><continue/></if>
+
+                <!-- TODO: Refactor this to use less code per emails -->
+                <set field="createOrganizationEmailTemplateId" value="CREATE_ORGANIZATION"/>
+                <set field="inviteUserEmailTemplateId" value="INVITE_USER"/>
+                <set field="createProcessStoryEmailTemplateId" value="CREATE_PROCESS_STORY"/>
+                <set field="createActorEmailTemplateId" value="CREATE_ACTOR"/>
+                <!-- check if email has already been sent -->
+                <entity-find entity-name="mantle.marketing.contact.ContactListCommStatus" list="commStatusList">
+                    <econdition field-name="partyId" from="listParty.partyId"/>
+                    <econdition field-name="contactListId" from="listParty.contactListId"/>
+                </entity-find>
+                <set field="createOrganizationAlreadyBeenSent" from="false"/>
+                <set field="inviteUserAlreadyBeenSent" from="false"/>
+                <set field="createProcessStoryAlreadyBeenSent" from="false"/>
+                <set field="createActorAlreadyBeenSent" from="false"/>
+                <iterate list="commStatusList" entry="commStatus">
+                    <entity-find-one entity-name="mantle.party.communication.CommunicationEvent" value-field="communicationEvent"
+                            auto-field-map="[communicationEventId:commStatus.communicationEventId]">
+                        <select-field field-name="emailMessageId"/>
+                    </entity-find-one>
+                    <entity-find-one entity-name="moqui.basic.email.EmailMessage" value-field="emailMessage"
+                            auto-field-map="[emailMessageId:communicationEvent.emailMessageId]">
+                        <select-field field-name="emailTemplateId"/>
+                    </entity-find-one>
+                    <if condition="emailMessage?.emailTemplateId==createOrganizationEmailTemplateId">
+                        <set field="createOrganizationAlreadyBeenSent" value="true"/>
+                        <continue/>
+                    </if>
+                    <if condition="emailMessage?.emailTemplateId==inviteUserEmailTemplateId">
+                        <set field="inviteUserAlreadyBeenSent" value="true"/>
+                        <continue/>
+                    </if>
+                    <if condition="emailMessage?.emailTemplateId==createProcessStoryEmailTemplateId">
+                        <set field="createProcessStoryAlreadyBeenSent" value="true"/>
+                        <continue/>
+                    </if>
+                    <if condition="emailMessage?.emailTemplateId==createActorEmailTemplateId">
+                        <set field="createActorAlreadyBeenSent" value="true"/>
+                        <continue/>
+                    </if>
+                </iterate>
+                <!-- Just assume one user per party -->
+                <entity-find entity-name="moqui.security.UserAccount" list="userAccountList" limit="2">
+                    <econdition field-name="partyId" from="listParty.partyId"/>
+                    <econdition field-name="disabled" operator="not-equals" value="Y"/>
+                </entity-find>
+                <if condition="userAccountList.size() &gt; 1">
+                    <log level="warn" message="Multiple user accounts found for party ${listParty.partyId}"/>
+                </if>
+                <set field="userAccount" from="userAccountList?.getFirst()"/>
+
+                <entity-find entity-name="moqui.security.UserLoginHistory" list="historyList" limit="1">
+                    <econdition field-name="userId" from="userAccount.userId"/>
+                    <order-by field-name="fromDate"/></entity-find>
+
+                <entity-find entity-name="mantle.party.Party" list="ownedOrganizationList">
+                    <econdition field-name="ownerPartyId" from="listParty.partyId"/>
+                    <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                    <econdition field-name="disabled" operator="not-equals" value="Y"/>
+                    <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                <!-- If the user hasn't already created an Organization 2 days after sign up, Lead gets sent an activation email to setup an organization. -->
+                <if condition="!createOrganizationAlreadyBeenSent &amp;&amp; ownedOrganizationList.size() == 0 &amp;&amp; userAccount &amp;&amp; historyList.size() &gt; 0
+                    &amp;&amp; twoDaysAgo.toInstant() &gt; historyList.getFirst().fromDate.toInstant()">
+                    <!-- TODO: Start tracking emails conversions -->
+                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                            contactListId:listParty.contactListId,emailTemplateId:createOrganizationEmailTemplateId,
+                                            partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                                            bodyParameters:[linkUrl:baseLinkUrl+'/settings/Organizations',
+                                            title:'Get started with Coarchy. Create an Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                    <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                                        emailAddress:userAccount.emailAddress,emailTemplateId:emailTemplateId]"/>
+                </if>
+
+                <!-- Find whether the listParty.party has any PartyRelationship besides the listParty.partyId for any organization it owns -->
+                <entity-find entity-name="mantle.party.PartyRelationship" list="partyRelationshipList">
+                    <econdition field-name="fromPartyId" operator="not-equals" from="listParty.partyId"/>
+                    <econdition field-name="toPartyId" operator="in" from="ownedOrganizationList*.partyId"/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                    <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                    <date-filter/>
+                </entity-find>
+                <!-- If the user hasn't already invited a user 4 days after sign up, Lead gets sent an activation email to invite a user. -->
+                <if condition="createOrganizationAlreadyBeenSent &amp;&amp; !inviteUserAlreadyBeenSent
+                    &amp;&amp; partyRelationshipList.size() == 0 &amp;&amp; userAccount &amp;&amp; historyList.size() &gt; 0
+                    &amp;&amp; fourDaysAgo.toInstant() &gt; historyList.getFirst().fromDate.toInstant()">
+                    <!-- TODO: Start tracking emails conversions -->
+                    <if condition="ownedOrganizationList.size() &gt; 0"><then>
+                        <set field="linkUrl" from="baseLinkUrl+'/settings/EditOrganization?organizationId='+ownedOrganizationList.getFirst().partyId"/>
+                    </then><else>
+                        <set field="linkUrl" from="baseLinkUrl+'/settings/Organizations'"/>
+                    </else></if>
+                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                        contactListId:listParty.contactListId,emailTemplateId:inviteUserEmailTemplateId,
+                        partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                        bodyParameters:[linkUrl:linkUrl,
+                        title:'Coarchy is better with people',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                    <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                        emailAddress:userAccount.emailAddress,emailTemplateId:emailTemplateId]"/>
+                </if>
+
+                <!-- 6 days after sign up, Lead gets sent an activation email to create a process story with activities. -->
+                <if condition="inviteUserAlreadyBeenSent &amp;&amp; !createProcessStoryAlreadyBeenSent
+                    &amp;&amp; userAccount &amp;&amp; historyList.size() &gt; 0
+                    &amp;&amp; sixDaysAgo.toInstant() &gt; historyList.getFirst().fromDate.toInstant()">
+                    <!-- TODO: Start tracking emails conversions -->
+                    <if condition="ownedOrganizationList.size() &gt; 0"><then>
+                        <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[
+                            preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:ownedOrganizationList.getFirst().partyId]"/>
+                        <set field="linkUrl" from="baseLinkUrl+'/coapp/Process/FindProcessStory'"/>
+                    </then><else>
+                        <set field="linkUrl" from="baseLinkUrl+'/settings/Organizations'"/>
+                    </else></if>
+                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                        contactListId:listParty.contactListId,emailTemplateId:createProcessStoryEmailTemplateId,
+                        partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                        bodyParameters:[linkUrl:linkUrl,baseLinkUrl:baseLinkUrl,
+                        title:'The Process Story is the most important requirements document']]" out-map="context"/>
+                    <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                        emailAddress:userAccount.emailAddress,emailTemplateId:emailTemplateId]"/>
+                </if>
+
+                <!-- 8 days after sign up, Lead gets sent an activation email to create an actor. -->
+                <if condition="createProcessStoryAlreadyBeenSent &amp;&amp; !createActorAlreadyBeenSent
+                    &amp;&amp; userAccount &amp;&amp; historyList.size() &gt; 0
+                    &amp;&amp; eightDaysAgo.toInstant() &gt; historyList.getFirst().fromDate.toInstant()">
+                    <!-- TODO: Start tracking emails conversions -->
+                    <if condition="ownedOrganizationList.size() &gt; 0"><then>
+                        <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[
+                            preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:ownedOrganizationList.getFirst().partyId]"/>
+                        <set field="linkUrl" from="baseLinkUrl+'/coapp/Actor'"/>
+                    </then><else>
+                        <set field="linkUrl" from="baseLinkUrl+'/settings/Organizations'"/>
+                    </else></if>
+                    <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                        contactListId:listParty.contactListId,emailTemplateId:createActorEmailTemplateId,
+                        partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                        bodyParameters:[linkUrl:linkUrl,baseLinkUrl:baseLinkUrl,
+                        title:'Actors are WHO perform activities']]" out-map="context"/>
+                    <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                        emailAddress:userAccount.emailAddress,emailTemplateId:emailTemplateId]"/>
+                </if>
+
+<!--                <if condition="ownedOrganizationList.size() &gt; 0"><then>-->
+<!--                    <log level="warn" message="Organization already created for party ${listParty.partyId}"/>-->
+<!--                </then></if>-->
+<!--                <if condition="!userAccount"><then>-->
+<!--                    <log level="warn" message="User account not found for party ${listParty.partyId}"/>-->
+<!--                </then></if>-->
+<!--                <if condition="historyList.size() &gt; 0">-->
+<!--                    <log level="warn" message="User ${userAccount.userId} has logged in ${historyList.size()} times"/>-->
+<!--                </if>-->
+<!--                <if condition="twoDaysAgo.toInstant() &lt; historyList.getFirst().fromDate.toInstant()"><then>-->
+<!--                    <log level="warn" message="User ${userAccount.userId} has signed up within the last 2 days"/>-->
+<!--                </then></if>-->
+<!--                <if condition="createOrganizationAlreadyBeenSent">-->
+<!--                    <log level="warn" message="Email ${createOrganizationEmailTemplateId} already sent to party ${listParty.partyId}"/>-->
+<!--                </if>-->
+<!--                <if condition="inviteUserEmailTemplateId">-->
+<!--                    <log level="warn" message="Email ${inviteUserEmailTemplateId} already sent to party ${listParty.partyId}"/>-->
+<!--                </if>-->
+<!--                <if condition="createProcessStoryAlreadyBeenSent">-->
+<!--                    <log level="warn" message="Email ${createProcessStoryEmailTemplateId} already sent to party ${listParty.partyId}"/>-->
+<!--                </if>-->
+<!--                <if condition="createActorAlreadyBeenSent">-->
+<!--                    <log level="warn" message="Email ${createActorEmailTemplateId} already sent to party ${listParty.partyId}"/>-->
+<!--                </if>-->
+
+<!--                <log level="warn" message="send#DailyEmails context.toString() ${context.toString()}"/>-->
+            </iterate>
+
+            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="invitationPartyList">
+                <econdition field-name="contactListId" value="CoarchyInvitation"/>
+                <econdition field-name="statusId" value="CLPT_IN_USE"/>
+                <date-filter/></entity-find>
+            <iterate list="invitationPartyList" entry="listParty">
+                <!-- check when first invitiation email has was sent -->
+                <entity-find entity-name="mantle.marketing.contact.ContactListCommStatus" list="commStatusList">
+                    <econdition field-name="partyId" from="listParty.partyId"/>
+                    <econdition field-name="contactListId" from="listParty.contactListId"/>
+                    <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                <set field="invitationList" from="[]"/>
+                <iterate list="commStatusList" entry="commStatus">
+                    <entity-find-one entity-name="mantle.party.communication.CommunicationEvent" value-field="communicationEvent"
+                            auto-field-map="[communicationEventId:commStatus.communicationEventId]">
+                        <select-field field-name="emailMessageId,entryDate"/>
+                    </entity-find-one>
+                    <entity-find-one entity-name="moqui.basic.email.EmailMessage" value-field="emailMessage"
+                            auto-field-map="[emailMessageId:communicationEvent.emailMessageId]">
+                        <select-field field-name="emailTemplateId,subject"/>
+                    </entity-find-one>
+                    <if condition="['USER_INVITE_RESET_PASSWORD','USER_INVITE'].contains(emailMessage?.emailTemplateId)">
+                        <set field="invitationDate" from="communicationEvent.entryDate"/>
+                        <set field="emailTemplateId" from="emailMessage.emailTemplateId"/>
+                        <set field="invitationList" from="invitationList + [invitationDate:invitationDate,
+                            emailTemplateId:emailTemplateId,subject:emailMessage.subject]"/>
+                    </if>
+                </iterate>
+
+                <!-- Just assume one user per party -->
+                <entity-find entity-name="moqui.security.UserAccount" list="userAccountList" limit="2" for-update="true">
+                    <econdition field-name="partyId" from="listParty.partyId"/>
+                    <econdition field-name="disabled" operator="not-equals" value="Y"/>
+                </entity-find>
+                <if condition="userAccountList.size() &gt; 1">
+                    <log level="warn" message="Multiple user accounts found for party ${listParty.partyId}"/>
+                </if>
+                <set field="userAccount" from="userAccountList?.getFirst()"/>
+
+                <entity-find entity-name="moqui.security.UserLoginHistory" list="historyList" limit="1">
+                    <econdition field-name="userId" from="userAccount.userId"/>
+                    <order-by field-name="fromDate"/></entity-find>
+
+                <set field="invitation" from="invitationList.max{ it.invitationDate }"/>
+                <set field="invitationDate" from="invitation?.invitationDate"/>
+
+                <if condition="invitationList.size() &lt; 3 &amp;&amp; userAccount &amp;&amp;
+                     twoDaysAgo.toInstant() &gt; invitationDate?.toInstant() &amp;&amp;
+                    (historyList.size() == 0 || (historyList.size() &gt; 0 &amp;&amp; historyList.getFirst().fromDate.toInstant() &lt; invitationDate?.toInstant() ))">
+                    <if condition="historyList.size() == 0">
+                        <then>
+                            <!-- if account has not logged in yet (ie, new user), create one & send a USER_INVITE_RESET_PASSWORD email -->
+                            <!-- reset the password to a random value -->
+                            <set field="resetPassword" from="getRandomString(12)"/>
+                            <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
+                            <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
+                            <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
+                            <entity-update value-field="userAccount"/>
+
+                            <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                                emailAddress:userAccount.emailAddress,emailTemplateId:'USER_INVITE_RESET_PASSWORD']"/>
+                            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
+                                partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                                bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+userAccount.emailAddress+'&amp;oldPassword='+resetPassword,
+                                title:invitation?.subject?:'You\'re invited to join Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                        </then>
+                        <else>
+                            <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                                emailAddress:userAccount.emailAddress,emailTemplateId:'USER_INVITE']"/>
+                            <!-- if account has logged in, existing/invited user, but NOT part of inviting organization, send a USER_INVITE email -->
+                            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE',
+                                partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                                bodyParameters:[linkUrl:baseLinkUrl+'/Login?username='+userAccount.username?:userAccount.emailAddress,
+                                title:invitation?.subject?:'You\'re invited to join Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                        </else>
+                    </if>
+                </if>
+            </iterate>
+
+            <!-- Find last time when newsletter email was sent -->
+
+            <!-- If a newsletter email hasn't been sent in 2 weeks, send a newsletter email. -->
+            <entity-find entity-name="moqui.resource.wiki.WikiBlogCategory" list="wikiBlogCategoryList">
+                <econdition field-name="wikiPageCategoryId" value="Newsletter"/>
+                <econdition field-name="sentDate" operator="is-null"/>
+                <order-by field-name="lastUpdatedStamp"/></entity-find>
+            <entity-find entity-name="moqui.resource.wiki.WikiBlogCategory" list="sentWikiBlogCategoryList" limit="1">
+                <econdition field-name="wikiPageCategoryId" value="Newsletter"/>
+                <econdition field-name="sentDate" operator="is-not-null"/>
+                <order-by field-name="-sentDate"/></entity-find>
+            <set field="wikiBlogCategory" from="wikiBlogCategoryList?.getFirst()"/>
+            <set field="didSendBlogEmail" from="false"/>
+            <if condition="wikiBlogCategoryList.size() == 0">
+                <log level="warn" message="No non sent blog posts found for newsletter"/>
+                <else-if condition="sentWikiBlogCategoryList.size() == 0 ||
+                    sentWikiBlogCategoryList.getFirst().sentDate.toInstant() &lt; twoWeeksAgo.toInstant()">
+                    <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="newsletterPartyList">
+                        <econdition field-name="contactListId" value="CoarchyNewsletter"/>
+                        <econdition field-name="statusId" value="CLPT_IN_USE"/>
+                        <date-filter/></entity-find>
+                    <iterate list="invitationPartyList" entry="listParty">
+                        <entity-find-one entity-name="moqui.resource.wiki.WikiBlog" value-field="wikiBlog" for-update="true"
+                            auto-field-map="[wikiBlogId:wikiBlogCategory.wikiBlogId]"/>
+                        <entity-find entity-name="moqui.resource.wiki.WikiPage" list="wikiPageList">
+                            <econdition field-name="wikiPageId" from="wikiBlog.wikiPageId"/>
+                            <econdition field-name="restrictView" operator="not-equals" value="Y"/>
+                        </entity-find>
+                        <set field="wikiPage" from="wikiPageList?.getFirst()"/>
+                        <if condition="!wikiPage">
+                            <log level="warn" message="Wiki page not found for blog ${wikiBlog.wikiBlogId}"/>
+                            <continue/>
+                        </if>
+                        <entity-find-one entity-name="moqui.resource.wiki.WikiSpace" value-field="wikiSpace">
+                            <field-map field-name="wikiSpaceId" from="wikiPage.wikiSpaceId"/></entity-find-one>
+                        <set field="rootPageRef" from="ec.resource.getLocationReference(wikiSpace.rootPageLocation)"/>
+                        <set field="pageReference" from="rootPageRef.findChildFile(wikiPage.pagePath)"/>
+
+                        <!-- Just assume one user per party -->
+                        <entity-find entity-name="moqui.security.UserAccount" list="userAccountList" limit="2" for-update="true">
+                            <econdition field-name="partyId" from="listParty.partyId"/>
+                            <econdition field-name="disabled" operator="not-equals" value="Y"/>
+                        </entity-find>
+                        <if condition="userAccountList.size() &gt; 1">
+                            <log level="warn" message="Multiple user accounts found for party ${listParty.partyId}"/>
+                        </if>
+                        <set field="userAccount" from="userAccountList?.getFirst()"/>
+
+                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                                contactListId:'CoarchyNewsletter',emailTemplateId:'BLOG',
+                                partyId:listParty.partyId,preferredContactMechId:null,toAddresses:userAccount.emailAddress,
+                                bodyParameters:[imageUrl:baseLinkUrl+'/content/downloadSmallImage?wikiBlogId='+wikiBlog.wikiBlogId,
+                                title:wikiBlog.title,author:wikiBlog.author,publishDate:ec.l10n.format(wikiBlog.publishDate, 'MMM dd, yyyy'),
+                                pageText:pageReference.getText(wikiPage.publishedVersionName),summary:wikiBlog.summary,
+                                baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                        <if condition="sentEmail">
+                            <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
+                            emailAddress:userAccount.emailAddress,emailTemplateId:'BLOG']"/>
+                            <set field="didSendBlogEmail" value="true"/>
+                        </if>
+                    </iterate>
+                </else-if>
+            </if>
+            <if condition="didSendBlogEmail">
+                <set field="wikiBlogCategory.sentDate" from="currentTimestamp"/>
+                <entity-update value-field="wikiBlogCategory"/>
+            </if>
 
         </actions>
     </service>

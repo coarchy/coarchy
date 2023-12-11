@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd">
+    <!-- for fields available see NotificationMessageImpl.getWrappedMessageMap(), this is generic so nothing from the 'message' Map within it -->
+
+<!--
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all padding="0px">
+      </mj-all>
+      <mj-class name="preheader" color="#000000" font-size="11px">
+      </mj-class>
+    </mj-attributes>
+    <mj-style inline="inline">a { text-decoration: none!important; color: inherit!important; }
+    </mj-style>
+  </mj-head>
+  <mj-body>
+    <mj-section border-left="1px solid #aaaaaa" border-right="1px solid #aaaaaa" padding="20px" border-bottom="1px solid #aaaaaa">
+      <mj-column>
+        <mj-image src="https://coarchy.com/coarchyText113.png" width="354px" alt="Coarchy Logo" padding="0px">
+        </mj-image>
+        <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b">
+          <font color="#000000">
+            <span style="font-size: 24px;"><b>Coarchy is better with people
+              </b></span>
+          </font>
+        </mj-text>
+        <mj-text>Inviting people to join your organization let&#39;s you work together and collaborate with Coarchy.
+        </mj-text>
+        <mj-button background-color="#ae1440" font-size="16px" padding-top="11px" padding-bottom="11px" font-style="normal" text-decoration="none" color="white" border="1px solid black" href="${linkUrl}">Invite People
+        </mj-button>
+        <mj-divider padding-right="0px" padding-left="0px" padding-top="11px" padding-bottom="11px">
+        </mj-divider>
+        <mj-text align="center" color="#45495d" font-size="10px" line-height="14px" padding-top="6px" padding-bottom="6px">
+          <p draggable="true" id="ilpqr">
+            <span draggable="true" id="id61r" style="font-size:12px;"><span draggable="true" id="i4i9x" style="color:#000000;">We don't want to see you go, but if you no longer wish to receive ${contactListName} emails from us,<br draggable="true" id="i2xbf"/>
+              you can </span><a draggable="true" href="${unsubscribeLink}" id="ia7ts"><span style="color:#3498db;"><span draggable="true" id="iqoch"><span draggable="true" id="ik7km">unsubscribe here</span></span></span></a><span draggable="true" id="iy63z" style="color:#000000;">.</span></span>
+          </p>
+          <p draggable="true" id="ippb7">
+            <span draggable="true" id="ibb4j" style="color:#000000;"><span draggable="true" id="ihaqs" style="font-size:12px;">504 W 800 N #91, Orem, UT 84057<br draggable="true" id="i0h3a3"/>
+              @${currentYear} Coarchy All Rights Reserved</span></span>
+          </p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-image src="${baseLinkUrl}/email/${emailMessageId}.png" alt="Email" title="Email" width="1" height="1" border="0">
+    </mj-image>
+  </mj-body>
+</mjml>
+-->
+    <widgets><render-mode><text type="html"><![CDATA[
+        <!doctype html>
+        <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+        <head>
+            <title>
+            </title>
+            <!--[if !mso]><!-->
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <!--<![endif]-->
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style type="text/css">
+                #outlook a {
+                    padding:0;
+                }
+                body {
+                    margin:0;
+                    padding:0;
+                    -webkit-text-size-adjust:100%;
+                    -ms-text-size-adjust:100%;
+                }
+                table, td {
+                    border-collapse:collapse;
+                    mso-table-lspace:0pt;
+                    mso-table-rspace:0pt;
+                }
+                img {
+                    border:0;
+                    height:auto;
+                    line-height:100%;
+                    outline:none;
+                    text-decoration:none;
+                    -ms-interpolation-mode:bicubic;
+                }
+                p {
+                    display:block;
+                    margin:13px 0;
+                }
+            </style>
+            <!--[if mso]>
+        <noscript>
+        <xml>
+        <o:OfficeDocumentSettings>
+        <o:AllowPNG/>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+        </xml>
+        </noscript>
+        <![endif]-->
+            <!--[if lte mso 11]>
+        <style type="text/css">
+        .mj-outlook-group-fix { width:100% !important; }
+        </style>
+        <![endif]-->
+            <!--[if !mso]><!-->
+            <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700" rel="stylesheet" type="text/css">
+            <style type="text/css">
+                @import url(https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700);
+            </style>
+            <!--<![endif]-->
+            <style type="text/css">
+                @media only screen and (min-width:480px) {
+                    .mj-column-per-100 {
+                        width:100% !important;
+                        max-width: 100%;
+                    }
+                }
+            </style>
+            <style media="screen and (min-width:480px)">
+                .moz-text-html .mj-column-per-100 {
+                    width:100% !important;
+                    max-width: 100%;
+                }
+            </style>
+            <style type="text/css">
+                @media only screen and (max-width:479px) {
+                    table.mj-full-width-mobile {
+                        width: 100% !important;
+                    }
+                    td.mj-full-width-mobile {
+                        width: auto !important;
+                    }
+                }
+            </style>
+            <style type="text/css">
+            </style>
+        </head>
+        <body style="word-spacing:normal;">
+        <div style>
+            <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:600px;" width="600" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
+            <div style="margin:0px auto;max-width:600px;">
+                <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
+                    <tbody>
+                    <tr>
+                        <td style="border-bottom:1px solid #aaaaaa;border-left:1px solid #aaaaaa;border-right:1px solid #aaaaaa;direction:ltr;font-size:0px;padding:20px;text-align:center;">
+                            <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:558px;" ><![endif]-->
+                            <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
+                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+                                    <tbody>
+                                    <tr>
+                                        <td style="vertical-align:top;padding:0px;">
+                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
+                                                <tbody>
+                                                <tr>
+                                                    <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
+                                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
+                                                            <tbody>
+                                                            <tr>
+                                                                <td style="width:354px;">
+                                                                    <img alt="Coarchy Logo" src="https://coarchy.com/coarchyText113.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="354" height="auto">
+                                                                </td>
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                                        <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:20px;line-height:1;text-align:center;color:#512d0b;">
+                                                            <font color="#000000">
+                                      <span style="font-size: 24px;"><b>Coarchy is better with people
+                                        </b></span>
+                                                            </font>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="left" style="font-size:0px;padding:0px;word-break:break-word;">
+                                                        <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">Inviting people to join your organization let&#39;s you work together and collaborate with Coarchy.
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="center" vertical-align="middle" style="font-size:0px;padding:0px;padding-top:11px;padding-bottom:11px;word-break:break-word;">
+                                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
+                                                            <tbody>
+                                                            <tr>
+                                                                <td align="center" bgcolor="#ae1440" role="presentation" style="border:1px solid black;border-radius:3px;cursor:auto;font-style:normal;mso-padding-alt:10px 25px;background:#ae1440;" valign="middle">
+                                                                    <a href="${linkUrl}" style="display: inline-block; background: #ae1440; font-family: Ubuntu, Helvetica, Arial, sans-serif; font-size: 16px; font-style: normal; font-weight: normal; line-height: 120%; margin: 0; text-transform: none; padding: 10px 25px; mso-padding-alt: 0px; border-radius: 3px; text-decoration: none; color: inherit;" target="_blank">
+                                                                        Invite People
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="center" style="font-size:0px;padding:0px;padding-top:11px;padding-right:0px;padding-bottom:11px;padding-left:0px;word-break:break-word;">
+                                                        <p style="border-top:solid 4px #000000;font-size:1px;margin:0px auto;width:100%;">
+                                                        </p>
+                                                        <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 4px #000000;font-size:1px;margin:0px auto;width:558px;" role="presentation" width="558px" ><tr><td style="height:0;line-height:0;"> &nbsp;
+                      </td></tr></table><![endif]-->
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td align="center" style="font-size:0px;padding:0px;padding-top:6px;padding-bottom:6px;word-break:break-word;">
+                                                        <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:10px;line-height:14px;text-align:center;color:#45495d;">
+                                                            <p draggable="true" id="ilpqr">
+                                      <span draggable="true" id="id61r" style="font-size:12px;"><span draggable="true" id="i4i9x" style="color:#000000;">We don't want to see you go, but if you no longer wish to receive ${contactListName} emails from us,<br draggable="true" id="i2xbf">
+                                        you can </span><a draggable="true" href="${unsubscribeLink}" id="ia7ts" style="text-decoration: none; color: inherit;"><span style="color:#3498db;"><span draggable="true" id="iqoch"><span draggable="true" id="ik7km">unsubscribe here</span></span></span></a><span draggable="true" id="iy63z" style="color:#000000;">.</span></span>
+                                                            </p>
+                                                            <p draggable="true" id="ippb7">
+                                      <span draggable="true" id="ibb4j" style="color:#000000;"><span draggable="true" id="ihaqs" style="font-size:12px;">504 W 800 N #91, Orem, UT 84057<br draggable="true" id="i0h3a3">
+                                        @${currentYear} Coarchy All Rights Reserved</span></span>
+                                                            </p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!--[if mso | IE]></td></tr></table><![endif]-->
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!--[if mso | IE]></td></tr></table><![endif]-->
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
+                <tbody>
+                <tr>
+                    <td style="width:1px;">
+                        <img alt="Email" src="${baseLinkUrl}/email/${emailMessageId}.png" style="border:0;display:block;outline:none;text-decoration:none;height:1;width:100%;font-size:13px;" title="Email" width="1" height="1">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        </body>
+        </html>
+
+    ]]></text></render-mode></widgets>
+</screen>
