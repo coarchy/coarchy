@@ -245,6 +245,9 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.service.job.ServiceJob jobName="update_SalesJourneyClassification" description="Update Sales Journey Classification"
             serviceName="coarchy.CoarchyServices.update#SalesJourneyClassification" cronExpression="0 0 3 * * ?" paused="N"
             transactionTimeout="3600"/>
+    <moqui.service.job.ServiceJob jobName="send_DailyEmails" description="Send Daily Emails"
+            serviceName="coarchy.CoarchyServices.send#DailyEmails" cronExpression="0 0 10 * * ?" paused="N"
+            transactionTimeout="3600"/>
 
     <!-- ========== Agreements ========== -->
     <enums enumId="AgrPrivacyPolicy" description="Privacy Policy" enumTypeId="AgreementType"/>
