@@ -24,7 +24,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="insertActivity">
         <service-call name="coarchy.CoarchyServices.insert#Activity" in-map="context + [organizationId:activeOrgId]"/>
-        <default-response url=".." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>
+        <default-response url=".." parameter-map="[pageIndex:pageIndex]"/></transition>
 
     <transition name="insertParagraphBreak"><actions>
         <set field="insertSequenceNum" from="sequenceNum"/>
