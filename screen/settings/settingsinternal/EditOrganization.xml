@@ -69,13 +69,15 @@ along with this software (see the LICENSE.md file). If not, see
         </iterate>
     </actions><default-response/></transition>
 
-    <transition name="updateOrganization"><actions>
-        <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:partyId]"/>
-        <if condition="!organization || organization.ownerPartyId != ec.user.userAccount.partyId"><return type="warning" error="true" message="${ec.resource.expand('CoarchyOrgNotEditable',null)}"/></if>
+    <transition name="updateOrganization">
+        <actions>
+        <entity-find-one entity-name="mantle.party.Party" value-field="organization" auto-field-map="[partyId:organizationId]"/>
+        <if condition="!(organizationName?.trim())"><return error="true" message="${ec.resource.expand('CoarchyOrgNameInvalid',null)}"/></if>
+        <if condition="!organization || organization.ownerPartyId != ec.user.userAccount.partyId"><return error="true" message="${ec.resource.expand('CoarchyOrgNotEditable',null)}"/></if>
         <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
-            <service-call name="update#mantle.party.Organization" in-map="[partyId:partyId,organizationName:organizationName]"/>
+            <service-call name="update#mantle.party.Organization" in-map="[partyId:organizationId,organizationName:organizationName]"/>
         </if>
-    </actions><default-response type="url" url="." parameter-map="[organizationId:partyId]"/><error-response/></transition>
+    </actions><default-response url="." parameter-map="[organizationId:organizationId]"/></transition>
 
     <transition name="getActorList"><actions>
         <set field="actorList" from="[]"/>
@@ -180,7 +182,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <container-dialog id="UpdateOrganizationDialog" button-text="Edit Organization Name" condition="organization.ownerPartyId==ec.user.userAccount.partyId">
                     <form-single name="UpdateOrganization" transition="updateOrganization">
-                        <field name="partyId" from="organizationId"><default-field><hidden/></default-field></field>
+                        <field name="organizationId" from="organizationId"><default-field><hidden/></default-field></field>
                         <field name="organizationName" from="organization.organizationName"><default-field title="Organization Name"><text-line size="50"/></default-field></field>
                         <field name="submit"><default-field><submit text="Update"/></default-field></field>
                     </form-single>
