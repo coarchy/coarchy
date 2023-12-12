@@ -709,7 +709,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="action"/>
             <parameter name="sequenceNum"/>
             <parameter name="implementationId"/>
-            <parameter name="ignoreNoAction" default="false"/>
+            <parameter name="ignoreNoAction" type="Boolean" default="false"/>
         </in-parameters>
         <out-parameters>
             <parameter name="activityId"/>
@@ -2484,8 +2484,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="sequenceNum"/>
             <parameter name="implementationId"/>
             <parameter name="condition"/>
-            <parameter name="actorIdList"/>
-            <parameter name="action"/>
+            <parameter name="actorIdList" type="List"/>
+            <parameter name="action" type="String"/>
             <parameter name="insertType"/>
             <parameter name="organizationId"/>
             <parameter name="sequenceNumDiff" default="1" type="Integer"/>
@@ -2496,7 +2496,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="orderByField"/>
         </out-parameters>
         <actions>
-            <if condition="!action"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessActivityActionRequired',null)}"/></if>
+            <if condition="!action?.trim()"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessActivityActionRequired',null)}"/></if>
             <set field="insertSequenceNum" from="sequenceNum"/>
             <if condition="insertType=='below'">
                 <set field="pageIndex" from="downPageIndex"/>
