@@ -425,6 +425,61 @@ Vue.component('c-unsubscribe', {
         if (urlParams.get('optInVerifyCode')) this.optInVerifyCode = urlParams.get('optInVerifyCode')
     },
 });
+Vue.component('c-blog-list', {
+    name: "cBlogList",
+    template:
+    // Could include type="email" for email, but then wouldn't allow john.doe to login
+        '<div class="q-pa-md row justify-start">\n' +
+        '   <div v-for="blog in blogList" :key="blog.wikiBlogId" class="q-mb-md col-12">\n' +
+        '       <a :href="blog.blogUrl" style="text-decoration: none; color: inherit;">\n' + // Wrap content with an anchor tag
+        '           <div class="q-mb-sm row items-top justify-center">\n' +
+        '               <div class="col-12 col-md-5 q-pr-sm flex flex-center">\n' +
+        '                   <q-img :src="blog.imageUrl" :ratio="16/9">\n' +
+        '               </div>\n' +
+        '               <div class="col-12 col-md">\n' +
+        '                   <div class="text-h6 q-mb-xs">{{ blog.title }}</div>\n' +
+        '                   <div class="text-caption text-italic q-mb-xs">{{ blog.summary }}</div>\n' +
+        '                   <div class="text-subtitle">Published {{blog.publishDate}}</div>\n' +
+        '               </div>\n' +
+        '           </div>\n' +
+        '       </a>\n' + // Close anchor tag
+        '   </div>' +
+        '   <div v-if="blogList.length === 0" class="text-h4">No articles found</div>\n\n' +
+        '</div>\n' +
+        '',
+    data () {
+        return {
+            blogList: [],
+        }
+    },
+    methods: {
+        async getData(url = "") {
+            // console.log(this.moquiSessionToken)
+
+            // console.log(_data.toString())
+            // See https://web.dev/introduction-to-fetch/#post-request for the fetch api
+            const response = await fetch(url, {
+                cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: "same-origin", // include, *same-origin, omit
+                method: 'get',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                redirect: "follow",
+                referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            })
+
+            return response.json();
+        },
+    },
+    mounted: function() {
+        this.getData("/c/Blog/actions").then((response) => {
+            // console.log(response)
+            this.blogList = response.blogList
+        })
+    },
+});
 
 // App
 moqui.webrootVue = new Vue({

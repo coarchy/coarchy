@@ -75,6 +75,11 @@
                         <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="42">
                     </#if>
                 </q-btn>
+
+                <q-space></q-space>
+
+                <q-btn stretch flat label="Blog" href="/Blog"></q-btn>
+
                 <q-space></q-space>
 
                 <q-btn stretch flat label="Log In" href="/Login"></q-btn>

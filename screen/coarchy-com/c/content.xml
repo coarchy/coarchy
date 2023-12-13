@@ -31,7 +31,7 @@ along with this software (see the LICENSE.md file). If not, see
                     auto-field-map="[wikiBlogId:wikiBlogId]"/>
             <entity-find-one entity-name="moqui.resource.wiki.WikiPage" value-field="wikiPage"
                     auto-field-map="[wikiPageId:wikiBlog.wikiPageId]"/>
-            <if condition="wikiPage?.restrictView != 'Y'">
+            <if condition="wikiPage?.publishedVersionName != null">
                 <script>ec.web.sendResourceResponse(wikiBlog?.smallImageLocation)</script>
                 <else><log level="warn" message="No published version for blog post ${wikiPageId}"/></else>
             </if>

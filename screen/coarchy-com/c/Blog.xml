@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Blog" require-authentication="anonymous-view" allow-extra-path="true">
+
+    <actions>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <entity-find entity-name="moqui.resource.wiki.WikiBlogFindView" list="blogListOut">
+            <econdition field-name="wikiPageCategoryId" value="Newsletter"/>
+            <econdition field-name="publishedVersionName" operator="is-not-null"/>
+            <order-by field-name="publishDate"/>
+        </entity-find>
+        <set field="blogList" from="[]"/>
+        <iterate list="blogListOut" entry="blog">
+            <script>blogList.push([wikiBlogId:blog.wikiBlogId,title:blog.title,author:blog.author,
+                imageUrl:baseLinkUrl+'/content/downloadSmallImage?wikiBlogId='+blog.wikiBlogId,
+                blogUrl:baseLinkUrl+'/Article?wikiBlogId='+blog.wikiBlogId,
+                publishDate:ec.l10n.format(blog.publishDate, 'MMM dd, yyyy'),summary:blog.summary]);
+            </script>
+        </iterate>
+    </actions>
+    <widgets>
+        <render-mode>
+            <text type="html"><![CDATA[
+                <div class="row">
+                    <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2 col-sm-10 offset-sm-1 col-xs-12 offset-xs-0">
+                        <div class="column justify-center" style="height: 150px">
+                            <div class="col-4">
+                                <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">
+                                    <q-card-section>
+                                        <div class="text-h2">Blog</div>
+                                    </q-card-section>
+
+                                    <q-card-section>
+                                        <c-blog-list></c-blog-list>
+                                    </q-card-section>
+                                </q-card>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ]]></text></render-mode>
+    </widgets>
+</screen>

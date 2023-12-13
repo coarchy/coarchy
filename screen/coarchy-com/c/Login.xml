@@ -55,7 +55,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="partyClassificationList.size() &gt; 0 || (partyClassificationCount == 0 &amp;&amp; partyClassificationList.size() == 0)">
                     <service-call name="coarchy.CoarchyServices.set#PartyClassification" in-map="[partyClassificationId:'HotLead']" out-map="context"/>
                 </if>
-                <log level="warn" message="login context.toString() ${context.toString()}"/>
+<!--                <log level="warn" message="login context.toString() ${context.toString()}"/>-->
             </if>
 
         </actions>
