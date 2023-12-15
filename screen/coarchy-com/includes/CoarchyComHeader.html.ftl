@@ -78,15 +78,15 @@
 
                 <q-space></q-space>
 
-                <q-btn stretch flat label="Blog" href="/Blog"></q-btn>
-
-                <q-space></q-space>
-
+                <q-btn stretch flat label="Newsletter" href="/Newsletter"></q-btn>
+                <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Log In" href="/Login"></q-btn>
                 <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Sign Up" href="/SignUp"></q-btn>
 
-<#--                <#assign headerTitleList = sri.getThemeValues("STRT_HEADER_TITLE")>-->
+                <q-space></q-space>
+
+                <#--                <#assign headerTitleList = sri.getThemeValues("STRT_HEADER_TITLE")>-->
 <#--                <#if headerTitleList?has_content>-->
 <#--                    <q-toolbar-title>${ec.resource.expand(headerTitleList?first, "")}</q-toolbar-title>-->
 <#--                </#if>-->

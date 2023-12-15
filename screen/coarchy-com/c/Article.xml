@@ -12,9 +12,10 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd">
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Article" require-authentication="anonymous-view">
 
-    <parameter name="wikiBlogId"/>
+    <parameter name="wikiBlogId" required="true"/>
     
     <always-actions>
         <set field="blogArticleExists" from="false"/>
@@ -28,9 +29,13 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="blogArticleExists" from="true"/>
         </if>
     </always-actions>
-    
+
+    <transition name="signup">
+        <service-call name="coarchy.CoarchyServices.signup#Newsletter" in-map="[emailAddress:emailAddress]"/>
+        <default-response save-parameters="true"/></transition>
+
     <pre-actions>
-        <set field="blog.publishDate" from="ec.l10n.format(blog.publishDate, 'MMM dd, yyyy')"/>
+        <set field="blog.publishDate" from="blog?.publishDate?ec.l10n.format(blog.publishDate, 'MMM dd, yyyy'):null"/>
 
         <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
         <set field="imageUrl" from="baseLinkUrl+'/content/downloadSmallImage?wikiBlogId='+blog.wikiBlogId"/>
@@ -41,14 +46,11 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="pageReference" from="rootPageRef.findChildFile(blog.pagePath)"/>
         <set field="pageText" from="pageReference.getText(blog.publishedVersionName)"/>
 
-        <set field="test" from="pageReference.getClass()"/>
-
-
         <set field="html_keywords" from="blog?.metaKeywords?:html_keywords"/>
         <set field="html_description" from="blog?.metaDescription?:html_description"/>
         <set field="html_title" from="blog?.title?:'Coarchy Blog'"/>
 
-        <log level="warn" message="Article context.toString() ${context.toString()}"/>
+<!--        <log level="warn" message="Article context.toString() ${context.toString()}"/>-->
     </pre-actions>
 
     <widgets><render-mode>
@@ -84,10 +86,22 @@ along with this software (see the LICENSE.md file). If not, see
                                         <div class="text-h2">No Article Found</div>
                                     </q-card-section>
                                 </div>
+
+                                <q-separator class="q-mt-md" inset></q-separator>
+
+                                <div class="flex flex-center justify-center items-center text-h4 q-mt-md">Sign up for our Newsletter</div>
+                                <div class="flex flex-center justify-center items-center text-h6 q-mt-xs">Learn about requirements and get product updates</div>
+                                <div class="flex flex-center justify-center items-center q-mt-lg q-mb-md"><c-newsletter-signup></c-newsletter-signup></div>
                             </q-card>
+
                         </div>
+
+
                     </div>
+
                 </div>
             </div>
+
+
             ]]></text></render-mode></widgets>
 </screen>

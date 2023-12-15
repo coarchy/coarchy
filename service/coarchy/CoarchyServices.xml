@@ -377,9 +377,10 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
                 <entity-find entity-name="moqui.security.UserAccount" list="existingUaList">
                     <econdition field-name="emailAddress" ignore-case="true"/></entity-find>
+
                 <if condition="!existingUaList"><then>
-                    <service-call name="mantle.party.PartyServices.create#Account" out-map="newUser"
-                        in-map="[emailAddress:emailAddress,firstName:firstName?:'Coarchy',lastName:lastName?:'Customer',username:emailAddress]"/>
+                    <service-call name="coarchy.CoarchyServices.create#Account" out-map="newUser"
+                        in-map="[emailAddress:emailAddress,firstName:firstName?:'Not',lastName:lastName?:'Set',username:emailAddress]"/>
                     <service-call name="create#mantle.party.PartyRole" in-map="[partyId:newUser.partyId,roleTypeId:'Customer']"/>
                     <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS',
                         userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
@@ -560,10 +561,106 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- Send welcome email -->
                 <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
                 <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',
+                        contactListId:'CoarchyOnboarding',emailTemplateId:'ONBOARDING_WELCOME',
                         partyId:userAccount.partyId,preferredContactMechId:null,toAddresses:username,
                         bodyParameters:[title:'Welcome to Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
             </if>
+        </actions>
+    </service>
+    <service verb="create" noun="Account">
+        <description>
+            Create a basic user account including:
+            - Party/Person
+            - UserAccount (with specified username or emailAddress for username)
+            - ContactMech/PartyContactMech for emailAddress (with EmailPrimary purpose)
+
+            At the end this optionally logs in the user (for this to work it must be run locally).
+        </description>
+        <in-parameters>
+            <auto-parameters entity-name="mantle.party.Person" include="nonpk"/>
+            <parameter name="firstName" required="true"/>
+            <parameter name="lastName" required="true"/>
+
+            <!-- Party fields -->
+            <parameter name="pseudoId"/>
+            <parameter name="ownerPartyId"/>
+            <parameter name="externalId"/>
+            <parameter name="dataSourceId"/>
+            <parameter name="disabled" default-value="N"/>
+
+            <parameter name="requirePasswordChange" default-value="N"/>
+            <parameter name="emailAddress" required="true"><text-email/></parameter>
+
+            <!-- UserAccount fields -->
+            <parameter name="username" default="emailAddress"/>
+            <parameter name="newPassword"><description>If empty won't set a password, user will have to change or reset.</description></parameter>
+            <parameter name="newPasswordVerify"/>
+            <parameter name="currencyUomId"/>
+            <parameter name="locale"/>
+            <parameter name="timeZone"/>
+
+            <!-- removed because creates a security hole as any open access to this service that doesn't restrict this parameter could be used to get admin access to system: <parameter name="userGroupId"/> -->
+            <parameter name="roleTypeId"/>
+            <parameter name="loginAfterCreate" type="Boolean" default="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="userId"/>
+            <parameter name="partyId" required="true"/>
+            <parameter name="emailContactMechId"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="mantle.party.contact.PartyContactMechInfo" list="existingPartyList" limit="2">
+                <date-filter/>
+                <econdition field-name="contactMechPurposeId" value="EmailPrimary"/>
+                <econdition field-name="contactMechTypeEnumId" value="CmtEmailAddress"/>
+                <econdition field-name="infoString" from="emailAddress"/></entity-find>
+            <if condition="existingPartyList.size() &gt; 1">
+                <log level="warn" message="Multiple parties found for email address ${emailAddress}"/>
+            </if>
+            <if condition="existingPartyList.size() == 1"><then>
+                <set field="partyId" from="existingPartyList.getFirst()?.partyId"/>
+                <entity-find-one entity-name="mantle.party.Person" value-field="person" auto-field-map="[partyId:partyId]" for-update="true"/>
+                <if condition="person"><then>
+                    <set field="person.firstName" from="firstName"/>
+                    <set field="person.lastName" from="lastName"/>
+                    <entity-update value-field="person"/>
+                </then><else>
+                    <service-call name="create#mantle.party.Person" in-map="[partyId:partyId,firstName:firstName,lastName:lastName]"/>
+                </else></if>
+                <if condition="roleTypeId">
+                    <service-call name="create#mantle.party.PartyRole" in-map="[partyId:partyId, roleTypeId:roleTypeId]"/></if>
+
+                <!-- copied from mantle.party.PartyServices.create#Account -->
+                <if condition="username">
+                    <!-- see if username already in use (instead of catching on unique index) -->
+                    <entity-find entity-name="moqui.security.UserAccount" list="existingUaList">
+                        <econdition field-name="username" ignore-case="true"/></entity-find>
+                    <if condition="existingUaList"><return error="true" message="Username [${username}] is already in use. Please choose another."/></if>
+                    <!-- see if emailAddress already in use (instead of catching on unique index) -->
+                    <if condition="emailAddress">
+                        <entity-find entity-name="moqui.security.UserAccount" list="existingUaList">
+                            <econdition field-name="emailAddress" ignore-case="true"/></entity-find>
+                        <if condition="existingUaList"><return error="true" message="Email ${emailAddress} is already in use. Login with username ${existingUaList[0].username}"/></if>
+                    </if>
+
+                    <set field="userFullName" value="${ec.resource.expand('PartyFullNameTemplate','')}"/>
+                    <if condition="newPassword"><then>
+                        <!-- NOTE: SECA rule on UserServices.create#UserAccount will create a Party for UserAccount if no partyId, so must call with the partyId after create Party -->
+                        <service-call name="org.moqui.impl.UserServices.create#UserAccount" in-map="context" out-map="newUaOut"/>
+                    </then><else>
+                        <service-call name="create#moqui.security.UserAccount" in-map="context" out-map="newUaOut"/>
+                    </else></if>
+                    <set field="userId" from="newUaOut.userId"/>
+
+                    <!-- login the user -->
+                    <if condition="loginAfterCreate &amp;&amp; newPassword">
+                        <script>ec.user.loginUser(username, newPassword)</script></if>
+                </if>
+            </then><else>
+                <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
+                        in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,
+                        newPassword:newPassword,newPasswordVerify:newPassword]"/>
+            </else></if>
         </actions>
     </service>
     <service verb="signUp" noun="User">
@@ -579,8 +676,9 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="partyClassificationId"/>
         </out-parameters>
         <actions>
-            <service-call name="mantle.party.PartyServices.create#Account" out-map="context"
-                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,newPassword:newPassword,newPasswordVerify:newPassword]"/>
+            <service-call name="coarchy.CoarchyServices.create#Account" out-map="context"
+                    in-map="[emailAddress:emailAddress,firstName:firstName,lastName:lastName,username:emailAddress,
+                    newPassword:newPassword,newPasswordVerify:newPassword]"/>
             <service-call name="update#mantle.party.Party" in-map="[partyId:partyId,visibilityEnumId:'PvOrganization']"/>
             <service-call name="create#mantle.party.PartyRole" in-map="[partyId:partyId,roleTypeId:'Customer']"/>
             <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
@@ -589,14 +687,11 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:partyId,partyClassificationId:'HotLead']" out-map="context"/>
 
             <!-- Send welcome email -->
-
-            <!-- TODO: Get help on this -->
             <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
-            <!--            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[-->
-            <!--                        contactListId:'CoarchyOnboarding',emailTemplateId:'WELCOME',-->
-            <!--                        partyId:partyId,preferredContactMechId:null,toAddresses:username,-->
-            <!--                        bodyParameters:[title:'Welcome to Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>-->
-
+            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                contactListId:'CoarchyOnboarding',emailTemplateId:'ONBOARDING_WELCOME',
+                partyId:partyId,preferredContactMechId:null,toAddresses:username,
+                bodyParameters:[title:'Welcome to Coarchy!',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
         </actions>
     </service>
 
@@ -3081,10 +3176,64 @@ along with this software (see the LICENSE.md file). If not, see
                         <set field="wikiBlogCategory.sentDate" from="currentTimestamp"/>
                         <entity-update value-field="wikiBlogCategory"/>
                     </if>
-
                 </else>
             </if>
+        </actions>
+    </service>
 
+    <service verb="signup" noun="Newsletter" authenticate="anonymous-all">
+        <in-parameters>
+            <parameter name="emailAddress" required="true"><text-email/></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="signupSuccessful" type="Boolean"/>
+            <parameter name="partyId"/>
+            <parameter name="emailContactMechId"/>
+        </out-parameters>
+        <actions>
+            <set field="signupSuccessful" value="false"/>
+<!--            <log level="warn" message="Newsletter signup for ${emailAddress}"/>-->
+
+            <entity-find entity-name="mantle.party.contact.PartyContactMechInfo" list="existingPartyList" limit="2">
+                <date-filter/>
+                <econdition field-name="contactMechPurposeId" value="EmailPrimary"/>
+                <econdition field-name="contactMechTypeEnumId" value="CmtEmailAddress"/>
+                <econdition field-name="infoString" from="emailAddress"/></entity-find>
+            <if condition="existingPartyList.size() &gt; 1">
+                <log level="warn" message="Multiple parties found for email address ${emailAddress}"/>
+            </if>
+            <set field="partyId" from="existingPartyList?.getFirst()?.partyId"/>
+            <if condition="!partyId">
+                <!-- copied from mantle.party.PartyServices.create#Account -->
+                <!-- create Party and Person -->
+                <service-call name="create#mantle.party.Party" in-map="context + [partyTypeEnumId:'PtyPerson']" out-map="newPartyOut"/>
+                <set field="partyId" from="newPartyOut.partyId"/>
+                <service-call name="create#mantle.party.Person" in-map="[partyId:partyId,firstName:'Not',lastName:'Set']"/>
+
+                <!-- add the emailAddress -->
+                <service-call name="mantle.party.ContactServices.create#EmailAddress" out-map="emailOut"
+                        in-map="[emailAddress:emailAddress, partyId:partyId, contactMechPurposeId:'EmailPrimary']"/>
+                <set field="emailContactMechId" from="emailOut.contactMechId"/>
+            </if>
+
+            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+
+            <entity-find entity-name="mantle.marketing.contact.ContactListParty" list="contactListPartyList" limit="1" for-update="true">
+                <econdition field-name="contactListId" value="CoarchyNewsletter"/>
+                <econdition field-name="statusId" value="CLPT_IN_USE"/>
+                <econdition field-name="partyId"/>
+                <date-filter/>
+                <order-by field-name="-fromDate"/></entity-find>
+            <if condition="contactListPartyList.size() == 0">
+                <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                    contactListId:'CoarchyNewsletter',emailTemplateId:'NEWSLETTER_WELCOME',
+                    partyId:partyId,preferredContactMechId:emailContactMechId,toAddresses:emailAddress,
+                    bodyParameters:[title:'Welcome to the Coarchy Newsletter',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                <message>Successfully subscribed to Newsletter!</message>
+                <else>
+                    <message>Already subscribed to Newsletter</message>
+                </else>
+            </if>
         </actions>
     </service>
 

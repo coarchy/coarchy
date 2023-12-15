@@ -474,10 +474,37 @@ Vue.component('c-blog-list', {
         },
     },
     mounted: function() {
-        this.getData("/c/Blog/actions").then((response) => {
+        this.getData("/c/Newsletter/actions").then((response) => {
             // console.log(response)
             this.blogList = response.blogList
         })
+    },
+});
+Vue.component('c-newsletter-signup', {
+    name: "cNewsletterSignUp",
+    template:
+    // Could include type="email" for email, but then wouldn't allow john.doe to login
+        '<q-form @submit="onSubmit" class="q-gutter-md" >\n' +
+        '    <div class="row">\n' +
+        '       <q-input class="col-8" filled v-model="emailAddress" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
+        '       <q-btn class="col-4" style="max-height: 56px" label="Sign Up" type="submit" color="primary"/>\n' +
+        '    </div>\n' +
+        '</q-form>\n' +
+        '',
+    data () {
+        return {
+            emailAddress: null,
+        }
+    },
+    methods: {
+        onSubmit () {
+            this.moqui.webrootVue.postData('/c/Article/signup', new URLSearchParams(this._data).toString())
+                .then((data) => {
+                    this.moqui.webrootVue.handleNotification(data)
+
+                    // console.log(data)
+                })
+        },
     },
 });
 
