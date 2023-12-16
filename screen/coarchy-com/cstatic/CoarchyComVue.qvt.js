@@ -139,7 +139,7 @@ Vue.component('c-change-password', {
         '      <template v-else-if="index === agreementlist.length - 2">, and&nbsp;</template>' +
         '   </template></p>' +
         '    <div>\n' +
-        '        <q-btn :label="isCompleteSignup?\'Create Account\':\'Update\'" type="submit" color="primary"/>\n' +
+        '        <q-btn :label="isCompleteSignup?\'Create Account\':\'Update Password\'" type="submit" color="primary"/>\n' +
         '    </div>\n' +
         '</q-form>',
     data () {
