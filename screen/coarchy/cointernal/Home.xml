@@ -112,7 +112,7 @@ along with this software (see the LICENSE.md file). If not, see
         <container-row><row-col md="6">
             <label text="Screens" type="h5" style="q-pt-sm"/>
             <link url="../Vision" text="Vision"/>
-            <link url="../Statements" text="Statements"/>
+            <link url="../ValueStatements" text="Statements"/>
             <link url="../Actor" text="Actors"/>
             <link url="../Process/FindProcessStory" text="Process Stories"/>
             <link url="../FindChecklist" text="Checklists"/>
