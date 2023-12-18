@@ -186,7 +186,7 @@ Vue.component('c-change-password', {
                         // redirect https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections#javascript_redirections
                         window.location = data.screenUrl;
                     }
-                }).
+                })
         },
     },
     mounted: function() {
