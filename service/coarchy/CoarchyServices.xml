@@ -1453,7 +1453,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-count entity-name="coarchy.ValueStatementActivity" count-field="valueStatementActivityCount">
                 <econdition field-name="valueStatementId"/></entity-find-count>
             <if condition="valueStatementActivityCount &gt; 0">
-                <return type="warning" message="${ec.l10n.expand('CoarchyProcessValueStatementDeleteError', null)}"/>
+                <return type="warning" message="${ec.resource.expand('CoarchyProcessValueStatementDeleteError', null)}"/>
             </if>
 
             <!-- (delete/end) existing tags -->
