@@ -123,7 +123,7 @@ Vue.component('c-change-password', {
         '    <q-input filled v-model="username" :disable="this.cameFromEmail" :readonly="this.cameFromEmail" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
         '    <q-input v-if="this.cameFromEmail" filled v-model="firstName" label="First Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input v-if="this.cameFromEmail" filled v-model="lastName" label="Last Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
-        '    <q-input filled v-model="oldPassword" :readonly="this.cameFromEmail" label="Reset Password" :type="isOldPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\']">' +
+        '    <q-input v-if="!this.cameFromEmail" filled v-model="oldPassword" :label="this.cameFromEmail?\'Reset Password\':\'Old Password\'" :type="isOldPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\']">' +
         '        <template v-slot:append>\n' +
         '            <q-icon :name="isOldPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isOldPwd = !isOldPwd"/>\n' +
         '        </template>\n' +
@@ -139,11 +139,12 @@ Vue.component('c-change-password', {
         '      <template v-else-if="index === agreementlist.length - 2">, and&nbsp;</template>' +
         '   </template></p>' +
         '    <div>\n' +
-        '        <q-btn label="Create Account" type="submit" color="primary"/>\n' +
+        '        <q-btn :label="isCompleteSignup?\'Create Account\':\'Update Password\'" type="submit" color="primary"/>\n' +
         '    </div>\n' +
         '</q-form>',
     data () {
         return {
+            isCompleteSignup: false,
             username: null,
             cameFromEmail: false,
             firstName: null,
@@ -153,7 +154,6 @@ Vue.component('c-change-password', {
             isOldPwd: true,
             isNewPwd: true,
             agreementlist: null
-
         }
     },
     methods: {
@@ -177,7 +177,8 @@ Vue.component('c-change-password', {
             return response.json();
         },
         onSubmit () {
-            this.moqui.webrootVue.postData('/c/ChangePassword/changePassword', new URLSearchParams(this._data).toString())
+            const url = this.isCompleteSignup ? '/c/ChangePassword/completeSignup' : '/c/ChangePassword/changePassword'
+            this.moqui.webrootVue.postData(url, new URLSearchParams({...this._data, oldPassword:this.cameFromEmail ? this.oldPassword :this._data?.oldPassword}).toString())
                 .then((data) => {
                     this.moqui.webrootVue.handleNotificationOther(data)
                     const paths = window.location.href.split("/").filter(entry => entry !== "")
@@ -192,6 +193,7 @@ Vue.component('c-change-password', {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('username')) this.username = urlParams.get('username')
         if (urlParams.get('oldPassword')) this.oldPassword = urlParams.get('oldPassword')
+        if (urlParams.get('action')) this.isCompleteSignup = urlParams.get('action') === 'signup' ? true : false
         if (this.username && this.oldPassword) this.cameFromEmail = true
 
         this.getData("/c/SignUp/actions").then((response) => {
