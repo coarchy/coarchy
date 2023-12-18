@@ -62,13 +62,24 @@ along with this software (see the LICENSE.md file). If not, see
 
         <relationship type="many" related="ValueStatementActivity" short-alias="activities">
             <key-map field-name="activityId"/></relationship>
-
+        <relationship type="many" related="coarchy.ValueStatementTag" short-alias="tags">
+                <key-map field-name="valueStatementId"/></relationship>
+        <relationship type="one" title="ValueType" related="moqui.basic.Enumeration" short-alias="typeEnum">
+            <key-map field-name="typeEnumId"/></relationship>
+                
         <seed-data>
-            <!-- Value Type Enums -->
-            <moqui.basic.EnumerationType description="Value Type" enumTypeId="ValueType">
-                <moqui.basic.Enumeration description="Benefit" enumId="VtBenefit" sequenceNum="10"/>
-                <moqui.basic.Enumeration description="Ideal" enumId="VtIdeal" sequenceNum="20"/>
-            </moqui.basic.EnumerationType>
+            <moqui.basic.EnumerationType description="Value Statement Type" enumTypeId="ValueType" />
+            
+            <moqui.basic.Enumeration description="Value" enumId="StValue" enumTypeId="ValueType" sequenceNum="1"/>
+            <moqui.basic.Enumeration description="Benefit" enumId="StBenefit" enumTypeId="ValueType" sequenceNum="2"/>
+            <moqui.basic.Enumeration description="Ideal" enumId="StIdeal" enumTypeId="ValueType" sequenceNum="3"/>
+            
+            <moqui.basic.Enumeration description="Requirement Statement" enumId="StRequirement" enumTypeId="ValueType" sequenceNum="4"/>
+            <moqui.basic.Enumeration description="Technical Requirement" enumId="StTechnicalRequirement" enumTypeId="ValueType" sequenceNum="5"/>
+            <moqui.basic.Enumeration description="Compliance Requirement" enumId="StComplianceRequirement" enumTypeId="ValueType" sequenceNum="6"/>
+            
+            <moqui.basic.Enumeration description="Operational Ability" enumId="StOperationalAbility" enumTypeId="ValueType" sequenceNum="7"/>
+            <moqui.basic.Enumeration description="Business Case" enumId="StBusinessCase" enumTypeId="ValueType" sequenceNum="8"/>
         </seed-data>
     </entity>
 
@@ -79,15 +90,49 @@ along with this software (see the LICENSE.md file). If not, see
 
         <field name="organizationId" type="id"/>
 
-        <relationship type="one" related="ValueStatement" short-alias="value">
+        <relationship type="one" related="ValueStatement" short-alias="valueStatement">
             <key-map field-name="valueStatementId"/></relationship>
         <relationship type="one" related="Activity" short-alias="activity">
             <key-map field-name="activityId"/></relationship>
     </entity>
 
+    <entity entity-name="Tag" package="coarchy">
+        <field name="tagId" type="id" is-pk="true"/>
+        <field name="description" type="text-intermediate"/>
+
+        <field name="organizationId" type="id"/>
+
+        <relationship type="many" related="coarchy.ValueStatementTag" short-alias="valueStatements">
+            <key-map field-name="tagId" />
+        </relationship>
+    </entity>
+
+    <entity entity-name="ValueStatementTag" package="coarchy">
+        <field name="tagId" type="id" is-pk="true"/>
+        <field name="valueStatementId" type="id" is-pk="true"/>
+        <field name="fromDate" type="date-time" is-pk="true"/>
+        <field name="thruDate" type="date-time"/>
+        <field name="organizationId" type="id"/>
+
+        <relationship type="one" related="coarchy.Tag" short-alias="tag">
+            <key-map field-name="tagId" />
+        </relationship>
+        <relationship type="one" related="coarchy.ValueStatement" short-alias="valueStatement">
+            <key-map field-name="valueStatementId" />
+        </relationship>
+    </entity>
+
+    <view-entity entity-name="ValueStatementTagDetail" package="coarchy">
+        <member-entity entity-alias="VST" entity-name="coarchy.ValueStatementTag"/>
+        <member-relationship entity-alias="TAG" join-from-alias="VST" relationship="tag"/>
+
+        <alias-all entity-alias="VST"></alias-all>
+        <alias-all entity-alias="TAG"><exclude field="organizationId"/></alias-all>
+    </view-entity>
+
     <view-entity entity-name="ValueStatementActivityDetail" package="coarchy">
         <member-entity entity-alias="VSA" entity-name="coarchy.ValueStatementActivity"/>
-        <member-relationship entity-alias="VS" join-from-alias="VSA" relationship="value"/>
+        <member-relationship entity-alias="VS" join-from-alias="VSA" relationship="valueStatement"/>
         <member-relationship entity-alias="ACT" join-from-alias="VSA" relationship="activity"/>
         <!-- Never select actorId so you don't get multiple rows back, INSTEAD filter by actorId -->
         <member-relationship entity-alias="ACAC" join-from-alias="ACT" relationship="actors" join-optional="true"/>
