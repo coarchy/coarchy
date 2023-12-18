@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="View Values" default-menu-index="12" menu-image="/ssstatic/images/Reports.png" default-menu-include="false">
+        default-menu-title="View Statements" default-menu-index="12" menu-image="/ssstatic/images/Reports.png" default-menu-include="false">
 
     <parameter name="processStoryId"/>
 
@@ -73,7 +73,7 @@ along with this software (see the LICENSE.md file). If not, see
             <row-col md="8">
                 <section name="FreemiumValueStatements" condition="partyActivationCount == 0">
                     <widgets>
-                        <label text="Value Statements" type="h4" style="q-pb-sm"/>
+                        <label text="Statements" type="h4" style="q-pb-sm"/>
                         <label text="You've found a premium feature!"/>
                     </widgets>
                 </section>

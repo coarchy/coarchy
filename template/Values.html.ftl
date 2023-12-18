@@ -1,6 +1,6 @@
-<h4 class="q-pb-sm">Value Statements:</h4>
+<h4 class="q-pb-sm">Statements:</h4>
 <#list valueStatementList! as valueStatement>
-    <#if valueStatement.value?hasContent><div><b><a href="/coapp/ValueStatements?valueStatmentId=${valueStatement.valueStatementId}">${valueStatement.value?html?ensureEndsWith(".")}</a></b></div><#if valueStatement_has_next><br></#if></#if>
+    <#if valueStatement.value?hasContent><div><b><a href="/coapp/ValueStatements?valueStatementId=${valueStatement.valueStatementId}">${valueStatement.value?html?ensureEndsWith(".")}</a></b></div><#if valueStatement_has_next><br></#if></#if>
 </#list>
 <hr>
 <h4 class="q-pb-sm">Activities:</h4>
