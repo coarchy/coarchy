@@ -200,7 +200,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <order-by field-name="name"/></entity-find>
                     <set field="processStoryActivity" from="valueActivity.getMap() + [actorNames:activityActorList*.name]"/>
                     <set field="label" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
-                    <script>valueActivityList.add([valueStatementActivityId:valueActivity.valueStatementActivityId, activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}"])</script>
+                    <script>valueActivityList.add([valueStatementActivityId:valueActivity.valueStatementActivityId, activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}", processStoryActivity:processStoryActivity])</script>
                 </iterate>
 
                 <entity-find entity-name="coarchy.ValueStatementTagDetail" list="statementTagList">
@@ -300,17 +300,17 @@ along with this software (see the LICENSE.md file). If not, see
                                         </field-col-row>
                                     </field-layout>
                                 </form-single>
-                                <section name="ConnectedActivitiesListSection" condition="valueActivityList">
+                                <section name="ConnectedActivitiesListSection" condition="valueActivityList" >
                                     <widgets>
-                                        <form-list name="ConnectedActivitiesFormList_${valueStatementEntry_index}" list="valueActivityList">                              
+                                        <form-list name="ConnectedActivitiesFormList_${valueStatementEntry_index}" list="valueActivityList" list-entry="valueActivityEntry">                              
                                             <field name="valueStatementActivityId">
                                                 <default-field>
                                                     <hidden />
                                                 </default-field>
                                             </field>
-                                            <field name="label">
+                                            <field name="processStoryActivity">
                                                 <default-field title="Connected Activities">
-                                                    <display />
+                                                    <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ActivityStyled.html.ftl" /></render-mode>
                                                 </default-field>
                                             </field>
                                             <field name="delete">
