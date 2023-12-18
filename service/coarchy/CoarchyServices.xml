@@ -1244,6 +1244,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="value" required="true"/>
             <parameter name="typeEnumId" required="true"/>
             <parameter name="organizationId" required="true"/>
+            <parameter name="tagIdList" type="List" default="[]"/>
         </in-parameters>
         <out-parameters>
             <parameter name="valueStatementId"/>
@@ -1254,7 +1255,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
                 <econdition field-name="value" from="value" ignore-case="true"/>
             </entity-find>
-            <if condition="valueStatementList"><return type="danger" message="Value Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
+            <if condition="valueStatementList"><return type="danger" message="Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
 
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList" limit="1">
                 <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
@@ -1262,7 +1263,11 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
 
             <service-call name="create#coarchy.ValueStatement" in-map="[value:value,typeEnumId:typeEnumId,
-                sequenceNum:valueStatementList.getFirst()?.sequenceNum?valueStatementList.getFirst()?.sequenceNum+1:1,organizationId:organizationId]"/>
+                sequenceNum:valueStatementList.getFirst()?.sequenceNum?valueStatementList.getFirst()?.sequenceNum+1:1,organizationId:organizationId]" out-map="context"/>
+
+            <iterate list="tagIdList" entry="tagId">
+                <service-call name="coarchy.CoarchyServices.create#ValueStatementTag" in-map="[tagId:tagId,organizationId:organizationId,valueStatementId:valueStatementId]"/>
+            </iterate>
         </actions>
     </service>
     <service verb="create" noun="ActivityValue">
@@ -1307,11 +1312,35 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
         </actions>
     </service>
+
+    <service verb="create" noun="ValueStatementActivity">
+        <in-parameters>
+            <parameter name="activityIdList" type="List" required="true"/>
+            <parameter name="valueStatementId" required="true"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <actions>
+            <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
+                <econdition field-name="valueStatementId"/>
+                <econdition field-name="activityId"/>
+                <econdition field-name="organizationId"/>
+                <order-by field-name="name"/>
+            </entity-find>
+            <if condition="valueStatementActivityList">
+                <return />
+            </if>
+            <iterate list="activityIdList" entry="activityId">
+                <service-call name="create#coarchy.ValueStatementActivity" in-map="[valueStatementId:valueStatementId, activityId:activityId, organizationId:organizationId]"/>            
+            </iterate>
+        </actions>
+    </service>
+
     <service verb="update" noun="ValueStatement">
         <in-parameters>
             <parameter name="valueStatementId" required="true"/>
             <parameter name="value" required="true"/>
             <parameter name="activityIdList" type="List"/>
+            <parameter name="tagIdList" type="List"/>
             <parameter name="typeEnumId"/>
             <parameter name="sequenceNum"/>
             <parameter name="organizationId" required="true"/>
@@ -1326,7 +1355,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="valueStatementId" operator="not-equals"/>
                 <econdition field-name="value" from="value" ignore-case="true"/>
             </entity-find>
-            <if condition="valueStatementList"><return type="danger" message="Value Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
+            <if condition="valueStatementList"><return type="danger" message="Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
 
             <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,organizationId:organizationId]" out-map="context"/>
 
@@ -1361,6 +1390,26 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
                 </else>
             </if>
+
+            <!-- tags -->
+            <entity-find entity-name="coarchy.ValueStatementTag" list="statementTagList">
+                <date-filter />
+                <econdition field-name="valueStatementId"/>
+                <econdition field-name="organizationId" />
+            </entity-find>
+            <set field="tagIdServerList" from="statementTagList*.tagId?:[]"/>
+
+            <!-- delete extra tags -->
+            <set field="tagIdDeleteList" from="tagIdServerList - (tagIdList?:[])"/>
+            <iterate list="tagIdDeleteList" entry="tagIdDelete">
+                <service-call name="coarchy.CoarchyServices.delete#ValueStatementTag" in-map="[valueStatementId:valueStatementId, tagId:tagIdDelete, organizationId:organizationId]"/>                  
+            </iterate>
+
+            <!-- create new tags -->
+            <set field="tagIdCreateList" from="(tagIdList?:[]) - (tagIdDeleteList?:[])"/>
+            <iterate list="tagIdCreateList" entry="tagIdCreate">
+                <service-call name="coarchy.CoarchyServices.create#ValueStatementTag" in-map="[valueStatementId:valueStatementId, tagId:tagIdCreate, organizationId:organizationId]"/>                  
+            </iterate>           
         </actions>
     </service>
     <service verb="delete" noun="ValueStatement">
@@ -1377,6 +1426,21 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="valueStatementActivityCount &gt; 0">
                 <return type="warning" message="Cannot delete an Value Statement with Process Story Activities"/>
             </if>
+
+            <!-- (delete/end) existing tags -->
+            <entity-find entity-name="coarchy.ValueStatementTag" list="statementTagList" for-update="true">
+                <date-filter />
+                <econdition field-name="tagId" />
+                <econdition field-name="valueStatementId" />
+                <econdition field-name="organizationId" />
+            </entity-find>
+
+            <iterate list="statementTagList" entry="statementTag">
+                <set field="statementTag.thruDate" from="ec.user.nowTimestamp"/>
+                <entity-update value-field="statementTag" />
+            </iterate>  
+
+            <!-- delete value statement -->
             <entity-find-one entity-name="coarchy.ValueStatement" value-field="valueStatement" auto-field-map="[valueStatementId:valueStatementId,organizationId:organizationId]"/>
 
             <if condition="valueStatement">
@@ -1385,6 +1449,92 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="getOrCreate" noun="Tag">
+        <in-parameters>
+            <parameter name="description" required="true">
+                <text-length min="1" />
+                <matches regexp="(?&lt;=\s|^)(\w*[A-Za-z_]+\w*)" message="Invalid tag format" />
+                </parameter>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="tagId"/>
+        </out-parameters>
+        <actions>
+            <set field="description" from="description.trim()"/>
+            <entity-find entity-name="coarchy.Tag" list="tagList">
+                <econdition field-name="description" ignore-case="true" />
+                <econdition field-name="organizationId" />
+            </entity-find>
+
+            <if condition="tagList?.size()">
+                <set field="tagId" from="tagList[0].tagId"/>
+                <else>
+                    <service-call name="create#coarchy.Tag" in-map="[description:description, organizationId:organizationId]" out-map="context"/>
+                </else>
+            </if>
+        </actions>
+    </service>
+
+    <service verb="create" noun="ValueStatementTag">
+        <in-parameters>
+            <parameter name="description">
+                <matches regexp="(?&lt;=\s|^)(\w*[A-Za-z_]+\w*)" message="Invalid tag format" />
+            </parameter>
+            <parameter name="tagId"/>
+            <parameter name="organizationId" required="true"/>
+            <parameter name="valueStatementId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="tagId"/>
+        </out-parameters>
+        <actions>
+            <set field="description" from="(description?:'').trim()"/>
+            <if condition="!tagId &amp;&amp; !description">
+                <return error="true" message="Tag id or description is required"/>
+            </if>
+            <if condition="tagId">
+                <!-- make sure tag id is valid to current org -->
+                <entity-find entity-name="coarchy.Tag" list="tagList">
+                    <econdition field-name="tagId"  />
+                    <econdition field-name="organizationId" />
+                </entity-find>
+                <if condition="!tagList">
+                <return error="true" message="Tag  is required"/>                    
+                </if>
+                <else>
+                    <service-call name="coarchy.CoarchyServices.getOrCreate#Tag" in-map="[description:description, organizationId:organizationId]" out-map="context"/>
+                </else>
+            </if>
+            <!-- now we should have a tag id in context -->
+            <!-- delete existing tags -->
+            <service-call name="coarchy.CoarchyServices.delete#ValueStatementTag" in-map="[tagId:tagId, valueStatementId:valueStatementId, organizationId:organizationId]" out-map="context"/>
+           <!-- create tags -->
+            <service-call name="create#coarchy.ValueStatementTag" in-map="[tagId:tagId, valueStatementId:valueStatementId, organizationId:organizationId, fromDate:ec.user.nowTimestamp]" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="delete" noun="ValueStatementTag">
+        <in-parameters>
+            <parameter name="tagId" required="true" />
+            <parameter name="valueStatementId" required="true" />
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <actions>
+            <entity-find entity-name="coarchy.ValueStatementTag" list="statementTagList" for-update="true">
+                <date-filter />
+                <econdition field-name="tagId" />
+                <econdition field-name="valueStatementId" />
+                <econdition field-name="organizationId" />
+            </entity-find>
+
+            <iterate list="statementTagList" entry="statementTag">
+                <set field="statementTag.thruDate" from="ec.user.nowTimestamp"/>
+                <entity-update value-field="statementTag" />
+            </iterate>           
+        </actions>
+    </service>
+    
     <service verb="update" noun="User">
         <in-parameters>
             <parameter name="partyId" required="true"/>
