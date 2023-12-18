@@ -70,16 +70,16 @@ along with this software (see the LICENSE.md file). If not, see
         <seed-data>
             <moqui.basic.EnumerationType description="Value Statement Type" enumTypeId="ValueType" />
             
-            <moqui.basic.Enumeration description="Value" enumId="StValue" enumTypeId="ValueType" sequenceNum="1"/>
-            <moqui.basic.Enumeration description="Benefit" enumId="StBenefit" enumTypeId="ValueType" sequenceNum="2"/>
-            <moqui.basic.Enumeration description="Ideal" enumId="StIdeal" enumTypeId="ValueType" sequenceNum="3"/>
+            <moqui.basic.Enumeration description="Value" enumId="VtValue" enumTypeId="ValueType" sequenceNum="1"/>
+            <moqui.basic.Enumeration description="Benefit" enumId="VtBenefit" enumTypeId="ValueType" sequenceNum="2"/>
+            <moqui.basic.Enumeration description="Ideal" enumId="VtIdeal" enumTypeId="ValueType" sequenceNum="3"/>
             
-            <moqui.basic.Enumeration description="Requirement Statement" enumId="StRequirement" enumTypeId="ValueType" sequenceNum="4"/>
-            <moqui.basic.Enumeration description="Technical Requirement" enumId="StTechnicalRequirement" enumTypeId="ValueType" sequenceNum="5"/>
-            <moqui.basic.Enumeration description="Compliance Requirement" enumId="StComplianceRequirement" enumTypeId="ValueType" sequenceNum="6"/>
+            <moqui.basic.Enumeration description="Requirement Statement" enumId="VtRequirement" enumTypeId="ValueType" sequenceNum="4"/>
+            <moqui.basic.Enumeration description="Technical Requirement" enumId="VtTechnicalRequirement" enumTypeId="ValueType" sequenceNum="5"/>
+            <moqui.basic.Enumeration description="Compliance Requirement" enumId="VtComplianceRequirement" enumTypeId="ValueType" sequenceNum="6"/>
             
-            <moqui.basic.Enumeration description="Operational Ability" enumId="StOperationalAbility" enumTypeId="ValueType" sequenceNum="7"/>
-            <moqui.basic.Enumeration description="Business Case" enumId="StBusinessCase" enumTypeId="ValueType" sequenceNum="8"/>
+            <moqui.basic.Enumeration description="Operational Ability" enumId="VtOperationalAbility" enumTypeId="ValueType" sequenceNum="7"/>
+            <moqui.basic.Enumeration description="Business Case" enumId="VtBusinessCase" enumTypeId="ValueType" sequenceNum="8"/>
         </seed-data>
     </entity>
 
