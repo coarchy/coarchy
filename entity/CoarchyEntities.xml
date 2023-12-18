@@ -126,8 +126,10 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="VST" entity-name="coarchy.ValueStatementTag"/>
         <member-relationship entity-alias="TAG" join-from-alias="VST" relationship="tag"/>
 
-        <alias-all entity-alias="VST"></alias-all>
-        <alias-all entity-alias="TAG"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="VST"><exclude field="organizationId"/></alias-all>
+        <alias-all entity-alias="TAG"></alias-all>
+        <alias name="valueOrganizationId" entity-alias="VST" field="organizationId"/>
+        <alias name="tagOrganizationId" entity-alias="TAG" field="organizationId"/>
     </view-entity>
 
     <view-entity entity-name="ValueStatementActivityDetail" package="coarchy">
