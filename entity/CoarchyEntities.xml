@@ -117,7 +117,7 @@ along with this software (see the LICENSE.md file). If not, see
         <relationship type="one" related="coarchy.Tag" short-alias="tag">
             <key-map field-name="tagId" />
         </relationship>
-        <relationship type="one" related="coarchy.ValueStatement" short-alias="valueStatement">
+        <relationship type="one-nofk" related="coarchy.ValueStatement" short-alias="valueStatement">
             <key-map field-name="valueStatementId" />
         </relationship>
     </entity>
