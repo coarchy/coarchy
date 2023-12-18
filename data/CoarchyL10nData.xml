@@ -47,5 +47,8 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardActivityEmpty" localized="Your clipboard contains no activities."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardPasteError" localized="Something went wrong while pasting this activity."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityValueDeleteError" localized="Something went wrong while deleting value."/>
+    
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthUserNotFound" localized="Invalid username or password."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthPasswordAlreadySet" localized="You have already set a password on this account. Please log in instead."/>
    
 </entity-facade-xml>
