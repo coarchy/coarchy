@@ -1424,7 +1424,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-count entity-name="coarchy.ValueStatementActivity" count-field="valueStatementActivityCount">
                 <econdition field-name="valueStatementId"/></entity-find-count>
             <if condition="valueStatementActivityCount &gt; 0">
-                <return type="warning" message="Cannot delete an Value Statement with Process Story Activities"/>
+                <return type="warning" message="${ec.l10n.expand('CoarchyProcessValueStatementDeleteError', null)}"/>
             </if>
 
             <!-- (delete/end) existing tags -->
@@ -1453,7 +1453,7 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="description" required="true">
                 <text-length min="1" />
-                <matches regexp="(?&lt;=\s|^)(\w*[A-Za-z_]+\w*)" message="Invalid tag format" />
+                <matches regexp="(?&lt;=\s|^)(\w*[A-Za-z_]+\w*)" message="CoarchyTagInvalidFormat" />
                 </parameter>
             <parameter name="organizationId" required="true"/>
         </in-parameters>
@@ -1479,7 +1479,7 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="ValueStatementTag">
         <in-parameters>
             <parameter name="description">
-                <matches regexp="(?&lt;=\s|^)(\w*[A-Za-z_]+\w*)" message="Invalid tag format" />
+                <matches regexp="(?&lt;=\s|^)(\w*[A-Za-z_]+\w*)" message="CoarchyTagInvalidFormat" />
             </parameter>
             <parameter name="tagId"/>
             <parameter name="organizationId" required="true"/>
@@ -1491,7 +1491,8 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <set field="description" from="(description?:'').trim()"/>
             <if condition="!tagId &amp;&amp; !description">
-                <return error="true" message="Tag id or description is required"/>
+                <!-- internal error, shouldn't make it to the user -->
+                <return error="true" message="Please specify at least one existing tag, or a new one."/>
             </if>
             <if condition="tagId">
                 <!-- make sure tag id is valid to current org -->
@@ -1500,7 +1501,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="organizationId" />
                 </entity-find>
                 <if condition="!tagList">
-                <return error="true" message="Tag  is required"/>                    
+                <return error="true" message="Invalid tag specified."/>                    
                 </if>
                 <else>
                     <service-call name="coarchy.CoarchyServices.getOrCreate#Tag" in-map="[description:description, organizationId:organizationId]" out-map="context"/>

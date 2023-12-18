@@ -47,5 +47,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardActivityEmpty" localized="Your clipboard contains no activities."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardPasteError" localized="Something went wrong while pasting this activity."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityValueDeleteError" localized="Something went wrong while deleting value."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessValueStatementDeleteError" localized="We could not delete this statement, as it is linked with one or more process story activities."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyTagInvalidFormat" localized="Tags cannot include spaces or special characters (except underscores)"/>
    
 </entity-facade-xml>
