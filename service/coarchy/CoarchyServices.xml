@@ -563,7 +563,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
                         contactListId:'CoarchyOnboarding',emailTemplateId:'ONBOARDING_WELCOME',
                         partyId:userAccount.partyId,preferredContactMechId:null,toAddresses:username,
-                        bodyParameters:[title:'Welcome to Coarchy',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                        bodyParameters:[linkUrl:baseLinkUrl+'/settings/Organizations',
+                        title:'Welcome to Coarchy, Build a better future!',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
             </if>
         </actions>
     </service>
@@ -691,7 +692,8 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
                 contactListId:'CoarchyOnboarding',emailTemplateId:'ONBOARDING_WELCOME',
                 partyId:partyId,preferredContactMechId:null,toAddresses:username,
-                bodyParameters:[title:'Welcome to Coarchy!',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                bodyParameters:[linkUrl:baseLinkUrl+'/settings/Organizations',
+                title:'Welcome to Coarchy, Build a better future!!',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
         </actions>
     </service>
 
