@@ -83,6 +83,24 @@ along with this software (see the LICENSE.md file). If not, see
         </seed-data>
     </entity>
 
+    <view-entity entity-name="ValueStatementAndTag" package="coarchy">
+        <member-entity entity-alias="VS" entity-name="coarchy.ValueStatement"/>
+        <member-relationship entity-alias="VT" join-from-alias="VS" relationship="tags" join-optional="true">
+            <entity-condition>
+                <date-filter />
+            </entity-condition>
+        </member-relationship>
+        <member-relationship entity-alias="TG" join-from-alias="VT" relationship="tag" join-optional="true"/>
+
+        <alias-all entity-alias="VS"/>
+        <alias name="valueTagOrganizationId" entity-alias="VT" field="organizationId"/>
+        <alias name="tagOrganizationId" entity-alias="TG" field="organizationId"/>
+        <alias name="tagId"  entity-alias="VT" />
+        <alias name="tagFromDate" field="fromDate" entity-alias="VT" />
+        <alias name="tagThruDate" field="thruDate" entity-alias="VT" />
+        <alias name="tagDescription" field="description" entity-alias="TG" />
+    </view-entity>
+
     <entity entity-name="ValueStatementActivity" package="coarchy">
         <field name="valueStatementActivityId" type="id" is-pk="true"/>
         <field name="valueStatementId" type="id"/>
