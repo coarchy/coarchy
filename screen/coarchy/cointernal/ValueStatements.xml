@@ -166,6 +166,13 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></default-field></field>
+                <field name="tagIdList"><default-field title="Tags">
+                    <drop-down allow-empty="true" allow-multiple="true">
+                        <list-options list="statementTagList" key="${tagId}" text="${description}"/>
+                        <dynamic-options server-search="true" transition="getTagList" min-length="0"/>
+                    </drop-down>
+                </default-field>
+                </field>
                 <field name="submit"><default-field><submit text="Add Statement"/></default-field></field>
             </form-single>
         </container-dialog>
@@ -179,7 +186,7 @@ along with this software (see the LICENSE.md file). If not, see
                 condition="statementCount &gt; 0"/>
 
         <form-list name="ValueStatement" header-dialog="true" show-page-size="true" show-csv-button="true" list-entry="valueStatementEntry"
-                list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null]"
+                list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null,typeEnumId:null,tagIdList:null,sequenceNum:null]"
                 select-columns="true">
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
                 <search-form-inputs/>
