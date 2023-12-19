@@ -133,6 +133,13 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="action"/></entity-find>
         </if>
 
+        <if condition="tagIdList">
+            <entity-find entity-name="coarchy.Tag" list="headerTagList">
+                <econdition field-name="tagId" operator="in" from="tagIdList"/>
+                <econdition field-name="organizationId" from="activeOrgId" />
+                <order-by field-name="description"/></entity-find>
+        </if>
+
         <entity-find-count entity-name="coarchy.ValueStatement" count-field="valueStatementCount"/>
 
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
@@ -188,10 +195,11 @@ along with this software (see the LICENSE.md file). If not, see
         <form-list name="ValueStatement" header-dialog="true" show-page-size="true" show-csv-button="true" list-entry="valueStatementEntry"
                 list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null,typeEnumId:null,tagIdList:null,sequenceNum:null]"
                 select-columns="true">
-            <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
-                <search-form-inputs/>
+            <entity-find entity-name="coarchy.ValueStatementAndTag" list="valueStatementList" distinct="true">
+                <search-form-inputs default-order-by="sequenceNum,value"/>
                 <econdition field-name="organizationId" from="activeOrgId" />
-                <order-by field-name="sequenceNum,value"/></entity-find>
+                <econdition field-name="tagId" operator="in" from="tagIdList" ignore-if-empty="true"/>
+            </entity-find>
 
             <row-actions>
                 <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
@@ -231,7 +239,14 @@ along with this software (see the LICENSE.md file). If not, see
                 </drop-down> -->
                 <hidden />
             </default-field></field>
-            <field name="tagIdList"><default-field title="Tags">
+            <field name="tagIdList">
+                <header-field>
+                    <drop-down allow-empty="true" allow-multiple="true">
+                        <list-options list="headerTagList" key="${tagId}" text="${description}"/>
+                        <dynamic-options server-search="true" transition="getTagList" min-length="0"/>
+                    </drop-down>
+                </header-field>
+                <default-field title="Tags">
                 <drop-down submit-on-select="true" allow-empty="true" allow-multiple="true">
                     <list-options list="statementTagList" key="${tagId}" text="${description}"/>
                     <dynamic-options server-search="true" transition="getTagList" min-length="0"/>
@@ -245,7 +260,7 @@ along with this software (see the LICENSE.md file). If not, see
             </last-row-field>
         </field>
             <field name="typeEnumId">
-                <header-field title="Statement Type" show-order-by="case-insensitive"><drop-down>
+                <header-field title="Statement Type"  show-order-by="case-insensitive"><drop-down allow-empty="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
@@ -270,7 +285,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <default-field title="Priority"><text-line input-type="number" maxlength="3"/></default-field>
             </field>
             <field name="valueStatementId">
-                <header-field title="Id"><text-find size="30"/></header-field>
+                <header-field title="ID"><text-find size="30"/></header-field>
                 <default-field><hidden/></default-field></field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
