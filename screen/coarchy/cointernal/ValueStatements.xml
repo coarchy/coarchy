@@ -285,7 +285,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <default-field title="Priority"><text-line input-type="number" maxlength="3"/></default-field>
             </field>
             <field name="valueStatementId">
-                <header-field title="ID"><text-find size="30"/></header-field>
                 <default-field><hidden/></default-field></field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
