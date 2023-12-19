@@ -425,7 +425,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
                             contactListId:'CoarchyInvitation',emailTemplateId:'USER_INVITE_RESET_PASSWORD',
                             partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
-                            bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword,
+                            bodyParameters:[linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword+'&amp;action=signup',
                             title:'You\'re invited to join the '+organization.organizationName+' Organization',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
                     </then>
                     <else-if condition="existingUaList &amp;&amp; !isInvitedUserOrgMember">
@@ -529,7 +529,25 @@ along with this software (see the LICENSE.md file). If not, see
             </else></if>
         </actions>
     </service>
+
     <service verb="change" noun="UserPassword">
+        <in-parameters>
+            <parameter name="username" required="true" default="ec.web?.sessionAttributes?.moquiPreAuthcUsername ?: username"/>
+            <parameter name="oldPassword" required="true"/>
+            <parameter name="newPassword" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="updateSuccessful"/>
+            <parameter name="loginSuccess"/>
+            <parameter name="passwordIssues"/>
+        </out-parameters>
+        <actions>
+            <service-call name="org.moqui.impl.UserServices.update#Password" in-map="[username:username,
+                oldPassword:oldPassword,newPassword:newPassword,newPasswordVerify:newPassword]" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="complete" noun="UserSignup">
         <in-parameters>
             <parameter name="username" required="true" default="ec.web?.sessionAttributes?.moquiPreAuthcUsername ?: username"/>
             <parameter name="firstName" required="true"/>
@@ -543,6 +561,16 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="passwordIssues"/>
         </out-parameters>
         <actions>
+            <!-- make sure account exists and password has not been already been set by user -->
+            <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount">
+                <field-map field-name="username" from="username" />
+                <select-field field-name="userId,partyId,currentPassword,passwordSetDate" />
+            </entity-find-one>
+            <if condition="!userAccount"><return error="true" message="${ec.resource.expand('CoarchyAuthUserNotFound','')}"/></if>
+            <if condition="userAccount.currentPassword &amp;&amp; userAccount.passwordSetDate">
+                <return error="true" message="${ec.resource.expand('CoarchyAuthPasswordAlreadySet','')}"/>
+            </if>
+
             <service-call name="org.moqui.impl.UserServices.update#Password" in-map="[username:username,
                 oldPassword:oldPassword,newPassword:newPassword,newPasswordVerify:newPassword]" out-map="context"/>
 
@@ -568,6 +596,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
         </actions>
     </service>
+
     <service verb="create" noun="Account">
         <description>
             Create a basic user account including:
