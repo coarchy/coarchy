@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Values" default-menu-index="10" menu-image="/ssstatic/images/Vendor.png">
+        default-menu-title="Statements" default-menu-index="10" menu-image="/ssstatic/images/Vendor.png">
 
     <parameter name="processStoryId"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
@@ -36,12 +36,12 @@ along with this software (see the LICENSE.md file). If not, see
     </always-actions>
 
     <transition name="createValue"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.create#ValueStatement" in-map="[value:value,typeEnumId:typeEnumId,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.create#ValueStatement" in-map="[value:value,typeEnumId:typeEnumId,tagIdList:tagIdList,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
     <transition name="updateValue"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,tagIdList:tagIdList,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
@@ -49,17 +49,62 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="coarchy.CoarchyServices.delete#ValueStatement" in-map="[valueStatementId:valueStatementId,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
+    <transition name="deleteValueActivity">
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId,organizationId:activeOrgId]"/>
+        <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
+    </transition>
 
-    <transition name="getActivityList">
+    <transition name="createTag"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.getOrCreate#Tag" in-map="[description:description,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true" />
+    </transition>
+    <transition name="createStatementTag"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.create#ValueStatementTag" in-map="[tagId:tagId,description:description,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>    
+    <transition name="addActivityToValueStatement">
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>        
+        <service-call name="coarchy.CoarchyServices.create#ValueStatementActivity" in-map="[valueStatementId:valueStatementId,activityIdList:activityIds,organizationId:activeOrgId]"/>
+        <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition name="getTagList">
         <actions>
+            <set field="tagList" from="[]"/>
+            <if condition="term == null &amp;&amp; tagIdList ? tagIdList?.size() &gt; 0 : false"><then>
+                <entity-find entity-name="coarchy.Tag" list="tagList" limit="50">
+                    <econdition field-name="organizationId" from="activeOrgId" />
+                    <econdition field-name="tagId" operator="in" from="tagIdList"/>
+                    <order-by field-name="description"/></entity-find>
+            </then><else>
+                <entity-find entity-name="coarchy.Tag" list="tagList" limit="50">
+                        <econdition field-name="organizationId" from="activeOrgId" />
+                        <econdition field-name="description" operator="like" value="%${term}%" ignore-case="true"/>
+                    <order-by field-name="description"/></entity-find>
+            </else></if>
+            <set field="outList" from="[]"/>
+            <iterate list="tagList" entry="tag">
+                <script>outList.add([value:tag.tagId, label:"${tag.description.size()&gt;97?tag.description.take(97)+'...':tag.description}"])</script>
+            </iterate>
+<!--            <log level="warn" message="getActivityList context.toString() ${context.toString()}"/>-->
+            <script>ec.web.sendJsonResponse(outList)</script>
+        </actions><default-response type="none"/></transition>
+    <transition name="getActivityList">
+        <parameter name="maxLabelLength"  />
+        <parameter name="excludeActivityIds" />
+        <actions>
+            <set field="maxLabelLength" from="maxLabelLength?:97" type="Integer"/>
             <set field="activityList" from="[]"/>
             <if condition="term == null &amp;&amp; activityIdList ? activityIdList?.size() &gt; 0 : false"><then>
                 <entity-find entity-name="coarchy.Activity" list="activityList" limit="50">
                     <econdition field-name="activityId" operator="in" from="activityIdList"/>
+                    <econdition field-name="activityId" operator="not-in" from="excludeActivityIds" ignore-if-empty="true"/>
                     <order-by field-name="action"/></entity-find>
             </then><else>
                 <!-- TODO: Also find by actor name -->
                 <entity-find entity-name="coarchy.Activity" list="activityList" limit="50">
+                    <econdition field-name="activityId" operator="not-in" from="excludeActivityIds" ignore-if-empty="true"/>
                     <econditions combine="or">
                         <econdition field-name="condition" operator="like" value="%${term}%" ignore-case="true"/>
                         <econdition field-name="action" operator="like" value="%${term}%" ignore-case="true"/>
@@ -73,7 +118,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="name"/></entity-find>
                 <set field="processStoryActivity" from="activity.getMap() + [actorNames:activityActorList*.name]"/>
                 <set field="label" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
-                <script>outList.add([value:activity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}"])</script>
+                <script>outList.add([value:activity?.activityId, label:"${label.size()&gt;maxLabelLength?label.take(maxLabelLength)+'...':label}"])</script>
             </iterate>
 <!--            <log level="warn" message="getActivityList context.toString() ${context.toString()}"/>-->
             <script>ec.web.sendJsonResponse(outList)</script>
@@ -86,6 +131,13 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="coarchy.Activity" list="headerActivityList">
                 <econdition field-name="activityId" operator="in" from="activityIdList"/>
                 <order-by field-name="action"/></entity-find>
+        </if>
+
+        <if condition="tagIdList">
+            <entity-find entity-name="coarchy.Tag" list="headerTagList">
+                <econdition field-name="tagId" operator="in" from="tagIdList"/>
+                <econdition field-name="organizationId" from="activeOrgId" />
+                <order-by field-name="description"/></entity-find>
         </if>
 
         <entity-find-count entity-name="coarchy.ValueStatement" count-field="valueStatementCount"/>
@@ -108,36 +160,51 @@ along with this software (see the LICENSE.md file). If not, see
             </widgets>
         </section>
 
-        <label text="Values" type="h4"/>
+        <label text="Statements" type="h4"/>
 <!--        <link url="../Process/ProcessStory" parameter-map="[processStoryId:processStoryId]" text="Go to Story: ${processStory.name?:'Process Story'}" condition="processStory"/>-->
 
-        <container-dialog id="CreateValueDialog" button-text="Add Value" type="success">
+        <container-dialog id="CreateValueDialog" button-text="Add Statement" type="success">
             <form-single name="CreateValueForm" transition="createValue">
-                <field name="value"><default-field title="Value"><text-line/></default-field></field>
-                <field name="typeEnumId"><default-field title="Value Type"><drop-down allow-empty="true">
+                <field name="value"><default-field title="Statement"><text-line/></default-field></field>
+                <field name="typeEnumId"><default-field title="Statement Type"><drop-down allow-empty="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></default-field></field>
-                <field name="submit"><default-field><submit text="Add Value"/></default-field></field>
+                <field name="tagIdList"><default-field title="Tags">
+                    <drop-down allow-empty="true" allow-multiple="true">
+                        <list-options list="statementTagList" key="${tagId}" text="${description}"/>
+                        <dynamic-options server-search="true" transition="getTagList" min-length="0"/>
+                    </drop-down>
+                </default-field>
+                </field>
+                <field name="submit"><default-field><submit text="Add Statement"/></default-field></field>
             </form-single>
         </container-dialog>
-        <link url="../ViewValueStatements" text="View/Print Values" tooltip="View Values Text" btn-type="info"
-                condition="valueStatementCount &gt; 0"/>
+        <container-dialog id="CreateTagDialog" button-text="New Tag" type="success">
+            <form-single name="CreateTagForm" transition="createTag">
+                <field name="description"><default-field title="Tag"><text-line/></default-field></field>                
+                <field name="submit"><default-field><submit text="Add Tag"/></default-field></field>
+            </form-single>
+        </container-dialog>
+        <link url="../ViewStatements" text="View/Print Statements" tooltip="View Statements Text" btn-type="info"
+                condition="statementCount &gt; 0"/>
 
-        <form-list name="ValueStatement" header-dialog="true" show-page-size="true" show-csv-button="true"
-                list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null]"
+        <form-list name="ValueStatement" header-dialog="true" show-page-size="true" show-csv-button="true" list-entry="valueStatementEntry"
+                list="valueStatementList" transition="updateValue" transition-last-row="createValue" map-last-row="[value:null,typeEnumId:null,tagIdList:null,sequenceNum:null]"
                 select-columns="true">
-            <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
-                <search-form-inputs/>
-                <order-by field-name="sequenceNum,value"/></entity-find>
+            <entity-find entity-name="coarchy.ValueStatementAndTag" list="valueStatementList" distinct="true">
+                <search-form-inputs default-order-by="sequenceNum,value"/>
+                <econdition field-name="organizationId" from="activeOrgId" />
+                <econdition field-name="tagId" operator="in" from="tagIdList" ignore-if-empty="true"/>
+            </entity-find>
 
             <row-actions>
                 <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
                     <econdition field-name="valueStatementId"/>
-                    <select-field field-name="activityId,name,condition,action"/>
+                    <select-field field-name="valueStatementActivityId,activityId,name,condition,action"/>
                     <order-by field-name="action"/>
                 </entity-find>
                 <set field="activityIdList" from="prepValueActivityList*.activityId"/>
@@ -148,39 +215,66 @@ along with this software (see the LICENSE.md file). If not, see
                         <order-by field-name="name"/></entity-find>
                     <set field="processStoryActivity" from="valueActivity.getMap() + [actorNames:activityActorList*.name]"/>
                     <set field="label" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
-                    <script>valueActivityList.add([activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}"])</script>
+                    <script>valueActivityList.add([valueStatementActivityId:valueActivity.valueStatementActivityId, activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}", processStoryActivity:processStoryActivity])</script>
                 </iterate>
 
-<!--                <log level="warn" message="form-list ValueStatements context.toString() ${context.toString()}"/>-->
+                <entity-find entity-name="coarchy.ValueStatementTagDetail" list="statementTagList">
+                    <date-filter />
+                    <econdition field-name="valueStatementId" />
+                    <econdition field-name="organizationId" from="activeOrgId" />
+                </entity-find>
+                <set field="tagIdList" from="statementTagList*.tagId"/>
+<!--                <log level="warn" message="form-list Statements context.toString() ${context.toString()}"/>-->
             </row-actions>
 
             <field name="value">
-                <header-field title="Value" show-order-by="case-insensitive"><text-find size="30"/></header-field>
-                <default-field title="Value"><text-area autogrow="true"/></default-field>
-                <last-row-field title="Value"><text-area autogrow="true"/></last-row-field>
+                <header-field title="Statement" show-order-by="case-insensitive"><text-find size="30"/></header-field>
+                <default-field title="Statement"><text-area autogrow="true"/></default-field>
+                <last-row-field title="Statement"><text-area autogrow="true"/></last-row-field>
             </field>
             <field name="activityIdList"><default-field title="Connected Activities">
-                <drop-down submit-on-select="true" allow-empty="true" allow-multiple="true">
+                <!-- <drop-down submit-on-select="true" allow-empty="true" allow-multiple="true">
                     <list-options list="valueActivityList" key="${activityId}" text="${label}"/>
                     <dynamic-options server-search="true" transition="getActivityList" min-length="0"/>
-                </drop-down>
+                </drop-down> -->
+                <hidden />
             </default-field></field>
+            <field name="tagIdList">
+                <header-field>
+                    <drop-down allow-empty="true" allow-multiple="true">
+                        <list-options list="headerTagList" key="${tagId}" text="${description}"/>
+                        <dynamic-options server-search="true" transition="getTagList" min-length="0"/>
+                    </drop-down>
+                </header-field>
+                <default-field title="Tags">
+                <drop-down submit-on-select="true" allow-empty="true" allow-multiple="true">
+                    <list-options list="statementTagList" key="${tagId}" text="${description}"/>
+                    <dynamic-options server-search="true" transition="getTagList" min-length="0"/>
+                </drop-down>
+            </default-field>
+            <last-row-field title="Tags">
+                <drop-down allow-empty="true" allow-multiple="true">
+                    <list-options list="statementTagList" key="${tagId}" text="${description}"/>
+                    <dynamic-options server-search="true" transition="getTagList" min-length="0"/>
+                </drop-down>
+            </last-row-field>
+        </field>
             <field name="typeEnumId">
-                <header-field title="Value Type" show-order-by="case-insensitive"><drop-down>
+                <header-field title="Statement Type"  show-order-by="case-insensitive"><drop-down allow-empty="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></header-field>
-                <default-field title="Value Type"><drop-down submit-on-select="true">
+                <default-field title="Statement Type"><drop-down submit-on-select="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></default-field>
-                <last-row-field title="Value Type"><drop-down required-manual-select="true">
+                <last-row-field title="Statement Type"><drop-down required-manual-select="true">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
@@ -191,21 +285,77 @@ along with this software (see the LICENSE.md file). If not, see
                 <default-field title="Priority"><text-line input-type="number" maxlength="3"/></default-field>
             </field>
             <field name="valueStatementId">
-                <header-field title="Id"><text-find size="30"/></header-field>
                 <default-field><hidden/></default-field></field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>
-                <last-row-field><submit text="Add Value" type="success"/></last-row-field></field>
-            <field name="delete"><default-field title="Delete">
-                <link url="deleteValue" parameter-map="[valueStatementId:valueStatementId]" icon="fa fa-trash" btn-type="danger"
-                        text=" " tooltip="Delete Value" confirmation="Delete Value '${value}'?"/></default-field></field>
-
+                <last-row-field><submit text="Add Statement" type="success"/></last-row-field></field>
+            <field name="actions">
+                <default-field title="">     
+                    <section name="ConnectedActivitiesSection">
+                        <widgets>
+                            <!-- Open dialog won't work with button-menu, probably because it isn't rendered yet? -->
+                            <!-- <button-menu text="Actions"> -->
+                            <container-dialog id="ConnectedActivitiesDialog_${valueStatementEntry_index}" button-text="Activities" >
+                                <form-single name="ConnectActivityForm" transition="addActivityToValueStatement" >
+                                    <field name="valueStatementId"><default-field><hidden /></default-field></field>
+                                    <field name="_openDialog" from="'ConnectedActivitiesDialog_'+valueStatementEntry_index"><default-field><display /></default-field></field>    
+                                    <field name="activityIds" from="[]"><default-field title="Connect An Activity">
+                                        <drop-down submit-on-select="false" allow-empty="false" allow-multiple="true">
+                                            <dynamic-options server-search="true" transition="getActivityList" min-length="0" parameter-map="[excludeActivityIds:valueActivityList*.activityId, maxLabelLength:80]"/>
+                                        </drop-down>
+                                    </default-field></field>
+                                    <field name="submit">
+                                        <default-field title="Add">
+                                            <submit />
+                                        </default-field>
+                                    </field>
+                                    <field-layout>
+                                        <field-col-row>
+                                            <field-col sm="11">
+                                                <field-ref name="activityIds" />
+                                            </field-col>
+                                            <field-col sm="1">
+                                                <field-ref name="submit" />
+                                            </field-col>
+                                        </field-col-row>
+                                    </field-layout>
+                                </form-single>
+                                <section name="ConnectedActivitiesListSection" condition="valueActivityList" >
+                                    <widgets>
+                                        <form-list name="ConnectedActivitiesFormList_${valueStatementEntry_index}" list="valueActivityList" list-entry="valueActivityEntry">                              
+                                            <field name="valueStatementActivityId">
+                                                <default-field>
+                                                    <hidden />
+                                                </default-field>
+                                            </field>
+                                            <field name="processStoryActivity">
+                                                <default-field title="Connected Activities">
+                                                    <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ActivityStyled.html.ftl" /></render-mode>
+                                                </default-field>
+                                            </field>
+                                            <field name="delete">
+                                                <default-field title="">
+                                                    <link url="deleteValueActivity" parameter-map="[valueStatementActivityId:valueStatementActivityId,_openDialog:'ConnectedActivitiesDialog_'+valueStatementEntry_index]" icon="fa fa-trash" btn-type="danger"
+                                                    text=" " tooltip="Unconnect Activity" confirmation="Unconnect Activity '${label}'?"/>                
+                                                </default-field>
+                                            </field>
+                                        </form-list>
+                                    </widgets>
+                                </section>
+                            </container-dialog>  
+                            <link url="deleteValue" parameter-map="[valueStatementId:valueStatementId]" icon="fa fa-trash" btn-type="danger"
+                            text=" " confirmation="Delete Statement '${value}'?"/>
+                        <!-- </button-menu>         -->
+                    </widgets>
+                    </section>
+                </default-field>
+            </field>        
             <columns>
-                <column><field-ref name="value"/><field-ref name="activityIdList"/></column>
+                <column><field-ref name="value"/><field-ref name="tagIdList"/></column>
                 <column><field-ref name="typeEnumId"/></column>
                 <column><field-ref name="submit"/></column>
-                <column><field-ref name="delete"/></column>
+                <column><field-ref name="actions"/></column>
             </columns>
         </form-list>
     </widgets>

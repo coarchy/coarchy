@@ -112,13 +112,13 @@ along with this software (see the LICENSE.md file). If not, see
         <container-row><row-col md="6">
             <label text="Screens" type="h5" style="q-pt-sm"/>
             <link url="../Vision" text="Vision"/>
-            <link url="../ValueStatements" text="Values"/>
+            <link url="../ValueStatements" text="Statements"/>
             <link url="../Actor" text="Actors"/>
             <link url="../Process/FindProcessStory" text="Process Stories"/>
             <link url="../FindChecklist" text="Checklists"/>
         </row-col><row-col md="6">
             <label text="Reports" type="h5" style="q-pt-sm" condition="valueStatementCount &gt; 0 || actorCount &gt; 0 || processStoryCount &gt; 0"/>
-            <link url="../ViewValueStatements" text="View Values" condition="valueStatementCount &gt; 0" btn-type="info"/>
+            <link url="../ViewValueStatements" text="View Statements" condition="valueStatementCount &gt; 0" btn-type="info"/>
             <link url="../ViewActors" text="View Actors" condition="actorCount &gt; 0" btn-type="info"/>
             <container-dialog id="ViewProcessStoryDialog" button-text="View Process Story" condition="processStoryCount &gt; 0" type="info">
                 <form-single name="ViewProcessStoryForm" transition="viewProcessStory">
@@ -137,7 +137,7 @@ along with this software (see the LICENSE.md file). If not, see
             <section-iterate name="FeedSection" list="activityFeedList" entry="item">
                 <widgets>
                     <container type="q-card" style="q-pa-sm q-mb-xs">
-                        <render-mode><text><![CDATA[<h6>${item.entityType}: <m-link href="${item.link}"><span v-pre>${item.name}</span></m-link></h6>]]></text></render-mode>
+                        <render-mode><text><![CDATA[<h6>${item.entityType}: <m-link href="${item.link}"><span v-pre>${item.name!""}</span></m-link></h6>]]></text></render-mode>
 
                         <label text="${item.updateType} on ${ec.l10n.format(item.date,'MMMM dd, HH:mm')}"/>
                     </container>

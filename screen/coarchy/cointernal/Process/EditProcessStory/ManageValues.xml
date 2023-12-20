@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-include="false" standalone="true" default-menu-title="Manage Values">
+        default-menu-include="false" standalone="true" default-menu-title="Manage Statements">
 
     <parameter name="activityId" required="true"/>
     <parameter name="pageIndex"/>
@@ -61,7 +61,7 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <form-single name="ManageValues" transition="createActivityValue">
             <field name="activityId"><default-field><hidden/></default-field></field>
-            <field name="valueIdList"><default-field title="Connect Values">
+            <field name="valueIdList"><default-field title="Connect Statements">
                 <drop-down submit-on-select="true" allow-empty="true" allow-multiple="true">
                     <list-options list="valueActivityList" key="${valueStatementId}" text="${value}"/>
                     <dynamic-options server-search="true" transition="getValueList" min-length="0"/>
