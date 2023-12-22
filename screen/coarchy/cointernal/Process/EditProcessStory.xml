@@ -147,7 +147,7 @@ along with this software (see the LICENSE.md file). If not, see
             <form-single name="AddChecklistForm" transition="createChecklist">
                 <field name="pageIndex"><default-field><hidden/></default-field></field>
                 <field name="processStoryId"><default-field><hidden/></default-field></field>
-                <field name="name" from="processStory.name"><default-field><text-line/></default-field></field>
+                <field name="name" from="processStory?.name"><default-field><text-line/></default-field></field>
                 <!--                <field name="recurStartCron"><default-field title="Repeat (optional)">-->
                 <!--                    <drop-down allow-empty="true" required-manual-select="true">-->
                 <!--                        <option key="0 0 6 ? * MON-FRI" text="Monday-Friday"/>-->
@@ -193,8 +193,8 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <link url="enableProcessStory" text="Show Process Story" parameter-map="[processStoryId:processStoryId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; processStory.disabled == 'Y'"/>
-        <link url="disableProcessStory" text="Hide Process Story" parameter-map="[processStoryId:processStoryId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; processStory.disabled != 'Y'"/>
+        <link url="enableProcessStory" text="Show Process Story" parameter-map="[processStoryId:processStoryId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; processStory?.disabled == 'Y'"/>
+        <link url="disableProcessStory" text="Hide Process Story" parameter-map="[processStoryId:processStoryId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; processStory?.disabled != 'Y'"/>
 
         <form-list name="ProcessStory" header-dialog="true" list="processStoryActivityList"
                 show-csv-button="true" show-page-size="true" select-columns="true"
@@ -209,6 +209,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="actors" from="activityActorList*.name?.join(', ')"/>
                 <set field="processStoryActivity" from="[condition:condition,action:action,actorNames:activityActorList*.name]"/>
                 <set field="activity" from="ec.resource.template('component://coarchy/template/ActivityStyled.html.ftl', '.ftl')"/>
+
+                <entity-find-one entity-name="moqui.basic.Enumeration" value-field="implementation" cache="true"
+                        auto-field-map="[enumId:implementationId]"/>
 
                 <!--                <log level="warn" message="form-list ProcessStory context.toString() ${context.toString()}"/>-->
             </row-actions>
@@ -326,14 +329,10 @@ along with this software (see the LICENSE.md file). If not, see
                         </entity-options>
                     </drop-down>
                 </header-field>
-                <default-field></default-field>
-                <last-row-field title="Implementation Status"><drop-down allow-empty="true">
-                    <entity-options key="${enumId}" text="${description}">
-                        <entity-find entity-name="moqui.basic.Enumeration">
-                            <econdition field-name="enumTypeId" value="ActivityImplementation"/>
-                            <order-by field-name="sequenceNum"/></entity-find>
-                    </entity-options>
-                </drop-down></last-row-field></field>
+                <default-field>
+                    <label text="${implementation?.description?:'No Status'}"/>
+                </default-field>
+            </field>
             <field name="activity"><default-field>
                 <render-mode><text type="html,vuet,qvt" location="component://coarchy/template/ActivityStyled.html.ftl"/>
                 </render-mode></default-field></field>
@@ -413,6 +412,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </last-row-field>
             </field>
             <columns>
+                <column><field-ref name="move"/></column>
                 <column><field-ref name="activity"/></column>
                 <column><field-ref name="submit"/></column>
                 <column><field-ref name="actionMenu"/></column>
