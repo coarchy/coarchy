@@ -49,9 +49,29 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="coarchy.CoarchyServices.delete#ValueStatement" in-map="[valueStatementId:valueStatementId,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
+    <transition name="showValueActivityDialog"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <actions>
+            <message type="warning"> ${ec.resource.expand("CoarchyProcessValueStatementDeleteWithActivities", null)} </message>
+        </actions>
+        <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
+    </transition>
     <transition name="deleteValueActivity">
         <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
         <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId,organizationId:activeOrgId]"/>
+        <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
+    </transition>
+    <transition name="deleteAllValueActivities">
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <actions>
+            <entity-find entity-name="coarchy.ValueStatementActivity" list="valueActivities">
+                <econdition field-name="valueStatementId" from="valueStatementId" />
+                <econdition field-name="organizationId" from="activeOrgId" />
+            </entity-find>
+
+            <iterate list="valueActivities" entry="valueActivity">
+                <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId]"/>
+            </iterate>
+        </actions>
         <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
     </transition>
 
@@ -335,6 +355,9 @@ along with this software (see the LICENSE.md file). If not, see
                                                 </default-field>
                                             </field>
                                             <field name="delete">
+                                                <header-field> 
+                                                    <link url="deleteAllValueActivities" btn-type="danger" text="Unconnect All" tooltip="Unconnect all associated acitivites" parameter-map="[valueStatementId:valueStatementId, _openDialog:'ConnectedActivitiesDialog_'+valueStatementEntry_index]"/>
+                                                </header-field>
                                                 <default-field title="">
                                                     <link url="deleteValueActivity" parameter-map="[valueStatementActivityId:valueStatementActivityId,_openDialog:'ConnectedActivitiesDialog_'+valueStatementEntry_index]" icon="fa fa-trash" btn-type="danger"
                                                     text=" " tooltip="Unconnect Activity" confirmation="Unconnect Activity '${label}'?"/>                
@@ -344,8 +367,10 @@ along with this software (see the LICENSE.md file). If not, see
                                     </widgets>
                                 </section>
                             </container-dialog>  
+                            <link url="showValueActivityDialog" parameter-map="[valueStatementId:valueStatementId, _openDialog:'ConnectedActivitiesDialog_'+valueStatementEntry_index]" icon="fa fa-trash" btn-type="warning"
+                            text=" " tooltip="To delete this statement, you have to unconnect any associated activities." condition="valueActivityList?.size()>0" />
                             <link url="deleteValue" parameter-map="[valueStatementId:valueStatementId]" icon="fa fa-trash" btn-type="danger"
-                            text=" " confirmation="Delete Statement '${value}'?"/>
+                            text=" " confirmation="Delete Statement '${value}'?" condition="!valueActivityList?.size()"/>
                         <!-- </button-menu>         -->
                     </widgets>
                     </section>
