@@ -3159,6 +3159,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="wikiPageId" from="wikiBlog?.wikiPageId"/>
                 <econdition field-name="publishedVersionName" operator="is-not-null"/>
             </entity-find>
+            <log level="warn" message="send#NewsletterEmail context.toString() ${context.toString()}"/>
             <set field="wikiPage" from="wikiPageList?.getFirst()"/>
             <if condition="!wikiPage">
                 <log level="warn" message="Wiki page not found for blog ${wikiBlog?.wikiBlogId}"/>
@@ -3211,6 +3212,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </if>
                 </else>
             </if>
+            <log level="warn" message="send#NewsletterEmail end context.toString() ${context.toString()}"/>
         </actions>
     </service>
 
@@ -3387,9 +3389,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="emailsSentList" from="emailsSentList + [partyId:listParty.partyId,
                         emailAddress:userAccount.emailAddress,emailTemplateId:emailTemplateId]"/>
                 </if>
-
             </iterate>
-
         </actions>
     </service>
 
