@@ -56,7 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
     </transition>
     <transition name="refreshPageWithFilters"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <default-response url="." parameter-map="[_openDialog:_openDialog, processStoryIds:processStoryIds]"/><error-response url="." save-parameters="true"/>
+        <default-response url="." parameter-map="[_openDialog:_openDialog, processStoryIds:processStoryIds, actorName:actorName]"/><error-response url="." save-parameters="true"/>
     </transition>
     <transition name="deleteValueActivity">
         <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
@@ -240,18 +240,33 @@ along with this software (see the LICENSE.md file). If not, see
                 <iterate list="prepValueActivityList" entry="valueActivity">
                     <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
                         <econdition field-name="activityId" from="valueActivity.activityId"/>
-                        <order-by field-name="name"/></entity-find>
-                        <set field="processStoryActivity" from="valueActivity.getMap() + [actorNames:activityActorList*.name]"/>
-                        <set field="label" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
-                        <script>valueActivityList.add([valueStatementActivityId:valueActivity.valueStatementActivityId, activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}", processStoryActivity:processStoryActivity])</script>
-                        <if condition="processStoryIds">
-                            <filter-map-list list="allProcessStoryActivityList" to-list="activityProcessStoryList">
-                                <field-map field-name="activityId" from="valueActivity.activityId" />
-                            </filter-map-list>
-                            <if condition="activityProcessStoryList &amp;&amp; (activityProcessStoryList*.processStoryId).any(it -> processStoryIds.split(',').contains(it))">
-                                <script>filterValueActivityList.add([valueStatementActivityId:valueActivity.valueStatementActivityId, activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}", processStoryActivity:processStoryActivity])</script>                        
-                            </if>
+                        <order-by field-name="name"/>
+                    </entity-find>
+                    <set field="processStoryActivity" from="valueActivity.getMap() + [actorNames:activityActorList*.name]"/>
+                    <set field="label" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/>
+                    <script>valueActivityList.add([valueStatementActivityId:valueActivity.valueStatementActivityId, activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}", processStoryActivity:processStoryActivity])</script>
+                    
+                    <!-- Filter by process story/actors -->
+                    <set field="isProcessMatch" type="Boolean" from="processStoryIds == null"/>
+                    <set field="isActorMatch" type="Boolean" from="actorName == null"/>
+                    <set field="isMatch" type="Boolean" from="false"/>
+                    <if condition="actorName">
+                        <if condition="(activityActorList*.name).any(it->(it.toLowerCase()).contains(actorName?.toLowerCase()))">
+                            <set field="isActorMatch" from="true" />                        
                         </if>
+                    </if>
+                    <if condition="processStoryIds">
+                        <filter-map-list list="allProcessStoryActivityList" to-list="activityProcessStoryList">
+                            <field-map field-name="activityId" from="valueActivity.activityId" />
+                        </filter-map-list>
+                        <if condition="activityProcessStoryList &amp;&amp; (activityProcessStoryList*.processStoryId).any(it -> processStoryIds.split(',').contains(it))">
+                            <set field="isProcessMatch" from="true" />                                            
+                        </if>
+                    </if>
+                    <set field="isMatch" from="isProcessMatch &amp;&amp; isActorMatch"/>
+                    <if condition="isMatch">
+                        <script>filterValueActivityList.add([valueStatementActivityId:valueActivity.valueStatementActivityId, activityId:valueActivity?.activityId, label:"${label.size()&gt;97?label.take(97)+'...':label}", processStoryActivity:processStoryActivity])</script>  
+                    </if>
                 </iterate>
 
                 <entity-find entity-name="coarchy.ValueStatementTagDetail" list="statementTagList">
@@ -365,8 +380,11 @@ along with this software (see the LICENSE.md file). If not, see
                                             <field name="_openDialog" from="'ConnectedActivitiesDialog_'+valueStatementEntry_index"><default-field><display /></default-field></field>    
                                             <field name="processStoryIds" from="processStoryIds"><default-field title="Filter By Process Story">
                                                 <drop-down allow-empty="true" allow-multiple="true">
-                                                    <list-options list="allProcessStoryActivityList" key="${processStoryId}" text="${name}" />
+                                                    <list-options list="allProcessStoryActivityList" key="${processStoryId}" text="${name}" />                               
                                                 </drop-down>
+                                            </default-field></field>
+                                            <field name="actorName" from="actorName"><default-field title="Filter By Actor">
+                                                <text-line/>
                                             </default-field></field>
                                             <field name="submit">
                                                 <default-field title="Filter">
@@ -375,16 +393,21 @@ along with this software (see the LICENSE.md file). If not, see
                                             </field>
                                             <field-layout>
                                                 <field-col-row>
-                                                    <field-col sm="11">
+                                                    <field-col sm="6">
                                                         <field-ref name="processStoryIds" />
+                                                    </field-col>                                                 
+                                                </field-col-row>
+                                                <field-col-row>                                      
+                                                    <field-col sm="6">
+                                                        <field-ref name="actorName" />
                                                     </field-col>
-                                                    <field-col sm="1">
+                                                    <field-col sm="2">
                                                         <field-ref name="submit" />
                                                     </field-col>
                                                 </field-col-row>
                                             </field-layout>
                                         </form-single>
-                                        <form-list name="ConnectedActivitiesFormList_${valueStatementEntry_index}" list="processStoryIds?filterValueActivityList:valueActivityList" list-entry="valueActivityEntry">                              
+                                        <form-list name="ConnectedActivitiesFormList_${valueStatementEntry_index}" list="(processStoryIds||actorName)?filterValueActivityList:valueActivityList" list-entry="valueActivityEntry">                              
                                             <field name="valueStatementActivityId">
                                                 <default-field>
                                                     <hidden />
