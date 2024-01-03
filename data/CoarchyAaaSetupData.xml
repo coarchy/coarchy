@@ -67,9 +67,9 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.screen.ScreenThemeResource screenThemeId="DEFAULT_QUASAR" sequenceNum="130" resourceTypeEnumId="STRT_HEADER_NAVBAR_COMP"
             resourceValue="/ssstatic/lib/ActiveOrgNav.qvue"/>
     <moqui.screen.ScreenThemeResource screenThemeId="DEFAULT_QUASAR" sequenceNum="100" resourceTypeEnumId="STRT_HEADER_LOGO"
-            resourceValue="/coarchy120.png"/>
+            resourceValue="/coarchyText113.png"/>
     <moqui.screen.ScreenThemeResource screenThemeId="DEFAULT" sequenceNum="100" resourceTypeEnumId="STRT_HEADER_LOGO"
-            resourceValue="/coarchy120.png"/>
+            resourceValue="/coarchyText113.png"/>
 
     <!-- Screen Documentation -->
     <moqui.screen.ScreenDocument screenLocation="component://coarchy/screen/settings/settingsinternal/Organizations.xml"

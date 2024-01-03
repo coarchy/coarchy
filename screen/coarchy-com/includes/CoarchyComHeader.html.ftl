@@ -78,6 +78,44 @@
 
                 <q-space></q-space>
 
+                <q-btn-dropdown stretch flat label="Products">
+                    <div class="row">
+                        <div class="col col-md-6 col-sm-12">
+                            <div class="text-h6 q-pa-md">Features</div>
+
+                            <q-list dense class="q-pb-md">
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Document Your Processes" href="/DocumentYourProcesses"></q-btn></q-item-section>
+                                </q-item>
+                            </q-list>
+                        </div>
+                        <div class="col col-md-6 col-sm-12">
+                            <div class="text-h6 q-pa-md">Demo</div>
+
+                            <q-list dense>
+                            </q-list>
+                        </div>
+                    </div>
+                </q-btn-dropdown>
+                <q-btn-dropdown stretch flat label="Use Case">
+                    <div class="row">
+                        <div class="col col-md-6 col-sm-12">
+                            <div class="text-h6 q-pa-md">Roles</div>
+
+                            <q-list dense class="q-pb-md">
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Business Analyst" href="/BusinessAnalyst"></q-btn></q-item-section>
+                                </q-item>
+                            </q-list>
+                        </div>
+                        <div class="col col-md-6 col-sm-12">
+                            <div class="text-h6 q-pa-md">Objectives</div>
+
+                            <q-list dense>
+                            </q-list>
+                        </div>
+                    </div>
+                </q-btn-dropdown>
                 <q-btn stretch flat label="Newsletter" href="/Newsletter"></q-btn>
                 <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Log In" href="/Login"></q-btn>

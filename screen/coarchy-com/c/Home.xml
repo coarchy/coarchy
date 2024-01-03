@@ -23,8 +23,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <q-parallax src="/cstatic/background.jpg" :height="500"/>
 
                         <q-card-section class="text-center q-pa-md shadow-10" data-aos="fade-in" data-aos-easing="ease-in-out-cubic" style="background: rgba(100,100,100,.75)">
-                            <div class="text-h1 text-white">Coarchy</div>
-                            <div class="text-h2 text-white q-mt-md">Design Your Organization</div>
+                            <div class="text-h2 text-white q-mt-md">Is Your Software Failing to <br/> Meet Business Needs?</div>
                             <q-btn no-caps href="/SignUp" label="Sign Up" push color="primary" class="q-mt-lg" size="xl"/>
                         </q-card-section>
                     </q-card>
