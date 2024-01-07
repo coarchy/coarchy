@@ -56,7 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
     </transition>
     <transition name="refreshPageWithFilters"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <default-response url="." parameter-map="[_openDialog:_openDialog, processStoryIds:processStoryIds, actorName:actorName]"/><error-response url="." save-parameters="true"/>
+        <default-response url="." parameter-map="[_openDialog:_openDialog, processStoryIds:processStoryIds, actorIds:actorIds]"/><error-response url="." save-parameters="true"/>
     </transition>
     <transition name="deleteValueActivity">
         <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
@@ -92,6 +92,37 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
     </transition>
 
+    <transition name="getActorList">
+        <parameter name="processStoryIds" />
+        <actions>
+            <set field="actorList" from="[]"/>
+            <set field="allStoryActorIdSet" from="new TreeSet()"/>
+            
+            <if condition="processStoryIds?.size() > 0">
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="psadList">
+                    <econdition field-name="processStoryId" operator="in" from="processStoryIds" />
+                    <econdition field-name="storyActivityOrganizationId" from="activeOrgId" />
+                    <econdition field-name="actorId" operator="is-not-null" />
+                    <select-field field-name="processStoryId,actorId" />
+                </entity-find>
+                <script>allStoryActorIdSet.addAll(psadList*.actorId)</script>
+            </if>
+
+            <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
+                <econdition field-name="actorId" operator="in" from="allStoryActorIdSet" ignore="!allStoryActorIdSet"/>
+                <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true" ignore="!term"/>
+                <order-by field-name="name"/>
+            </entity-find>
+
+            <script>
+                def outList = []
+                for (def actor in actorList)
+                    outList.add([value:actor?.actorId, label:"${actor?.name}".toString()])
+                ec.web.sendJsonResponse(outList)
+            </script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
     <transition name="getTagList">
         <actions>
             <set field="tagList" from="[]"/>
@@ -248,10 +279,10 @@ along with this software (see the LICENSE.md file). If not, see
                     
                     <!-- Filter by process story/actors -->
                     <set field="isProcessMatch" type="Boolean" from="processStoryIds == null"/>
-                    <set field="isActorMatch" type="Boolean" from="actorName == null"/>
+                    <set field="isActorMatch" type="Boolean" from="actorIds == null"/>
                     <set field="isMatch" type="Boolean" from="false"/>
-                    <if condition="actorName">
-                        <if condition="(activityActorList*.name).any(it->(it.toLowerCase()).contains(actorName?.toLowerCase()))">
+                    <if condition="actorIds">
+                        <if condition="(activityActorList*.actorId).any(it->actorIds.contains(it))">
                             <set field="isActorMatch" from="true" />                        
                         </if>
                     </if>
@@ -352,7 +383,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 <form-single name="ConnectActivityForm" transition="addActivityToValueStatement" >
                                     <field name="valueStatementId"><default-field><hidden /></default-field></field>
                                     <field name="_openDialog" from="'ConnectedActivitiesDialog_'+valueStatementEntry_index"><default-field><display /></default-field></field>    
-                                    <field name="activityIds" from="[]"><default-field title="Connect An Activity">
+                                    <field name="activityIds" from="[]"><default-field title="Add An Activity">
                                         <drop-down submit-on-select="false" allow-empty="false" allow-multiple="true">
                                             <dynamic-options server-search="true" transition="getActivityList" min-length="0" parameter-map="[excludeActivityIds:valueActivityList*.activityId, maxLabelLength:80]"/>
                                         </drop-down>
@@ -383,9 +414,15 @@ along with this software (see the LICENSE.md file). If not, see
                                                     <list-options list="allProcessStoryActivityList" key="${processStoryId}" text="${name}" />                               
                                                 </drop-down>
                                             </default-field></field>
-                                            <field name="actorName" from="actorName"><default-field title="Filter By Actor">
-                                                <text-line/>
-                                            </default-field></field>
+                                            <field name="actorIds" from="actorIds">
+                                                <default-field title="Filter By Actor">
+                                                    <drop-down allow-empty="true" allow-multiple="true">
+                                                        <dynamic-options transition="getActorList" min-length="0" depends-optional="true">
+                                                            <depends-on field="processStoryIds"/>
+                                                        </dynamic-options>
+                                                    </drop-down>                                             
+                                                </default-field>
+                                            </field>
                                             <field name="submit">
                                                 <default-field title="Filter">
                                                     <submit />
@@ -399,7 +436,7 @@ along with this software (see the LICENSE.md file). If not, see
                                                 </field-col-row>
                                                 <field-col-row>                                      
                                                     <field-col sm="6">
-                                                        <field-ref name="actorName" />
+                                                        <field-ref name="actorIds" />
                                                     </field-col>
                                                     <field-col sm="2">
                                                         <field-ref name="submit" />
@@ -407,7 +444,7 @@ along with this software (see the LICENSE.md file). If not, see
                                                 </field-col-row>
                                             </field-layout>
                                         </form-single>
-                                        <form-list name="ConnectedActivitiesFormList_${valueStatementEntry_index}" list="(processStoryIds||actorName)?filterValueActivityList:valueActivityList" list-entry="valueActivityEntry">                              
+                                        <form-list name="ConnectedActivitiesFormList_${valueStatementEntry_index}" list="(processStoryIds||actorIds)?filterValueActivityList:valueActivityList" list-entry="valueActivityEntry">                              
                                             <field name="valueStatementActivityId">
                                                 <default-field>
                                                     <hidden />
@@ -420,11 +457,11 @@ along with this software (see the LICENSE.md file). If not, see
                                             </field>
                                             <field name="delete">
                                                 <header-field> 
-                                                    <link url="deleteAllValueActivities" btn-type="danger" text="Unconnect All" tooltip="Unconnect all associated acitivites" parameter-map="[valueStatementId:valueStatementId, _openDialog:'ConnectedActivitiesDialog_'+valueStatementEntry_index]"/>
+                                                    <link url="deleteAllValueActivities" btn-type="danger" text="Remove All" tooltip="Remove all associated acitivites" parameter-map="[valueStatementId:valueStatementId, _openDialog:'ConnectedActivitiesDialog_'+valueStatementEntry_index]"/>
                                                 </header-field>
                                                 <default-field title="">
                                                     <link url="deleteValueActivity" parameter-map="[valueStatementActivityId:valueStatementActivityId,_openDialog:'ConnectedActivitiesDialog_'+valueStatementEntry_index]" icon="fa fa-trash" btn-type="danger"
-                                                    text=" " tooltip="Unconnect Activity" confirmation="Unconnect Activity '${label}'?"/>                
+                                                    text=" " tooltip="Remove Activity" confirmation="Remove Activity '${label}'?"/>                
                                                 </default-field>
                                             </field>
                                         </form-list>
@@ -432,7 +469,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 </section>
                             </container-dialog>  
                             <link url="showValueActivityDialog" parameter-map="[valueStatementId:valueStatementId, _openDialog:'ConnectedActivitiesDialog_'+valueStatementEntry_index]" icon="fa fa-trash" btn-type="warning"
-                            text=" " tooltip="To delete this statement, you have to unconnect any associated activities." condition="valueActivityList?.size()>0" />
+                            text=" " tooltip="To delete this statement, you have to remove any associated activities." condition="valueActivityList?.size()>0" />
                             <link url="deleteValue" parameter-map="[valueStatementId:valueStatementId]" icon="fa fa-trash" btn-type="danger"
                             text=" " confirmation="Delete Statement '${value}'?" condition="!valueActivityList?.size()"/>
                         <!-- </button-menu>         -->
