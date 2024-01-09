@@ -457,8 +457,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
                                     parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"
                                     condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown"/>
-                    <dynamic-dialog id="ManageValues" button-text="Statements" transition="ManageValues"
-                                    parameter-map="[activityId:activityId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/>
+                    <dynamic-dialog id="ManageValuesDialog" button-text="Statements" transition="ManageValues"
+                                    parameter-map="[activityId:activityId, dialogIndex: processStoryActivityList_index]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/>
                     <dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
                                     parameter-map="[processStoryActivityId:processStoryActivityId,parentProcessStoryIdList:detailActivityList*.processStoryId]"
                                     condition="action &amp;&amp; !detailProcessStoryId &amp;&amp; partyRelationshipCount &gt; 0"/>
