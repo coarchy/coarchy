@@ -47,8 +47,8 @@ along with this software (see the LICENSE.md file). If not, see
             [featureName:'Process Story Report with Substories',free:'',premium:'X'],
             [featureName:'Process Task Checklist',free:'',premium:'X'],
             [featureName:'Unlimited Checklists per Process Story',free:'',premium:'X'],
-            [featureName:'System',free:'',premium:'X'],
-            [featureName:'Unlimited Systems',free:'',premium:'X'],
+            [featureName:'Product',free:'',premium:'X'],
+            [featureName:'Unlimited Products',free:'',premium:'X'],
         ]"/>
 
         <!-- When the user is in a checkout flow and disengages from it, to prevent future confusion remove the
