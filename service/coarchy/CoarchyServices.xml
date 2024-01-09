@@ -1313,34 +1313,15 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
                 <econdition field-name="activityId"/>
+                <econdition field-name="organizationId" />
                 <order-by field-name="name"/></entity-find>
+
             <set field="valueIdServerList" from="valueStatementActivityList*.valueStatementId"/>
-            <if condition="valueIdServerList">
-                <set field="valueIdDeleteList" from="valueIdServerList - valueIdList?:[]"/>
-
-                <!--                                    <log level="warn" message="activityIdDeleteList ${activityIdDeleteList}"/>-->
-                <iterate list="valueIdDeleteList" entry="valueIdDelete">
-                    <set field="valueStatementActivity" from="valueStatementActivityList.find{it.valueStatementId == valueIdDelete}"/>
-                    <if condition="valueStatementActivity"><then>
-                        <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity.valueStatementActivityId]"/>
-                    </then><else>
-                        <log level="warn" message="Unable to delete value connection ${valueIdDelete}"/>
-                        <message type="warning" error="true">${ec.resource.expand('CoarchyProcessActivityValueDeleteError', null)}</message>
-                    </else></if>
-                </iterate>
-            </if>
-
-            <set field="valueIdCreateList" from="valueIdList?:[] - valueIdDeleteList?:[]"/>
-            <!--            <log level="warn" message="update#ValueStatement context.toString() ${context.toString()}"/>-->
-            <if condition="valueIdCreateList instanceof String">
-                <then>
-                    <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityList.find{it.valueStatementId == valueIdCreateList}?.valueStatementActivityId,valueStatementId:valueIdCreateList, activityId:activityId, organizationId:organizationId]"/>
-                </then><else>
-                <iterate list="valueIdCreateList" entry="valueIdCreate">
-                    <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityList.find{it.valueStatementId == valueIdCreate}?.valueStatementActivityId,valueStatementId:valueIdCreate, activityId:activityId, organizationId:organizationId]"/>
-                </iterate>
-            </else>
-            </if>
+        
+            <set field="valueIdCreateList" from="valueIdList?:[] - valueIdServerList?:[]" />
+            <iterate list="valueIdCreateList" entry="valueIdCreate">
+                <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementId:valueIdCreate, activityId:activityId, organizationId:organizationId]"/>
+            </iterate>
         </actions>
     </service>
 
