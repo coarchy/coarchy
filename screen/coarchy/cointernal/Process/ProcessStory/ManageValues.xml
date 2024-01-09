@@ -16,21 +16,25 @@ along with this software (see the LICENSE.md file). If not, see
         default-menu-include="false" standalone="true" default-menu-title="Manage Statements">
 
     <parameter name="activityId" required="true"/>
+    <parameter name="dialogIndex"/>
     <parameter name="pageIndex"/>
     <parameter name="pageSize"/>
     <parameter name="orderByField"/>
 
     <transition name="getValueList">
+        <parameter name="excludeValueIds" />
         <actions>
             <set field="valueList" from="[]"/>
             <if condition="term == null &amp;&amp; valueIdList ? valueIdList?.size() &gt; 0 : false"><then>
                 <entity-find entity-name="coarchy.ValueStatement" list="valueList" limit="50">
                     <econdition field-name="valueStatementId" operator="in" from="valueIdList"/>
+                    <econdition field-name="valueStatementId" operator="not-in" from="excludeValueIds" ignore-if-empty="true"/>
                     <order-by field-name="value"/></entity-find>
             </then><else>
                 <!-- TODO: Also find by actor name -->
                 <entity-find entity-name="coarchy.ValueStatement" list="valueList" limit="50">
                     <econdition field-name="value" operator="like" value="%${term}%" ignore-case="true"/>
+                    <econdition field-name="valueStatementId" operator="not-in" from="excludeValueIds" ignore-if-empty="true"/>
                     <order-by field-name="value"/></entity-find>
             </else></if>
             <set field="outList" from="[]"/>
@@ -43,17 +47,23 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="createActivityValue">
         <service-call name="coarchy.CoarchyServices.create#ActivityValue" in-map="[activityId:activityId,valueIdList:valueIdList,organizationId:activeOrgId]"/>
-        <default-response type="none"/></transition>
-
+        <default-response url=".." parameter-map="[_openDialog:_openDialog, processStoryId:processStoryId, activityId:null]"/><error-response url="." save-parameters="true"/>
+    </transition>
+    <transition name="deleteValueStatementActivity">
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId,organizationId:activeOrgId]"/>
+        <default-response url=".." parameter-map="[_openDialog:_openDialog, processStoryId:processStoryId, activityId:null]"/><error-response url="." save-parameters="true"/>
+    </transition>
+    
     <actions>
         <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
             <econdition field-name="activityId" from="activityId"/>
-            <select-field field-name="valueStatementId,value"/>
+            <select-field field-name="valueStatementActivityId,valueStatementId,value"/>
             <order-by field-name="^value"/></entity-find>
         <set field="valueIdList" from="prepValueActivityList*.valueStatementId"/>
         <set field="valueActivityList" from="[]"/>
         <iterate list="prepValueActivityList" entry="valueActivity">
-            <script>valueActivityList.add([valueStatementId:valueActivity?.valueStatementId, value:(valueActivity?.value&amp;&amp;valueActivity.value.size()&gt;79)?valueActivity.value.take(79)+"...":valueActivity.value])</script>
+            <script>valueActivityList.add([valueStatementId:valueActivity?.valueStatementId, valueStatementActivityId:valueActivity?.valueStatementActivityId, value:(valueActivity?.value&amp;&amp;valueActivity.value.size()&gt;79)?valueActivity.value.take(79)+"...":valueActivity.value, valueFull:valueActivity.value])</script>
         </iterate>
 <!--        <log level="warn" message="ManageValues context.toString() ${context.toString()}"/>-->
     </actions>
@@ -61,12 +71,52 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <form-single name="ManageValues" transition="createActivityValue">
             <field name="activityId"><default-field><hidden/></default-field></field>
-            <field name="valueIdList"><default-field title="Connect Statements">
-                <drop-down submit-on-select="true" allow-empty="true" allow-multiple="true">
-                    <list-options list="valueActivityList" key="${valueStatementId}" text="${value}"/>
-                    <dynamic-options server-search="true" transition="getValueList" min-length="0"/>
+            <field name="processStoryId"><default-field><hidden/></default-field></field>
+            <field name="_openDialog" from="'ManageValuesDialog_'+(dialogIndex?:0)"><default-field><display /></default-field></field>    
+            <field name="valueIdList" from="[]"><default-field title="Connect Statements">
+                <drop-down submit-on-select="false" allow-empty="false" allow-multiple="true">
+                    <!-- <list-options list="valueActivityList" key="${valueStatementId}" text="${value}"/> -->
+                    <dynamic-options server-search="true" transition="getValueList" min-length="0" parameter-map="[excludeValueIds:valueActivityList*.valueStatementId, maxLabelLength:80]"/>
                 </drop-down>
             </default-field></field>
+            <field name="submit">
+                <default-field title="Add">
+                    <submit />
+                </default-field>
+            </field>                              
+            <field-layout>
+                <field-col-row>
+                    <field-col sm="11">
+                        <field-ref name="valueIdList" />
+                    </field-col>
+                    <field-col sm="1">
+                        <field-ref name="submit" />
+                    </field-col>
+                </field-col-row>
+            </field-layout>
         </form-single>
+        <section name="ProcessStoryStatementListSection" condition="valueActivityList" >
+            <widgets>
+                <form-list name="ProcessStoryStatementList" list="valueActivityList" list-entry="valueActivityEntry">                              
+                    <field name="valueStatementActivityId">
+                        <default-field>
+                            <hidden />
+                        </default-field>
+                    </field>
+                    <field name="valueFull">
+                        <default-field title="Connected Statements">
+                            <display/>
+                        </default-field>
+                    </field>
+                    <field name="delete">
+                        <default-field title="">
+                            <link url="deleteValueStatementActivity" parameter-map="[valueStatementActivityId:valueStatementActivityId,_openDialog:'ManageValuesDialog_'+dialogIndex]" icon="fa fa-trash" btn-type="danger"
+                            text=" " tooltip="Remove Statement" confirmation="Remove Statement '${label}'?"/>                
+                        </default-field>
+                    </field>
+                </form-list>
+            </widgets>
+        </section>
+        
     </widgets>
 </screen>
