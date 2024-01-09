@@ -54,7 +54,21 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId,organizationId:activeOrgId]"/>
         <default-response url=".." parameter-map="[_openDialog:_openDialog, processStoryId:processStoryId, activityId:null]"/><error-response url="." save-parameters="true"/>
     </transition>
-    
+    <transition name="deleteAllValueStatementActivities">
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <actions>
+            <entity-find entity-name="coarchy.ValueStatementActivity" list="valueActivities">
+                <econdition field-name="activityId" from="activityId" />
+                <econdition field-name="organizationId" from="activeOrgId" />
+            </entity-find>
+
+            <iterate list="valueActivities" entry="valueActivity">
+                <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId]"/>
+            </iterate>
+        </actions>
+        <default-response url=".." parameter-map="[_openDialog:_openDialog, processStoryId:processStoryId, activityId:null]"/><error-response url="." save-parameters="true"/>
+    </transition>
+
     <actions>
         <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
             <econdition field-name="activityId" from="activityId"/>
@@ -109,6 +123,9 @@ along with this software (see the LICENSE.md file). If not, see
                         </default-field>
                     </field>
                     <field name="delete">
+                        <header-field> 
+                            <link url="deleteAllValueStatementActivities" btn-type="danger" text="Remove All" tooltip="Remove all associated statements" parameter-map="[_openDialog:'ManageValuesDialog_'+dialogIndex]"/>
+                        </header-field>
                         <default-field title="">
                             <link url="deleteValueStatementActivity" parameter-map="[valueStatementActivityId:valueStatementActivityId,_openDialog:'ManageValuesDialog_'+dialogIndex]" icon="fa fa-trash" btn-type="danger"
                             text=" " tooltip="Remove Statement" confirmation="Remove Statement '${label}'?"/>                
