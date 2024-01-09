@@ -206,6 +206,8 @@ along with this software (see the LICENSE.md file). If not, see
             authorizeServiceName="coarchy.StripeServices.authorizeAndCapture#Payment" captureServiceName="coarchy.StripeServices.capture#Payment"/>
 
     <!-- ========== Products and Other Related ========== -->
+    <moqui.basic.Enumeration description="Coarchy" enumId="PclsCoarchy" enumTypeId="ProductClass"/>
+
     <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy" visibilityEnumId="PvPublic">
         <mantle.party.Organization organizationName="Coarchy" partyId="coarchy"/>
         <roles roleTypeId="OrgInternal"/>
