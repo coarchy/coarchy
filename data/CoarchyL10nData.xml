@@ -51,5 +51,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyTagInvalidFormat" localized="Tags cannot include spaces or special characters (except underscores)"/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthUserNotFound" localized="Invalid username or password."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthPasswordAlreadySet" localized="You have already set a password on this account. Please log in instead."/>
+    
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProductSoftwareAlreadyExists" localized="An existing system with then name '${productName}' already exists."/>
    
 </entity-facade-xml>
