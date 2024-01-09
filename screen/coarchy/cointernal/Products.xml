@@ -78,7 +78,7 @@ along with this software (see the LICENSE.md file). If not, see
         <container-dialog id="CreateSoftwareProductDialog" button-text="Add Software System" type="success">
             <form-single name="CreateSoftwareProductForm" transition="createSoftwareProduct">
                 <field name="productName">
-                    <default-field><text-line/></default-field>
+                    <default-field title="System Name"><text-line/></default-field>
                 </field>
                 <field name="description">
                     <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
@@ -91,7 +91,7 @@ along with this software (see the LICENSE.md file). If not, see
                    show-csv-button="true" list="productList" transition="updateSoftwareProduct" transition-last-row="createSoftwareProduct" map-last-row="[productName:null,description:null]">
             <entity-find entity-name="mantle.product.Product" list="productList">
                 <search-form-inputs />
-                <econdition field-name="productTypeEnumId" value="PtDigital" />
+                <econdition field-name="productClassEnumId" value="PclsCoarchy" />
                 <econdition field-name="ownerPartyId" from="activeOrgId"/>
             </entity-find>           
             <field name="productId">
@@ -100,9 +100,9 @@ along with this software (see the LICENSE.md file). If not, see
                 </default-field>
             </field>
             <field name="productName">
-                <header-field show-order-by="case-insensitive"><text-find/></header-field>
-                <default-field><text-line/></default-field>
-                <last-row-field><text-line/></last-row-field>
+                <header-field show-order-by="case-insensitive" title="System Name"><text-find/></header-field>
+                <default-field title="System Name"><text-line/></default-field>
+                <last-row-field title="System Name"><text-line/></last-row-field>
             </field>
             <field name="description">
                 <header-field><text-find/></header-field>
