@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        require-authentication="false" allow-extra-path="true">
+
+    <widgets>
+        <render-mode>
+            <text type="html"><![CDATA[
+                <section>
+                    <div class="gjs-row" id="i0i2">
+                        <div class="gjs-cell" id="idpw">
+                            <div id="icxg">
+                                <b>Checklists that keep track
+                                    <br/>of what you do to avoid chaos
+                                </b>
+                            </div>
+                        </div>
+                        <div class="gjs-cell" id="iyxa">
+                            <img id="icj3s" src="https://coarchy.com/Checklist.png"/>
+                        </div>
+                    </div>
+                    <div class="gjs-row" id="i7il">
+                        <div class="gjs-cell">
+                            <div id="ir53k">
+                                <b id="i72of">Multiple People on ONE Checklist
+                                </b>
+                                <br/>
+                            </div>
+                            <div id="i685g">Have multiple people use the same checklist. We'll notify the next person that they have a task automatically!
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                ]]></text>
+        </render-mode>
+    </widgets>
+</screen>

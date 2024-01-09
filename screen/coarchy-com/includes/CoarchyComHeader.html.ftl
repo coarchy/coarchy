@@ -80,25 +80,38 @@
 
                 <q-btn-dropdown stretch flat label="Products">
                     <div class="row">
-                        <div class="col col-md-6 col-sm-12">
+<#--                        <div class="col col-md-6 col-sm-12">-->
+                        <div class="col col-12">
                             <div class="text-h6 q-pa-md">Features</div>
 
                             <q-list dense class="q-pb-md">
                                 <q-item clickable>
                                     <q-item-section><q-btn stretch flat label="Document Your Processes" href="/DocumentYourProcesses"></q-btn></q-item-section>
                                 </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Define Roles and Responsibilities" href="/RolesAndResponsibilities"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Manage Organization" href="/ManageOrganization"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Requirements Statements" href="/RequirementsStatements"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Checklists" href="/Checklists"></q-btn></q-item-section>
+                                </q-item>
                             </q-list>
                         </div>
-                        <div class="col col-md-6 col-sm-12">
-                            <div class="text-h6 q-pa-md">Demo</div>
+<#--                        <div class="col col-md-6 col-sm-12">-->
+<#--                            <div class="text-h6 q-pa-md">Demo</div>-->
 
-                            <q-list dense>
-                            </q-list>
-                        </div>
+<#--                            <q-list dense>-->
+<#--                            </q-list>-->
+<#--                        </div>-->
                     </div>
                 </q-btn-dropdown>
                 <q-btn-dropdown stretch flat label="Use Case">
-                    <div class="row">
+                    <div class="row" style="min-width: 500px">
                         <div class="col col-md-6 col-sm-12">
                             <div class="text-h6 q-pa-md">Roles</div>
 
@@ -106,12 +119,35 @@
                                 <q-item clickable>
                                     <q-item-section><q-btn stretch flat label="Business Analyst" href="/BusinessAnalyst"></q-btn></q-item-section>
                                 </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Business Owner" href="/Owner"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="IT Consultant" href="/ItConsultant"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Developer" href="/Developer"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Project Manager" href="/ProjectManager"></q-btn></q-item-section>
+                                </q-item>
                             </q-list>
                         </div>
                         <div class="col col-md-6 col-sm-12">
                             <div class="text-h6 q-pa-md">Objectives</div>
-
                             <q-list dense>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Requirement Gathering" href="/RequirementGathering"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Align Organization" href="/AlignOrganization"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Software Evaluation" href="/SoftwareEvaluation"></q-btn></q-item-section>
+                                </q-item>
+                                <q-item clickable>
+                                    <q-item-section><q-btn stretch flat label="Software Design" href="/SoftwareDesign"></q-btn></q-item-section>
+                                </q-item>
                             </q-list>
                         </div>
                     </div>
