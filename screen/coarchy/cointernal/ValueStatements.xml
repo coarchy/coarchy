@@ -95,6 +95,9 @@ along with this software (see the LICENSE.md file). If not, see
     <transition name="getActorList">
         <parameter name="processStoryIds" />
         <actions>
+            <!-- note: for some reason, list params are not playing nice and are always null (probably sent as processStoryIds[] and not sanitized/processed in transition to processStoryIds), 
+                workaround below to get it working for now  -->
+            <set field="processStoryIds" from="ec.web.getParameters().get('processStoryIds[]')?:[]"/>
             <set field="actorList" from="[]"/>
             <set field="allStoryActorIdSet" from="new TreeSet()"/>
             
@@ -109,7 +112,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <entity-find entity-name="coarchy.Actor" list="actorList" limit="50">
-                <econdition field-name="actorId" operator="in" from="allStoryActorIdSet" ignore="!allStoryActorIdSet"/>
+                <econdition field-name="actorId" operator="in" from="allStoryActorIdSet" ignore="!processStoryIds"/>
                 <econdition field-name="name" operator="like" value="%${term}%" ignore-case="true" ignore="!term"/>
                 <order-by field-name="name"/>
             </entity-find>
@@ -418,7 +421,7 @@ along with this software (see the LICENSE.md file). If not, see
                                                 <default-field title="Filter By Actor">
                                                     <drop-down allow-empty="true" allow-multiple="true">
                                                         <dynamic-options transition="getActorList" min-length="0" depends-optional="true">
-                                                            <depends-on field="processStoryIds"/>
+                                                            <depends-on field="processStoryIds" />
                                                         </dynamic-options>
                                                     </drop-down>                                             
                                                 </default-field>
