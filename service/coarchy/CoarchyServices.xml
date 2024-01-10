@@ -3452,4 +3452,51 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="create" noun="Product">
+        <in-parameters>
+            <parameter name="productName" required="true"/>
+            <parameter name="description"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productId"/>
+        </out-parameters>
+        <actions>
+            <set field="productName" from="productName.trim()"/>
+            <set field="description" from="description?.trim()"/>
+            <entity-find entity-name="mantle.product.Product" list="productList" limit="20">
+                <econdition field-name="productClassEnumId" value="PclsCoarchy" />
+                <econdition field-name="ownerPartyId" from="organizationId" />
+                <econdition field-name="productName" from="productName" ignore-case="true"/>
+            </entity-find>
+            <if condition="productList"><return type="danger" message="${ec.resource.expand('CoarchyProductAlreadyExists', null, [productName:productList?.getFirst()?.productName])}"/></if>
+            
+            <service-call name="create#mantle.product.Product" in-map="[productName:productName,description:description,productClassEnumId:'PclsCoarchy',ownerPartyId:organizationId]" out-map="context"/>
+        </actions>
+    </service>
+    
+    <service verb="update" noun="Product">
+        <in-parameters>
+            <parameter name="productId" required="true"/>
+            <parameter name="productName" required="true"/>
+            <parameter name="description"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productId"/>
+        </out-parameters>
+        <actions>
+            <set field="productName" from="productName.trim()"/>
+            <set field="description" from="description?.trim()"/>
+            <entity-find entity-name="mantle.product.Product" list="productList" limit="20">
+                <econdition field-name="productId" operator="not-equals"/>
+                <econdition field-name="productClassEnumId" value="PclsCoarchy" />
+                <econdition field-name="ownerPartyId" from="organizationId" />
+                <econdition field-name="productName" from="productName" ignore-case="true"/>
+            </entity-find>
+            <if condition="productList"><return type="danger" message="${ec.resource.expand('CoarchyProductAlreadyExists', null, [productName:productList?.getFirst()?.productName])}"/></if>
+
+            <service-call name="update#mantle.product.Product" in-map="[productId:productId, productName:productName,description:description,organizationId:organizationId]" out-map="context"/>
+        </actions>
+    </service>    
 </services>
