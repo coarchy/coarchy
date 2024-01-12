@@ -2777,6 +2777,7 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="activityId" required="true"/>
             <parameter name="processStoryActivityId"/>
+            <parameter name="statementIdList" type="List"/>
             <parameter name="actorIdList" type="List"/>
             <parameter name="pageIndex"/>
         </in-parameters>
@@ -2802,6 +2803,16 @@ along with this software (see the LICENSE.md file). If not, see
             <iterate list="actorIdList" entry="actorId">
                 <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
             </iterate>
+            <!-- delete associated valuestatement activities -->
+            <entity-find entity-name="coarchy.ValueStatementActivity" list="statementList">
+                <econdition field-name="valueStatementId" operator="in" from="statementIdList" ignore-if-empty="true" />
+                <econdition field-name="activityId" from="activityId"/>
+            </entity-find>
+            <set field="statementActivityIdList" from="statementList*.valueStatementActivityId"/>
+            <iterate list="statementActivityIdList" entry="valueStatementActivityId">
+                <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId]"/>
+            </iterate>
+
             <service-call name="delete#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId]"/>
         </actions>
     </service>
