@@ -832,6 +832,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="organizationId" required="true"/>
             <parameter name="condition"/>
             <parameter name="actorIdList" type="List"/>
+            <parameter name="statementIdList" type="List" default="[]"/>
             <parameter name="action"/>
             <parameter name="sequenceNum"/>
             <parameter name="implementationId"/>
@@ -869,6 +870,9 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
                 </else>
             </if>
+            <iterate list="statementIdList" entry="statementId">
+                <service-call name="store#coarchy.ValueStatementActivity" in-map="[activityId:newActivity.activityId, valueStatementId:statementId, organizationId:organizationId]"/>
+            </iterate>
         </actions>
     </service>
     <service verb="update" noun="Activity">
@@ -2457,6 +2461,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
 
                 <set field="actorIdMap" from="[:]"/>
+                <set field="valueStatementIdMap" from="[:]"/>
                 <if condition="organizationId!=activeOrgId">
                     <set field="ec.user.context?.activeOrgId" from="activeOrgId"/>
                     <set field="ec.user.context?.filterOrgIds" from="[activeOrgId]"/>
@@ -2465,6 +2470,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="activityId" from="originalProcessStoryActivityList*.activityId"/>
                     <select-field field-name="actorId,activityId,name,description"/>
                     <order-by field-name="name"/></entity-find>
+                <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="statementActivityDetailList" distinct="true">
+                    <econdition field-name="activityId" from="originalProcessStoryActivityList*.activityId"/>
+                    <select-field field-name="valueStatementId,activityId,value,typeEnumId"/>
+                    <order-by field-name="statementSeqId"/></entity-find>
                 <if condition="organizationId!=activeOrgId">
                     <set field="ec.user.context?.activeOrgId" from="organizationId"/>
                     <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
@@ -2484,17 +2493,37 @@ along with this software (see the LICENSE.md file). If not, see
                         <script>actorIdMap.put(activityActor.actorId,insideActivityActorList.getFirst().actorId)</script>
                     </else></if>
                 </iterate>
+
+                <iterate list="statementActivityDetailList" entry="statementActivity">
+                    <entity-find entity-name="coarchy.ValueStatement" list="insideStatementList" distinct="true" limit="1">
+                        <econdition field-name="value" from="statementActivity.value"/>
+                        <econdition field-name="typeEnumId" from="statementActivity.typeEnumId"/>
+                        <select-field field-name="valueStatementId,value,typeEnumId"/>
+                        <order-by field-name="value"/></entity-find>
+                    <if condition="!insideStatementList"><then>
+                        <if condition="!valueStatementIdMap.keys?.contains(statementActivity.valueStatementId)">
+                            <service-call name="create#coarchy.ValueStatement" in-map="[value:statementActivity.value,
+                                    typeEnumId:statementActivity.typeEnumId,organizationId:organizationId]" out-map="valueStatementContext"/>
+                            <script>valueStatementIdMap.put(statementActivity.valueStatementId,valueStatementContext?.valueStatementId)</script>
+                        </if>
+                    </then><else>
+                        <script>valueStatementIdMap.put(statementActivity.valueStatementId,insideStatementList.getFirst().valueStatementId)</script>
+                    </else></if>
+                </iterate>
 <!--                <log level="warn" message="copy#Activities actorIdMap ${actorIdMap}"/>-->
 
                 <iterate list="originalProcessStoryActivityList" entry="activity">
                     <set field="actorIdList" from="activityActorList.findAll{ it.activityId == activity.activityId }*.actorId"/>
+                    <set field="statementIdList" from="statementActivityDetailList.findAll{ it.activityId == activity.activityId }*.valueStatementId"/>
+    
 <!--                    <log level="warn" message="copy#Activities actorIdList ${actorIdList}"/>-->
                     <if condition="organizationId==activeOrgId"><then>
                     </then><else>
                         <set field="actorIdList" from="actorIdList.collect{ actorIdMap[it] }"/>
+                        <set field="statementIdList" from="statementIdList.collect{ valueStatementIdMap[it] }"/>
 <!--                        <log level="warn" message="copy#Activities diff org actorIdList ${actorIdList}"/>-->
                     </else></if>
-                    <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,actorIdList:actorIdList,sequenceNum:insertSequenceNum+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
+                    <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,actorIdList:actorIdList,statementIdList:statementIdList,sequenceNum:insertSequenceNum+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
 <!--                    <log level="warn" message="copy#Activities activityActorList ${activityActorList}"/>-->
                 </iterate>
 
@@ -2554,9 +2583,20 @@ along with this software (see the LICENSE.md file). If not, see
                             <econdition field-name="clipboardEntryId" from="entry.clipboardEntryId"/>
                             <order-by field-name="activitySeqId"/></entity-find>
                         <iterate list="activityList" entry="activity">
+                            <!-- delete any statements related to activity -->
+                            <entity-find entity-name="coarchy.ClipboardActivityStatement" list="activityStatementList">
+                                <econdition field-name="clipboardEntryId" from="entry.clipboardEntryId"/>
+                                <econdition field-name="activitySeqId" from="activity.activitySeqId"/>
+                                <order-by field-name="statementSeqId"/>
+                            </entity-find>
+                            <iterate list="activityStatementList" entry="activityStatement">
+                                <service-call name="delete#coarchy.ClipboardActivityStatement" in-map="[clipboardEntryId:entry.clipboardEntryId,
+                                    activitySeqId:activity.activitySeqId, statementSeqId:activityStatement.statementSeqId]"/>
+                            </iterate>
+                            <!-- delete activity from clipboard -->
                             <service-call name="delete#coarchy.ClipboardActivity" in-map="[clipboardEntryId:entry.clipboardEntryId,
                                 activitySeqId:activity.activitySeqId]"/>
-                        </iterate>
+                        </iterate>          
                         <service-call name="delete#coarchy.ClipboardEntry" in-map="[clipboardEntryId:entry.clipboardEntryId]"/>
                     </if>
                 </iterate>
@@ -2584,6 +2624,15 @@ along with this software (see the LICENSE.md file). If not, see
 <!--                <log level="warn" message="clipboardEntryId ${clipboardEntryId} actor ${actor} actor.actorId ${actor.actorId}"/>-->
                 <service-call name="create#coarchy.ClipboardActor" in-map="[clipboardEntryId:clipboardEntryId,
                     activitySeqId:activityOut.activitySeqId,name:actor.name,description:actor.description]"/>
+            </iterate>
+
+            <entity-find entity-name="ValueStatementActivityDetail" list="statementActivityDetailList" distinct="true">
+                <econdition field-name="activityId"/>
+                <select-field field-name="activityId,valueStatementId,value,typeEnumId,organizationId" />
+            </entity-find>            
+            <iterate list="statementActivityDetailList" entry="statementActivityDetail">
+                <service-call name="create#coarchy.ClipboardActivityStatement" in-map="[clipboardEntryId:clipboardEntryId,
+                    activitySeqId:activityOut.activitySeqId,value:statementActivityDetail.value,typeEnumId:statementActivityDetail.typeEnumId]"/>
             </iterate>
 
             <if condition="moveTypeEnumId=='CbmtCut' &amp;&amp; activityIdList.size() == activityIdNum.toInteger()">
@@ -2691,12 +2740,34 @@ along with this software (see the LICENSE.md file). If not, see
                     <script>actorIdMap.put(actor.actorSeqId,insideActorList.getFirst().actorId)</script>
                 </else></if>
             </iterate>
-<!--                <log level="warn" message="copy#Activities actorIdMap ${actorIdMap}"/>-->
+            
+            <set field="valueStatementIdMap" from="[:]"/>
+            <entity-find entity-name="coarchy.ClipboardActivityStatement" list="activityStatementList" distinct="true">
+                <econdition field-name="clipboardEntryId"/>
+                <select-field field-name="statementSeqId,activitySeqId,value,typeEnumId"/>
+                <order-by field-name="statementSeqId"/></entity-find>
+            <iterate list="activityStatementList" entry="activityStatement">
+                <entity-find entity-name="coarchy.ValueStatement" list="insideStatementList" distinct="true" limit="1">
+                    <econdition field-name="value" from="activityStatement.value"/>
+                    <econdition field-name="typeEnumId" from="activityStatement.typeEnumId"/>
+                    <select-field field-name="valueStatementId,value,typeEnumId"/>
+                    <order-by field-name="value"/></entity-find>
+                <if condition="!insideStatementList"><then>
+                    <service-call name="create#coarchy.ValueStatement" in-map="[value:activityStatement.value,
+                            typeEnumId:activityStatement.typeEnumId,organizationId:organizationId]" out-map="valueStatementContext"/>
+                    <script>valueStatementIdMap.put(activityStatement.statementSeqId,valueStatementContext?.valueStatementId)</script>
+                </then><else>
+                    <script>valueStatementIdMap.put(activityStatement.statementSeqId,insideStatementList.getFirst().valueStatementId)</script>
+                </else></if>
+            </iterate>
+<!--                <log level="warn" message="copy#Activities valueStatementIdMap ${valueStatementIdMap}"/>-->
 
             <iterate list="activityList" entry="activity">
                 <set field="actorSeqIdList" from="actorList.findAll{ it.activitySeqId == activity.activitySeqId }*.actorSeqId"/>
                 <set field="actorIdList" from="actorSeqIdList.collect{ actorIdMap[it] }"/>
-                <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,actorIdList:actorIdList,sequenceNum:insertSequenceNum.toInteger()+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
+                <set field="statementSeqIdList" from="activityStatementList.findAll{ it.activitySeqId == activity.activitySeqId }*.statementSeqId"/>
+                <set field="statementIdList" from="statementSeqIdList.collect{ valueStatementIdMap[it] }"/>
+                <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:activity.condition,action:activity.action,actorIdList:actorIdList,statementIdList:statementIdList, sequenceNum:insertSequenceNum.toInteger()+activity_index,implementationId:activity.implementationId,ignoreNoAction:true]"/>
             </iterate>
 
 <!--            <log level="warn" message="paste#Activities context.toString() ${context.toString()}"/>-->
