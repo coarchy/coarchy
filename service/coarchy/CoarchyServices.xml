@@ -445,6 +445,109 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
         </actions>
     </service>
+
+    <service verb="invite" noun="VendorUser">
+        <in-parameters>
+            <parameter name="partyId" required="true"/>
+            <parameter name="productId" required="true"/>
+            <parameter name="emailAddress" required="true"/>
+            <parameter name="firstName" />
+            <parameter name="lastName" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="newUserId"/>
+            <parameter name="newPartyId"/>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="mantle.product.Product" value-field="product" auto-field-map="[productId:productId]" />
+            <if condition="product.productClassEnumId != 'PclsCoarchy'">
+                <return error="true" message="Invalid product."/>
+            </if>
+
+            <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:partyId]"/>
+            <if condition="!organization || !organization.ownerPartyId"><return/></if>
+            <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
+                <entity-find entity-name="moqui.security.UserAccount" list="existingUaList">
+                    <econdition field-name="emailAddress" ignore-case="true"/></entity-find>
+
+                <if condition="!existingUaList"><then>
+                    <service-call name="coarchy.CoarchyServices.create#Account" out-map="newUser"
+                        in-map="[emailAddress:emailAddress,firstName:firstName?:'Not',lastName:lastName?:'Set',username:emailAddress]"/>
+                    <service-call name="create#mantle.party.PartyRole" in-map="[partyId:newUser.partyId,roleTypeId:'VendorRepresentative']"/>
+                    <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS',
+                        userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
+                    <!-- Sales Journey Prospect for invited user -->
+                    <!-- <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:newUser.partyId,partyClassificationId:'Prospect']"/> -->
+                </then><else>
+                    <set field="newUser" from="existingUaList?.getFirst()"/>
+                </else></if>
+                <set field="newPartyId" from="newUser.partyId"/>
+                <set field="newUserId" from="newUser.userId"/>
+
+                <!-- find if invited user is already an existing member of organization -->
+                <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                    <date-filter/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtVendorRepresentative"/>
+                    <econdition field-name="toRoleTypeId" value="VendorRepresentative"/>
+                    <econdition field-name="fromPartyId" from="newPartyId"/>
+                    <econdition field-name="toPartyId" from="partyId"/>
+                </entity-find-count>
+                <set field="isInvitedUserOrgMember" from="partyRelationshipCount > 0"/>
+                <if condition="!isInvitedUserOrgMember">
+                    <then>
+                        <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtVendorRepresentative',
+                            fromPartyId:newUser.partyId,toRoleTypeId:'VendorRepresentative',toPartyId:partyId,fromDate:ec.user.nowTimestamp]"/>
+                    </then>
+                </if>
+
+                <entity-find entity-name="mantle.product.ProductParty" list="productPartyList">
+                    <date-filter />
+                    <econdition field-name="productId" />
+                    <econdition field-name="partyId" from="newPartyId"/>
+                    <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                </entity-find>
+                <set field="isVendorAlreadyInvitedToProduct" from="productPartyList.size() > 0" />
+                <if condition="!productPartyList">
+                    <service-call name="create#mantle.product.ProductParty" in-map="[productId:productId,partyId:newPartyId,roleTypeId:'VendorRepresentative',fromDate:ec.user.nowTimestamp]"/>
+                </if>
+
+                <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
+
+                <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+                <if condition="!existingUaList">
+                    <then>
+                        <!-- if account does not exist (ie, new user), create one & send a VENDOR_INVITE_RESET_PASSWORD email -->
+                        <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
+                        <!-- reset the password to a random value -->
+                        <set field="resetPassword" from="getRandomString(12)"/>
+                        <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
+                        <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
+                        <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
+                        <entity-update value-field="userAccount"/>
+
+                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                            contactListId:'CoarchyInvitation',emailTemplateId:'VENDOR_INVITE_RESET_PASSWORD',
+                            partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
+                            bodyParameters:[organization:organization, product:product, linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword+'&amp;action=signup',
+                            title: (organization.organizationName+' is Requesting for Information about ' + product.productName), baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                    </then>
+                    <else-if condition="existingUaList &amp;&amp; (!isInvitedUserOrgMember || (isInvitedUserOrgMember &amp;&amp; !isVendorAlreadyInvitedToProduct))">
+                        <!-- if account DOES exist, existing/invited user, but NOT already invited to product, send a VENDOR_INVITE email -->
+                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                            contactListId:'CoarchyInvitation',emailTemplateId:'VENDOR_INVITE',
+                            partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
+                            bodyParameters:[organization:organization, product:product, linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
+                            title: (organization.organizationName+' is Requesting for Information about ' + product.productName), baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                    </else-if>
+                    <else>
+                        <!-- otherwise, do nothing (account exists, and is already invited to product)-->
+                        <return type="warning" message="${ec.resource.expand('CoarchyProductVendorAlreadyInvited', null, [emailAddress:emailAddress, productName:product.productName])}"/>
+                    </else>
+                </if>
+                <else><return type="danger" error="true" message="${ec.resource.expand('CoarchyGeneralNotAllowed', null)}"/></else>
+            </if>
+        </actions>
+    </service>
     <service verb="send" noun="ContactListEmail">
         <in-parameters>
             <parameter name="contactListId" required="true"/>
