@@ -13,7 +13,9 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        require-authentication="false" allow-extra-path="true">
+        require-authentication="false" allow-extra-path="true" default-menu-title="2 Hour Training - Coarchy">
+
+
 
     <widgets>
         <render-mode>
@@ -22,23 +24,20 @@ along with this software (see the LICENSE.md file). If not, see
                     <div id="ipssba" class="gjs-row">
                         <div id="iuyzwg" class="gjs-cell">
                             <div id="irdyl">
-                                <div id="itxbs" class="am-title">Process Documentation Software
+                                <div id="itxbs" class="am-title">Introduction to Software and Concepts Training
                                 </div>
-                                <div id="idx8f" class="am-desc">Finally document the processes in your organization in one single place.
-                                </div>
-                                <div id="ihbr3" class="am-desc">Get rid of your cluttered process documents and use one platform to store all of them.
+                                <div id="idx8f" class="am-desc">Train your team on the general concepts and overview of Coarchy in 2 hours.
                                 </div>
                             </div>
-                            <div id="isewzq" class="am-desc">- Start with Templates
-                                <br/>- Invite your People
-                                <br/>- Conveniently Write any Process
-                                <br/>- Easily Read any Process
-                                <br/>- Search by Condition, Actor, or Action
+                            <div id="isewzq" class="am-desc">
+                                <br/>- $200 total for 2 Hours
+                                <br/>- Meet Virtually over Google Meet
+                                <br/>- Go over each feature
+                                <br/>- Generic demo data
                             </div>
-                            <q-btn no-caps href="/SignUp" label="Sign Up" push color="primary" class="q-mt-lg" size="xl"/>
                         </div>
                         <div class="gjs-cell">
-                            <img id="iceg7" src="https://coarchy.com/cstatic/ViewProcessStoryScreenshot.png"/>
+                            <img id="iceg7" src="http://localhost:8080/cstatic/Training.png" alt="Training a group of people Coarchy"/>
                         </div>
                     </div>
                     <div class="container-width">

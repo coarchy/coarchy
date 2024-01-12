@@ -138,7 +138,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <entity-find entity-name="mantle.party.PartyDetail">
                                 <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
                                 <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
-                            </entity-find></entity-options> </drop-down></default-field></field>
+                            </entity-find></entity-options></drop-down></default-field></field>
                         <field name="emailAddress"><default-field><text-line input-type="email"/></default-field></field>
                         <field name="submit"><default-field><submit/></default-field></field>
                     </form-single>
