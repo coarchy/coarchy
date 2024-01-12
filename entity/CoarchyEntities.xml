@@ -351,6 +351,21 @@ along with this software (see the LICENSE.md file). If not, see
         <relationship type="one" related="moqui.basic.Enumeration" short-alias="implementation">
             <key-map field-name="implementationId" related="enumId"/></relationship>
     </entity>
+    <entity entity-name="ClipboardActivityStatement" package="coarchy">
+        <field name="clipboardEntryId" type="id" is-pk="true"/>
+        <field name="statementSeqId" type="id" is-pk="true"/>
+        <field name="activitySeqId" type="id" />
+
+        <field name="value" type="text-intermediate"/>
+        <field name="typeEnumId" type="id"/>
+
+        <relationship type="one" title="Clipboard" related="coarchy.ClipboardEntry" short-alias="clipboard">
+            <key-map field-name="clipboardEntryId"/></relationship>
+        <relationship type="one" title="ClipboardActivity" related="coarchy.ClipboardActivity" short-alias="clipboardActivity">
+            <key-map field-name="clipboardEntryId"/><key-map field-name="activitySeqId"/></relationship>
+        <relationship type="one" title="ValueType" related="moqui.basic.Enumeration" short-alias="typeEnum">
+            <key-map field-name="typeEnumId" related="enumId"/></relationship>
+    </entity>
     <entity entity-name="ClipboardActor" package="coarchy">
         <field name="clipboardEntryId" type="id" is-pk="true"/>
         <field name="actorSeqId" type="id" is-pk="true"/>
