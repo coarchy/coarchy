@@ -108,6 +108,13 @@ along with this software (see the LICENSE.md file). If not, see
             emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/email/UserInviteEmail.xml" webappName="webroot"
             fromAddress="invitation@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
 
+    <moqui.basic.email.EmailTemplate emailTemplateId="VENDOR_INVITE_RESET_PASSWORD" description="Vendor Invite with Reset Password" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_PWD_RESET" bodyScreenLocation="component://coarchy/screen/email/VendorInviteResetPasswordEmail.xml" webappName="webroot"
+            fromAddress="invitation@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+    <moqui.basic.email.EmailTemplate emailTemplateId="VENDOR_INVITE" description="Vendor Invite" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/email/VendorInviteEmail.xml" webappName="webroot"
+            fromAddress="invitation@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+
     <moqui.basic.email.EmailTemplate emailTemplateId="TASK_ASSIGNED_NOTIFICATION" description="Task Assigned Notification" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/email/TaskAssignedNotificationEmail.xml" webappName="webroot"
             fromAddress="system@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
@@ -207,6 +214,11 @@ along with this software (see the LICENSE.md file). If not, see
 
     <!-- ========== Products and Other Related ========== -->
     <moqui.basic.Enumeration description="Coarchy" enumId="PclsCoarchy" enumTypeId="ProductClass"/>
+
+    <!-- ========== Party & Roles ========== -->
+    <moqui.basic.Enumeration description="Vendor Representative" enumId="PrtVendorRepresentative" enumTypeId="PartyRelationshipType"/>
+
+    <mantle.party.RoleType description="Vendor Representative" roleTypeId="VendorRepresentative"/>
 
     <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy" visibilityEnumId="PvPublic">
         <mantle.party.Organization organizationName="Coarchy" partyId="coarchy"/>
@@ -344,6 +356,10 @@ along with this software (see the LICENSE.md file). If not, see
     <mantle.marketing.contact.ContactList contactListId="CoarchyInvitation" contactListName="Invitation" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220000" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="USER_INVITE_RESET_PASSWORD"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220001" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="USER_INVITE"/>
+    </mantle.marketing.contact.ContactList>
+    <mantle.marketing.contact.ContactList contactListId="CoarchyVendorInvitation" contactListName="Vendor Invitation" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800220000" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="VENDOR_INVITE_RESET_PASSWORD"/>
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800220001" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="VENDOR_INVITE"/>
     </mantle.marketing.contact.ContactList>
     <mantle.marketing.contact.ContactList contactListId="CoarchyTaskReminder" contactListName="Task Reminder" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
         <mantle.marketing.contact.ContactListEmail fromDate="1701800220002" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"/>
