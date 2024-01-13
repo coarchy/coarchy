@@ -686,16 +686,37 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="mantle.party.PartyServices.update#Account" in-map="[userId:userAccount.userId,firstName:firstName,lastName:lastName]"/>
                 <set field="loginSuccess" from="ec.user.internalLoginUser(username)"/>
 
-                <!-- Sales Journey Hot Lead user -->
-                <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:userAccount.partyId,partyClassificationId:'HotLead']" out-map="context"/>
+                <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="vendorRelCount">
+                    <date-filter/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtVendorRepresentative"/>
+                    <econdition field-name="toRoleTypeId" value="VendorRepresentative"/>
+                    <econdition field-name="fromPartyId" from="userAccount.partyId"/>
+                </entity-find-count>
 
+                <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="memberRelCount">
+                    <date-filter/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                    <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                    <econdition field-name="fromPartyId" from="userAccount.partyId"/>
+                </entity-find-count>
+
+                <!-- if user is only a vendor to an org, onboard him as vendor. if user is both a vendor and member, onboard him as member -->
+                <set field="treatAsVendor" from="(vendorRelCount > 0) &amp;&amp; !memberRelCount" />
+
+                <if condition="!treatAsVendor">
+                    <!-- Sales Journey Hot Lead user -->
+                    <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:userAccount.partyId,partyClassificationId:'HotLead']" out-map="context"/>
+                </if>
+
+                <set field="emailTemplateId" from="treatAsVendor?'ONBOARDING_VENDOR_WELCOME':'ONBOARDING_WELCOME'" />
+                <set field="emailTitle" from="treatAsVendor?'Welcome to Coarchy, connect with customers, sell more!':'Welcome to Coarchy, Build a better future!'" />
                 <!-- Send welcome email -->
                 <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
                 <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                        contactListId:'CoarchyOnboarding',emailTemplateId:'ONBOARDING_WELCOME',
+                        contactListId:'CoarchyOnboarding',emailTemplateId:emailTemplateId,
                         partyId:userAccount.partyId,preferredContactMechId:null,toAddresses:username,
                         bodyParameters:[linkUrl:baseLinkUrl+'/settings/Organizations',
-                        title:'Welcome to Coarchy, Build a better future!',baseLinkUrl:baseLinkUrl]]" out-map="context"/>
+                        title:emailTitle,baseLinkUrl:baseLinkUrl]]" out-map="context"/>
             </if>
         </actions>
     </service>
