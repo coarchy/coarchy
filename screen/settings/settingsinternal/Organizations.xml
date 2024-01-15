@@ -18,7 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <always-actions>
         <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
             <date-filter/>
-            <econdition field-name="relationshipTypeEnumId" value="PrtMember,PrtVendorRepresentative"/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
             <econditions combine="or">
                 <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
                 <econdition field-name="visibilityEnumId" value="PvPublic"/>
@@ -186,20 +186,30 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationFormList" distinct="true">
                         <search-form-inputs default-order-by="-visibilityEnumId"/>
                         <date-filter/>
-                        <econdition field-name="relationshipTypeEnumId" operator="in" value="PrtMember,PrtVendorRepresentative"/>
                         <econditions combine="or">
                             <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
                             <econdition field-name="visibilityEnumId" value="PvPublic"/>
                         </econditions>
-                        <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId,relationshipTypeEnumId"/></entity-find>
+                        <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/></entity-find>
 
                     <row-actions>
                         <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
                             <econdition field-name="partyId" from="toPartyId"/>
                             <date-filter/></entity-find-count>
 
-                        <set field="isMember" from="organizationFormEntry.relationshipTypeEnumId=='PrtMember'" />
-                        <set field="isRep" from="organizationFormEntry.relationshipTypeEnumId=='PrtVendorRepresentative'" />
+                         <!-- Find if user is member / rep of organization -->
+                         <entity-find entity-name="mantle.party.PartyToAndRelationship" list="partyRelList">
+                            <date-filter/>
+                            <econdition field-name="toPartyId"/>
+                            <econditions combine="or">
+                                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                                <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                            </econditions>
+                            <select-field field-name="fromPartyId,toPartyId,visibilityEnumId,relationshipTypeEnumId,ownerPartyId"/>
+                        </entity-find>
+                        <set field="orgRelTypeList" from="partyRelList*.relationshipTypeEnumId" />
+                        <set field="isMember" from="orgRelTypeList.contains('PrtMember')" />
+                        <set field="isRep" from="orgRelTypeList.contains('PrtVendorRepresentative')" />
                     </row-actions>
 
                     <field name="toPartyId">
@@ -217,17 +227,14 @@ along with this software (see the LICENSE.md file). If not, see
                             <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip>
                                 ]]></text></render-mode></conditional-field>
                         <default-field title="View Organization"><link url="goToApplication" text="${organizationName}"
-                                parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/></default-field>
+                                parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home" condition="isMember"/>
+                            <link url="" text="${organizationName} Response"
+                                parameter-map="[partyId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/></default-field>
                     </field>
-                    <field name="organizationName"><conditional-field title="Organization Settings" condition="isMember &amp;&amp;
-                            (visibilityEnumId!='PvPublic'||ownerPartyId == ec.user.userAccount.partyId)">
-                        <link url="/settings/EditOrganization" text="${organizationName}" parameter-map="[
-                            organizationId:toPartyId]" tooltip="Edit ${organizationName}"/></conditional-field>
-                            <conditional-field title="Organization Settings" condition="isRep &amp;&amp;
-                            (visibilityEnumId!='PvPublic'||ownerPartyId == ec.user.userAccount.partyId)">
-                        <link url="" text="RFI - ${organizationName}" parameter-map="[
-                            organizationId:toPartyId]" tooltip="Edit ${organizationName}"/></conditional-field>
-                    </field>
+                    <field name="organizationName"><conditional-field title="Organization Settings" condition="
+                        !(isRep &amp;&amp; !isMember) &amp;&amp; visibilityEnumId!='PvPublic' || ownerPartyId == ec.user.userAccount.partyId">
+                    <link url="/settings/EditOrganization" text="${organizationName}" parameter-map="[
+                        organizationId:toPartyId]" tooltip="Edit ${organizationName}"/></conditional-field></field>
                     <field name="activation"><header-field title="Premium"><hidden/></header-field>
                         <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
                                 &amp;&amp; partyActivationCount == 0">
