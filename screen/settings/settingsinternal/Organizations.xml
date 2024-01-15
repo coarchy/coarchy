@@ -232,7 +232,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 parameter-map="[partyId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/></default-field>
                     </field>
                     <field name="organizationName"><conditional-field title="Organization Settings" condition="
-                        visibilityEnumId!='PvPublic' &amp;&amp; ownerPartyId == ec.user.userAccount.partyId">
+                        !(isRep &amp;&amp; !isMember) &amp;&amp; visibilityEnumId!='PvPublic' || ownerPartyId == ec.user.userAccount.partyId">
                     <link url="/settings/EditOrganization" text="${organizationName}" parameter-map="[
                         organizationId:toPartyId]" tooltip="Edit ${organizationName}"/></conditional-field></field>
                     <field name="activation"><header-field title="Premium"><hidden/></header-field>
