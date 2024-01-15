@@ -54,19 +54,19 @@ along with this software (see the LICENSE.md file). If not, see
           </mj-text>
         </mj-column>
         <mj-column vertical-align="middle">
-          <mj-image src="https://coarchy.com/cstatic/EditOrganizationScreenshot.png">
+          <mj-image src="https://coarchy.com/cstatic/EditOrganizationScreenshot.png" padding-top="1px" padding-right="1px" padding-left="1px" padding-bottom="1px">
           </mj-image>
         </mj-column>
       </mj-section>
       <mj-section>
         <mj-column vertical-align="middle">
+          <mj-image src="https://coarchy.com/cstatic/EditActorScreenshot.png" padding-top="1px" padding-bottom="1px" padding-right="1px" padding-left="1px">
+          </mj-image>
+        </mj-column>
+        <mj-column vertical-align="middle">
           <mj-text align="center" font-size="18px" font-family="Arial">
             <span draggable="true" style="color:#000000;">Add Actors for each role in your organization</span>
           </mj-text>
-        </mj-column>
-        <mj-column vertical-align="middle">
-          <mj-image src="https://coarchy.com/cstatic/EditActorScreenshot.png">
-          </mj-image>
         </mj-column>
       </mj-section>
       <mj-section>
@@ -76,14 +76,14 @@ along with this software (see the LICENSE.md file). If not, see
           </mj-text>
         </mj-column>
         <mj-column vertical-align="middle">
-          <mj-image src="https://coarchy.com/cstatic/ViewProcessStoryScreenshot.png">
+          <mj-image src="https://coarchy.com/cstatic/ViewProcessStoryScreenshot.png" padding-top="1px" padding-bottom="1px" padding-right="1px" padding-left="1px">
           </mj-image>
         </mj-column>
       </mj-section>
       <mj-section>
         <mj-column>
           <mj-text align="center" font-size="18px" font-family="Arial">
-            <span draggable="true" id="iap4h" style="color:#000000;">Use Coarchy to design your organization</span>
+            <span data-gjs-type="text" draggable="true" id="iap4h" style="color:#000000;">Use Coarchy to design your organization</span>
           </mj-text>
           <mj-button background-color="#ae1440" font-size="16px" padding-top="11px" padding-bottom="11px" font-style="normal" text-decoration="none" color="white" border="1px solid black" href="${linkUrl}">Get Started
           </mj-button>
@@ -347,12 +347,12 @@ along with this software (see the LICENSE.md file). If not, see
                                                             <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
                                                                 <tbody>
                                                                 <tr>
-                                                                    <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
+                                                                    <td align="center" style="font-size:0px;padding:0px;padding-top:1px;padding-right:1px;padding-bottom:1px;padding-left:1px;word-break:break-word;">
                                                                         <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
                                                                             <tbody>
                                                                             <tr>
-                                                                                <td style="width:279px;">
-                                                                                    <img src="https://coarchy.com/cstatic/EditOrganizationScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="279" height="auto">
+                                                                                <td style="width:277px;">
+                                                                                    <img src="https://coarchy.com/cstatic/EditOrganizationScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="277" height="auto">
                                                                                 </td>
                                                                             </tr>
                                                                             </tbody>
@@ -387,10 +387,16 @@ along with this software (see the LICENSE.md file). If not, see
                                                             <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
                                                                 <tbody>
                                                                 <tr>
-                                                                    <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
-                                                                        <div style="font-family:Arial;font-size:18px;line-height:1;text-align:center;color:#000000;">
-                                                                            <span draggable="true" style="color:#000000;">Add Actors for each role in your organization</span>
-                                                                        </div>
+                                                                    <td align="center" style="font-size:0px;padding:0px;padding-top:1px;padding-right:1px;padding-bottom:1px;padding-left:1px;word-break:break-word;">
+                                                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
+                                                                            <tbody>
+                                                                            <tr>
+                                                                                <td style="width:277px;">
+                                                                                    <img src="https://coarchy.com/cstatic/EditActorScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="277" height="auto">
+                                                                                </td>
+                                                                            </tr>
+                                                                            </tbody>
+                                                                        </table>
                                                                     </td>
                                                                 </tr>
                                                                 </tbody>
@@ -410,15 +416,9 @@ along with this software (see the LICENSE.md file). If not, see
                                                                 <tbody>
                                                                 <tr>
                                                                     <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
-                                                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
-                                                                            <tbody>
-                                                                            <tr>
-                                                                                <td style="width:279px;">
-                                                                                    <img src="https://coarchy.com/cstatic/EditActorScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="279" height="auto">
-                                                                                </td>
-                                                                            </tr>
-                                                                            </tbody>
-                                                                        </table>
+                                                                        <div style="font-family:Arial;font-size:18px;line-height:1;text-align:center;color:#000000;">
+                                                                            <span draggable="true" style="color:#000000;">Add Actors for each role in your organization</span>
+                                                                        </div>
                                                                     </td>
                                                                 </tr>
                                                                 </tbody>
@@ -471,12 +471,12 @@ along with this software (see the LICENSE.md file). If not, see
                                                             <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
                                                                 <tbody>
                                                                 <tr>
-                                                                    <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
+                                                                    <td align="center" style="font-size:0px;padding:0px;padding-top:1px;padding-right:1px;padding-bottom:1px;padding-left:1px;word-break:break-word;">
                                                                         <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
                                                                             <tbody>
                                                                             <tr>
-                                                                                <td style="width:279px;">
-                                                                                    <img src="https://coarchy.com/cstatic/ViewProcessStoryScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="279" height="auto">
+                                                                                <td style="width:277px;">
+                                                                                    <img src="https://coarchy.com/cstatic/ViewProcessStoryScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="277" height="auto">
                                                                                 </td>
                                                                             </tr>
                                                                             </tbody>
@@ -513,7 +513,7 @@ along with this software (see the LICENSE.md file). If not, see
                                                                 <tr>
                                                                     <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
                                                                         <div style="font-family:Arial;font-size:18px;line-height:1;text-align:center;color:#000000;">
-                                                                            <span draggable="true" id="iap4h" style="color:#000000;">Use Coarchy to design your organization</span>
+                                                                            <span data-gjs-type="text" draggable="true" id="iap4h" style="color:#000000;">Use Coarchy to design your organization</span>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -613,7 +613,5 @@ along with this software (see the LICENSE.md file). If not, see
         </div>
         </body>
         </html>
-
-
     ]]></text></render-mode></widgets>
 </screen>
