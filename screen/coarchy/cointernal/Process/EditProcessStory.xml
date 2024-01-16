@@ -383,8 +383,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <dynamic-dialog id="InsertActivity" button-text="Insert" transition="InsertActivity"
                             parameter-map="[processStoryId:processStory?.processStoryId?:processStoryId,isEmptyStory:!processStoryActivityList,sequenceNum:sequenceNum,pageIndex:pageIndex,downPageIndex:processStoryActivityListPageRangeLow-1+processStoryActivityListPageSize==processStoryActivityListPageRangeLow+processStoryActivityList_index?pageIndex.toInteger()+1:pageIndex]"
                             condition="partyRelationshipCount &gt; 0 &amp;&amp; showMoveUpDown"/>
-                    <dynamic-dialog id="ManageValues" button-text="Statements" transition="ManageValues"
-                            parameter-map="[activityId:activityId]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/>
+                    <dynamic-dialog id="ManageValuesDialog" button-text="Statements" transition="ManageValues"
+                            parameter-map="[activityId:activityId, dialogIndex: processStoryActivityList_index]" condition="partyRelationshipCount &gt; 0 &amp;&amp; action"/>
                     <dynamic-dialog id="SubstoryDialogue" transition="CreateOrSelectSubstory" button-text="Substory"
                             parameter-map="[processStoryActivityId:processStoryActivityId]"
                             condition="action &amp;&amp; !detailProcessStoryId &amp;&amp; partyRelationshipCount &gt; 0"/>
@@ -393,7 +393,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <link url="deleteActivity" confirmation="Are you sure? You can't undo deleting an activity."
                             icon="fa fa-trash" btn-type="danger" text="Delete" tooltip="Delete Activity"
                             parameter-map="[processStoryActivityId:processStoryActivityId,activityId:activityId,actorIdList:actorIdList,pageIndex:pageIndex]"/>
-                </button-menu></default-field>
+                </button-menu>
+            </default-field>
                 <last-row-field>
                     <button-menu text="Actions" condition="!processStoryActivityList">
                         <dynamic-dialog id="PasteActivity" button-text="Paste" transition="PasteActivity"
