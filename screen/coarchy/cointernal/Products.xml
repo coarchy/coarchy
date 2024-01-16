@@ -47,6 +47,12 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
+    <transition name="inviteVendor">
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.invite#VendorUser" in-map="[productId:productId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,partyId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>
+
     <transition name="deleteProduct"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition><actions>
         <!-- TODO: check depends -->
         <service-call name="delete#mantle.product.Product" in-map="[productId:productId, ownerPartyId:activeOrgId]"/>
@@ -93,7 +99,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <search-form-inputs />
                 <econdition field-name="productClassEnumId" value="PclsCoarchy" />
                 <econdition field-name="ownerPartyId" from="activeOrgId"/>
-            </entity-find>           
+            </entity-find>   
+            <row-actions>
+                <entity-find entity-name="mantle.product.ProductParty" list="vendorRepList">
+                    <date-filter />
+                    <econdition field-name="productId" />
+                    <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                </entity-find>
+            </row-actions>        
             <field name="productId">
                 <default-field>
                     <hidden />
@@ -114,6 +127,56 @@ along with this software (see the LICENSE.md file). If not, see
                 <default-field><submit text="Update"/></default-field>
                 <last-row-field><submit text="Add Product" type="success"/></last-row-field></field>
             <field name="delete"><default-field title="">
+                <section name="ConnectedActivitiesSection">
+                    <widgets>
+                        <container-dialog id="ProductVendorInviteDialog" button-text="Request Info">
+                            <form-single name="ProductVendorInviteForm" transition="inviteVendor">
+                                <field name="productId">
+                                    <default-field><hidden /></default-field>
+                                </field>
+                                <field name="emailAddress"><default-field><text-line input-type="email"/></default-field></field>
+                                <field name="submit"><default-field><submit text="Request"/></default-field></field>
+                                <field-layout>
+                                    <field-col-row>
+                                        <field-col sm="9">
+                                            <field-ref name="emailAddress" />
+                                        </field-col> 
+                                        <field-col sm="3">
+                                            <field-ref name="submit" />
+                                        </field-col>
+                                    </field-col-row>
+                                </field-layout>
+                            </form-single>
+                            <section name="ProductVendorInviteListSection" condition="vendorRepList">
+                                <widgets>
+                                    <label text="Sent RFI Requests" style="text-bold q-ml-md" />
+                                    <form-list name="ProductVendorInviteList" list="vendorRepList">
+                                        <row-actions>
+                                            <entity-find-one entity-name="mantle.party.PersonAndUserAccount" value-field="personAndAccount">
+                                                <field-map field-name="partyId" />
+                                            </entity-find-one>
+                                        </row-actions>
+                                        <field name="partyId">
+                                            <default-field>
+                                                <hidden/>
+                                            </default-field>
+                                        </field>
+                                        <field name="combinedName">
+                                            <default-field title="Representative Name">
+                                                <display text="${personAndAccount?.firstName} ${personAndAccount?.lastName}" parameter-map="personAndAccount"/>
+                                            </default-field>
+                                        </field>
+                                        <field name="emailAddress">
+                                            <default-field>
+                                                <display text="${personAndAccount.emailAddress}"/>
+                                            </default-field>
+                                        </field>
+                                    </form-list>
+                                </widgets>
+                            </section>
+                        </container-dialog>
+                    </widgets>
+                </section>
                 <link url="deleteProduct" parameter-map="[productId:productId]" icon="fa fa-trash" btn-type="danger"
                         text=" " tooltip="Delete Product" confirmation="Delete Product '${productName}'?"/></default-field></field>
         </form-list>

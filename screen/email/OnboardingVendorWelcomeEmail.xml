@@ -54,19 +54,19 @@ along with this software (see the LICENSE.md file). If not, see
           </mj-text>
         </mj-column>
         <mj-column vertical-align="middle">
-          <mj-image src="https://coarchy.com/cstatic/EditOrganizationScreenshot.png" padding-top="1px" padding-right="1px" padding-left="1px" padding-bottom="1px">
+          <mj-image src="https://coarchy.com/cstatic/EditOrganizationScreenshot.png">
           </mj-image>
         </mj-column>
       </mj-section>
       <mj-section>
         <mj-column vertical-align="middle">
-          <mj-image src="https://coarchy.com/cstatic/EditActorScreenshot.png" padding-top="1px" padding-bottom="1px" padding-right="1px" padding-left="1px">
-          </mj-image>
-        </mj-column>
-        <mj-column vertical-align="middle">
           <mj-text align="center" font-size="18px" font-family="Arial">
             <span draggable="true" style="color:#000000;">Add Actors for each role in your organization</span>
           </mj-text>
+        </mj-column>
+        <mj-column vertical-align="middle">
+          <mj-image src="https://coarchy.com/cstatic/EditActorScreenshot.png">
+          </mj-image>
         </mj-column>
       </mj-section>
       <mj-section>
@@ -76,14 +76,14 @@ along with this software (see the LICENSE.md file). If not, see
           </mj-text>
         </mj-column>
         <mj-column vertical-align="middle">
-          <mj-image src="https://coarchy.com/cstatic/ViewProcessStoryScreenshot.png" padding-top="1px" padding-bottom="1px" padding-right="1px" padding-left="1px">
+          <mj-image src="https://coarchy.com/cstatic/ViewProcessStoryScreenshot.png">
           </mj-image>
         </mj-column>
       </mj-section>
       <mj-section>
         <mj-column>
           <mj-text align="center" font-size="18px" font-family="Arial">
-            <span data-gjs-type="text" draggable="true" id="iap4h" style="color:#000000;">Use Coarchy to design your organization</span>
+            <span draggable="true" id="iap4h" style="color:#000000;">Use Coarchy to design your organization</span>
           </mj-text>
           <mj-button background-color="#ae1440" font-size="16px" padding-top="11px" padding-bottom="11px" font-style="normal" text-decoration="none" color="white" border="1px solid black" href="${linkUrl}">Get Started
           </mj-button>
@@ -278,7 +278,7 @@ along with this software (see the LICENSE.md file). If not, see
                                                                 <tr>
                                                                     <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
                                                                         <div style="font-family:Arial;font-size:18px;line-height:1;text-align:center;color:#000000;">
-                                                                            <span draggable="true" style="color:#000000;">Use Coarchy to design your organization</span>
+                                                                            <span draggable="true" style="color:#000000;">Use coarchy to find sales prospects</span>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -327,76 +327,8 @@ along with this software (see the LICENSE.md file). If not, see
                                                                 <tr>
                                                                     <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
                                                                         <div style="font-family:Arial;font-size:18px;line-height:1;text-align:center;color:#000000;">
-                                                                            <span draggable="true" style="color:#000000;">Start by creating an organization and inviting additional users</span>
+                                                                            <span draggable="true" style="color:#000000;">Start by responding to the request for information on your product</span>
                                                                         </div>
-                                                                    </td>
-                                                                </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <!--[if mso | IE]></td><td class="" style="vertical-align:middle;width:279px;" ><![endif]-->
-                                            <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
-                                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td style="vertical-align:middle;padding:0px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
-                                                                <tbody>
-                                                                <tr>
-                                                                    <td align="center" style="font-size:0px;padding:0px;padding-top:1px;padding-right:1px;padding-bottom:1px;padding-left:1px;word-break:break-word;">
-                                                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
-                                                                            <tbody>
-                                                                            <tr>
-                                                                                <td style="width:277px;">
-                                                                                    <img src="https://coarchy.com/cstatic/EditOrganizationScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="277" height="auto">
-                                                                                </td>
-                                                                            </tr>
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </td>
-                                                                </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <!--[if mso | IE]></td></tr></table><![endif]-->
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!--[if mso | IE]></td></tr></table></td><td class="" style="" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:558px;" width="558" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-                            <div style="margin:0px auto;max-width:558px;">
-                                <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
-                                    <tbody>
-                                    <tr>
-                                        <td style="direction:ltr;font-size:0px;padding:0px;text-align:center;">
-                                            <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:middle;width:279px;" ><![endif]-->
-                                            <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
-                                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td style="vertical-align:middle;padding:0px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
-                                                                <tbody>
-                                                                <tr>
-                                                                    <td align="center" style="font-size:0px;padding:0px;padding-top:1px;padding-right:1px;padding-bottom:1px;padding-left:1px;word-break:break-word;">
-                                                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
-                                                                            <tbody>
-                                                                            <tr>
-                                                                                <td style="width:277px;">
-                                                                                    <img src="https://coarchy.com/cstatic/EditActorScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="277" height="auto">
-                                                                                </td>
-                                                                            </tr>
-                                                                            </tbody>
-                                                                        </table>
                                                                     </td>
                                                                 </tr>
                                                                 </tbody>
@@ -416,67 +348,11 @@ along with this software (see the LICENSE.md file). If not, see
                                                                 <tbody>
                                                                 <tr>
                                                                     <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
-                                                                        <div style="font-family:Arial;font-size:18px;line-height:1;text-align:center;color:#000000;">
-                                                                            <span draggable="true" style="color:#000000;">Add Actors for each role in your organization</span>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <!--[if mso | IE]></td></tr></table><![endif]-->
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!--[if mso | IE]></td></tr></table></td><td class="" style="" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:558px;" width="558" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-                            <div style="margin:0px auto;max-width:558px;">
-                                <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
-                                    <tbody>
-                                    <tr>
-                                        <td style="direction:ltr;font-size:0px;padding:0px;text-align:center;">
-                                            <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:middle;width:279px;" ><![endif]-->
-                                            <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
-                                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td style="vertical-align:middle;padding:0px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
-                                                                <tbody>
-                                                                <tr>
-                                                                    <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
-                                                                        <div style="font-family:Arial;font-size:18px;line-height:1;text-align:center;color:#000000;">
-                                                                            <span draggable="true" style="color:#000000;">Create a high level process story and add activities </span>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <!--[if mso | IE]></td><td class="" style="vertical-align:middle;width:279px;" ><![endif]-->
-                                            <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
-                                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td style="vertical-align:middle;padding:0px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
-                                                                <tbody>
-                                                                <tr>
-                                                                    <td align="center" style="font-size:0px;padding:0px;padding-top:1px;padding-right:1px;padding-bottom:1px;padding-left:1px;word-break:break-word;">
                                                                         <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
                                                                             <tbody>
                                                                             <tr>
-                                                                                <td style="width:277px;">
-                                                                                    <img src="https://coarchy.com/cstatic/ViewProcessStoryScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="277" height="auto">
+                                                                                <td style="width:279px;">
+                                                                                    <img src="https://coarchy.com/cstatic/EditOrganizationScreenshot.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="279" height="auto">
                                                                                 </td>
                                                                             </tr>
                                                                             </tbody>
@@ -495,7 +371,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     </tr>
                                     </tbody>
                                 </table>
-                            </div>
+                            </div>                            
                             <!--[if mso | IE]></td></tr></table></td><td class="" style="" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:558px;" width="558" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
                             <div style="margin:0px auto;max-width:558px;">
                                 <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
@@ -513,7 +389,7 @@ along with this software (see the LICENSE.md file). If not, see
                                                                 <tr>
                                                                     <td align="center" style="font-size:0px;padding:0px;word-break:break-word;">
                                                                         <div style="font-family:Arial;font-size:18px;line-height:1;text-align:center;color:#000000;">
-                                                                            <span data-gjs-type="text" draggable="true" id="iap4h" style="color:#000000;">Use Coarchy to design your organization</span>
+                                                                            <span draggable="true" id="iap4h" style="color:#000000;">Use Coarchy to find sales prospects</span>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -613,5 +489,7 @@ along with this software (see the LICENSE.md file). If not, see
         </div>
         </body>
         </html>
+
+
     ]]></text></render-mode></widgets>
 </screen>

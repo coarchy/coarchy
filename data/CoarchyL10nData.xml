@@ -54,5 +54,6 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthPasswordAlreadySet" localized="You have already set a password on this account. Please log in instead."/>
     
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProductAlreadyExists" localized="An existing product with the name '${productName}' already exists."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProductVendorAlreadyInvited" localized="The invitation was not sent. Information for product ${productName} was already requested from ${emailAddress}."/>
    
 </entity-facade-xml>
