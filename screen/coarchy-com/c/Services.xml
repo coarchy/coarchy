@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        require-authentication="false" allow-extra-path="true" default-menu-title="2 Hour Training - Coarchy">
+
+
+
+    <widgets>
+        <render-mode>
+            <text type="html"><![CDATA[
+                <div class="row">
+                    <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2 col-sm-10 offset-sm-1 col-xs-12 offset-xs-0">
+                        <div class="column justify-center">
+                            <div class="col-4">
+
+                                <q-card flat bordered class="q-mb-md">
+                                    <q-card-section>
+                                        <div class="text-h4">Introduction to Software and Concepts Training</div>
+                                        <div class="text-subtitle2">Train your team on the general concepts and overview of Coarchy in 2 hours.</div>
+                                    </q-card-section>
+                                    <q-card-section>
+                                        - $200 total for 2 Hours
+                                        <br/>- Meet Virtually over Google Meet
+                                        <br/>- Go over each feature
+                                        <br/>- Generic demo data
+                                    </q-card-section>
+                                    <q-btn no-caps href="mailto:sales@coarchy.com?subject=Introduction to Coarchy Software and Concepts Training" label="Contact Sales" push color="primary" class="q-ma-sm" size="md"/>
+                                </q-card>
+                                <!-- Personalized Training Section -->
+                                <q-card flat bordered class="q-mb-md">
+                                    <q-card-section>
+                                        <div class="text-h4">Personalized Training</div>
+                                        <div class="text-subtitle2">Train your team on how to gather requirements, and when to use Process Stories and Statements.</div>
+                                    </q-card-section>
+                                    <q-card-section>
+                                        - $600 total for 4 Hours
+                                        <br/>- Meet Virtually over Google Meet
+                                        <br/>- Interactive Training
+                                        <br/>- Personalized High Level Process Creation
+                                    </q-card-section>
+                                    <q-btn no-caps href="mailto:sales@coarchy.com?subject=Coarchy Personalized Training" label="Contact Sales" push color="primary" class="q-ma-sm" size="md"/>
+                                </q-card>
+
+                                <!-- Support Monthly Contract Section -->
+                                <q-card flat bordered class="q-mb-md">
+                                    <q-card-section>
+                                        <div class="text-h4">Support Monthly Contract</div>
+                                        <div class="text-subtitle2">Comprehensive support package to ensure you are using Coarchy to its fullest potential.</div>
+                                    </q-card-section>
+                                    <q-card-section>
+                                        - $750/month
+                                        <br/>Includes:
+                                        <br/>    - Priority email support
+                                        <br/>    - Weekly 1 Hour Meeting
+                                        <br/>       - Process story review and feedback
+                                        <br/>       - Statements improvement
+                                        <br/>       - Resolve issues
+                                    </q-card-section>
+                                    <q-btn no-caps href="mailto:sales@coarchy.com?subject=Coarchy Support Monthly Contract" label="Contact Sales" push color="primary" class="q-ma-sm" size="md"/>
+                                </q-card>
+
+                                <!-- Business Analyst Consulting Section -->
+                                <q-card flat bordered class="q-mb-md">
+                                    <q-card-section>
+                                        <div class="text-h4">Business Analyst Consulting</div>
+                                        <div class="text-subtitle2">Get a pair of expert Business Analysts to help you with your process documentation.</div>
+                                    </q-card-section>
+                                    <q-card-section>
+                                        - $250/hour for 1 senior analyst and 1 analyst
+                                        <br/>- Minimum 10 hours
+                                    </q-card-section>
+                                    <q-btn no-caps href="mailto:sales@coarchy.com?subject=Coarchy Business Analyst Consulting" label="Contact Sales" push color="primary" class="q-ma-sm" size="md"/>
+                                </q-card>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ]]></text>
+        </render-mode>
+    </widgets>
+</screen>
