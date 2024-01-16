@@ -78,6 +78,8 @@
 
                 <q-space></q-space>
 
+                <q-btn stretch flat label="Services" href="/Services"></q-btn>
+                <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Newsletter" href="/Newsletter"></q-btn>
                 <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Log In" href="/Login"></q-btn>
