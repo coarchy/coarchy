@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Products" default-menu-index="60" menu-image="/ssstatic/images/Catalog.png">
+
+    <parameter name="pageIndex" from="pageIndex?:0"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField" value="productName"/>
+
+    <always-actions>
+        <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if>
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
+        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+            <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
+        <!--        <log level="warn" message="Actors always-actions context.toString() ${context.toString()}"/>-->
+    </always-actions>
+
+    <transition name="createProduct">
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.create#Product" in-map="[productName:productName,description:description,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition name="updateProduct">
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.update#Product" in-map="[productId:productId,productName:productName,description:description,organizationId:activeOrgId]"/>
+        <default-response/><error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition name="deleteProduct"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition><actions>
+        <!-- TODO: check depends -->
+        <service-call name="delete#mantle.product.Product" in-map="[productId:productId, ownerPartyId:activeOrgId]"/>
+        </actions><default-response/></transition>
+
+    <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
+
+    <actions>
+
+    </actions>
+
+    <widgets>
+        <section name="FreemiumBanner" condition="partyActivationCount == 0">
+            <widgets>
+                <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
+                    <label text="To enable all the features upgrade organization '${activeOrg.organizationName}' to Premium" type="b"/>
+                    <container type="template v-slot:action">
+                        <form-single name="UpgradeForm" transition="upgradeParty">
+                            <field name="upgrade"><default-field><submit text="Upgrade" type="success"
+                                    confirmation="Activating will cost 1 Organization-Month Credit per month while ${activeOrg.organizationName} is upgraded. Are you sure?"/></default-field></field>
+                        </form-single>
+                    </container>
+                </container>
+            </widgets>
+        </section>
+
+        <label text="Products" type="h4"/>
+
+        <container-dialog id="CreateProductDialog" button-text="Add Product" type="success">
+            <form-single name="CreateProductForm" transition="createProduct">
+                <field name="productName">
+                    <default-field><text-line/></default-field>
+                </field>
+                <field name="description">
+                    <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
+                </field>
+                <field name="submit"><default-field><submit text="Add Product"/></default-field></field>
+            </form-single>
+        </container-dialog>
+
+        <form-list name="ProductListForm" header-dialog="true" show-page-size="true" select-columns="true" saved-finds="true"
+                   show-csv-button="true" list="productList" transition="updateProduct" transition-last-row="createProduct" map-last-row="[productName:null,description:null]">
+            <entity-find entity-name="mantle.product.Product" list="productList">
+                <search-form-inputs />
+                <econdition field-name="productClassEnumId" value="PclsCoarchy" />
+                <econdition field-name="ownerPartyId" from="activeOrgId"/>
+            </entity-find>           
+            <field name="productId">
+                <default-field>
+                    <hidden />
+                </default-field>
+            </field>
+            <field name="productName">
+                <header-field show-order-by="case-insensitive"><text-find/></header-field>
+                <default-field><text-line/></default-field>
+                <last-row-field><text-line/></last-row-field>
+            </field>
+            <field name="description">
+                <header-field><text-find/></header-field>
+                <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
+                <last-row-field><text-area rows="2" cols="80" autogrow="true"/></last-row-field>
+            </field>           
+            <field name="submit">
+                <header-field><submit text="Submit"/></header-field>
+                <default-field><submit text="Update"/></default-field>
+                <last-row-field><submit text="Add Product" type="success"/></last-row-field></field>
+            <field name="delete"><default-field title="">
+                <link url="deleteProduct" parameter-map="[productId:productId]" icon="fa fa-trash" btn-type="danger"
+                        text=" " tooltip="Delete Product" confirmation="Delete Product '${productName}'?"/></default-field></field>
+        </form-list>
+    </widgets>
+</screen>

@@ -48,9 +48,11 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessClipboardPasteError" localized="Something went wrong while pasting this activity."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityValueDeleteError" localized="Something went wrong while deleting value."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessValueStatementDeleteError" localized="We could not delete this statement, as it is linked with one or more process story activities."/>
-    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessValueStatementDeleteWithActivities" localized="In order to delete this statement, you have to unconnect any associated activities. You can use the unconnect all to quickly unconnect all."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessValueStatementDeleteWithActivities" localized="In order to delete this statement, you have to remove any associated activities. You can use the remove all to quickly remove all."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyTagInvalidFormat" localized="Tags cannot include spaces or special characters (except underscores)"/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthUserNotFound" localized="Invalid username or password."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthPasswordAlreadySet" localized="You have already set a password on this account. Please log in instead."/>
+    
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProductAlreadyExists" localized="An existing product with the name '${productName}' already exists."/>
    
 </entity-facade-xml>
