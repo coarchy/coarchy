@@ -129,13 +129,16 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="delete"><default-field title="">
                 <section name="ConnectedActivitiesSection">
                     <widgets>
-                        <container-dialog id="ProductVendorInviteDialog" button-text="Request Info">
+                        <container-dialog id="ProductVendorInviteDialog" button-text="RFI Invite">
+                            <container>
+                                <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." />
+                            </container>
                             <form-single name="ProductVendorInviteForm" transition="inviteVendor">
                                 <field name="productId">
                                     <default-field><hidden /></default-field>
                                 </field>
                                 <field name="emailAddress"><default-field><text-line input-type="email"/></default-field></field>
-                                <field name="submit"><default-field><submit text="Request"/></default-field></field>
+                                <field name="submit"><default-field><submit text="Invite"/></default-field></field>
                                 <field-layout>
                                     <field-col-row>
                                         <field-col sm="9">
@@ -149,7 +152,7 @@ along with this software (see the LICENSE.md file). If not, see
                             </form-single>
                             <section name="ProductVendorInviteListSection" condition="vendorRepList">
                                 <widgets>
-                                    <label text="Sent RFI Requests" style="text-bold q-ml-md" />
+                                    <label text="Sent RFI Invites" style="text-bold q-ml-md" />
                                     <form-list name="ProductVendorInviteList" list="vendorRepList">
                                         <row-actions>
                                             <entity-find-one entity-name="mantle.party.PersonAndUserAccount" value-field="personAndAccount">
