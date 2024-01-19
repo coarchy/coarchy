@@ -6,6 +6,14 @@
     <#if html_keywords?has_content><meta name="keywords" content="${html_keywords}"></#if>
     <#if html_description?has_content><meta name="description" content="${html_description}"></#if>
     <title><#if html_title?has_content>${html_title}<#else><#if parentMenuName?has_content>${ec.resource.expand(parentMenuName, "")} - </#if><#if defaultMenuName?has_content>${ec.resource.expand(defaultMenuName, "")}</#if></#if></title>
+    <#-- SEO Cards -->
+    <#if html_title?has_content><meta property="og:title" content="${html_title}"/><meta name="twitter:title" content="${html_title}"></#if>
+    <#if html_description?has_content><meta property="og:description" content="${html_description}"><meta name="twitter:description" content="${html_description}"></#if>
+    <#if html_image?has_content><meta property="og:image" content="${html_image}">
+        <meta name="twitter:image" content="${html_image}"><meta name="twitter:card" content="summary_large_image"></#if>
+    <#if html_url?has_content><meta property="og:url" content="${html_url}"></#if>
+    <#if html_type?has_content><meta property="og:type" content="${html_type}"></#if>
+    <#if html_site_name?has_content><meta property="og:site_name" content="${html_site_name}"></#if>
     <link rel="apple-touch-icon" href="/coarchy120.png"/>
     <#-- Style Sheets -->
 <#--    <#list sri.getThemeValues("STRT_STYLESHEET") as styleSheetLocation>-->
@@ -80,7 +88,7 @@
 
                 <q-btn stretch flat label="Services" href="/Services"></q-btn>
                 <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Newsletter" href="/Newsletter"></q-btn>
+                <q-btn stretch flat label="Blog" href="/Newsletter"></q-btn>
                 <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Log In" href="/Login"></q-btn>
                 <q-separator dark vertical></q-separator>

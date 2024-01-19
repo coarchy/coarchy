@@ -49,6 +49,10 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="html_keywords" from="blog?.metaKeywords?:html_keywords"/>
         <set field="html_description" from="blog?.metaDescription?:html_description"/>
         <set field="html_title" from="blog?.title?:'Coarchy Blog'"/>
+        <set field="html_image" from="imageUrl"/>
+        <set field="html_url" from="baseLinkUrl+'/Article?wikiBlogId='+blog.wikiBlogId"/>
+        <set field="html_type" value="article"/>
+        <set field="html_site_name" value="Coarchy"/>
 
 <!--        <log level="warn" message="Article context.toString() ${context.toString()}"/>-->
     </pre-actions>
