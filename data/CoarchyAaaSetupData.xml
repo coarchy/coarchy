@@ -350,7 +350,7 @@ along with this software (see the LICENSE.md file). If not, see
         <mantle.marketing.contact.ContactListEmail fromDate="1701800219998" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="BLOG" wikiPageCategoryId="Newsletter"/>
     </mantle.marketing.contact.ContactList>
     <mantle.marketing.contact.ContactList contactListId="CoarchyOnboarding" contactListName="Onboarding" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
-        <mantle.marketing.contact.ContactListEmail fromDate="1701800219995" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="ONBOARDING_WELCOME"/>
+        <mantle.marketing.contact.ContactListEmail fromDate="1701800219994" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="ONBOARDING_WELCOME"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800219995" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="ONBOARDING_VENDOR_WELCOME"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800219996" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="CREATE_ORGANIZATION"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800219997" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="INVITE_USER"/>
