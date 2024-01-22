@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <!-- Product Eval -->
+    <service verb="create" noun="ProductEvaluation">
+        <in-parameters>
+            <parameter name="productId" required="true" />
+            <parameter name="organizationId" required="true" />
+            <parameter name="processStoryIds" type="List" required="true" />
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="mantle.product.Product" value-field="product" />
+
+            <if condition="!product">
+                <return error="true" message="Product ${productId} not found." />
+            </if>
+
+            <service-call name="create#coarchy.product.ProductEvaluation"
+                in-map="[productId:productId, organizationId:organizationId, statusId: 'PeActivitySelection']"
+                out-map="context" />
+
+            <iterate list="processStoryIds" entry="processStoryId">
+                <service-call name="create#coarchy.product.ProductEvaluationItem"
+                    in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryId]" />
+            </iterate>
+            <!--             
+            <entity-find entity-name="mantle.product.ProductParty" list="productPartyList">
+                <date-filter />
+                <econdition field-name="productId" />
+                <econdition field-name="partyId" from="vendorPartyId" />
+                <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                <econdition field-name="statusId" value="PpInvited" />
+                <order-by field-name="-fromDate" />
+            </entity-find>
+
+            <if condition="productPartyList">
+                <set field="productParty" from="productPartyList[0]" />
+                <service-call name="update#mantle.product.ProductParty" in-map="[productId:productParty.productId,
+            roleTypeId:productParty.roleTypeId, fromDate:productParty.fromDate,
+            partyId:productParty.partyId, statusId: 'PpRejected']"/>
+                <else>
+                    <return error="true" message="Cannot reject invitation."/>
+                </else>
+            </if> -->
+        </actions>
+    </service>
+
+    <service verb="add" noun="ProductEvaluationProcessStory">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+            <parameter name="organizationId" required="true" />
+            <parameter name="processStoryIds" type="List" required="true" />
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" />
+
+            <if condition="productEvaluation.statusId != 'PeActivitySelection'">
+                <return error="true" message="Cannot edit activities in this status." />
+            </if>
+
+            <iterate list="processStoryIds" entry="processStoryId">
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationItem"
+                    count-field="productEvaluationItemCount">
+                    <econdition field-name="productEvaluationId" />
+                    <econdition field-name="processStoryId" />
+                    <econdition field-name="activityId" operator="is-null" />
+                    <econdition field-name="statementId" operator="is-null" />
+                </entity-find-count>
+
+                <if condition="!productEvaluationItemCount">
+                    <service-call name="create#coarchy.product.ProductEvaluationItem"
+                        in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryId]" />
+                </if>
+            </iterate>
+
+        </actions>
+    </service>
+
+    <service verb="remove" noun="ProductEvaluationProcessStory">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+            <parameter name="organizationId" required="true" />
+            <parameter name="processStoryId" required="true" />
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" />
+
+            <if condition="productEvaluation.statusId != 'PeActivitySelection'">
+                <return error="true" message="Cannot edit activities in this status." />
+            </if>
+
+            <entity-find entity-name="coarchy.product.ProductEvaluationItem"
+                list="productEvaluationItemList">
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="processStoryId" />
+            </entity-find>
+
+            <iterate list="productEvaluationItemList" entry="productEvaluationItem">
+                <service-call name="delete#coarchy.product.ProductEvaluationItem"
+                    in-map="[productEvaluationId:productEvaluationItem.productEvaluationId, productEvaluationItemSeqId:productEvaluationItem.productEvaluationItemSeqId]" />
+            </iterate>
+        </actions>
+    </service>
+
+    <service verb="get" noun="ProcessStoryDescendants">
+        <in-parameters>
+            <parameter name="processStoryId" required="true" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="descendantIdList" type="List" />
+        </out-parameters>
+        <actions>
+            <set field="descendantIdList" from="[]" />
+            <entity-find entity-name="coarchy.ProcessStoryActivity" list="processStoryActivityList">
+                <econdition field-name="processStoryId" />
+                <econdition field-name="detailProcessStoryId" operator="is-not-null" />
+            </entity-find>
+
+            <iterate list="processStoryActivityList" entry="processStoryActivity">
+                <script>
+                    descendantIdList.add(processStoryActivity.detailProcessStoryId)
+                </script>
+
+                <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryDescendants"
+                    out-map="descOut" out-map-add-to-existing="false"
+                    in-map="[processStoryId:processStoryActivity.detailProcessStoryId]" />
+
+                <script>descendantIdList.addAll(descOut.descendantIdList)</script>
+            </iterate>
+
+        </actions>
+    </service>
+
+    <service verb="get" noun="ProcessStoryAnscestors">
+        <in-parameters>
+            <parameter name="processStoryId" required="true" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="anscestorIdList" type="List" />
+        </out-parameters>
+        <actions>
+            <set field="anscestorIdList" from="[]" />
+            <entity-find entity-name="coarchy.ProcessStoryActivity" list="processStoryActivityList">
+                <econdition field-name="detailProcessStoryId" from="processStoryId" />
+            </entity-find>
+
+            <iterate list="processStoryActivityList" entry="processStoryActivity">
+                <script>
+                    anscestorIdList.add(processStoryActivity.processStoryId)
+                </script>
+
+                <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryAnscestors"
+                    out-map="anscOut" out-map-add-to-existing="false"
+                    in-map="[processStoryId:processStoryActivity.processStoryId]" />
+
+                <script>anscestorIdList.addAll(anscOut.anscestorIdList)</script>
+            </iterate>
+
+        </actions>
+    </service>
+
+    <service verb="get" noun="ProductEvaluationAcitivites">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processStoryIds" />
+            <parameter name="activityIds" />
+            <parameter name="activityList" />
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" />
+
+            <entity-find entity-name="coarchy.product.ProductEvaluationItem"
+                list="productEvaluationPsList">
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="processStoryId" operator="is-not-null" />
+                <econdition field-name="activityId" operator="is-null" />
+                <econdition field-name="statementId" operator="is-null" />
+            </entity-find>
+
+            <set field="processStoryIds" from="productEvaluationPsList*.processStoryId" />
+
+            <iterate list="productEvaluationPsList" entry="productEvaluationPs">
+                <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryDescendants"
+                    out-map="descOut" out-map-add-to-existing="false"
+                    in-map="[processStoryId:productEvaluationPs.processStoryId]" />
+
+                <script>processStoryIds.addAll(descOut.descendantIdList)</script>
+            </iterate>
+
+            <entity-find entity-name="coarchy.product.ProductEvaluationItem"
+                list="excludedActivityList">
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="excludeFlag" value="Y" />
+                <econdition field-name="activityId" operator="is-not-null" />
+            </entity-find>
+
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
+                <econdition field-name="processStoryId" operator="in" from="processStoryIds" />
+                <econdition field-name="activityId" operator="not-in"
+                    from="excludedActivityList*.activityId" />
+                <econditions combine="or">
+                    <econdition field-name="condition" operator="not-equals" value="" />
+                    <econdition field-name="action" operator="not-equals" value="" />
+                </econditions>
+                <select-field field-name="processStoryId,activityId,condition,action" />
+            </entity-find>
+
+            <set field="activityIds" from="activityList*.activityId" />
+        </actions>
+    </service>
+
+    <service verb="exclude" noun="ProductEvaluationActivity">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+            <parameter name="activityId" required="true" />
+        </in-parameters>
+        <out-parameters>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" />
+
+            <if condition="productEvaluation.statusId != 'PeActivitySelection'">
+                <return error="true" message="Cannot edit activities in this status." />
+            </if>
+
+            <entity-find entity-name="coarchy.product.ProductEvaluationItem"
+                list="excludedActivityList">
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="activityId" />
+                <econdition field-name="excludeFlag" value="Y" />
+                <econdition field-name="statementId" operator="is-null" />
+            </entity-find>
+
+            <if condition="!excludedActivityList">
+                <service-call name="create#coarchy.product.ProductEvaluationItem"
+                    in-map="[productEvaluationId:productEvaluationId, activityId:activityId, excludeFlag:'Y']" />
+
+                <!-- Automatically exclude all activities of any child process stories -->
+                <entity-find-one entity-name="coarchy.ProcessStoryActivity" value-field="psActivity">
+                    <field-map field-name="activityId" />
+                </entity-find-one>
+
+                <if condition="psActivity.detailProcessStoryId">
+                    <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryDescendants"
+                    out-map="descOut" out-map-add-to-existing="false"
+                    in-map="[processStoryId:psActivity.detailProcessStoryId]" />
+
+                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
+                        <econdition field-name="processStoryId" operator="in" from="[psActivity.detailProcessStoryId] + descOut.descendantIdList" />
+                        <econditions combine="or">
+                            <econdition field-name="condition" operator="not-equals" value="" />
+                            <econdition field-name="action" operator="not-equals" value="" />
+                        </econditions>
+                        <select-field field-name="processStoryId,activityId,condition,action" />
+                    </entity-find>
+
+                    <set field="activityIds" from="activityList*.activityId" />
+                    <iterate list="activityIds" entry="activityId">            
+                        <service-call name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId, activityId:activityId]"/>
+                    </iterate>
+                </if>
+            </if>
+        </actions>
+    </service>
+
+    <service verb="include" noun="ProductEvaluationActivity">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+            <parameter name="activityId" required="true" />
+        </in-parameters>
+        <out-parameters>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" />
+
+            <if condition="productEvaluation.statusId != 'PeActivitySelection'">
+                <return error="true" message="Cannot edit activities in this status." />
+            </if>
+
+            <entity-find entity-name="coarchy.product.ProductEvaluationItem"
+                list="excludedActivityList">
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="activityId" />
+                <econdition field-name="excludeFlag" value="Y" />
+                <econdition field-name="statementId" operator="is-null" />
+            </entity-find>
+
+            <iterate list="excludedActivityList" entry="excludedActivity">
+                <service-call name="delete#coarchy.product.ProductEvaluationItem"
+                    in-map="[productEvaluationId:productEvaluationId, productEvaluationItemSeqId:excludedActivity.productEvaluationItemSeqId]" />
+
+                <!-- Automatically include all activities of any anscestor process stories -->
+                <entity-find-one entity-name="coarchy.ProcessStoryActivity" value-field="psActivity">
+                    <field-map field-name="activityId" />
+                </entity-find-one>
+
+                <if condition="psActivity.processStoryId">
+                    <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryAnscestors"
+                    out-map="anscOut" out-map-add-to-existing="false"
+                    in-map="[processStoryId:psActivity.processStoryId]" />
+
+                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
+                        <econdition field-name="processStoryId" operator="in" from="[psActivity.processStoryId] + anscOut.anscestorIdList" />
+                        <econditions combine="or">
+                            <econdition field-name="condition" operator="not-equals" value="" />
+                            <econdition field-name="action" operator="not-equals" value="" />
+                        </econditions>
+                        <select-field field-name="processStoryId,activityId,condition,action" />
+                    </entity-find>
+
+                    <set field="activityIds" from="activityList*.activityId" />
+                    <iterate list="activityIds" entry="activityId">            
+                        <service-call name="coarchy.ProductEvaluationServices.include#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId, activityId:activityId]"/>
+                    </iterate>
+                </if>
+            </iterate>
+        </actions>
+    </service>
+
+
+    <!-- =============== -->
+    <!-- Response Services -->
+    <!-- =============== -->
+    <service verb="add" noun="ProductEvaluationResponse">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+            <parameter name="activityId" required="true" />
+            <parameter name="implementationStatusEnumId" required="true" />
+            <parameter name="rating" type="Integer" />
+            <parameter name="comments" />
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" />
+
+            <if condition="productEvaluation.statusId != 'PeAwaitingVendorResponse'">
+                <return error="true" message="Cannot add response in this status." />
+            </if>
+            
+            <!-- find if party is internal org -->
+            <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                <date-filter/>
+                <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                <econdition field-name="toPartyId" from="productEvaluation.organizationId"/>
+            </entity-find-count>
+            <set field="isUserOrgMember" from="partyRelationshipCount > 0"/>
+
+            <set field="responsePartyId" from="ec.user.userAccount?.partyId" />
+            <set field="lastEditedByUserId" from="ec.user.userId" />
+
+            <!-- find existing response, if exists, update, otherwise create -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
+                list="productEvalResponseList">
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="responsePartyId" from="ec.user.userAccount?.partyId" />
+                <econdition field-name="activityId" />
+            </entity-find>
+
+            <if condition="!productEvalResponseList">
+                <service-call name="create#coarchy.product.ProductEvaluationResponse"
+                    in-map="[productEvaluationId:productEvaluationId, activityId:activityId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments, responsePartyId: responsePartyId, lastEditedByUserId: lastEditedByUserId, evaluationByEnumId: isUserOrgMember?'EbInternal':'EbVendor']" />
+                <else>
+                    <set field="productEvalResponse" from="productEvalResponseList[0]" />
+                    <service-call name="update#coarchy.product.ProductEvaluationResponse"
+                        in-map="[productEvaluationId:productEvaluationId, responseSeqId:productEvalResponse, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments, lastEditedByUserId: lastEditedByUserId]" />
+                </else>
+            </if>
+        </actions>
+    </service>
+
+    <service verb="get" noun="ProductEvaluationResponseStats">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="internalResponseByActivity" type="Map" />
+            <parameter name="vendorResponseByActivity" type="Map" />
+            <parameter name="totalVendorCount" type="Integer" />
+            <parameter name="allVendorsResponded" type="Boolean" />
+            <parameter name="internalEvaluationComplete" type="Boolean" />
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" />
+
+            <set field="vendorResponseByActivity" from="[:]"/>
+            <set field="internalResponseByActivity" from="[:]"/>
+            <!-- see if all activites on the product evaluation have responses from all vendors, if
+            they do, change status to complete -->
+            <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationAcitivites"
+                in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
+
+            <!-- get vendors on the product evaluation -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationParty"
+                list="productEvalPartyList">
+                <date-filter />
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                <!-- <econdition field-name="statusId" value="PpInvited" /> -->
+            </entity-find>
+            <set field="vendorPartyIds" from="productEvalPartyList*.partyId" />
+            <set field="totalVendorCount" from="vendorPartyIds.size()" />
+
+            <iterate list="productEvalActivities.activityIds" entry="activityId">
+                <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
+                    list="productEvalResponseList">
+                    <econdition field-name="productEvaluationId" />
+                    <econdition field-name="activityId" />
+                    <econdition field-name="evaluationByEnumId" value="EbVendor" />
+                    <econdition field-name="responsePartyId" operator="in" from="vendorPartyIds" />
+                </entity-find>
+                <script>addToBigDecimalInMap(activityId, productEvalResponseList.size(), vendorResponseByActivity)</script>
+            </iterate>
+            
+            <iterate list="productEvalActivities.activityIds" entry="activityId">
+                <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
+                    list="productEvalResponseList">
+                    <econdition field-name="productEvaluationId" />
+                    <econdition field-name="activityId" />
+                    <econdition field-name="evaluationByEnumId" value="EbInternal" />
+                </entity-find>
+                <script>addToBigDecimalInMap(activityId, productEvalResponseList.size(), internalResponseByActivity)</script>
+            </iterate>
+
+            <!-- get all values of vendorResponseByActivity in list -->
+            <set field="vendorResponseCountList" from="vendorResponseByActivity.values()" />
+            <set field="allVendorsResponded" from="vendorResponseCountList.every{it -> it >= totalVendorCount}" />
+            
+            <set field="internalResponseCountList" from="internalResponseByActivity.values()" />
+            <set field="internalEvaluationComplete" from="internalResponseCountList.every{it -> it > 0}" />
+        </actions>
+    </service>
+
+    <!-- =============== -->
+    <!-- Status Services -->
+    <!-- =============== -->
+
+    <service verb="finalize" noun="ProductEvaluationActivitySelection">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" for-update="true" />
+
+            <!-- Make sure we're in the correct status -->
+            <if condition="productEvaluation.statusId != 'PeActivitySelection'">
+                <return error="true" message="Cannot finalize activities in this status." />
+            </if>
+
+            <!-- Make sure we have at least one activity to Evaluate -->
+            <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationAcitivites"
+                in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
+
+            <if condition="productEvalActivities.activityIds?.size() == 0">
+                <return error="true" message="Please add at least one activity to evaluate." />
+            </if>
+
+            <set field="productEvaluation.statusId" value="PeInviteVendors" />
+            <entity-update value-field="productEvaluation" />
+        </actions>
+    </service>
+
+    <service verb="finalize" noun="ProductEvaluationVendorInvitations">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" for-update="true" />
+
+            <!-- Make sure we're in the correct status -->
+            <if condition="productEvaluation.statusId != 'PeInviteVendors'">
+                <return error="true" message="Cannot complete vendor invitations in this status." />
+            </if>
+
+            <!-- Make sure we have at least one invited vendor -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationParty"
+                list="productEvalPartyList">
+                <date-filter />
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                <!-- <econdition field-name="statusId" value="PpInvited" /> -->
+            </entity-find>
+
+            <if condition="productEvalPartyList.size() == 0">
+                <return error="true" message="Please invite at least one vendor." />
+            </if>
+
+            <!-- update status -->
+            <set field="productEvaluation.statusId" value="PeAwaitingVendorResponse" />
+            <entity-update value-field="productEvaluation" />
+        </actions>
+    </service>
+
+    <service verb="cancel" noun="ProductEvaluation">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+        </in-parameters>
+        <out-parameters>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" for-update="true" />
+
+            <!-- Make sure we're in the correct status -->
+            <if
+                condition="!['PeActivitySelection', 'PeAwaitingVendorResponse', 'PeInviteVendors'].contains(productEvaluation.statusId)">
+                <return error="true" message="Cannot cancel Product Evaluation in this status." />
+            </if>
+
+            <!-- update status -->
+            <set field="productEvaluation.statusId" value="PeCancelled" />
+            <entity-update value-field="productEvaluation" />
+        </actions>
+    </service>
+
+    <service verb="checkComplete" noun="ProductEvaluation">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+        </in-parameters>
+        <out-parameters>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" />
+
+            <!-- Make sure we're in the correct status -->
+            <if condition="!['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)">
+                <return />
+            </if>
+
+            <!-- see if all activites on the product evaluation have responses from all vendors, if
+            they do, change status to complete -->
+            <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationAcitivites"
+                in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
+
+            <!-- get vendors on the product evaluation -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationParty"
+                list="productEvalPartyList">
+                <date-filter />
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                <!-- <econdition field-name="statusId" value="PpInvited" /> -->
+            </entity-find>
+            <set field="vendorPartyIds" from="productEvalPartyList*.partyId" />
+
+            <set field="allVendorsResponded" from="true" />
+            <iterate list="vendorPartyIds" entry="vendorPartyId">
+                <if condition="!allVendorsResponded">
+                    <break />
+                </if>
+
+                <iterate list="productEvalActivities.activityIds" entry="activityId">
+                    <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
+                        list="productEvalResponseList">
+                        <econdition field-name="productEvaluationId" />
+                        <econdition field-name="activityId" />
+                        <econdition field-name="responsePartyId" from="vendorPartyId" />
+                    </entity-find>
+
+                    <if condition="!productEvalResponseList.size()">
+                        <set field="allVendorsResponded" from="false" />
+                        <break />
+                    </if>
+                </iterate>
+            </iterate>
+
+            <!-- update status -->
+            <if condition="allVendorsResponded">
+                <set field="productEvaluation.statusId" value="PeCompleted" />
+                <entity-update value-field="productEvaluation" />
+            </if>
+        </actions>
+    </service>
+
+
+</services>

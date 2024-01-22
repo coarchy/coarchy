@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+
+    <!-- <extend-entity entity-name="ProductParty" package="mantle.product">
+        <field name="statusId" type="id" />
+
+        <relationship type="one" title="ProductParty" related="moqui.basic.StatusItem"/>
+
+        <seed-data>
+            <moqui.basic.StatusType description="Product Party" statusTypeId="ProductParty"/>
+
+            <moqui.basic.StatusItem description="Invited" sequenceNum="1" statusId="PpInvited"
+    statusTypeId="ProductParty"/>
+            <moqui.basic.StatusItem description="Accepted" sequenceNum="2" statusId="PpAccepted"
+    statusTypeId="ProductParty"/>
+            <moqui.basic.StatusItem description="Rejected" sequenceNum="3" statusId="PpRejected"
+    statusTypeId="ProductParty"/>
+            <moqui.basic.StatusItem description="Cancelled" sequenceNum="4" statusId="PpCancelled"
+    statusTypeId="ProductParty"/>
+
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PpInvited"
+    toStatusId="PpAccepted" transitionName="Accept"/>
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PpInvited"
+    toStatusId="PpRejected" transitionName="Reject"/>
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PpInvited"
+    toStatusId="PpCancelled" transitionName="Cancel"/>
+
+        </seed-data>
+    </extend-entity>
+    -->
+
+    <!-- general logic 
+     ======
+     - Org Member creates request on a specific product 
+     - Org Member selects vendors to evaluate 
+     - Org Member selects process stories to include (related activities and statements are included by
+    default) 
+     - (If needed), Org member selects which activities to exclude per process story
+     - (statements are included only if they are connected to a relevant activity)
+     - Org member sends request 
+     - Vendors respond to each activity/statement
+     - Status is changed to complete once every activity/statement is responded to by all vendors
+     -->
+    <entity entity-name="ProductEvaluation" package="coarchy.product">
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="productId" type="id" />
+        <field name="organizationId" type="id" />
+        <field name="statusId" type="id" />
+
+        <relationship type="one" title="ProductEvaluation" related="moqui.basic.StatusItem"  short-alias="statusEnum"/>
+        <relationship type="one" related="moqui.basic.StatusItem" short-alias="product" />
+
+        <seed-data>
+            <moqui.basic.StatusType description="Product Evaluation"
+                statusTypeId="ProductEvaluation" />
+
+            <moqui.basic.StatusItem description="Activity Selection" sequenceNum="1"
+                statusId="PeActivitySelection" statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Invite Vendors" sequenceNum="2"
+                statusId="PeInviteVendors" statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Awaiting Vendor Responses" sequenceNum="2"
+                statusId="PeAwaitingVendorResponse" statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Completed" sequenceNum="3" statusId="PeCompleted"
+                statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Cancelled" sequenceNum="4" statusId="PeCancelled"
+                statusTypeId="ProductEvaluation" />
+
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeActivitySelection"
+                toStatusId="PeInviteVendors" transitionName="Finalize Activity Selection" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeInviteVendors"
+                toStatusId="PeAwaitingVendorResponse" transitionName="Request Information" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeAwaitingVendorResponse"
+                toStatusId="PeCompleted" transitionName="Complete" />
+                
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeActivitySelection"
+                toStatusId="PeActivitySelection" transitionName="Cancel" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeInviteVendors"
+                toStatusId="PeInviteVendors" transitionName="Cancel" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeAwaitingVendorResponse"
+                toStatusId="PeCancelled" transitionName="Withdraw Request" />
+        </seed-data>
+    </entity>
+  
+    <entity entity-name="ProductEvaluationItem" package="coarchy.product">
+        <description>
+            A product evaluation item can be a process story, an activity or a statement.
+            Use the includeSubstories flag to include all substories of a given process story.
+            Use the excludeFlag to exclude a specific activity/value statement from a process story.
+        </description>
+
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="productEvaluationItemSeqId" type="id" is-pk="true" />
+        <field name="processStoryId" type="id" />
+        <!-- <field name="includeSubstories" type="text-indicator" default="'Y'"/> -->
+        <field name="excludeFlag" type="text-indicator" />
+        <field name="statementId" type="id"/>
+        <field name="activityId" type="id"/>
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation" short-alias="productEvaluation"/>
+        <relationship type="one" related="coarchy.ProcessStory" short-alias="processStory"/>
+        <relationship type="one" related="coarchy.Activity" short-alias="activity" />
+        <relationship type="one" related="coarchy.ValueStatement" short-alias="statement" >
+            <key-map field-name="statementId" related="valueStatementId" />
+        </relationship>
+    </entity>
+
+    <entity entity-name="ProductEvaluationParty" package="coarchy.product">
+        <description>
+            This entity represents the parties (mainly vendors for now) assigned to this request.
+        </description>
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="partyId" type="id" is-pk="true" />
+        <field name="roleTypeId" type="id" is-pk="true" />
+        <field name="fromDate" type="date-time" is-pk="true" />
+        <field name="thruDate" type="date-time" />
+        <!-- <field name="statusId" type="id" /> -->
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation"
+            short-alias="productEvalRequest" />
+        <relationship type="one" related="mantle.party.RoleType" short-alias="roleType">
+            <key-map field-name="roleTypeId" />
+        </relationship>
+    </entity>
+
+    <entity entity-name="ProductEvaluationResponse" package="coarchy.product">
+        <description>
+            This entity represents the response of each party to a certain activity / statement, in a product evaluation.
+        </description>
+        
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="responseSeqId" type="id" is-pk="true" />
+        <field name="responsePartyId" type="id" />
+        <field name="statementId" type="id" />
+        <field name="activityId" type="id" />
+        <field name="evaluationByEnumId" type="id" />
+        <field name="implementationStatusEnumId" type="id" />
+        <field name="rating" type="number-integer" />
+        <field name="comments" type="text-long" />
+        <field name="lastEditedByUserId" type="id" enable-audit-log="update" />
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation" />
+        <relationship type="one" related="coarchy.Activity">
+            <key-map field-name="activityId" />
+        </relationship>
+        <relationship type="one" related="coarchy.ValueStatement">
+            <key-map field-name="statementId" related="valueStatementId" />
+        </relationship>
+
+        <relationship type="one" title="EvaluationBy" related="moqui.basic.Enumeration" short-alias="evaluationByEnum">
+            <key-map field-name="evaluationByEnumId" related="enumId"/></relationship>
+
+        <relationship type="one" title="ImplementationStatus" related="moqui.basic.Enumeration" short-alias="implementationStatusEnum">
+            <key-map field-name="implementationStatusEnumId" related="enumId" />
+        </relationship>
+        
+        <seed-data>
+            <moqui.basic.EnumerationType description="Evaluation By"
+                enumTypeId="EvaluationBy" />
+            <moqui.basic.EnumerationType description="Implementation Status"
+                enumTypeId="ImplementationStatus" />
+
+            <moqui.basic.Enumeration description="Vendor" sequenceNum="1"
+                enumTypeId="EvaluationBy" enumId="EbVendor" />
+            <moqui.basic.Enumeration description="Internal" sequenceNum="2"
+                enumTypeId="EvaluationBy" enumId="EbInternal" />
+
+            <moqui.basic.Enumeration description="Full Gap" sequenceNum="1"
+                enumTypeId="ImplementationStatus" enumId="IsFullGap" />
+            <moqui.basic.Enumeration description="Partial Overlap" sequenceNum="2"
+                enumTypeId="ImplementationStatus" enumId="IsPartialOverlap" />
+            <moqui.basic.Enumeration description="Full Overlap" sequenceNum="3"
+                enumTypeId="ImplementationStatus" enumId="IsFullOverlap" />
+        </seed-data>
+    </entity>
+
+
+    <view-entity entity-name="ProductEvaluationAndProduct" package="coarchy.product">
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation"/>
+        <member-entity entity-alias="PR" entity-name="mantle.product.Product" join-from-alias="PE">
+            <key-map field-name="productId" />
+        </member-entity>
+
+        <alias-all entity-alias="PE"/>
+        <alias name="productName" entity-alias="PR" />
+    </view-entity>
+</entities>

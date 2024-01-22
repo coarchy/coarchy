@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+    default-menu-include="false" standalone="true" default-menu-title="Manage Statements">
+
+    <parameter name="productEvaluationId" required="true"/>
+    <parameter name="activityId" required="true"/>
+    <parameter name="pageIndex"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField"/>
+
+    <transition name="addEvalResponse">    
+        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationResponse" in-map="[productEvaluationId:productEvaluationId, activityId:activityId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments,  _openDialog:_openDialog]"/>
+        <default-response url=".." parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null]"/>
+        <error-response url="." save-parameters="true"/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="coarchy.Activity" value-field="activity">
+            <field-map field-name="activityId" />
+        </entity-find-one>
+
+        <set field="activityActorList" from="[]"/>
+        <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+            <econdition field-name="activityId"/>
+            <order-by field-name="name"/>
+        </entity-find>
+
+        <set field="actorIdList" from="activityActorList*.actorId"/>
+        <set field="actors" from="activityActorList*.name?.join(', ')"/>
+        <set field="processStoryActivity" from="[condition:activity.condition,action:activity.action,actorNames:activityActorList*.name]"/>
+        <set field="activity" from="ec.resource.template('component://coarchy/template/ActivityStyled.html.ftl', '.ftl')"/>
+
+        <!-- find existing response by activityId -->
+        <entity-find entity-name="coarchy.product.ProductEvaluationResponse" list="productEvaluationResponseList">
+            <econdition field-name="productEvaluationId" />
+            <econdition field-name="activityId" />
+        </entity-find>
+    </actions>
+
+    <widgets>
+        <label text="The evaluations for the following activity are displayed below." type="h6"/>
+        <container style="q-pa-md">
+            <render-mode>
+                <text type="html,vuet,qvt" location="component://coarchy/template/ActivityStyledSpan.html.ftl" />
+            </render-mode>
+        </container>
+
+        <form-list name="ProductEvalResponseFormList" list="productEvaluationResponseList">
+            <field name="productEvaluationId">
+                <default-field>
+                    <hidden/>
+                </default-field>
+            </field>
+            <field name="activityId">
+                <default-field>
+                    <hidden/>
+                </default-field>
+            </field>
+            <field name="_openDialog" from="'ManageValuesDialog_'+(dialogIndex?:0)">
+                <default-field>
+                    <hidden />
+                </default-field>
+            </field>
+            <field name="evaluationByEnumId">
+                <default-field title="Type">
+                    <display-entity entity-name="moqui.basic.Enumeration" />
+                </default-field>
+            </field>
+            <field name="responsePartyId">
+                <default-field title="Response By">
+                    <display-entity entity-name="mantle.party.PartyDetail" text="PartyNameOnlyTemplate" />
+                </default-field>
+            </field>
+            <field name="implementationStatusEnumId">
+                <default-field title="Implementation Status">
+                    <display-entity entity-name="moqui.basic.Enumeration" />
+                </default-field>
+            </field>
+            <field name="rating">
+                <default-field title="Rating">
+                    <display />                   
+                </default-field>
+            </field>
+            <field name="comments">
+                <default-field title="Comments">
+                    <display />
+                </default-field>
+            </field>                
+        </form-list>
+
+        <container style="q-mt-lg text-grey-7">
+            <label text="The scale for ratings are 1 (Full Gap) - 5 (Partial Overlap) - 9 (Full Overlap)" />
+        </container>
+    </widgets>
+</screen>
