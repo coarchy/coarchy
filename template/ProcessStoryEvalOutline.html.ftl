@@ -2,7 +2,7 @@
     <#if showOrgResponseView>
         <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
         <#assign allVendorsResponded = (responseCount == totalVendorCount)/>
-        <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseListDialog_${activityResponseListDialogIndexMap[processStoryActivity.activityId]}">
+        <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseListDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
             <span class="text-caption <#if allVendorsResponded>text-positive<#else>text-negative</#if>">(${responseCount!0}/${totalVendorCount} evals) </span>
         </a>
     </#if>

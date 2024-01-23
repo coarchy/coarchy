@@ -17,37 +17,47 @@ along with this software (see the LICENSE.md file). If not, see
     default-menu-include="false" standalone="true" default-menu-title="Manage Statements">
 
     <parameter name="productEvaluationId" required="true"/>
-    <parameter name="activityId" required="true"/>
+    <parameter name="activityId"/>
+    <parameter name="valueStatementId "/>
     <parameter name="pageIndex"/>
     <parameter name="pageSize"/>
     <parameter name="orderByField"/>
 
     <transition name="addEvalResponse">    
-        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationResponse" in-map="[productEvaluationId:productEvaluationId, activityId:activityId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments,  _openDialog:_openDialog]"/>
-        <default-response url=".." parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null]"/>
+        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationResponse" in-map="[productEvaluationId:productEvaluationId, activityId:activityId, statementId:statementId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments,  _openDialog:_openDialog]"/>
+        <default-response url=".." parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]"/>
         <error-response url="." save-parameters="true"/>
     </transition>
 
     <actions>
-        <entity-find-one entity-name="coarchy.Activity" value-field="activity">
-            <field-map field-name="activityId" />
-        </entity-find-one>
+        <if condition="valueStatementId">
+            <entity-find-one entity-name="coarchy.ValueStatement" value-field="valueStatement">
+                <field-map field-name="valueStatementId"/>
+            </entity-find-one>
+        </if>
 
-        <set field="activityActorList" from="[]"/>
-        <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
-            <econdition field-name="activityId"/>
-            <order-by field-name="name"/>
-        </entity-find>
-
-        <set field="actorIdList" from="activityActorList*.actorId"/>
-        <set field="actors" from="activityActorList*.name?.join(', ')"/>
-        <set field="processStoryActivity" from="[condition:activity.condition,action:activity.action,actorNames:activityActorList*.name]"/>
-        <set field="activity" from="ec.resource.template('component://coarchy/template/ActivityStyled.html.ftl', '.ftl')"/>
+        <if condition="activityId">            
+            <entity-find-one entity-name="coarchy.Activity" value-field="activity">
+                <field-map field-name="activityId" />
+            </entity-find-one>
+    
+            <set field="activityActorList" from="[]"/>
+            <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                <econdition field-name="activityId"/>
+                <order-by field-name="name"/>
+            </entity-find>
+    
+            <set field="actorIdList" from="activityActorList*.actorId"/>
+            <set field="actors" from="activityActorList*.name?.join(', ')"/>
+            <set field="processStoryActivity" from="[condition:activity.condition,action:activity.action,actorNames:activityActorList*.name]"/>
+            <set field="activity" from="ec.resource.template('component://coarchy/template/ActivityStyled.html.ftl', '.ftl')"/>
+        </if>
 
         <!-- find existing response by activityId -->
         <entity-find entity-name="coarchy.product.ProductEvaluationResponse" list="productEvaluationResponseList">
             <econdition field-name="productEvaluationId" />
-            <econdition field-name="activityId" />
+            <econdition field-name="activityId" ignore="!activityId"/>
+            <econdition field-name="statementId" from="valueStatementId" ignore="!valueStatementId"/>
         </entity-find>
         <if condition="productEvaluationResponseList.size() > 0">
             <set field="productEvaluationResponse" from="productEvaluationResponseList[0]"/>
@@ -55,13 +65,24 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
-        <label text="Evaluate the following activity against the product." type="h6"/>
-        <container style="q-pa-md">
-            <render-mode>
-                <text type="html,vuet,qvt" location="component://coarchy/template/ActivityStyledSpan.html.ftl" />
-            </render-mode>
-        </container>
-
+        <section name="ShowActivityDescription" condition="activityId">
+            <widgets>
+                <label text="Evaluate the following activity against the product." type="h6"/>
+                <container style="q-pa-md" >
+                    <render-mode>
+                        <text type="html,vuet,qvt" location="component://coarchy/template/ActivityStyledSpan.html.ftl" />
+                    </render-mode>
+                </container>
+            </widgets>
+        </section>
+        <section name="ShowStatementDescription" condition="valueStatementId">
+            <widgets>
+                <label text="Evaluate the following statement against the product." type="h6"/>
+                <container style="q-pa-md" >
+                    <label text="${valueStatement?.value}" />
+                </container>
+            </widgets>
+        </section>
         <form-single name="AddProductEvalResponseForm" transition="addEvalResponse" map="productEvaluationResponse">
             <field name="productEvaluationId">
                 <default-field>
@@ -69,6 +90,11 @@ along with this software (see the LICENSE.md file). If not, see
                 </default-field>
             </field>
             <field name="activityId">
+                <default-field>
+                    <hidden/>
+                </default-field>
+            </field>
+            <field name="statementId" from="valueStatementId">
                 <default-field>
                     <hidden/>
                 </default-field>

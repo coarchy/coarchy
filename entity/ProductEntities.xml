@@ -62,15 +62,16 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="organizationId" type="id" />
         <field name="statusId" type="id" />
 
-        <relationship type="one" title="ProductEvaluation" related="moqui.basic.StatusItem"  short-alias="statusEnum"/>
+        <relationship type="one" title="ProductEvaluation" related="moqui.basic.StatusItem"
+            short-alias="statusEnum" />
         <relationship type="one" related="moqui.basic.StatusItem" short-alias="product" />
 
         <seed-data>
             <moqui.basic.StatusType description="Product Evaluation"
                 statusTypeId="ProductEvaluation" />
 
-            <moqui.basic.StatusItem description="Activity Selection" sequenceNum="1"
-                statusId="PeActivitySelection" statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Requirements Selection" sequenceNum="1"
+                statusId="PeRequirementsSelection" statusTypeId="ProductEvaluation" />
             <moqui.basic.StatusItem description="Invite Vendors" sequenceNum="2"
                 statusId="PeInviteVendors" statusTypeId="ProductEvaluation" />
             <moqui.basic.StatusItem description="Awaiting Vendor Responses" sequenceNum="2"
@@ -80,22 +81,30 @@ along with this software (see the LICENSE.md file). If not, see
             <moqui.basic.StatusItem description="Cancelled" sequenceNum="4" statusId="PeCancelled"
                 statusTypeId="ProductEvaluation" />
 
-            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeActivitySelection"
-                toStatusId="PeInviteVendors" transitionName="Finalize Activity Selection" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeRequirementsSelection"
+                toStatusId="PeInviteVendors" transitionName="Finalize Requirements Selection" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeInviteVendors"
+                toStatusId="PeRequirementsSelection" transitionName="Modify Requirements" />
+
             <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeInviteVendors"
                 toStatusId="PeAwaitingVendorResponse" transitionName="Request Information" />
-            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeAwaitingVendorResponse"
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeAwaitingVendorResponse"
                 toStatusId="PeCompleted" transitionName="Complete" />
-                
-            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeActivitySelection"
-                toStatusId="PeActivitySelection" transitionName="Cancel" />
+
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeRequirementsSelection"
+                toStatusId="PeRequirementsSelection" transitionName="Cancel" />
             <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeInviteVendors"
                 toStatusId="PeInviteVendors" transitionName="Cancel" />
-            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeAwaitingVendorResponse"
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeAwaitingVendorResponse"
                 toStatusId="PeCancelled" transitionName="Withdraw Request" />
         </seed-data>
     </entity>
-  
+
     <entity entity-name="ProductEvaluationItem" package="coarchy.product">
         <description>
             A product evaluation item can be a process story, an activity or a statement.
@@ -108,13 +117,14 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="processStoryId" type="id" />
         <!-- <field name="includeSubstories" type="text-indicator" default="'Y'"/> -->
         <field name="excludeFlag" type="text-indicator" />
-        <field name="statementId" type="id"/>
-        <field name="activityId" type="id"/>
+        <field name="statementId" type="id" />
+        <field name="activityId" type="id" />
 
-        <relationship type="one" related="coarchy.product.ProductEvaluation" short-alias="productEvaluation"/>
-        <relationship type="one" related="coarchy.ProcessStory" short-alias="processStory"/>
+        <relationship type="one" related="coarchy.product.ProductEvaluation"
+            short-alias="productEvaluation" />
+        <relationship type="one" related="coarchy.ProcessStory" short-alias="processStory" />
         <relationship type="one" related="coarchy.Activity" short-alias="activity" />
-        <relationship type="one" related="coarchy.ValueStatement" short-alias="statement" >
+        <relationship type="one" related="coarchy.ValueStatement" short-alias="statement">
             <key-map field-name="statementId" related="valueStatementId" />
         </relationship>
     </entity>
@@ -128,20 +138,52 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="roleTypeId" type="id" is-pk="true" />
         <field name="fromDate" type="date-time" is-pk="true" />
         <field name="thruDate" type="date-time" />
-        <!-- <field name="statusId" type="id" /> -->
+        <field name="statusId" type="id" enable-audit-log="update"/>
 
         <relationship type="one" related="coarchy.product.ProductEvaluation"
             short-alias="productEvalRequest" />
         <relationship type="one" related="mantle.party.RoleType" short-alias="roleType">
             <key-map field-name="roleTypeId" />
         </relationship>
+
+        <relationship type="one" title="ProductEvaluationParty" related="moqui.basic.StatusItem" />
+
+        <seed-data>
+            <moqui.basic.StatusType description="Product Evaluation Party" statusTypeId="ProductEvaluationParty" />
+
+            <moqui.basic.StatusItem description="Planned" sequenceNum="1" statusId="PepPlanned"
+                statusTypeId="ProductEvaluationParty" />
+            <moqui.basic.StatusItem description="Invited" sequenceNum="2" statusId="PepInvited"
+                statusTypeId="ProductEvaluationParty" />
+            <moqui.basic.StatusItem description="Accepted" sequenceNum="3" statusId="PepAccepted"
+                statusTypeId="ProductEvaluationParty" />
+            <moqui.basic.StatusItem description="Rejected" sequenceNum="4" statusId="PepRejected"
+                statusTypeId="ProductEvaluationParty" />
+            <moqui.basic.StatusItem description="Withdrew" sequenceNum="5" statusId="PepWithdrew"
+                statusTypeId="ProductEvaluationParty" />
+
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepPlanned"
+                toStatusId="PepInvited" transitionName="Invite" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepInvited"
+                toStatusId="PepAccepted" transitionName="Accept" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepInvited"
+                toStatusId="PepAccepted" transitionName="Accept" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepInvited"
+                toStatusId="PepRejected" transitionName="Reject" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepInvited"
+                toStatusId="PepWithdrew" transitionName="Withdraw Invitation" />
+
+            <!-- should be removed once the accept/reject flow is implemented -->
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepPlanned"
+                toStatusId="PepAccepted" transitionName="Fast Accept" />
+        </seed-data>
     </entity>
 
     <entity entity-name="ProductEvaluationResponse" package="coarchy.product">
         <description>
             This entity represents the response of each party to a certain activity / statement, in a product evaluation.
         </description>
-        
+
         <field name="productEvaluationId" type="id" is-pk="true" />
         <field name="responseSeqId" type="id" is-pk="true" />
         <field name="responsePartyId" type="id" />
@@ -161,13 +203,16 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="statementId" related="valueStatementId" />
         </relationship>
 
-        <relationship type="one" title="EvaluationBy" related="moqui.basic.Enumeration" short-alias="evaluationByEnum">
-            <key-map field-name="evaluationByEnumId" related="enumId"/></relationship>
+        <relationship type="one" title="EvaluationBy" related="moqui.basic.Enumeration"
+            short-alias="evaluationByEnum">
+            <key-map field-name="evaluationByEnumId" related="enumId" />
+        </relationship>
 
-        <relationship type="one" title="ImplementationStatus" related="moqui.basic.Enumeration" short-alias="implementationStatusEnum">
+        <relationship type="one" title="ImplementationStatus" related="moqui.basic.Enumeration"
+            short-alias="implementationStatusEnum">
             <key-map field-name="implementationStatusEnumId" related="enumId" />
         </relationship>
-        
+
         <seed-data>
             <moqui.basic.EnumerationType description="Evaluation By"
                 enumTypeId="EvaluationBy" />
@@ -190,12 +235,12 @@ along with this software (see the LICENSE.md file). If not, see
 
 
     <view-entity entity-name="ProductEvaluationAndProduct" package="coarchy.product">
-        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation"/>
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation" />
         <member-entity entity-alias="PR" entity-name="mantle.product.Product" join-from-alias="PE">
             <key-map field-name="productId" />
         </member-entity>
 
-        <alias-all entity-alias="PE"/>
+        <alias-all entity-alias="PE" />
         <alias name="productName" entity-alias="PR" />
     </view-entity>
 </entities>

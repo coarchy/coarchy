@@ -277,7 +277,7 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="actions">
                 <default-field title="">                  
                     <link url="goToProductEvaluation" text="View"  parameter-map="[productEvaluationId:productEvaluationId]" />
-                    <link url="cancelProductEvaluation" text="Cancel" confirmation="Are you sure you want to cancel this product evaluation?" btn-type="danger" tooltip="Cancel Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeActivitySelection','PeInviteVendors'].contains(statusId)"/>
+                    <link url="cancelProductEvaluation" text="Cancel" confirmation="Are you sure you want to cancel this product evaluation?" btn-type="danger" tooltip="Cancel Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeRequirementsSelection','PeInviteVendors'].contains(statusId)"/>
                 </default-field>
             </field>
         </form-list>
