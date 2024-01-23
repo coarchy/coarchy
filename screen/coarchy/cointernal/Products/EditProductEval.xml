@@ -12,7 +12,10 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Evaluate Product" default-menu-index="20" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="false">
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+    default-menu-title="Evaluate Product" default-menu-index="20" menu-image="fa fa-file"
+    menu-image-type="icon" default-menu-include="false">
 
     <parameter name="productEvaluationId" required="true"/>
 
@@ -108,7 +111,8 @@ along with this software (see the LICENSE.md file). If not, see
         <condition>
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
-        <!-- <service-call name="coarchy.VendorServices.invite#VendorUser" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,partyId:activeOrgId]"/> -->
+        <!-- <service-call name="coarchy.VendorServices.invite#VendorUser"
+        in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,partyId:activeOrgId]"/> -->
         <service-call name="coarchy.VendorServices.add#ProductEvaluationParty" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,organizationId:activeOrgId]"/>
         <default-response/>
         <error-response url="." save-parameters="true"/>
@@ -219,7 +223,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <label text="Product Evaluation on ${productEvaluation?.productName}" style="text-h4"/>
                     <label text="(#${productEvaluation?.productEvaluationId})" style="text-subtitle2 text-grey-8"/>
                     <container style="q-mb-md">
-                        <label text="In the Requirements Selection step, add your the requirements you want the product to be evaluated against." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeRequirementsSelection'"/>
+                        <label text="In the Requirements Selection step, add the requirements you want the product to be evaluated against." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeRequirementsSelection'"/>
                         <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeInviteVendors'"/>
                         <label text="You are waiting for vendor evaluations. You can track their responses below." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeAwaitingVendorResponse'"/>
                     </container>
@@ -377,9 +381,9 @@ along with this software (see the LICENSE.md file). If not, see
                                         </field-layout>
                                     </form-single>
                                 </container-dialog>
-                                <label text="Specify Vendors to Invite" style="text-bold q-ml-md" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
+                                <label text="Specify Vendors to Invite" style="text-bold q-mx-md" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
                                 <label text="Add as many vendors you would like to evaluate the product, against these requirements. Invitations will only be send when you click 'Finalize Invitations'." style="text-caption text-grey-8" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
-                                <label text="Invited Vendors" style="text-bold q-ml-md" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
+                                <label text="Invited Vendors" style="text-bold q-mx-md" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
                                 <label text="You have invited the following vendors to evaluate this product." style="text-caption text-grey-8" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>                                
                             </box-header>
                             <box-body>
@@ -415,7 +419,8 @@ along with this software (see the LICENSE.md file). If not, see
                                                     <display text="Invited" style="text-grey-8"/>
                                                 </conditional-field>
                                                 <default-field title="Status">
-                                                    <!-- <display-entity entity-name="moqui.basic.StatusItem"/> -->
+                                                    <!-- <display-entity
+                                                    entity-name="moqui.basic.StatusItem"/> -->
                                                     <label text="N/A" />
                                                 </default-field>
                                             </field>
@@ -449,10 +454,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <widgets>
                         <container-box>
                             <box-header>
+                                <label text="Statements" style="text-bold q-mx-sm" type="div"/>
                                 <container type="div">
-                                    <label text="Statements" style="text-bold" type="div"/>
-                                </container>
-                                <container type="div" style="q-px-sm">
                                     <label text="By default, all statements in your organization will be evaluated by the vendors. You can choose to Include/Exclude them by clicking on the buttons below." style="text-caption text-grey-8" condition="productEvaluation.statusId=='PeRequirementsSelection'"/>
                                     <label text="The following statements will be evaluated by vendors." style="text-caption text-grey-8" condition="productEvaluation.statusId!='PeRequirementsSelection'" />
                                 </container>
