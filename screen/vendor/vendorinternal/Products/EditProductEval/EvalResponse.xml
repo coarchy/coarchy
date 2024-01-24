@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+    default-menu-include="false" standalone="true" default-menu-title="Manage Statements">
+
+    <parameter name="productEvaluationId" required="true"/>
+    <parameter name="activityId"/>
+    <parameter name="valueStatementId "/>
+    <parameter name="pageIndex"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField"/>
+
+    <transition name="addEvalResponse">    
+        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationResponse" in-map="[productEvaluationId:productEvaluationId, activityId:activityId, statementId:statementId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments,  _openDialog:_openDialog]"/>
+        <default-response url=".." parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]"/>
+        <error-response url="." save-parameters="true"/>
+    </transition>
+
+    <actions>
+        <if condition="valueStatementId">
+            <entity-find-one entity-name="coarchy.ValueStatement" value-field="valueStatement">
+                <field-map field-name="valueStatementId"/>
+            </entity-find-one>
+        </if>
+
+        <if condition="activityId">            
+            <entity-find-one entity-name="coarchy.Activity" value-field="activity">
+                <field-map field-name="activityId" />
+            </entity-find-one>
+    
+            <set field="activityActorList" from="[]"/>
+            <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                <econdition field-name="activityId"/>
+                <order-by field-name="name"/>
+            </entity-find>
+    
+            <set field="actorIdList" from="activityActorList*.actorId"/>
+            <set field="actors" from="activityActorList*.name?.join(', ')"/>
+            <set field="processStoryActivity" from="[condition:activity.condition,action:activity.action,actorNames:activityActorList*.name]"/>
+            <set field="activity" from="ec.resource.template('component://coarchy/template/ActivityStyled.html.ftl', '.ftl')"/>
+        </if>
+
+        <!-- find existing response by activityId -->
+        <entity-find entity-name="coarchy.product.ProductEvaluationResponse" list="productEvaluationResponseList">
+            <econdition field-name="productEvaluationId" />
+            <econdition field-name="activityId" ignore="!activityId"/>
+            <econdition field-name="statementId" from="valueStatementId" ignore="!valueStatementId"/>
+        </entity-find>
+        <if condition="productEvaluationResponseList.size() > 0">
+            <set field="productEvaluationResponse" from="productEvaluationResponseList[0]"/>
+        </if>
+    </actions>
+
+    <widgets>
+        <section name="ShowActivityDescription" condition="activityId">
+            <widgets>
+                <label text="Evaluate the following activity against the product." type="h6"/>
+                <container style="q-pa-md" >
+                    <render-mode>
+                        <text type="html,vuet,qvt" location="component://coarchy/template/ActivityStyledSpan.html.ftl" />
+                    </render-mode>
+                </container>
+            </widgets>
+        </section>
+        <section name="ShowStatementDescription" condition="valueStatementId">
+            <widgets>
+                <label text="Evaluate the following statement against the product." type="h6"/>
+                <container style="q-pa-md" >
+                    <label text="${valueStatement?.value}" />
+                </container>
+            </widgets>
+        </section>
+        <form-single name="AddProductEvalResponseForm" transition="addEvalResponse" map="productEvaluationResponse">
+            <field name="productEvaluationId">
+                <default-field>
+                    <hidden/>
+                </default-field>
+            </field>
+            <field name="activityId">
+                <default-field>
+                    <hidden/>
+                </default-field>
+            </field>
+            <field name="statementId" from="valueStatementId">
+                <default-field>
+                    <hidden/>
+                </default-field>
+            </field>
+            <field name="_openDialog" from="'ManageValuesDialog_'+(dialogIndex?:0)">
+                <default-field>
+                    <display />
+                </default-field>
+            </field>
+            <field name="implementationStatusEnumId">
+                <default-field title="Implementation Status">
+                    <drop-down submit-on-select="false" allow-empty="false" allow-multiple="true">
+                        <entity-options>
+                            <entity-find entity-name="moqui.basic.Enumeration">
+                                <econdition field-name="enumTypeId" value="ImplementationStatus" />
+                            </entity-find>
+                        </entity-options>
+                    </drop-down>
+                </default-field>
+            </field>
+            <field name="rating">
+                <default-field title="Rating" >
+                    <radio no-current-selected-key="5">
+                        <option key="1" text="1 Full Gap" />
+                        <option key="2" text="2" />
+                        <option key="3" text="3" />
+                        <option key="4" text="4" />
+                        <option key="5" text="5 Partial Overlap" />
+                        <option key="6" text="6" />
+                        <option key="7" text="7" />
+                        <option key="8" text="8" />
+                        <option key="9" text="9 Full Overlap" />
+                    </radio>
+                </default-field>
+            </field>
+            <field name="comments">
+                <default-field title="Comments">
+                    <text-area />
+                </default-field>
+            </field>
+            <field name="submit">
+                <default-field title="${productEvaluationId?'Update Evaluation':'Add Evaluation'}">
+                    <submit />
+                </default-field>
+            </field>
+            <field-layout>
+                <field-ref name="implementationStatusEnumId" />
+                <field-ref name="rating" />
+                <field-ref name="comments" />
+                <field-ref name="submit" />
+            </field-layout>
+        </form-single>
+    </widgets>
+</screen>

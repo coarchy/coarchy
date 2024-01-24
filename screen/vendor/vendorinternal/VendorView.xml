@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Vendor View" default-menu-index="40" menu-image="fa fa-building" menu-image-type="icon">
+
+    <always-actions>
+        <service-call name="mantle.party.PartyServices.setup#UserOrganizationInfo" out-map="context"/>
+
+        <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econditions combine="or">
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                <econdition field-name="visibilityEnumId" value="PvPublic"/>
+            </econditions>
+            <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
+            <order-by field-name="-visibilityEnumId"/></entity-find>
+        <set field="ownerOfAnyOrganization" from="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)"/>
+    </always-actions>
+
+    <transition name="createOrganization">
+        <actions>
+            <service-call name="coarchy.CoarchyServices.create#Organization" in-map="context" out-map="createOrgOut"/>       
+        </actions>
+        <conditional-response url="../EditOrganization" parameter-map="[organizationId:createOrgOut.newOrganizationId]">
+            <condition>
+                <expression>!ownerOfAnyOrganization</expression>
+            </condition>
+        </conditional-response>
+        <default-response url="."/>
+    </transition>
+
+    <transition name="inviteUser">
+        <service-call name="coarchy.CoarchyServices.invite#User" in-map="[partyId:organizationId,emailAddress:emailAddress]"/>
+        <default-response url="../EditOrganization" parameter-map="[organizationId:partyId]"/></transition>
+
+    <transition name="acceptInvitation">
+        <service-call name="coarchy.VendorServices.accept#VendorProductInvitation" in-map="context"/>
+        <default-response url="../EditOrganization" parameter-map="[organizationId:organizationId]"/></transition>
+
+    <transition name="rejectInvitation">
+        <service-call name="coarchy.VendorServices.reject#VendorProductInvitation" in-map="context"/>
+        <default-response url="../EditOrganization" parameter-map="[organizationId:organizationId]"/></transition>
+
+    <transition name="goToProductEvaluation">
+        <default-response url="../Products/EditProductEval" parameter-map="[productEvaluationId:productEvaluationId]"/>
+    </transition>
+
+    <transition name="activateOrDeactivateOrganization">
+        <service-call name="coarchy.CoarchyServices.activateOrDeactivate#Organization" in-map="[organizationPartyId:toPartyId]" out-map="context"/>
+        <actions>
+            <if condition="needsCredits">
+                <set field="ec.web.sessionAttributes.checkoutOrganizationId" from="toPartyId"/>
+                <script>ec.user.setPreference('ACTIVE_ORGANIZATION', toPartyId)</script>
+            </if>
+        </actions>
+        <conditional-response  url="../BuyPremium" parameter-map="[creditsNeeded:creditsNeeded]"><condition>
+            <expression>needsCredits</expression></condition></conditional-response>
+        <default-response/>
+    </transition>
+
+    <transition name="getCloneOrganizationList"><actions>
+        <entity-find entity-name="mantle.party.PartyDetail" list="organizationList" distinct="true">
+            <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+            <econditions combine="or">
+                <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                <econdition field-name="partyId" operator="in" from="organizationList*.toPartyId"/>
+            </econditions>
+            <select-field field-name="partyId,organizationName,visibilityEnumId"/>
+            <order-by field-name="-visibilityEnumId,organizationName"/>
+        </entity-find>
+        <set field="cloneOrganizationList" from="[]"/>
+        <iterate list="organizationList" entry="organization">
+            <if condition="organization.visibilityEnumId == 'PvPublic'">
+                <script>cloneOrganizationList.add([value:organization.partyId, label:"${organization.visibilityEnumId=='PvPublic'?organization.organizationName+' - Template':organization.organizationName}"])</script>
+                <continue/>
+            </if>
+            <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+                <econdition field-name="partyId" from="organization.partyId"/>
+                <date-filter/>
+            </entity-find-count>
+            <if condition="partyActivationCount &gt; 0">
+                <script>cloneOrganizationList.add([value:organization.partyId, label:"${organization.visibilityEnumId=='PvPublic'?organization.organizationName+' - Template':organization.organizationName}"])</script>
+            </if>
+        </iterate>
+        <script>
+            ec.web.sendJsonResponse(cloneOrganizationList)
+        </script>
+    </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <transition name="goToApplication"><actions>
+        <entity-find-one entity-name="moqui.security.UserPreference" value-field="userPreference" auto-field-map="[userId:ec.user.userId,preferenceKey:'ACTIVE_ORGANIZATION']"/>
+        <if condition="partyId &amp;&amp; userPreference?.preferenceValue != partyId">
+            <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                <date-filter/>
+                <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+                <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                <econdition field-name="toPartyId" from="partyId"/></entity-find-count>
+            <if condition="partyRelationshipCount &gt; 0">
+                <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
+            </if>
+        </if>
+    </actions><default-response url="/coapp/Home" url-type="plain"/></transition>
+
+    <actions>
+        <entity-find entity-name="mantle.account.financial.FinancialAccountAndTrans" list="finAccountAndTrans" limit="1">
+            <search-form-inputs/>
+            <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="finAccountTypeId" value="OrganizationMonthCredit"/>
+            <econdition field-name="organizationPartyId" value="coarchy"/>
+            <econdition field-name="statusId" value="FaActive"/>
+            <date-filter/>
+            <order-by field-name="-transactionDate"/>
+        </entity-find>
+        
+        <if condition="ec.user.userAccount?.partyId">
+            <service-call name="coarchy.CoarchyServices.check#PartyActivation" 
+                in-map="[userPartyId:ec.user.userAccount?.partyId, finAccountTypeId:'OrganizationMonthCredit']" 
+                out-map="partyActivationOut" />
+        </if>
+        <set field="totalCreditsUsed" type="BigDecimal" from="partyActivationOut?.totalCreditsUsed?:0.0" />
+    </actions>
+
+    <widgets>
+        <container-row>
+            <row-col md="2"/>
+            <row-col md="8">
+                <label text="Organizations" type="h4"/>
+
+                <!-- TODO: Create the feature to transfer org to another user -->
+                <label condition="finAccountAndTrans.getFirst() != null&amp;&amp;finAccountAndTrans.getFirst().availableBalance&gt;0"
+                        text="Used ${ec.l10n.formatNumber((Number)(totalCreditsUsed.setScale(2, BigDecimal.ROUND_HALF_UP)),null,null)} / ${ec.l10n.formatNumber((Number)finAccountAndTrans.getFirst().availableBalance,null,null)} Organization-Month Credits this month\n"/>
+
+                <container-dialog id="InviteUser" button-text="Invite User" condition="ownerOfAnyOrganization" type="success">
+                    <form-single name="InviteUser" transition="inviteUser">
+                        <field name="organizationId"><default-field title="Organization"><drop-down><entity-options text="${organizationName}" key="${partyId}">
+                            <entity-find entity-name="mantle.party.PartyDetail">
+                                <econdition field-name="partyTypeEnumId" value="PtyOrganization"/>
+                                <econdition field-name="ownerPartyId" from="ec.user.userAccount.partyId"/>
+                            </entity-find></entity-options> </drop-down></default-field></field>
+                        <field name="emailAddress"><default-field><text-line input-type="email"/></default-field></field>
+                        <field name="submit"><default-field><submit/></default-field></field>
+                    </form-single>
+                </container-dialog>
+
+                <container-dialog id="CreateOrganization" button-text="Create Organization" type="success">
+                    <form-single name="CreateOrganization" transition="createOrganization">                        
+                        <field name="organizationName"><default-field><text-line/></default-field></field>                
+                        <field name="create"><default-field><submit/></default-field></field>
+                    </form-single>
+                </container-dialog>
+
+                <container-dialog id="CloneOrganization" button-text="Clone Organization" type="success" icon="fa fa-clone">
+                    <form-single name="CloneOrganization" transition="createOrganization">
+                        <field name="organizationId"><default-field title="Copy from Organization">
+                            <label text="Enable premium features to copy from your organizations"/>
+                            <drop-down allow-empty="false" required-manual-select="true">
+                                <dynamic-options server-search="true" transition="getCloneOrganizationList" min-length="0"/></drop-down>
+                        </default-field></field>
+                        <field name="organizationName"><default-field><text-line/></default-field></field>
+                        <field name="copyChecklists">
+                            <default-field title="What do you want to do with your existing checklists?">
+                                <radio no-current-selected-key="none">
+                                    <option key="none" text="Do nothing" />
+                                    <option key="copy" text="Copy to new values" />
+                                    <option key="move" text="Move to new organization" />
+                                </radio>
+                            </default-field>
+                        </field>
+                        <field name="copyUsers">
+                            <default-field title="Do you want to do with your existing users?">
+                                <radio no-current-selected-key="none">
+                                    <option key="none" text="Do nothing" />
+                                    <option key="copy" text="Copy to new values" />
+                                    <option key="move" text="Move to new organization" />
+                                </radio>
+                            </default-field>
+                        </field>
+                        <field name="create"><default-field><submit/></default-field></field>
+                    </form-single>
+                </container-dialog>
+                                
+                <form-list name="Organization" header-dialog="true" list="organizationFormList" list-entry="organizationFormEntry" transition="activateOrDeactivateOrganization">
+                    <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationFormList" distinct="true">
+                        <search-form-inputs default-order-by="-visibilityEnumId"/>
+                        <date-filter/>
+                        <econditions combine="or">
+                            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                            <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                        </econditions>
+                        <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/></entity-find>
+
+                    <row-actions>
+                        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
+                            <econdition field-name="partyId" from="toPartyId"/>
+                            <date-filter/></entity-find-count>
+
+                         <!-- Find if user is member / rep of organization -->
+                         <entity-find entity-name="mantle.party.PartyToAndRelationship" list="partyRelList">
+                            <date-filter/>
+                            <econdition field-name="toPartyId"/>
+                            <econditions combine="or">
+                                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                                <econdition field-name="visibilityEnumId" value="PvPublic"/>
+                            </econditions>
+                            <select-field field-name="fromPartyId,toPartyId,visibilityEnumId,relationshipTypeEnumId,ownerPartyId"/>
+                        </entity-find>
+                        <set field="orgRelTypeList" from="partyRelList*.relationshipTypeEnumId" />
+                        <set field="isMember" from="orgRelTypeList.contains('PrtMember')" />
+                        <set field="isRep" from="orgRelTypeList.contains('PrtVendorRepresentative')" />
+                    </row-actions>
+
+                    <field name="toPartyId">
+                        <header-field><text-find size="25"/></header-field>
+                        <default-field><hidden/></default-field></field>
+                    <field name="application">
+                        <conditional-field title="View Organization" condition="visibilityEnumId=='PvPublic'&amp;&amp;
+                                ownerPartyId != ec.user.userAccount.partyId"><link url="goToApplication" text="${organizationName}"
+                                parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/>
+                            <link url="" text="${organizationName} Response"
+                                parameter-map="[partyId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/>
+                            <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip>
+                            <q-chip>Read Only</q-chip>]]></text></render-mode></conditional-field>
+                        <conditional-field title="View Organization" condition="visibilityEnumId=='PvPublic'&amp;&amp;
+                                ownerPartyId == ec.user.userAccount.partyId"><link url="goToApplication" text="${organizationName}"
+                                parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/>
+                            <link url="" text="${organizationName} Response"
+                                parameter-map="[partyId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/>
+                            <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip>
+                                ]]></text></render-mode></conditional-field>
+                        <default-field title="View Organization"><link url="goToApplication" text="${organizationName}"
+                                parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home" condition="isMember"/>
+                            <link url="" text="${organizationName} Response"
+                                parameter-map="[partyId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/></default-field>
+                    </field>
+                    <field name="organizationName"><conditional-field title="Organization Settings" condition="
+                        !(isRep &amp;&amp; !isMember) &amp;&amp; visibilityEnumId!='PvPublic' || ownerPartyId == ec.user.userAccount.partyId">
+                    <link url="/settings/EditOrganization" text="${organizationName}" parameter-map="[
+                        organizationId:toPartyId]" tooltip="Edit ${organizationName}"/></conditional-field></field>
+                    <field name="activation"><header-field title="Premium"><hidden/></header-field>
+                        <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
+                                &amp;&amp; partyActivationCount == 0">
+                            <submit text="Upgrade" type="success" confirmation="Activating will cost 1 Organization-Month
+                             Credit per month while ${organizationName} is upgraded. Are you sure?"/></conditional-field>
+                        <conditional-field title="Premium" condition="ownerPartyId == ec.user.userAccount.partyId
+                                &amp;&amp; partyActivationCount != 0">
+                            <submit text="Downgrade" type="danger"/></conditional-field>
+                    </field>
+                    <field name="submit"><header-field><submit/></header-field></field>
+                </form-list>
+            </row-col>
+            <row-col md="2"/>
+        </container-row>
+
+        <container-row>
+            <row-col md="2"/>
+            <row-col md="8">
+                <label text="Product Evaluations" type="h4"/>
+                                                
+                <form-list name="Products" header-dialog="true" list="productPartyList">
+                    <entity-find entity-name="coarchy.product.ProductEvaluationParty" list="productPartyList">
+                        <date-filter />
+                        <econdition field-name="partyId" from="ec.user.userAccount.partyId" />
+                        <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                        <!-- <econdition field-name="statusId" operator="not-in" value="PpCancelled,PpRejected" /> -->
+                    </entity-find>
+                    <row-actions>
+                        <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="evalAndProduct" auto-field-map="[productEvaluationId:productEvaluationId]"/>
+                        <log message="product ${product}"/>
+                        <log message="productPartyList ${productPartyList}"/>
+                    </row-actions>
+                    <field name="partyId">
+                        <default-field>
+                            <hidden />
+                        </default-field>
+                        </field>
+                    <field name="productEvaluationId">
+                        <default-field title="Evaluation Request #">
+                            <display />
+                        </default-field>
+                        </field>
+                    <field name="productId" from="evalAndProduct?.productId">
+                        <default-field title="Product">
+                            <display-entity entity-name="mantle.product.Product" text="${productName}" />
+                        </default-field>
+                    </field>          
+                    <field name="organizationPartyId" from="evalAndProduct?.organizationId">
+                        <default-field title="Organization">
+                            <display-entity entity-name="mantle.party.PartyDetail" text="PartyNameOnlyTemplate"  />
+                        </default-field>
+                    </field>   
+                    <field name="statusId" from="evalAndProduct?.statusId">
+                        <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem" /></default-field>
+                    </field>
+                    <field name="actions">
+                        <default-field title="">
+                            <link url="goToProductEvaluation" text="Complete Evaluation" condition="statusId=='PeAwaitingVendorResponse'" parameter-map="[productEvaluationId:productEvaluationId]"/>
+                            <!-- <link url="acceptInvitation" text="Accept Invitation" condition="statusId=='PpInvited'" parameter-map="[productId:productId, vendorPartyId:ec.user.userAccount.partyId, organizationId:organizationPartyId]"/>
+                            <link url="rejectInvitation" text="Reject Invitation" condition="statusId=='PpInvited'" parameter-map="[productId:productId, vendorPartyId:ec.user.userAccount.partyId, organizationId:organizationPartyId]"/> -->
+                        </default-field>
+                    </field>              
+                </form-list>
+            </row-col>
+            <row-col md="2"/>
+        </container-row>
+        
+    </widgets>
+</screen>

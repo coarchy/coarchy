@@ -36,6 +36,12 @@
             <subscreens-item name="coapp" menu-include="false" location="component://coarchy/screen/coarchy/coapp.xml"/>
             <subscreens-item name="cointernal" menu-include="false" location="component://coarchy/screen/coarchy/cointernal.xml"/>
             <subscreens-item name="costatic" menu-include="false" location="component://coarchy/screen/coarchy/costatic.xml"/>
+
+            <!-- Vendor App -->
+            <subscreens-item name="vendor" menu-include="false" location="component://coarchy/screen/vendor/vendor.xml"/>
+            <subscreens-item name="vendorinternal" menu-include="false" location="component://coarchy/screen/vendor/vendorinternal.xml"/>
+            <subscreens-item name="vendorstatic" menu-include="false" location="component://coarchy/screen/vendor/vendorstatic.xml"/>
+            
         </screen>
 
     </screen-facade>
