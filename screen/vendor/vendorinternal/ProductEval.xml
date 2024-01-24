@@ -13,11 +13,11 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Products" default-menu-index="30" menu-image="/ssstatic/images/Catalog.png">
+        default-menu-title="Product Evaluations" default-menu-index="20" menu-image="/ssstatic/images/Catalog.png" default-menu-include="true">
 
-    <subscreens default-item="FindProducts"/>
+    <subscreens default-item="FindProductEval"/>
 
     <widgets>
-        <subscreens-active id="products-active" />
+        <subscreens-active id="product-eval-active" />
     </widgets>
 </screen>

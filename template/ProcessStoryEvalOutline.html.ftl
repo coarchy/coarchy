@@ -55,6 +55,7 @@
             <#if !isActivityIncluded && !showExcludedActivities><#continue/></#if>
             <li>
             <@activityResponseStat processStoryActivity />
+            <@evaluateActivityButton processStoryActivity />
             <@toggleActivityInclusion processStoryActivity />
             <#if processStoryActivity.action!?has_content><#if !isActivityIncluded><s class="text-grey-8"></#if></#if>
             <#include "ActivityStyledSpan.html.ftl"/>
@@ -82,8 +83,8 @@
     <#if processStoryActivity.detailProcessStoryId!?has_content && showSubstoriesActual>
         <@substory processStoryActivity 1/>
     </#if>
-    <#if processStoryActivity.activity!?has_content></li></#if>
-    <#if !processStoryActivity.detailProcessStoryId!?has_content><br/></#if>
+    <#if processStoryActivity.action!?has_content></li></#if>
+    <#--  <#if !processStoryActivity.detailProcessStoryId!?has_content><br/></#if>  -->
 </#list>
 </ol>
 </div>

@@ -59,8 +59,7 @@
                     ${valueStatement.value?html?ensure_ends_with(".")}
                     <#if !isStatementIncluded></s></#if>
                 </li>
-            </div>
-        
+            </div>        
         </#if>
     </#list>
 </ol>

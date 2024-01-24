@@ -41,7 +41,7 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- <condition> -->
             <!-- <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression> -->
         <!-- </condition> -->
-        <default-response url="/vendor/Products/EditProductEval" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId]"/>
+        <default-response url="/vendor/ProductEval/EditProductEval" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId]"/>
     </transition>
 
     <!-- <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/> -->
@@ -81,8 +81,8 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="showExcludedStatements" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
         <set field="showExcludedActivities" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
         <set field="canInviteVendors" from="['PeInviteVendors','PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
-        <set field="showInviteVendorsSection" from="['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
-        <set field="showOrgResponseView" from="productEvaluation.statusId == 'PeAwaitingVendorResponse'"/>
+        <set field="showInviteVendorsSection" from="isUserInternalOrgMember &amp;&amp; ['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
+        <set field="showOrgResponseView" from="isUserOrgInternal &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
         <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
         <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
 
@@ -140,7 +140,7 @@ along with this software (see the LICENSE.md file). If not, see
             </actions>
             <widgets>
                 <dynamic-dialog id="ActivityResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Activity':'Evaluate Activity'}" button-text="Evaluate activity ${activityId}" transition="EvalResponse" parameter-map="[activityId:activityId]" button-style="hidden"/>
-                <dynamic-dialog id="ActivityResponseListDialog" title="Activity Evaluations" button-text="${activityId} Evaluations" transition="ActivityEvals" parameter-map="[activityId:activityId]" button-style="hidden"/>        
+                <dynamic-dialog id="ActivityResponseListDialog" title="Activity Evaluations" button-text="${activityId} Evaluations" transition="ActivityEvals" parameter-map="[activityId:activityId]" button-style="hidden" condition="isUserInternalOrgMember"/>        
             </widgets>
         </section-iterate>
         <section-iterate name="ActivityReponseListSection" list="productEvalStatements.valueStatementIds" entry="valueStatementId">
@@ -151,7 +151,7 @@ along with this software (see the LICENSE.md file). If not, see
             </actions>
             <widgets>
                 <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="Evaluate staatement ${valueStatementId}" transition="EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="hidden"/>
-                <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="${valueStatementId} Evaluations" transition="ActivityEvals" parameter-map="[valueStatementId:valueStatementId]" button-style="hidden"/>        
+                <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="${valueStatementId} Evaluations" transition="ActivityEvals" parameter-map="[valueStatementId:valueStatementId]" button-style="hidden" condition="isUserInternalOrgMember"/>        
             </widgets>
         </section-iterate>
 
@@ -166,7 +166,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                         <set field="showSubstories" value="Y"/>
                         <set field="hasSubstories" from="processStoryActivityList*.detailProcessStoryId.any{ it != null }"/>
-                        <set field="showSubstoriesActual" from="partyActivationCount!=0 &amp;&amp; showSubstories=='Y' &amp;&amp; hasSubstories"/>
+                        <set field="showSubstoriesActual" from="showSubstories=='Y' &amp;&amp; hasSubstories"/>
                     </actions>
                     <widgets>
                         <container-box>

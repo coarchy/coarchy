@@ -243,4 +243,17 @@ along with this software (see the LICENSE.md file). If not, see
         <alias-all entity-alias="PE" />
         <alias name="productName" entity-alias="PR" />
     </view-entity>
+    
+    <view-entity entity-name="ProductEvaluationPartyAndEval" package="coarchy.product">
+        <member-entity entity-alias="PEP" entity-name="coarchy.product.ProductEvaluationParty" />
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation" join-from-alias="PEP">
+            <key-map field-name="productEvaluationId" />
+        </member-entity>
+
+        <alias-all entity-alias="PEP" />
+        <alias-all entity-alias="PE" >
+            <exclude field="statusId" />
+        </alias-all>
+        <alias name="evaluationStatusId" field="statusId" entity-alias="PE"/>
+    </view-entity>
 </entities>
