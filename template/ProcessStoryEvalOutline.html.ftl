@@ -1,15 +1,25 @@
 <#macro activityResponseStat processStoryActivity>
     <#if showOrgResponseView>
-        <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
-        <#assign allVendorsResponded = (responseCount == totalVendorCount)/>
-        <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseListDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
-            <span class="text-caption <#if allVendorsResponded>text-positive<#else>text-negative</#if>">(${responseCount!0}/${totalVendorCount} evals) </span>
-        </a>
+        <#if isUserInternalOrgMember>
+            <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
+            <#assign allVendorsResponded = (responseCount == totalVendorCount)/>
+            <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseListDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
+                <span class="text-caption <#if allVendorsResponded>text-positive<#else>text-negative</#if>">(${responseCount!0}/${totalVendorCount} evals) </span>
+            </a>
+        <#elseif isUserVendor>
+            <#assign responseCount = activityResponseByVendor[ec.user.userAccount.partyId!][processStoryActivity.activityId] />
+            <#assign vendorResponseComplete = responseCount &gt; 0/>
+            <#if vendorResponseComplete>
+            <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseListDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
+                <span class="text-caption text-info">${'['}View Eval${']'}</span>
+            </a>
+            </#if>
+        </#if>
     </#if>
 </#macro>
 <#macro evaluateActivityButton processStoryActivity>
     <#if showVendorResponseView>
-        <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
+        <#assign responseCount = activityResponseByVendor[ec.user.userAccount.partyId!][processStoryActivity.activityId] />
         <#assign vendorResponseComplete = responseCount &gt; 0/>
         <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
             <span class="text-caption <#if vendorResponseComplete>text-positive<#else>text-negative</#if>"><#if vendorResponseComplete>(Update Evaluation)<#else>(Evaluate)</#if> </span>

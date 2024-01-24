@@ -191,7 +191,7 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="showExcludedActivities" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
         <set field="canInviteVendors" from="['PeInviteVendors','PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
         <set field="showInviteVendorsSection" from="['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
-        <set field="showOrgResponseView" from="productEvaluation.statusId == 'PeAwaitingVendorResponse'"/>
+        <set field="showOrgResponseView" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
         <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
         <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
 

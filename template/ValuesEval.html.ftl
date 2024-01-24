@@ -1,16 +1,26 @@
 
 <#macro statementResponseStat valueStatement>
     <#if showOrgResponseView>
-        <#assign responseCount = vendorResponseByStatement[valueStatement.valueStatementId] />
-        <#assign allVendorsResponded = (responseCount == totalVendorCount)/>
-        <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=StatementResponseListDialog_${statementResponseDialogIndexMap[valueStatement.valueStatementId]}">
-            <span class="text-caption <#if allVendorsResponded>text-positive<#else>text-negative</#if>">(${responseCount!0}/${totalVendorCount} evals) </span>
-        </a>
+        <#if isUserInternalOrgMember>
+            <#assign responseCount = vendorResponseByStatement[valueStatement.valueStatementId] />
+            <#assign allVendorsResponded = (responseCount == totalVendorCount)/>
+            <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=StatementResponseListDialog_${statementResponseDialogIndexMap[valueStatement.valueStatementId]}">
+                <span class="text-caption <#if allVendorsResponded>text-positive<#else>text-negative</#if>">(${responseCount!0}/${totalVendorCount} evals) </span>
+            </a>
+        <#elseif isUserVendor>
+            <#assign responseCount = statementResponseByVendor[ec.user.userAccount.partyId!][valueStatement.valueStatementId] />
+            <#assign vendorResponseComplete = responseCount &gt; 0/>
+            <#if vendorResponseComplete>
+            <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=StatementResponseListDialog_${statementResponseDialogIndexMap[valueStatement.valueStatementId]}">
+                <span class="text-caption text-info">${'['}View Eval${']'}</span>
+            </a>
+            </#if>
+        </#if>
     </#if>
 </#macro>
 <#macro evaluateStatementButton valueStatement>
     <#if showVendorResponseView>
-        <#assign responseCount = vendorResponseByStatement[valueStatement.valueStatementId] />
+        <#assign responseCount = statementResponseByVendor[ec.user.userAccount.partyId!][valueStatement.valueStatementId] />
         <#assign vendorResponseComplete = responseCount &gt; 0/>
         <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=StatementResponseDialog_${statementResponseDialogIndexMap[valueStatement.valueStatementId]}">
             <span class="text-caption <#if vendorResponseComplete>text-positive<#else>text-negative</#if>"><#if vendorResponseComplete>(Update Evaluation)<#else>(Evaluate)</#if> </span>

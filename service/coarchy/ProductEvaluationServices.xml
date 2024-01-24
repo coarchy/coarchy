@@ -48,25 +48,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="create#coarchy.product.ProductEvaluationItem"
                 in-map="[productEvaluationId:productEvaluationId, statementId:valueStatement.valueStatementId]" />
             </iterate>
-            <!--             
-            <entity-find entity-name="mantle.product.ProductParty" list="productPartyList">
-                <date-filter />
-                <econdition field-name="productId" />
-                <econdition field-name="partyId" from="vendorPartyId" />
-                <econdition field-name="roleTypeId" value="VendorRepresentative" />
-                <econdition field-name="statusId" value="PpInvited" />
-                <order-by field-name="-fromDate" />
-            </entity-find>
 
-            <if condition="productPartyList">
-                <set field="productParty" from="productPartyList[0]" />
-                <service-call name="update#mantle.product.ProductParty" in-map="[productId:productParty.productId,
-            roleTypeId:productParty.roleTypeId, fromDate:productParty.fromDate,
-            partyId:productParty.partyId, statusId: 'PpRejected']"/>
-                <else>
-                    <return error="true" message="Cannot reject invitation."/>
-                </else>
-            </if> -->
         </actions>
     </service>
 
@@ -277,6 +259,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <!-- Activity include/exclude -->
     <service verb="exclude" noun="ProductEvaluationActivity">
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
@@ -387,7 +370,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <!-- Value statements -->
+    <!-- Value statement include/exclude -->
     <service verb="exclude" noun="ProductEvaluationStatement">
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
@@ -514,9 +497,10 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <!-- =============== -->
+    <!-- ================= -->
     <!-- Response Services -->
-    <!-- =============== -->
+    <!-- ================= -->
+
     <service verb="add" noun="ProductEvaluationResponse">
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
@@ -573,6 +557,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="productEvaluationId" required="true" />
         </in-parameters>
         <out-parameters>
+            <parameter name="activityResponseByVendor" type="Map" />
+            <parameter name="statementResponseByVendor" type="Map" />
             <parameter name="internalResponseByActivity" type="Map" />
             <parameter name="vendorResponseByActivity" type="Map" />
             <parameter name="internalResponseByStatement" type="Map" />
@@ -585,6 +571,8 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="coarchy.product.ProductEvaluation"
                 value-field="productEvaluation" />
 
+            <set field="activityResponseByVendor" from="[:]"/>
+            <set field="statementResponseByVendor" from="[:]"/>
             <set field="vendorResponseByActivity" from="[:]"/>
             <set field="internalResponseByActivity" from="[:]"/>
             <set field="vendorResponseByStatement" from="[:]"/>
@@ -602,51 +590,57 @@ along with this software (see the LICENSE.md file). If not, see
                 <date-filter />
                 <econdition field-name="productEvaluationId" />
                 <econdition field-name="roleTypeId" value="VendorRepresentative" />
-                <!-- <econdition field-name="statusId" value="PpInvited" /> -->
+                <econdition field-name="statusId" operator="in" value="PepInvited,PepAccepted" />
             </entity-find>
             <set field="vendorPartyIds" from="productEvalPartyList*.partyId" />
             <set field="totalVendorCount" from="vendorPartyIds.size()" />
 
-            <iterate list="productEvalActivities.activityIds" entry="activityId">
-                <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
-                    list="productEvalResponseList">
-                    <econdition field-name="productEvaluationId" />
-                    <econdition field-name="activityId" />
-                    <econdition field-name="evaluationByEnumId" value="EbVendor" />
-                    <econdition field-name="responsePartyId" operator="in" from="vendorPartyIds" />
-                </entity-find>
-                <script>addToBigDecimalInMap(activityId, productEvalResponseList.size(), vendorResponseByActivity)</script>
+            <iterate list="vendorPartyIds" entry="vendorPartyId">
+                <script>activityResponseByVendor[vendorPartyId] = [:] </script>
+                <script>statementResponseByVendor[vendorPartyId] = [:] </script>
+                <iterate list="productEvalActivities.activityIds" entry="activityId">
+                    <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                        count-field="productEvalResponseCount">
+                        <econdition field-name="productEvaluationId" />
+                        <econdition field-name="activityId" />
+                        <econdition field-name="evaluationByEnumId" value="EbVendor" />
+                        <econdition field-name="responsePartyId" from="vendorPartyId" />
+                    </entity-find-count>
+                    <script>addToBigDecimalInMap(activityId, productEvalResponseCount, vendorResponseByActivity)</script>
+                    <script>activityResponseByVendor[vendorPartyId].put(activityId, productEvalResponseCount)</script>
+                </iterate>
+                            
+                <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
+                    <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                        count-field="productEvalResponseCount">
+                        <econdition field-name="productEvaluationId" />
+                        <econdition field-name="statementId" from="valueStatementId" />
+                        <econdition field-name="evaluationByEnumId" value="EbVendor" />
+                        <econdition field-name="responsePartyId" from="vendorPartyId" />
+                    </entity-find-count>
+                    <script>addToBigDecimalInMap(valueStatementId, productEvalResponseCount, vendorResponseByStatement)</script>
+                    <script>statementResponseByVendor[vendorPartyId].put(valueStatementId, productEvalResponseCount)</script>
+                </iterate>
             </iterate>
             
-            <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
-                <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
-                    list="productEvalResponseList">
-                    <econdition field-name="productEvaluationId" />
-                    <econdition field-name="statementId" from="valueStatementId" />
-                    <econdition field-name="evaluationByEnumId" value="EbVendor" />
-                    <econdition field-name="responsePartyId" operator="in" from="vendorPartyIds" />
-                </entity-find>
-                <script>addToBigDecimalInMap(valueStatementId, productEvalResponseList.size(), vendorResponseByStatement)</script>
-            </iterate>
-            
             <iterate list="productEvalActivities.activityIds" entry="activityId">
-                <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
-                    list="productEvalResponseList">
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                    count-field="productEvalResponseCount">
                     <econdition field-name="productEvaluationId" />
                     <econdition field-name="activityId" />
                     <econdition field-name="evaluationByEnumId" value="EbInternal" />
-                </entity-find>
-                <script>addToBigDecimalInMap(activityId, productEvalResponseList.size(), internalResponseByActivity)</script>
+                </entity-find-count>
+                <script>addToBigDecimalInMap(activityId, productEvalResponseCount, internalResponseByActivity)</script>
             </iterate>
 
             <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
-                <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
-                    list="productEvalResponseList">
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                    count-field="productEvalResponseCount">
                     <econdition field-name="productEvaluationId" />
                     <econdition field-name="statementId" from="valueStatementId" />
                     <econdition field-name="evaluationByEnumId" value="EbInternal" />
-                </entity-find>
-                <script>addToBigDecimalInMap(valueStatementId, productEvalResponseList.size(), internalResponseByStatement)</script>
+                </entity-find-count>
+                <script>addToBigDecimalInMap(valueStatementId, productEvalResponseCount, internalResponseByStatement)</script>
             </iterate>
 
             <!-- get all values of vendorResponseByActivity in list -->
@@ -725,7 +719,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <date-filter />
                 <econdition field-name="productEvaluationId" />
                 <econdition field-name="roleTypeId" value="VendorRepresentative" />
-                <econdition field-name="statusId" operator="not-in" value="PepWithdrew" />
+                <econdition field-name="statusId" operator="not-in" value="PepRejected,PepWithdrew" />
             </entity-find>
 
             <if condition="productEvalPartyList.size() == 0">
@@ -768,8 +762,6 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
         </in-parameters>
-        <out-parameters>
-        </out-parameters>
         <actions>
             <entity-find-one entity-name="coarchy.product.ProductEvaluation"
                 value-field="productEvaluation" />
@@ -782,18 +774,21 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- see if all activites on the product evaluation have responses from all vendors, if
             they do, change status to complete -->
             <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationAcitivites"
-                in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
-
+                in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />            
+            <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationStatements"
+                in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalStatements" />
+                
             <!-- get vendors on the product evaluation -->
             <entity-find entity-name="coarchy.product.ProductEvaluationParty"
                 list="productEvalPartyList">
                 <date-filter />
                 <econdition field-name="productEvaluationId" />
                 <econdition field-name="roleTypeId" value="VendorRepresentative" />
-                <!-- <econdition field-name="statusId" value="PpInvited" /> -->
+                <econdition field-name="statusId" operator="in" value="PepInvited,PepAccepted" />
             </entity-find>
             <set field="vendorPartyIds" from="productEvalPartyList*.partyId" />
 
+            <!-- check if all vendors responded -->
             <set field="allVendorsResponded" from="true" />
             <iterate list="vendorPartyIds" entry="vendorPartyId">
                 <if condition="!allVendorsResponded">
@@ -801,25 +796,78 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
 
                 <iterate list="productEvalActivities.activityIds" entry="activityId">
-                    <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
-                        list="productEvalResponseList">
+                    <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                        count-field="productEvalResponseCount">
                         <econdition field-name="productEvaluationId" />
                         <econdition field-name="activityId" />
                         <econdition field-name="responsePartyId" from="vendorPartyId" />
-                    </entity-find>
+                        <econdition field-name="evaluationByEnumId" value="EbVendor" />
+                    </entity-find-count>
 
-                    <if condition="!productEvalResponseList.size()">
+                    <if condition="!productEvalResponseCount">
                         <set field="allVendorsResponded" from="false" />
                         <break />
                     </if>
                 </iterate>
+                
+                <if condition="allVendorsResponded">
+                    <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
+                        <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                            count-field="productEvalResponseCount">
+                            <econdition field-name="productEvaluationId" />
+                            <econdition field-name="statementId" from="valueStatementId" />
+                            <econdition field-name="responsePartyId" from="vendorPartyId" />
+                            <econdition field-name="evaluationByEnumId" value="EbVendor" />
+                        </entity-find-count>
+
+                        <if condition="!productEvalResponseCount">
+                            <set field="allVendorsResponded" from="false" />
+                            <break />
+                        </if>
+                    </iterate>
+                </if>
             </iterate>
 
+            <!-- check if all internal responded -->
+            <set field="allInternalResponded" from="true" />
+            <iterate list="productEvalActivities.activityIds" entry="activityId">
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                    count-field="productEvalResponseCount">
+                    <econdition field-name="productEvaluationId" />
+                    <econdition field-name="activityId" />
+                    <econdition field-name="responsePartyId" operator="not-in" from="vendorPartyId" />
+                    <econdition field-name="evaluationByEnumId" value="EbInternal" />
+                </entity-find-count>
+
+                <if condition="!productEvalResponseCount">
+                    <set field="allInternalResponded" from="false" />
+                    <break />
+                </if>
+            </iterate>
+            
+            <if condition="allInternalResponded">
+                <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
+                    <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                        count-field="productEvalResponseCount">
+                        <econdition field-name="productEvaluationId" />
+                        <econdition field-name="statementId" from="valueStatementId" />
+                        <econdition field-name="responsePartyId" operator="not-in" from="vendorPartyId" />
+                        <econdition field-name="evaluationByEnumId" value="EbInternal" />
+                    </entity-find-count>
+
+                    <if condition="!productEvalResponseCount">
+                        <set field="allInternalResponded" from="false" />
+                        <break />
+                    </if>
+                </iterate>
+            </if>
+
             <!-- update status -->
-            <if condition="allVendorsResponded">
+            <if condition="allVendorsResponded &amp;&amp; allInternalResponded">
                 <set field="productEvaluation.statusId" value="PeCompleted" />
                 <entity-update value-field="productEvaluation" />
             </if>
+
         </actions>
     </service>
 

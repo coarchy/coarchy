@@ -126,7 +126,7 @@ along with this software (see the LICENSE.md file). If not, see
             </field>
             <field name="implementationStatusEnumId">
                 <default-field title="Implementation Status">
-                    <drop-down submit-on-select="false" allow-empty="false" allow-multiple="true">
+                    <drop-down submit-on-select="false" allow-empty="false" allow-multiple="false">
                         <entity-options>
                             <entity-find entity-name="moqui.basic.Enumeration">
                                 <econdition field-name="enumTypeId" value="ImplementationStatus" />

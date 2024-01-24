@@ -82,7 +82,7 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="showExcludedActivities" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
         <set field="canInviteVendors" from="['PeInviteVendors','PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
         <set field="showInviteVendorsSection" from="isUserInternalOrgMember &amp;&amp; ['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
-        <set field="showOrgResponseView" from="isUserOrgInternal &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
+        <set field="showOrgResponseView" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
         <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
         <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
 
@@ -108,15 +108,9 @@ along with this software (see the LICENSE.md file). If not, see
                     <container>
                         <label text="Status" style="text-bold" />
                     </container>
-                    <container style="text-subtitle1">
-                        <label text="Requirements Selection" style="text-grey-8" condition="productEvaluation.statusId != 'PeRequirementsSelection'"/>
-                        <label text="Requirements Selection" style="text-primary text-bold" condition="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-                        <label text=" / " />
-                        <label text="Vendor Invitations" style="text-grey-8" condition="productEvaluation.statusId != 'PeInviteVendors'"/>
-                        <label text="Vendor Invitations" style="text-primary text-bold" condition="productEvaluation.statusId == 'PeInviteVendors'"/>
-                        <label text=" / " />
-                        <label text="Awaiting Responses" style="text-grey-8" condition="productEvaluation.statusId != 'PeAwaitingVendorResponse'"/>
-                        <label text="Awaiting Responses" style="text-primary text-bold" condition="productEvaluation.statusId == 'PeAwaitingVendorResponse'"/>
+                    <container style="text-subtitle1">                        
+                        <label text="Awaiting Response" style="text-grey-8" condition="productEvaluation.statusId != 'PeAwaitingVendorResponse'"/>
+                        <label text="Awaiting Response" style="text-primary text-bold" condition="productEvaluation.statusId == 'PeAwaitingVendorResponse'"/>
                         <label text=" / " />
                         <label text="Complete" style="text-grey-8" condition="productEvaluation.statusId != 'PeCompleted' &amp;&amp; productEvaluation.statusId != 'PeCancelled'"/>
                         <label text="Complete" style="text-success text-bold" condition="productEvaluation.statusId == 'PeCompleted' &amp;&amp; productEvaluation.statusId != 'PeCancelled'"/>
@@ -125,11 +119,6 @@ along with this software (see the LICENSE.md file). If not, see
                 </row-col>
             </container-row>
         </container>
-
-        <link url="finalizeActivitySelection" text="Finalize Requirements Selection" confirmation="Are you sure you want to finalize the requirements selection?" btn-type="success" tooltip="Finalize Requirements Selection" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeRequirementsSelection'"/>
-        <link url="reopenActivitySelection" text="Modify Requirements" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeInviteVendors'"/>
-        <link url="finalizeVendorInvitations" text="Finalize Invitations" confirmation="Are you sure you want to finalize the vendor invitations?" btn-type="success" tooltip="Finalize Vendor Invitations" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeInviteVendors'"/>
-        <link url="cancelProductEvaluation" text="Cancel Evaluation" confirmation="Are you sure you want to cancel this product evaluation?" btn-type="danger" tooltip="Cancel Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
 
         <!-- Response dialog generation -->
         <section-iterate name="ActivityReponseSection" list="productEvalActivities.activityIds" entry="activityId">
@@ -140,7 +129,7 @@ along with this software (see the LICENSE.md file). If not, see
             </actions>
             <widgets>
                 <dynamic-dialog id="ActivityResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Activity':'Evaluate Activity'}" button-text="Evaluate activity ${activityId}" transition="EvalResponse" parameter-map="[activityId:activityId]" button-style="hidden"/>
-                <dynamic-dialog id="ActivityResponseListDialog" title="Activity Evaluations" button-text="${activityId} Evaluations" transition="ActivityEvals" parameter-map="[activityId:activityId]" button-style="hidden" condition="isUserInternalOrgMember"/>        
+                <dynamic-dialog id="ActivityResponseListDialog" title="Activity Evaluations" button-text="${activityId} Evaluations" transition="ActivityEvals" parameter-map="[activityId:activityId]" button-style="hidden"/>        
             </widgets>
         </section-iterate>
         <section-iterate name="ActivityReponseListSection" list="productEvalStatements.valueStatementIds" entry="valueStatementId">
@@ -151,7 +140,7 @@ along with this software (see the LICENSE.md file). If not, see
             </actions>
             <widgets>
                 <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="Evaluate staatement ${valueStatementId}" transition="EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="hidden"/>
-                <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="${valueStatementId} Evaluations" transition="ActivityEvals" parameter-map="[valueStatementId:valueStatementId]" button-style="hidden" condition="isUserInternalOrgMember"/>        
+                <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="${valueStatementId} Evaluations" transition="ActivityEvals" parameter-map="[valueStatementId:valueStatementId]" button-style="hidden"/>        
             </widgets>
         </section-iterate>
 
@@ -193,120 +182,14 @@ along with this software (see the LICENSE.md file). If not, see
                 </section-iterate>
             </row-col>
 
-            <row-col sm="4">        
-                <section name="ProductVendorInviteListSection" condition="showInviteVendorsSection">
-                    <widgets>
-                        <container-box>
-                            <box-header>
-                                <container-dialog id="ProductVendorInviteDialog" button-text="${(productEvaluation.statusId=='PeAwaitingVendorResponse'?'Invite':'Add')}" button-style="float-right" condition="canInviteVendors">
-                                    <container>
-                                        <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." />
-                                    </container>
-                                    <form-single name="ProductVendorInviteForm" transition="inviteVendor">
-                                        <field name="productEvaluationId">
-                                            <default-field>
-                                                <hidden />
-                                            </default-field>
-                                        </field>
-                                        <field name="emailAddress">
-                                            <default-field>
-                                                <text-line input-type="email"/>
-                                            </default-field>
-                                        </field>
-                                        <field name="submit">
-                                            <default-field>
-                                                <submit text="Invite"/>
-                                            </default-field>
-                                        </field>
-                                        <field-layout>
-                                            <field-col-row>
-                                                <field-col sm="9">
-                                                    <field-ref name="emailAddress" />
-                                                </field-col>
-                                                <field-col sm="3">
-                                                    <field-ref name="submit" />
-                                                </field-col>
-                                            </field-col-row>
-                                        </field-layout>
-                                    </form-single>
-                                </container-dialog>
-                                <label text="Specify Vendors to Invite" style="text-bold q-mx-md" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
-                                <label text="Add as many vendors you would like to evaluate the product, against these requirements. Invitations will only be send when you click 'Finalize Invitations'." style="text-caption text-grey-8" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
-                                <label text="Invited Vendors" style="text-bold q-mx-md" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
-                                <label text="You have invited the following vendors to evaluate this product." style="text-caption text-grey-8" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>                                
-                            </box-header>
-                            <box-body>
-                                <section name="VendorListSection" condition="vendorRepList">
-                                    <widgets>
-                                        <form-list name="ProductVendorInviteList" list="vendorRepList">
-                                            <row-actions>
-                                                <entity-find-one entity-name="mantle.party.PersonAndUserAccount" value-field="personAndAccount">
-                                                    <field-map field-name="partyId" />
-                                                </entity-find-one>
-                                            </row-actions>
-                                            <field name="partyId">
-                                                <default-field>
-                                                    <hidden/>
-                                                </default-field>
-                                            </field>
-                                            <field name="combinedName">
-                                                <default-field title="Representative Name">
-                                                    <display text="${personAndAccount?.firstName} ${personAndAccount?.lastName}" parameter-map="personAndAccount"/>
-                                                </default-field>
-                                            </field>
-                                            <field name="emailAddress">
-                                                <default-field>
-                                                    <display text="${personAndAccount.emailAddress}"/>
-                                                </default-field>
-                                            </field>
-                                            <!-- simplified status -->
-                                            <field name="statusId">
-                                                <conditional-field condition="statusId=='PepPlanned'">
-                                                    <display text="Pending" style="text-grey-8"/>
-                                                </conditional-field>
-                                                <conditional-field condition="['PepInvited','PepAccepted'].contains(statusId)">
-                                                    <display text="Invited" style="text-grey-8"/>
-                                                </conditional-field>
-                                                <default-field title="Status">
-                                                    <!-- <display-entity
-                                                    entity-name="moqui.basic.StatusItem"/> -->
-                                                    <label text="N/A" />
-                                                </default-field>
-                                            </field>
-                                            <!-- <field name="statusId">
-                                                <default-field title="Invitation Status">
-                                                    <display-entity entity-name="moqui.basic.StatusItem"/>
-                                                </default-field>
-                                            </field>
-                                            <field name="actions">
-                                                <default-field title="">
-                                                    <link url="." text="Cancel Invitation" condition="statusId=='PepInvited'"/>
-                                                    <link url="." text="Remove Vendor" condition="statusId=='PepAccepted'"/>
-                                                </default-field>
-                                            </field> -->
-                                        </form-list>
-                                    </widgets>
-                                </section>
-                                <section name="NoVendorListSection" condition="!vendorRepList">
-                                    <widgets>
-                                        <container style="text-center">
-                                            <label text="Please specify at least one vendor to evaluate this product." style="text-bold text-negative" />
-                                        </container>
-
-                                    </widgets>
-                                </section>
-                            </box-body>
-                        </container-box>
-                    </widgets>
-                </section>
+            <row-col sm="4">                        
                 <section name="ValueStatementSection">                    
                     <widgets>
                         <container-box>
                             <box-header>
                                 <label text="Statements" style="text-bold q-mx-sm" type="div"/>
                                 <container type="div">
-                                    <label text="By default, all statements in your organization will be evaluated by the vendors. You can choose to Include/Exclude them by clicking on the buttons below." style="text-caption text-grey-8" condition="productEvaluation.statusId=='PeRequirementsSelection'"/>
-                                    <label text="The following statements will be evaluated by vendors." style="text-caption text-grey-8" condition="productEvaluation.statusId!='PeRequirementsSelection'" />
+                                    <label text="Evaluate the following statements." style="text-caption text-grey-8" condition="productEvaluation.statusId!='PeRequirementsSelection'" />
                                 </container>
                             </box-header>
                             <box-body>

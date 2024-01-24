@@ -68,7 +68,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="partyId" from="ec.user.userAccount.partyId" />
                 <econdition field-name="roleTypeId" value="VendorRepresentative" />
                 <econdition field-name="statusId" operator="not-in" value="PepPlanned,PepCancelled,PepRejected" />
-                <econdition field-name="evaluationStatusId" value="PeAwaitingVendorResponse" />
+                <econdition field-name="evaluationStatusId" operator="in" value="PeAwaitingVendorResponse,PeCompleted" />
             </entity-find>           
             <row-actions>
                 <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
@@ -82,15 +82,20 @@ along with this software (see the LICENSE.md file). If not, see
                 <default-field><display /></default-field>
             </field>          
             <field name="evaluationStatusId">
-                <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem" /></default-field>
+                <conditional-field condition="evaluationStatusId=='PeAwaitingVendorResponse'">
+                    <display text="Awaiting Response"/>
+                </conditional-field>
+                <default-field title="Status">
+                    <display-entity entity-name="moqui.basic.StatusItem" />
+                </default-field>
             </field>
-              <field name="statusId" >
+            <!-- <field name="statusId" >
                 <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem" /></default-field>
-            </field>
+            </field> -->
             <field name="actions">
                 <default-field title="">                  
                     <link url="goToProductEvaluation" text="View"  parameter-map="[productEvaluationId:productEvaluationId]" />
-                    <link url="rejectProductEvaluation" text="Reject" confirmation="Are you sure you want to reject this product evaluation?" btn-type="danger" tooltip="Reject Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeAwaitingVendorResponse'].contains(evaluationStatusId)"/>
+                    <!-- <link url="rejectProductEvaluation" text="Reject" confirmation="Are you sure you want to reject this product evaluation?" btn-type="danger" tooltip="Reject Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeAwaitingVendorResponse'].contains(evaluationStatusId)"/> -->
                 </default-field>
             </field>
         </form-list>

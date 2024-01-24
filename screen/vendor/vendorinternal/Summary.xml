@@ -271,7 +271,7 @@ along with this software (see the LICENSE.md file). If not, see
         <container-row>
             <row-col md="2"/>
             <row-col md="8">
-                <label text="Product Evaluations" type="h4"/>
+                <label text="Outstanding Product Evaluations" type="h4"/>
                                                 
                 <form-list name="ProductEvaluationSummaryList" header-dialog="true" list="evalPartyAndEvalList">
                     <entity-find entity-name="coarchy.product.ProductEvaluationPartyAndEval" list="evalPartyAndEvalList">
@@ -304,11 +304,16 @@ along with this software (see the LICENSE.md file). If not, see
                             <display-entity entity-name="mantle.party.PartyDetail" text="PartyNameOnlyTemplate"  />
                         </default-field>
                     </field>   
-                    <field name="statusId" >
+                    <!-- <field name="statusId" >
                         <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem" /></default-field>
-                    </field>
+                    </field> -->
                     <field name="evaluationStatusId">
-                        <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem" /></default-field>
+                        <conditional-field condition="evaluationStatusId=='PeAwaitingVendorResponse'">
+                            <display text="Awaiting Response"/>
+                        </conditional-field>
+                        <default-field title="Status">
+                            <display-entity entity-name="moqui.basic.StatusItem" />
+                        </default-field>
                     </field>
                     <field name="actions">
                         <default-field title="">
