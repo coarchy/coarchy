@@ -16,46 +16,6 @@ along with this software (see the LICENSE.md file). If not, see
     xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
 
 
-    <!-- <extend-entity entity-name="ProductParty" package="mantle.product">
-        <field name="statusId" type="id" />
-
-        <relationship type="one" title="ProductParty" related="moqui.basic.StatusItem"/>
-
-        <seed-data>
-            <moqui.basic.StatusType description="Product Party" statusTypeId="ProductParty"/>
-
-            <moqui.basic.StatusItem description="Invited" sequenceNum="1" statusId="PpInvited"
-    statusTypeId="ProductParty"/>
-            <moqui.basic.StatusItem description="Accepted" sequenceNum="2" statusId="PpAccepted"
-    statusTypeId="ProductParty"/>
-            <moqui.basic.StatusItem description="Rejected" sequenceNum="3" statusId="PpRejected"
-    statusTypeId="ProductParty"/>
-            <moqui.basic.StatusItem description="Cancelled" sequenceNum="4" statusId="PpCancelled"
-    statusTypeId="ProductParty"/>
-
-            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PpInvited"
-    toStatusId="PpAccepted" transitionName="Accept"/>
-            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PpInvited"
-    toStatusId="PpRejected" transitionName="Reject"/>
-            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PpInvited"
-    toStatusId="PpCancelled" transitionName="Cancel"/>
-
-        </seed-data>
-    </extend-entity>
-    -->
-
-    <!-- general logic 
-     ======
-     - Org Member creates request on a specific product 
-     - Org Member selects vendors to evaluate 
-     - Org Member selects process stories to include (related activities and statements are included by
-    default) 
-     - (If needed), Org member selects which activities to exclude per process story
-     - (statements are included only if they are connected to a relevant activity)
-     - Org member sends request 
-     - Vendors respond to each activity/statement
-     - Status is changed to complete once every activity/statement is responded to by all vendors
-     -->
     <entity entity-name="ProductEvaluation" package="coarchy.product">
         <field name="productEvaluationId" type="id" is-pk="true" />
         <field name="productId" type="id" />
@@ -64,7 +24,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <relationship type="one" title="ProductEvaluation" related="moqui.basic.StatusItem"
             short-alias="statusEnum" />
-        <relationship type="one" related="moqui.basic.StatusItem" short-alias="product" />
+        <relationship type="one" related="moqui.basic.StatusItem" short-alias="status" /> 
 
         <seed-data>
             <moqui.basic.StatusType description="Product Evaluation"
@@ -105,25 +65,51 @@ along with this software (see the LICENSE.md file). If not, see
         </seed-data>
     </entity>
 
-    <entity entity-name="ProductEvaluationItem" package="coarchy.product">
+    <entity entity-name="ProductEvaluationStory" package="coarchy.product">
         <description>
-            A product evaluation item can be a process story, an activity or a statement.
-            Use the includeSubstories flag to include all substories of a given process story.
-            Use the excludeFlag to exclude a specific activity/value statement from a process story.
+            This entity represents the process stories included in a product evaluation.          
         </description>
 
         <field name="productEvaluationId" type="id" is-pk="true" />
-        <field name="productEvaluationItemSeqId" type="id" is-pk="true" />
-        <field name="processStoryId" type="id" />
-        <!-- <field name="includeSubstories" type="text-indicator" default="'Y'"/> -->
-        <field name="excludeFlag" type="text-indicator" />
-        <field name="statementId" type="id" />
-        <field name="activityId" type="id" />
+        <field name="processStoryId" type="id" is-pk="true"/>
 
         <relationship type="one" related="coarchy.product.ProductEvaluation"
             short-alias="productEvaluation" />
         <relationship type="one" related="coarchy.ProcessStory" short-alias="processStory" />
+    </entity>
+
+    <entity entity-name="ProductEvaluationActivity" package="coarchy.product">
+        <description>
+            This entity represents the activities included in a product evaluation.
+            Use the excludeFlag to exclude a specific activity from a process story.
+        </description>
+
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="processStoryId" type="id" is-pk="true" />
+        <field name="activityId" type="id" is-pk="true" />
+        <field name="excludeFlag" type="text-indicator" />
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation"
+            short-alias="productEvaluation" />
+        <relationship type="one-nofk" related="coarchy.product.ProductEvaluationStory"
+            short-alias="evaluationStory" >
+            <key-map field-name="productEvaluationId" />
+            <key-map field-name="processStoryId" />
+        </relationship>
+        <relationship type="one" related="coarchy.ProcessStory" short-alias="processStory" />
         <relationship type="one" related="coarchy.Activity" short-alias="activity" />
+    </entity>
+
+    <entity entity-name="ProductEvaluationStatement" package="coarchy.product">
+        <description>
+            This entity represents the value statements included in a product evaluation.
+        </description>
+
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="statementId" type="id"  is-pk="true"/>
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation"
+            short-alias="productEvaluation" />
         <relationship type="one" related="coarchy.ValueStatement" short-alias="statement">
             <key-map field-name="statementId" related="valueStatementId" />
         </relationship>
@@ -184,14 +170,13 @@ along with this software (see the LICENSE.md file). If not, see
             This entity represents the response of each party to a certain activity / statement, in a product evaluation.
         </description>
 
-        <field name="productEvaluationId" type="id" is-pk="true" />
-        <field name="responseSeqId" type="id" is-pk="true" />
-        <field name="responsePartyId" type="id" />
+        <field name="productEvaluationResponseId" type="id" is-pk="true" />
+        <field name="productEvaluationId" type="id" />
         <field name="statementId" type="id" />
         <field name="activityId" type="id" />
         <field name="evaluationByEnumId" type="id" />
         <field name="implementationStatusEnumId" type="id" />
-        <field name="rating" type="number-integer" />
+        <field name="value" type="number-integer" />
         <field name="comments" type="text-long" />
         <field name="lastEditedByUserId" type="id" enable-audit-log="update" />
 
@@ -242,6 +227,30 @@ along with this software (see the LICENSE.md file). If not, see
 
         <alias-all entity-alias="PE" />
         <alias name="productName" entity-alias="PR" />
+    </view-entity>
+    
+    <view-entity entity-name="ProductEvaluationStoryDetail" package="coarchy.product">
+        <member-entity entity-alias="PES" entity-name="coarchy.product.ProductEvaluationStory" />
+        <member-entity entity-alias="PS" entity-name="coarchy.ProcessStory" join-from-alias="PES">
+            <key-map field-name="processStoryId" />
+        </member-entity>
+
+        <alias-all entity-alias="PES" />
+        <alias-all entity-alias="PS" >
+            <!-- <exclude field="organizationId" /> -->
+        </alias-all>
+    </view-entity>
+    
+    <view-entity entity-name="ProductEvaluationActivityAndDetail" package="coarchy.product">
+        <member-entity entity-alias="PEA" entity-name="coarchy.product.ProductEvaluationActivity" />
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation" join-from-alias="PEA">
+            <key-map field-name="productEvaluationId" />
+        </member-entity>
+
+        <alias-all entity-alias="PEA" />
+        <alias-all entity-alias="PE" >
+            <!-- <exclude field="organizationId" /> -->
+        </alias-all>
     </view-entity>
     
     <view-entity entity-name="ProductEvaluationPartyAndEval" package="coarchy.product">

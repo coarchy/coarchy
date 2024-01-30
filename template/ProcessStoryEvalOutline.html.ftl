@@ -1,36 +1,41 @@
 <#macro activityResponseStat processStoryActivity>
     <#if showOrgResponseView>
         <#if isUserInternalOrgMember>
+            <#assign internalResponseCount = internalResponseByActivity[processStoryActivity.activityId] />
             <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
-            <#assign allVendorsResponded = (responseCount == totalVendorCount)/>
-            <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseListDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
-                <span class="text-caption <#if allVendorsResponded>text-positive<#else>text-negative</#if>">(${responseCount!0}/${totalVendorCount} evals) </span>
-            </a>
+            <#assign vendorResponseComplete = responseCount &gt; 0/>
+            <m-dynamic-dialog url="${sri.buildUrl('../EvalList')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
+                buttonText="View Evals (${internalResponseCount+responseCount})" noIcon 
+                buttonClass="text-caption" title="Activity ${processStoryActivity.activityId} Evaluations" 
+                color="<#if vendorResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>
         <#elseif isUserVendor>
-            <#assign responseCount = activityResponseByVendor[ec.user.userAccount.partyId!][processStoryActivity.activityId] />
+            <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
             <#assign vendorResponseComplete = responseCount &gt; 0/>
             <#if vendorResponseComplete>
-            <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseListDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
-                <span class="text-caption text-info">${'['}View Eval${']'}</span>
-            </a>
+            <m-dynamic-dialog url="${sri.buildUrl('../EvalList')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
+                buttonText="View Eval" noIcon 
+                buttonClass="text-caption" title="Activity ${processStoryActivity.activityId} Evaluations" 
+                color="info"></m-dynamic-dialog>
             </#if>
         </#if>
     </#if>
 </#macro>
 <#macro evaluateActivityButton processStoryActivity>
     <#if showVendorResponseView>
-        <#assign responseCount = activityResponseByVendor[ec.user.userAccount.partyId!][processStoryActivity.activityId] />
+        <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
         <#assign vendorResponseComplete = responseCount &gt; 0/>
-        <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
-            <span class="text-caption <#if vendorResponseComplete>text-positive<#else>text-negative</#if>"><#if vendorResponseComplete>(Update Evaluation)<#else>(Evaluate)</#if> </span>
-        </a>
+        <m-dynamic-dialog url="${sri.buildUrl('../EvalResponse')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
+            buttonText="<#if vendorResponseComplete>Update Evaluation<#else>Evaluate</#if>" noIcon 
+            buttonClass="text-caption" title="<#if isUserInternalOrgMember>Add Internal Evaluation on Activity<#else>Evaluate Activity</#if>" 
+            color="<#if vendorResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>        
     </#if>
     <#if showInternalResponseView>
         <#assign responseCount = internalResponseByActivity[processStoryActivity.activityId] />
         <#assign internalResponseComplete = responseCount &gt; 0/>
-        <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=${productEvaluationId}&_openDialog=ActivityResponseDialog_${activityResponseDialogIndexMap[processStoryActivity.activityId]}">
-            <span class="text-caption <#if internalResponseComplete>text-positive<#else>text-negative</#if>"><#if internalResponseComplete>(Update Internal Evaluation)<#else>(Internal Evaluation)</#if> </span>
-        </a>
+        <m-dynamic-dialog url="${sri.buildUrl('../EvalResponse')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
+            buttonText="<#if internalResponseComplete>Update Internal Evaluation<#else>Internal Evaluation</#if>" noIcon 
+            buttonClass="text-caption" title="<#if isUserInternalOrgMember>Add Internal Evaluation on Activity<#else>Evaluate Activity</#if>" 
+            color="<#if internalResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>
     </#if>
 </#macro>
 
@@ -42,7 +47,7 @@
                 <input type="hidden" name="activityId" value="${processStoryActivity.activityId}">
                 <input type="hidden" name="processStoryId" value="${processStoryActivity.processStoryId}">
                 <input type="hidden" name="productEvaluationId" value="${productEvaluationId}">
-                <button class="btn text-positive" type="submit">${ec.l10n.localize("Included")}</button>
+                <q-btn padding="1px" dense flat no-caps size="sm" class="text-positive" icon="check" type="submit">${ec.l10n.localize("Included")}</q-btn>
             </form>
             <#else>
             <form method="post" action="${sri.buildUrl('includeActivity').url}" class="" id="IncludeActivityForm">
@@ -50,7 +55,7 @@
                 <input type="hidden" name="activityId" value="${processStoryActivity.activityId}">
                 <input type="hidden" name="processStoryId" value="${processStoryActivity.processStoryId}">
                 <input type="hidden" name="productEvaluationId" value="${productEvaluationId}">
-                <button class="btn text-negative" type="submit">${ec.l10n.localize("Excluded")}</button>
+                <q-btn padding="1px" dense flat no-caps size="sm" class="text-negative" icon="close" type="submit">${ec.l10n.localize("Excluded")}</q-btn>
             </form>
             </#if>
         </#if>

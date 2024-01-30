@@ -34,8 +34,6 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
         <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
             <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
-        <!--        <log level="warn" message="Actors always-actions context.toString()
-        ${context.toString()}"/>-->
     </always-actions>
 
     <transition name="createProduct">
@@ -57,7 +55,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="createProductEvaluation">
         <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="coarchy.ProductEvaluationServices.create#ProductEvaluation" in-map="[productId:productId,processStoryIds:processStoryIds,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.ProductEvaluationServices.create#ProductEvaluation" in-map="[productId:productId,processStoryIds:processStoryIds,emailAddress:emailAddress,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
@@ -216,6 +214,8 @@ along with this software (see the LICENSE.md file). If not, see
             <form-single name="CreateProductEvaluationForm" transition="createProductEvaluation">
                 <field name="productId">
                     <default-field title="Product To Evaluate">
+                        <label text="Product Selection" style="text-bold q-mt-md" />
+                        <label text="Select the product you want to evaluate" style="text-caption text-grey-8 q-pb-sm" type="div" />
                         <drop-down allow-empty="false">
                             <entity-options key="${productId}" text="${productName}">
                                 <entity-find entity-name="mantle.product.Product">
@@ -228,6 +228,8 @@ along with this software (see the LICENSE.md file). If not, see
                 </field>
                 <field name="processStoryIds">
                     <default-field title="Process Stories">
+                        <label text="Process Story Selection" style="text-bold q-mt-md" />
+                        <label text="Select the process stories you would like to evaluate. You will get the change to include/exclude activities next." style="text-caption text-grey-8 q-pb-sm" type="div" />
                         <drop-down allow-empty="false" allow-multiple="true">
                             <entity-options key="${processStoryId}" text="${name}">
                                 <entity-find entity-name="coarchy.ProcessStory">
@@ -235,6 +237,13 @@ along with this software (see the LICENSE.md file). If not, see
                                 </entity-find>
                             </entity-options>
                         </drop-down>
+                    </default-field>
+                </field>
+                <field name="emailAddress">
+                    <default-field>
+                        <label text="Vendor Invitation" style="text-bold q-mt-md" />
+                        <label text="Specify the email address of the vendor you want to evaluate this product against" style="text-caption text-grey-8 q-pb-sm" type="div" />
+                        <text-line input-type="email"/>
                     </default-field>
                 </field>
                 <field name="submit"><default-field><submit text="Start Evaluation"/></default-field></field>
@@ -253,7 +262,13 @@ along with this software (see the LICENSE.md file). If not, see
                     <date-filter />
                     <econdition field-name="productEvaluationId" />
                     <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                    <order-by field-name="fromDate" />
                 </entity-find>
+                <if condition="vendorRepList">
+                    <entity-find-one entity-name="mantle.party.PersonAndUserAccount" value-field="personAndAccount">
+                        <field-map field-name="partyId" from="vendorRepList[0].partyId" />
+                    </entity-find-one>
+                </if>
             </row-actions>        
             <field name="productId">
                 <default-field>
@@ -268,8 +283,10 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="productName" from="product.productName">
                 <default-field><display /></default-field>
             </field>
-            <field name="invitedVendorCount" >
-                <default-field><display text="${vendorRepList?.size()}" /></default-field>
+            <field name="combinedName">
+                <default-field title="Representative Name">
+                    <display text="${personAndAccount?.firstName?:''} ${personAndAccount?.lastName?:''} ${personAndAccount?.emailAddress?('('+personAndAccount.emailAddress+')'):''}" />
+                </default-field>
             </field>
             <field name="statusId" >
                 <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem" /></default-field>

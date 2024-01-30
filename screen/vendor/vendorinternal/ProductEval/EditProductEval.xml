@@ -36,33 +36,72 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="partyId" from="activeOrgId"/>
         </entity-find-count>
     </always-actions>
-
-    <transition name="refreshPageWithFilters">
-        <!-- <condition> -->
-            <!-- <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression> -->
-        <!-- </condition> -->
-        <default-response url="/vendor/ProductEval/EditProductEval" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId]"/>
+    
+    <transition name="inviteVendor">
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
+        <!-- <service-call name="coarchy.VendorServices.invite#VendorUser"
+        in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,partyId:activeOrgId]"/> -->
+        <service-call name="coarchy.VendorServices.add#ProductEvaluationParty" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,organizationId:activeOrgId]"/>
+        <default-response url="."/>
     </transition>
 
-    <!-- <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/> -->
+    <transition name="finalizeActivitySelection">
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
+        <service-call name="coarchy.ProductEvaluationServices.finalize#ProductEvaluationActivitySelection" in-map="[productEvaluationId:productEvaluationId]"/>
+        <default-response/>
+        <error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition name="finalizeVendorInvitations">
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
+        <service-call name="coarchy.ProductEvaluationServices.finalize#ProductEvaluationVendorInvitations" in-map="[productEvaluationId:productEvaluationId]"/>
+        <default-response/>
+        <error-response url="." save-parameters="true"/>
+    </transition>
+    
+    <transition name="reopenActivitySelection">
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
+        <service-call name="coarchy.ProductEvaluationServices.reopen#ProductEvaluationActivitySelection" in-map="[productEvaluationId:productEvaluationId]"/>
+        <default-response/>
+        <error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition name="cancelProductEvaluation">
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
+        <service-call name="coarchy.ProductEvaluationServices.cancel#ProductEvaluation" in-map="[productEvaluationId:productEvaluationId]"/>
+        <default-response/>
+        <error-response url="." save-parameters="true"/>
+    </transition>
+
+    <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
+
+    <subscreens default-item="EvalProcessStories">
+        <subscreens-item name="EvalProcessStories" menu-include="true" location="component://coarchy/screen/vendor/vendorinternal/ProductEval/EditProductEval/EvalProcessStories.xml"/>
+        <subscreens-item name="EvalStatements" menu-include="true" location="component://coarchy/screen/vendor/vendorinternal/ProductEval/EditProductEval/EvalStatements.xml"/>
+    </subscreens>
 
     <actions>
         <!-- find product eval -->
         <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
-        <set field="organizationId" from="productEvaluation?.organizationId"/>
-
+        <set field="activeOrgId" from="productEvaluation.organizationId"/>
         <!-- find root process stories -->
-        <entity-find entity-name="coarchy.product.ProductEvaluationItem" list="productEvalItemList">
+        <entity-find entity-name="coarchy.product.ProductEvaluationStory" list="productEvalStoryList">
             <econdition field-name="productEvaluationId" />
-            <econdition field-name="processStoryId" operator="is-not-null" />
-            <econdition field-name="activityId" operator="is-null" />
-            <econdition field-name="statementId" operator="is-null" />
-            <econdition field-name="excludeFlag" value="N" or-null="true" />
         </entity-find>
-        <set field="processStoryIdList" from="productEvalItemList*.processStoryId"/>
+        <set field="processStoryIdList" from="productEvalStoryList*.processStoryId"/>
 
         <!-- find inculded activities -->
-        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationAcitivites" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
+        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationActivites" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationStatements" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalStatements" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationResponseStats" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
 
@@ -80,8 +119,8 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="canModifyStatements" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
         <set field="showExcludedStatements" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
         <set field="showExcludedActivities" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="canInviteVendors" from="['PeInviteVendors','PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
-        <set field="showInviteVendorsSection" from="isUserInternalOrgMember &amp;&amp; ['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
+        <set field="canInviteVendors" from="['PeRequirementsSelection','PeInviteVendors','PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
+        <set field="showInviteVendorsSection" from="['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
         <set field="showOrgResponseView" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
         <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
         <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
@@ -91,6 +130,22 @@ along with this software (see the LICENSE.md file). If not, see
     </actions>
 
     <widgets>
+        <!-- <section name="FreemiumBanner" condition="partyActivationCount == 0">
+            <widgets>
+                <container type="q-banner inline-actions rounded dense" style="bg-grey-3 text-black q-mb-md">
+                    <label text="To enable all the features upgrade organization '${activeOrg.organizationName}' to Premium" type="b"/>
+                    <container type="template v-slot:action">
+                        <form-single name="UpgradeForm" transition="upgradeParty">
+                            <field name="upgrade">
+                                <default-field>
+                                    <submit text="Upgrade" type="success" confirmation="Activating will cost 1 Organization-Month Credit per month while ${activeOrg.organizationName} is upgraded. Are you sure?"/>
+                                </default-field>
+                            </field>
+                        </form-single>
+                    </container>
+                </container>
+            </widgets>
+        </section> -->
 
         <container>
             <container-row style="q-mt-md">
@@ -108,7 +163,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <container>
                         <label text="Status" style="text-bold" />
                     </container>
-                    <container style="text-subtitle1">                        
+                    <container style="text-subtitle1">
                         <label text="Awaiting Response" style="text-grey-8" condition="productEvaluation.statusId != 'PeAwaitingVendorResponse'"/>
                         <label text="Awaiting Response" style="text-primary text-bold" condition="productEvaluation.statusId == 'PeAwaitingVendorResponse'"/>
                         <label text=" / " />
@@ -120,93 +175,126 @@ along with this software (see the LICENSE.md file). If not, see
             </container-row>
         </container>
 
-        <!-- Response dialog generation -->
-        <section-iterate name="ActivityReponseSection" list="productEvalActivities.activityIds" entry="activityId">
-            <actions>
-                <script>
-                    activityResponseDialogIndexMap.put(activityId, activityId_index)
-                </script>
-            </actions>
-            <widgets>
-                <dynamic-dialog id="ActivityResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Activity':'Evaluate Activity'}" button-text="Evaluate activity ${activityId}" transition="EvalResponse" parameter-map="[activityId:activityId]" button-style="hidden"/>
-                <dynamic-dialog id="ActivityResponseListDialog" title="Activity Evaluations" button-text="${activityId} Evaluations" transition="ActivityEvals" parameter-map="[activityId:activityId]" button-style="hidden"/>        
-            </widgets>
-        </section-iterate>
-        <section-iterate name="ActivityReponseListSection" list="productEvalStatements.valueStatementIds" entry="valueStatementId">
-            <actions>
-                <script>
-                    statementResponseDialogIndexMap.put(valueStatementId, valueStatementId_index)
-                </script>
-            </actions>
-            <widgets>
-                <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="Evaluate staatement ${valueStatementId}" transition="EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="hidden"/>
-                <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="${valueStatementId} Evaluations" transition="ActivityEvals" parameter-map="[valueStatementId:valueStatementId]" button-style="hidden"/>        
-            </widgets>
-        </section-iterate>
 
-        <container-row >
+        <link url="finalizeActivitySelection" text="Finalize Requirements Selection" confirmation="Are you sure you want to finalize the requirements selection?" btn-type="success" tooltip="Finalize Requirements Selection" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeRequirementsSelection'"/>
+        <link url="reopenActivitySelection" text="Modify Requirements" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeInviteVendors'"/>
+        <link url="finalizeVendorInvitations" text="Finalize Invitations" confirmation="Are you sure you want to finalize the vendor invitations?" btn-type="success" tooltip="Finalize Vendor Invitations" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeInviteVendors'"/>
+        <link url="cancelProductEvaluation" text="Cancel Evaluation" confirmation="Are you sure you want to cancel this product evaluation?" btn-type="danger" tooltip="Cancel Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
+
+
+        <container-row >           
             <row-col sm="8">
-                <section-iterate name="ProcessStorySection" list="processStoryIdList" entry="processStoryId">
-                    <actions>
-                        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory" />
-
-                        <service-call name="coarchy.CoarchyServices.find#ProcessStoryActivityList" in-map="[processStoryId:processStoryId,
-                showSubstories:'Y',organizationId:organizationId]" out-map="context"/>
-
-                        <set field="showSubstories" value="Y"/>
-                        <set field="hasSubstories" from="processStoryActivityList*.detailProcessStoryId.any{ it != null }"/>
-                        <set field="showSubstoriesActual" from="showSubstories=='Y' &amp;&amp; hasSubstories"/>
-                    </actions>
-                    <widgets>
-                        <container-box>
-                            <box-header>
-                                <container type="span" style="q-mr-xs">
-                                    <link url="removeProcessStory" parameter-map="[processStoryId:processStoryId]" text="Remove" style="text-caption text-negative" condition="canModifyProcessStory"/>
-                                </container>
-                                <label text="Process Story (${processStoryId_index+1}/${processStoryIdList.size()})" style="q-pr-sm"/>
-                                <label text="${processStory?.name?' - '+processStory.name:''}" style="text-bold"/>
-                            </box-header>
-                            <box-body>
-                                <render-mode>
-                                    <text><![CDATA[<h5 v-pre>]]></text>
-                                </render-mode>
-                                <render-mode>
-                                    <text type="html,vuet,qvt" location="component://coarchy/template/ProcessStoryEvalOutline.html.ftl"/>
-                                </render-mode>
-                                <render-mode>
-                                    <text><![CDATA[</h5>]]></text>
-                                </render-mode>
-                            </box-body>
-                        </container-box>
-                    </widgets>
-                </section-iterate>
+                <subscreens-panel id="ProductEvalPanel" type="tab" />
             </row-col>
-
-            <row-col sm="4">                        
-                <section name="ValueStatementSection">                    
+            <row-col sm="4">                     
+                <section name="ProductVendorInviteListSection" condition="true || showInviteVendorsSection">
                     <widgets>
                         <container-box>
                             <box-header>
-                                <label text="Statements" style="text-bold q-mx-sm" type="div"/>
-                                <container type="div">
-                                    <label text="Evaluate the following statements." style="text-caption text-grey-8" condition="productEvaluation.statusId!='PeRequirementsSelection'" />
-                                </container>
+                                <container-dialog id="ProductVendorInviteDialog" button-text="${(productEvaluation.statusId=='PeAwaitingVendorResponse'?'Invite':'Add')}" button-style="float-right" condition="canInviteVendors">
+                                    <container>
+                                        <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." />
+                                    </container>
+                                    <form-single name="ProductVendorInviteForm" transition="inviteVendor">
+                                        <field name="productEvaluationId">
+                                            <default-field>
+                                                <hidden />
+                                            </default-field>
+                                        </field>
+                                        <field name="emailAddress">
+                                            <default-field>
+                                                <text-line input-type="email"/>
+                                            </default-field>
+                                        </field>
+                                        <field name="submit">
+                                            <default-field>
+                                                <submit text="Invite"/>
+                                            </default-field>
+                                        </field>
+                                        <field-layout>
+                                            <field-col-row>
+                                                <field-col sm="9">
+                                                    <field-ref name="emailAddress" />
+                                                </field-col>
+                                                <field-col sm="3">
+                                                    <field-ref name="submit" />
+                                                </field-col>
+                                            </field-col-row>
+                                        </field-layout>
+                                    </form-single>
+                                </container-dialog>
+                                <label text="Invite Vendor Representatives" style="text-bold q-mx-md" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
+                                <label text="Invited Vendors" style="text-bold q-mx-md" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
                             </box-header>
                             <box-body>
-                                <render-mode>
-                                    <text><![CDATA[<h5 v-pre>]]></text>
-                                </render-mode>
-                                <render-mode>
-                                    <text type="html,vuet,qvt" location="component://coarchy/template/ValuesEval.html.ftl"/>
-                                </render-mode>
-                                <render-mode>
-                                    <text><![CDATA[</h5>]]></text>
-                                </render-mode>
+                                <label text="Add as many vendor representatives you would like to evaluate the product, against these requirements. Invitations will only be sent when you click 'Finalize Invitations'." style="text-caption text-grey-8" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
+                                <label text="You have invited the following vendors to evaluate this product." style="text-caption text-grey-8" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>                                
+
+                                <section name="VendorListSection" condition="vendorRepList">
+                                    <widgets>
+                                        <form-list name="ProductVendorInviteList" list="vendorRepList">
+                                            <row-actions>
+                                                <entity-find-one entity-name="mantle.party.PersonAndUserAccount" value-field="personAndAccount">
+                                                    <field-map field-name="partyId" />
+                                                </entity-find-one>
+                                            </row-actions>
+                                            <field name="partyId">
+                                                <default-field>
+                                                    <hidden/>
+                                                </default-field>
+                                            </field>
+                                            <field name="combinedName">
+                                                <default-field title="Representative Name">
+                                                    <display text="${personAndAccount?.firstName} ${personAndAccount?.lastName}" parameter-map="personAndAccount"/>
+                                                </default-field>
+                                            </field>
+                                            <field name="emailAddress">
+                                                <default-field>
+                                                    <display text="${personAndAccount.emailAddress}"/>
+                                                </default-field>
+                                            </field>
+                                            <!-- simplified status -->
+                                            <field name="statusId">
+                                                <conditional-field condition="statusId=='PepPlanned'">
+                                                    <display text="Pending" style="text-grey-8"/>
+                                                </conditional-field>
+                                                <conditional-field condition="['PepInvited','PepAccepted'].contains(statusId)">
+                                                    <display text="Invited" style="text-grey-8"/>
+                                                </conditional-field>
+                                                <default-field title="Status">
+                                                    <!-- <display-entity
+                                                    entity-name="moqui.basic.StatusItem"/> -->
+                                                    <label text="N/A" />
+                                                </default-field>
+                                            </field>
+                                            <!-- <field name="statusId">
+                                                <default-field title="Invitation Status">
+                                                    <display-entity entity-name="moqui.basic.StatusItem"/>
+                                                </default-field>
+                                            </field>
+                                            <field name="actions">
+                                                <default-field title="">
+                                                    <link url="." text="Cancel Invitation" condition="statusId=='PepInvited'"/>
+                                                    <link url="." text="Remove Vendor" condition="statusId=='PepAccepted'"/>
+                                                </default-field>
+                                            </field> -->
+                                        </form-list>
+                                    </widgets>
+                                </section>
+                                <section name="NoVendorListSection" condition="!vendorRepList">
+                                    <widgets>
+                                        <container style="text-center">
+                                            <label text="Please specify at least one vendor to evaluate this product." style="text-bold text-negative" />
+                                        </container>
+
+                                    </widgets>
+                                </section>
                             </box-body>
                         </container-box>
                     </widgets>
-                </section>
+                </section>                
             </row-col>
         </container-row>
+
     </widgets>
 </screen>
