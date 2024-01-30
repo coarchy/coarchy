@@ -118,8 +118,8 @@ along with this software (see the LICENSE.md file). If not, see
             </field>                
         </form-list>
 
-        <container style="q-mt-lg text-grey-7">
+        <!-- <container style="q-mt-lg text-grey-7">
             <label text="The scale for ratings are 1 (Full Gap) - 5 (Partial Overlap) - 9 (Full Overlap)" />
-        </container>
+        </container> -->
     </widgets>
 </screen>
