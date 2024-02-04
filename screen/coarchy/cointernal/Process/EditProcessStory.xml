@@ -77,9 +77,13 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="name"/></entity-find>
         </if>
         <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="activityCount">
-            <econdition field-name="processStoryId"/></entity-find-count>
+            <date-filter />
+            <econdition field-name="processStoryId"/>
+        </entity-find-count>
 
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="detailActivityList">
+            <date-filter />
+            <econdition field-name="replacedByActivityId" operator="is-null" />
             <econdition field-name="detailProcessStoryId" from="processStoryId"/>
             <select-field field-name="processStoryId,name"/>
             <order-by field-name="-lastUpdatedStamp"/></entity-find>
@@ -88,6 +92,8 @@ along with this software (see the LICENSE.md file). If not, see
 
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
             <search-form-inputs default-order-by="sequenceNum,action"/>
+            <date-filter />
+            <econdition field-name="replacedByActivityId" operator="is-null" />
             <econdition field-name="processStoryId"/>
             <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
             <!-- Don't select fields from activityactor (actorId) -->

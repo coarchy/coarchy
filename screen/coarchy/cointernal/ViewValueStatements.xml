@@ -32,10 +32,14 @@ along with this software (see the LICENSE.md file). If not, see
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
 
         <entity-find entity-name="coarchy.ValueStatement" list="prepPrepValueStatementList">
-            <order-by field-name="value"/></entity-find>
+            <econdition field-name="replacedByValueStatementId" operator="is-null" />
+            <order-by field-name="value"/>
+        </entity-find>
         <set field="valueStatementList" from="[]"/>
         <iterate list="prepPrepValueStatementList" entry="valueStatement">
             <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
+                <date-filter />
+                <econdition field-name="replacedByActivityId" operator="is-null" />
                 <econdition field-name="valueStatementId" from="valueStatement.valueStatementId"/>
                 <select-field field-name="activityId,name,condition,action"/>
                 <order-by field-name="action"/>

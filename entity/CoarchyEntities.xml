@@ -29,14 +29,14 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="activityId" type="id" is-pk="true"/>
         <field name="condition" type="text-intermediate"/>
         <field name="action" type="text-intermediate"/>
-        <field name="replacesActivityId" type="id"/>
+        <field name="replacedByActivityId" type="id"/>
 
         <field name="implementationId" type="id"/>
 
         <field name="organizationId" type="id"/>
 
         <relationship type="one-nofk" related="coarchy.Activity" short-alias="replacesActivity">
-            <key-map field-name="replacesActivityId" related="activityId"/></relationship>
+            <key-map field-name="replacedByActivityId" related="activityId"/></relationship>
         <relationship type="many" related="ActivityActor" short-alias="actors">
             <key-map field-name="activityId"/></relationship>
 
@@ -61,12 +61,12 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="sequenceNum" type="number-integer"/>
         <field name="typeEnumId" type="id"/>
         <field name="disabled" type="text-indicator" enable-audit-log="true" default="'N'"/>
-        <field name="replacesValueStatementId" type="id"/>
+        <field name="replacedByValueStatementId" type="id"/>
 
         <field name="organizationId" type="id"/>
 
         <relationship type="one-nofk" related="coarchy.ValueStatement" short-alias="replacesValueStatement">
-            <key-map field-name="replacesValueStatementId" related="valueStatementId"/></relationship>
+            <key-map field-name="replacedByValueStatementId" related="valueStatementId"/></relationship>
         <relationship type="many" related="ValueStatementActivity" short-alias="activities">
             <key-map field-name="activityId"/></relationship>
         <relationship type="many" related="coarchy.ValueStatementTag" short-alias="tags">
@@ -112,6 +112,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="valueStatementActivityId" type="id" is-pk="true"/>
         <field name="valueStatementId" type="id"/>
         <field name="activityId" type="id"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
 
         <field name="organizationId" type="id"/>
 
@@ -273,7 +275,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="activityId" type="id"/>
         <field name="sequenceNum" type="number-integer"/>
         <field name="detailProcessStoryId" type="id"/>
-        <field name="disabled" type="text-indicator" enable-audit-log="true" default="'N'"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
 
         <field name="organizationId" type="id"/>
 
@@ -294,11 +297,10 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- Never select actorId so you don't get multiple rows back, INSTEAD filter by actorId -->
         <member-relationship entity-alias="ACAC" join-from-alias="PSA" relationship="actors" join-optional="true"/>
 
-        <alias-all entity-alias="PSA"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/><exclude field="disabled" /></alias-all>
+        <alias-all entity-alias="PSA"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
         <alias-all entity-alias="ACT"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
         <alias-all entity-alias="PS"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
         <alias-all entity-alias="ACAC"><exclude field="organizationId"/><exclude field="lastUpdatedStamp"/></alias-all>
-        <alias name="storyActivityDisabled" entity-alias="PSA" field="disabled"/>
         <alias name="storyActivityOrganizationId" entity-alias="PSA" field="organizationId"/>
         <alias name="storyActivityLastUpdatedStamp" entity-alias="PSA" field="lastUpdatedStamp"/>
         <alias name="activityOrganizationId" entity-alias="ACT" field="organizationId"/>
@@ -319,7 +321,7 @@ along with this software (see the LICENSE.md file). If not, see
         <member-relationship entity-alias="DPS3" join-from-alias="PSA3" relationship="story" join-optional="true"/>
 
         <alias-all entity-alias="PS"><exclude field="lastUpdatedStamp"/></alias-all>
-        <alias-all entity-alias="PSA"><exclude field="detailProcessStoryId"/><exclude field="organizationId"/><exclude field="disabled" /></alias-all>
+        <alias-all entity-alias="PSA"><exclude field="detailProcessStoryId"/><exclude field="organizationId"/></alias-all>
         <alias-all entity-alias="DPS" prefix="detail"><exclude field="processStoryId"/></alias-all>
         <alias-all entity-alias="PSA2" prefix="activity2"/>
         <alias-all entity-alias="DPS2" prefix="detail2"/>
@@ -327,7 +329,6 @@ along with this software (see the LICENSE.md file). If not, see
         <alias-all entity-alias="DPS3" prefix="detail3"/>
         <alias name="detailProcessStoryId" entity-alias="PSA" field="processStoryId"/>
         <alias name="activityOrganizationId" entity-alias="PSA" field="organizationId"/>
-        <alias name="storyActivityDisabled" entity-alias="PSA" field="disabled"/>
     </view-entity>
 
     <entity entity-name="ClipboardEntry" package="coarchy">
