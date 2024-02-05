@@ -41,15 +41,16 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- By default, add all value statements in this organization to ProductEvaluation -->
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
+                <econdition field-name="replacedByValueStatementId" operator="is-null" />
                 <econdition field-name="organizationId" />
                 <order-by field-name="sequenceNum,value" />
             </entity-find>
 
             <iterate list="valueStatementList" entry="valueStatement">
                 <service-call name="create#coarchy.product.ProductEvaluationStatement"
-                in-map="[productEvaluationId:productEvaluationId, statementId:valueStatement.valueStatementId]" />
+                    in-map="[productEvaluationId:productEvaluationId, statementId:valueStatement.valueStatementId]" />
             </iterate>
-            
+
             <!-- add process stories -->
             <set field="allProcessStoryIds" from="processStoryIds.clone()" />
             <iterate list="processStoryIds" entry="processStoryId">
@@ -59,7 +60,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <script>allProcessStoryIds.addAll(descOut.descendantIdList)</script>
             </iterate>
 
-            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail"
+                list="processStoryActivityList">
+                <date-filter />
                 <econdition field-name="processStoryId" operator="in" from="allProcessStoryIds" />
                 <econditions combine="or">
                     <econdition field-name="condition" operator="not-equals" value="" />
@@ -70,13 +73,13 @@ along with this software (see the LICENSE.md file). If not, see
 
             <iterate list="processStoryActivityList" entry="processStoryActivity">
                 <service-call name="create#coarchy.product.ProductEvaluationActivity"
-                in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryActivity.processStoryId, activityId:processStoryActivity.activityId]" />
+                    in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryActivity.processStoryId, activityId:processStoryActivity.activityId]" />
             </iterate>
 
             <!-- add vendor -->
             <service-call name="coarchy.VendorServices.add#ProductEvaluationParty"
-            in-map="[productEvaluationId:productEvaluationId, emailAddress:emailAddress]" />
-            
+                in-map="[productEvaluationId:productEvaluationId, emailAddress:emailAddress]" />
+
         </actions>
     </service>
 
@@ -104,18 +107,21 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <if condition="!productEvaluationStoryCount">
                     <service-call name="create#coarchy.product.ProductEvaluationStory"
-                    in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryId]" />
-                    
-                    <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryDescendants"
-                    out-map="descOut" out-map-add-to-existing="false"
-                    in-map="[processStoryId:processStoryId]" />
+                        in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryId]" />
+
+                    <service-call
+                        name="coarchy.ProductEvaluationServices.get#ProcessStoryDescendants"
+                        out-map="descOut" out-map-add-to-existing="false"
+                        in-map="[processStoryId:processStoryId]" />
                     <script>newProcessStoryIds.add(processStoryId)</script>
                     <script>newProcessStoryIds.addAll(descOut.descendantIdList)</script>
                 </if>
             </iterate>
 
             <!-- add activities -->
-            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail"
+                list="processStoryActivityList">
+                <date-filter />
                 <econdition field-name="processStoryId" operator="in" from="newProcessStoryIds" />
                 <econditions combine="or">
                     <econdition field-name="condition" operator="not-equals" value="" />
@@ -125,18 +131,23 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
 
             <iterate list="processStoryActivityList" entry="processStoryActivity">
-                <entity-find-count entity-name="coarchy.product.ProductEvaluationActivity" count-field="existingCount">
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationActivity"
+                    count-field="existingCount">
                     <econdition field-name="productEvaluationId" />
-                    <econdition field-name="processStoryId" from="processStoryActivity.processStoryId" />
+                    <econdition field-name="processStoryId"
+                        from="processStoryActivity.processStoryId" />
                     <econdition field-name="activityId" from="processStoryActivity.activityId" />
                 </entity-find-count>
                 <if condition="existingCount">
-                    <!-- <set field="activity" from="ec.resource.template('component://coarchy/template/Activity.html.ftl', '.ftl')"/> -->
-                    <!-- <message type="warning"> Activity ${activity} is already included.</message> -->
+                    <!-- <set field="activity"
+                    from="ec.resource.template('component://coarchy/template/Activity.html.ftl',
+                    '.ftl')"/> -->
+                    <!-- <message type="warning"> Activity ${activity} is already
+                    included.</message> -->
                     <continue />
                 </if>
                 <service-call name="create#coarchy.product.ProductEvaluationActivity"
-                in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryActivity.processStoryId, activityId:processStoryActivity.activityId]" />
+                    in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryActivity.processStoryId, activityId:processStoryActivity.activityId]" />
             </iterate>
         </actions>
     </service>
@@ -167,12 +178,13 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
 
             <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryDescendants"
-            out-map="descOut" out-map-add-to-existing="false"
-            in-map="[processStoryId:processStoryId]" />
+                out-map="descOut" out-map-add-to-existing="false"
+                in-map="[processStoryId:processStoryId]" />
 
             <entity-delete-by-condition entity-name="coarchy.product.ProductEvaluationActivity">
                 <econdition field-name="productEvaluationId" />
-                <econdition field-name="processStoryId" operator="in" from="[processStoryId]+descOut.descendantIdList" />
+                <econdition field-name="processStoryId" operator="in"
+                    from="[processStoryId]+descOut.descendantIdList" />
             </entity-delete-by-condition>
         </actions>
     </service>
@@ -234,6 +246,94 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="find" noun="ProcessStoryActivityList">
+        <description>
+            Find list of activities of process story
+            For each activity that has a detailProcessStory, call this function with that processStoryId, return the list of activities
+            Add the necessary fields for the activity and the detail process story name, and detail process story activity list
+        </description>
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+            <parameter name="processStoryId" required="true" />
+            <parameter name="showSubstories" required="true" />
+            <parameter name="organizationId" required="true" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processStoryActivityList" />
+        </out-parameters>
+        <actions>
+            <!-- find included activity ids -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
+                list="productEvaluationActivityList">
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="excludeFlag" value="N" or-null="true" />
+            </entity-find>
+            <set field="includedActivityIds" from="productEvaluationActivityList*.activityId" />
+
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail"
+                list="setupProcessStoryActivityList">
+                <econdition field-name="processStoryId" />
+                <econditions combine="or">
+                    <date-filter />
+                    <econdition field-name="activityId" from="includedActivityIds" operator="in" />
+                </econditions>
+                <select-field
+                    field-name="activityId,condition,action,detailProcessStoryId,processStoryId" />
+                <order-by field-name="sequenceNum" />
+            </entity-find>
+
+            <set field="processStoryActivityList" from="[]" />
+            <iterate list="setupProcessStoryActivityList" entry="processStoryActivity">
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                    <econdition field-name="activityId" from="processStoryActivity.activityId" />
+                    <order-by field-name="name" />
+                </entity-find>
+                <set field="detailProcessStoryName" from="null" />
+                <set field="detailProcessStoryId" from="processStoryActivity.detailProcessStoryId" />
+                <set field="detailProcessStoryActivityList" from="[]" />
+                <if
+                    condition="processStoryActivity.detailProcessStoryId &amp;&amp; showSubstories!='N'">
+                    <service-call
+                        name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList"
+                        out-map="detail"
+                        in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryActivity.detailProcessStoryId,showSubstories:showSubstories,
+                            organizationId:organizationId]" />
+                    <entity-find-one entity-name="coarchy.ProcessStory"
+                        value-field="detailProcessStory"
+                        auto-field-map="[processStoryId:processStoryActivity.detailProcessStoryId]" />
+                    <set field="detailProcessStoryName" from="detailProcessStory.name" />
+                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail"
+                        list="setupDetailProcessStoryActivityList">
+                        <econdition field-name="processStoryId"
+                            from="processStoryActivity.detailProcessStoryId" />
+                        <econditions combine="or">
+                            <date-filter />
+                            <econdition field-name="activityId" from="includedActivityIds"
+                                operator="in" />
+                        </econditions>
+                        <select-field field-name="activityId,condition,action" />
+                        <order-by field-name="sequenceNum" />
+                    </entity-find>
+                    <iterate list="setupDetailProcessStoryActivityList"
+                        entry="detailProcessStoryActivity">
+                        <entity-find entity-name="coarchy.ActivityActorDetail"
+                            list="detailActivityActorList">
+                            <econdition field-name="activityId"
+                                from="detailProcessStoryActivity.activityId" />
+                            <order-by field-name="name" />
+                        </entity-find>
+                        <script>detailProcessStoryActivityList.add([sequenceNum:detailProcessStoryActivity.sequenceNum,condition:detailProcessStoryActivity.condition,actorNames:detailActivityActorList*.name,action:detailProcessStoryActivity.action])</script>
+                    </iterate>
+                </if>
+
+                <script>processStoryActivityList.add([processStoryId:processStoryActivity.processStoryId,activityId:processStoryActivity.activityId,
+                    sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,
+                    actorNames:activityActorList*.name,action:processStoryActivity.action,detailProcessStoryId:detailProcessStoryId,
+                    detailProcessStoryName:detailProcessStoryName,detailProcessStoryActivityList:detail?.processStoryActivityList?.clone()])</script>
+            </iterate>
+        </actions>
+    </service>
+
     <service verb="get" noun="ProductEvaluationActivites">
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
@@ -269,7 +369,8 @@ along with this software (see the LICENSE.md file). If not, see
 
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
                 <econdition field-name="processStoryId" operator="in" from="processStoryIds" />
-                <econdition field-name="activityId" operator="in" from="includedActivityList*.activityId" />
+                <econdition field-name="activityId" operator="in"
+                    from="includedActivityList*.activityId" />
                 <econditions combine="or">
                     <econdition field-name="condition" operator="not-equals" value="" />
                     <econdition field-name="action" operator="not-equals" value="" />
@@ -280,7 +381,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="activityIds" from="activityList*.activityId" />
         </actions>
     </service>
-    
+
     <service verb="get" noun="ProductEvaluationStatements">
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
@@ -295,17 +396,22 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="coarchy.product.ProductEvaluation"
                 value-field="productEvaluation" />
 
-            <entity-find entity-name="coarchy.ValueStatement" list="allValueStatementList">
-                <econdition field-name="organizationId" operator="in" from="productEvaluation.organizationId" />
-                <select-field field-name="valueStatementId,value" />
-            </entity-find>
-            <set field="allValueStatementIds" from="allValueStatementList*.valueStatementId" />
-
             <entity-find entity-name="coarchy.product.ProductEvaluationStatement"
                 list="productEvaluationStatementList">
                 <econdition field-name="productEvaluationId" />
             </entity-find>
             <set field="valueStatementIds" from="productEvaluationStatementList*.statementId" />
+
+            <entity-find entity-name="coarchy.ValueStatement" list="allValueStatementList">
+                <econditions combine="or">
+                    <econdition field-name="valueStatementId" operator="in" from="valueStatementIds" />
+                    <econdition field-name="replacedByValueStatementId" operator="is-null" />
+                </econditions>
+                <econdition field-name="organizationId" operator="in"
+                    from="productEvaluation.organizationId" />
+                <select-field field-name="valueStatementId,value" />
+            </entity-find>
+            <set field="allValueStatementIds" from="allValueStatementList*.valueStatementId" />
 
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
                 <econdition field-name="valueStatementId" operator="in" from="valueStatementIds" />
@@ -332,6 +438,11 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
+                list="allActivityList">
+                <econdition field-name="productEvaluationId" />
+            </entity-find>
+
+            <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
                 list="excludedActivityList">
                 <econdition field-name="productEvaluationId" />
                 <econdition field-name="processStoryId" />
@@ -342,6 +453,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!excludedActivityList">
                 <service-call name="update#coarchy.product.ProductEvaluationActivity"
                     in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryId, activityId:activityId, excludeFlag:'Y']" />
+                    
 
                 <!-- Automatically exclude all activities of any child process stories -->
                 <entity-find-one entity-name="coarchy.ProcessStoryActivity" value-field="psActivity">
@@ -349,12 +461,18 @@ along with this software (see the LICENSE.md file). If not, see
                 </entity-find-one>
 
                 <if condition="psActivity.detailProcessStoryId">
-                    <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryDescendants"
-                    out-map="descOut" out-map-add-to-existing="false"
-                    in-map="[processStoryId:psActivity.detailProcessStoryId]" />
+                    <service-call
+                        name="coarchy.ProductEvaluationServices.get#ProcessStoryDescendants"
+                        out-map="descOut" out-map-add-to-existing="false"
+                        in-map="[processStoryId:psActivity.detailProcessStoryId]" />
 
-                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
-                        <econdition field-name="processStoryId" operator="in" from="[psActivity.detailProcessStoryId] + descOut.descendantIdList" />
+                        <log message="descOut.descendantIdList ${descOut.descendantIdList}"/>
+
+                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail"
+                        list="activityList">
+                        <econdition field-name="activityId" operator="in" from="allActivityList*.activityId" />
+                        <econdition field-name="processStoryId" operator="in"
+                            from="[psActivity.detailProcessStoryId] + descOut.descendantIdList" />
                         <econditions combine="or">
                             <econdition field-name="condition" operator="not-equals" value="" />
                             <econdition field-name="action" operator="not-equals" value="" />
@@ -362,8 +480,10 @@ along with this software (see the LICENSE.md file). If not, see
                         <select-field field-name="processStoryId,activityId,condition,action" />
                     </entity-find>
 
-                    <iterate list="activityList" entry="activity">            
-                        <service-call name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId, processStoryId:activity.processStoryId, activityId:activity.activityId]"/>
+                    <iterate list="activityList" entry="activity">
+                        <service-call
+                            name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationActivity"
+                            in-map="[productEvaluationId:productEvaluationId, processStoryId:activity.processStoryId, activityId:activity.activityId]" />
                     </iterate>
                 </if>
             </if>
@@ -387,6 +507,11 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
+                list="allActivityList">
+                <econdition field-name="productEvaluationId" />
+            </entity-find>
+
+            <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
                 list="excludedActivityList">
                 <econdition field-name="productEvaluationId" />
                 <econdition field-name="processStoryId" />
@@ -397,6 +522,14 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!excludedActivityList">
                 <service-call name="store#coarchy.product.ProductEvaluationActivity"
                     in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryId, activityId:activityId, excludeFlag:'N']" />
+
+                    <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
+                list="excludedActivityList">
+                <econdition field-name="productEvaluationId" />
+                <econdition field-name="processStoryId" />
+                <econdition field-name="activityId" />
+                <econdition field-name="excludeFlag" value="Y" />
+            </entity-find>
             </if>
 
             <iterate list="excludedActivityList" entry="excludedActivity">
@@ -409,12 +542,17 @@ along with this software (see the LICENSE.md file). If not, see
                 </entity-find-one>
 
                 <if condition="psActivity.processStoryId">
-                    <service-call name="coarchy.ProductEvaluationServices.get#ProcessStoryAnscestors"
-                    out-map="anscOut" out-map-add-to-existing="false"
-                    in-map="[processStoryId:psActivity.processStoryId]" />
+                    <service-call
+                        name="coarchy.ProductEvaluationServices.get#ProcessStoryAnscestors"
+                        out-map="anscOut" out-map-add-to-existing="false"
+                        in-map="[processStoryId:psActivity.processStoryId]" />
 
-                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
-                        <econdition field-name="processStoryId" operator="in" from="anscOut.anscestorIdList" />
+                        <log message="anscOut.anscestorIdList ${anscOut.anscestorIdList}"/>
+                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail"
+                        list="activityList">
+                        <econdition field-name="activityId" operator="in" from="allActivityList*.activityId" />
+                        <econdition field-name="processStoryId" operator="in"
+                            from="anscOut.anscestorIdList" />
                         <econditions combine="or">
                             <econdition field-name="condition" operator="not-equals" value="" />
                             <econdition field-name="action" operator="not-equals" value="" />
@@ -422,8 +560,10 @@ along with this software (see the LICENSE.md file). If not, see
                         <select-field field-name="processStoryId,activityId,condition,action" />
                     </entity-find>
 
-                    <iterate list="activityList" entry="activity">            
-                        <service-call name="coarchy.ProductEvaluationServices.include#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId, processStoryId:activity.processStoryId, activityId:activity.activityId]"/>
+                    <iterate list="activityList" entry="activity">
+                        <service-call
+                            name="coarchy.ProductEvaluationServices.include#ProductEvaluationActivity"
+                            in-map="[productEvaluationId:productEvaluationId, processStoryId:activity.processStoryId, activityId:activity.activityId]" />
                     </iterate>
                 </if>
             </iterate>
@@ -453,7 +593,7 @@ along with this software (see the LICENSE.md file). If not, see
             <iterate list="existingStatementList" entry="existingStatement">
                 <service-call name="delete#coarchy.product.ProductEvaluationStatement"
                     in-map="[productEvaluationId:productEvaluationId, statementId:existingStatement.statementId]" />
-            </iterate>           
+            </iterate>
         </actions>
     </service>
 
@@ -480,7 +620,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <if condition="!existingStatementList">
                 <service-call name="create#coarchy.product.ProductEvaluationStatement"
-                    in-map="[productEvaluationId:productEvaluationId, statementId:statementId]" />             
+                    in-map="[productEvaluationId:productEvaluationId, statementId:statementId]" />
             </if>
         </actions>
     </service>
@@ -492,8 +632,8 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="add" noun="ProductEvaluationResponse">
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
-            <parameter name="activityId"  />
-            <parameter name="statementId"  />
+            <parameter name="activityId" />
+            <parameter name="statementId" />
             <parameter name="implementationStatusEnumId" required="true" />
             <parameter name="rating" type="Integer" />
             <parameter name="comments" />
@@ -505,16 +645,17 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="productEvaluation.statusId != 'PeAwaitingVendorResponse'">
                 <return error="true" message="Cannot add response in this status." />
             </if>
-            
+
             <!-- find if party is internal org -->
-            <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
-                <date-filter/>
-                <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
-                <econdition field-name="toRoleTypeId" value="OrgInternal"/>
-                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
-                <econdition field-name="toPartyId" from="productEvaluation.organizationId"/>
+            <entity-find-count entity-name="mantle.party.PartyRelationship"
+                count-field="partyRelationshipCount">
+                <date-filter />
+                <econdition field-name="relationshipTypeEnumId" value="PrtMember" />
+                <econdition field-name="toRoleTypeId" value="OrgInternal" />
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId" />
+                <econdition field-name="toPartyId" from="productEvaluation.organizationId" />
             </entity-find-count>
-            <set field="isUserOrgMember" from="partyRelationshipCount > 0"/>
+            <set field="isUserOrgMember" from="partyRelationshipCount > 0" />
 
             <set field="lastEditedByUserId" from="ec.user.userId" />
 
@@ -522,10 +663,12 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
                 list="productEvalResponseList">
                 <econdition field-name="productEvaluationId" />
-                <econdition field-name="evaluationByEnumId" value="EbInternal" ignore="!isUserOrgMember" />
-                <econdition field-name="evaluationByEnumId" value="EbVendor" ignore="isUserOrgMember"/>
-                <econdition field-name="activityId" ignore="!activityId"/>
-                <econdition field-name="statementId" ignore="!statementId"/>
+                <econdition field-name="evaluationByEnumId" value="EbInternal"
+                    ignore="!isUserOrgMember" />
+                <econdition field-name="evaluationByEnumId" value="EbVendor"
+                    ignore="isUserOrgMember" />
+                <econdition field-name="activityId" ignore="!activityId" />
+                <econdition field-name="statementId" ignore="!statementId" />
             </entity-find>
 
             <if condition="!productEvalResponseList">
@@ -557,10 +700,10 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="coarchy.product.ProductEvaluation"
                 value-field="productEvaluation" />
 
-            <set field="vendorResponseByActivity" from="[:]"/>
-            <set field="internalResponseByActivity" from="[:]"/>
-            <set field="vendorResponseByStatement" from="[:]"/>
-            <set field="internalResponseByStatement" from="[:]"/>
+            <set field="vendorResponseByActivity" from="[:]" />
+            <set field="internalResponseByActivity" from="[:]" />
+            <set field="vendorResponseByStatement" from="[:]" />
+            <set field="internalResponseByStatement" from="[:]" />
 
             <!-- see if all activites on the product evaluation have responses from all vendors, if
             they do, change status to complete -->
@@ -597,7 +740,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </entity-find-count>
                 <script>addToBigDecimalInMap(activityId, productEvalResponseCount, internalResponseByActivity)</script>
             </iterate>
-                        
+
             <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
                 <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
                     count-field="productEvalResponseCount">
@@ -617,11 +760,14 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
 
             <!-- get all values of vendorResponseByActivity in list -->
-            <set field="vendorResponseCountList" from="vendorResponseByActivity.values() + vendorResponseByStatement.values()" />
+            <set field="vendorResponseCountList"
+                from="vendorResponseByActivity.values() + vendorResponseByStatement.values()" />
             <set field="allVendorsResponded" from="vendorResponseCountList.every{it -> it > 0}" />
-            
-            <set field="internalResponseCountList" from="internalResponseByActivity.values() + internalResponseByStatement.values()" />
-            <set field="internalEvaluationComplete" from="internalResponseCountList.every{it -> it > 0}" />
+
+            <set field="internalResponseCountList"
+                from="internalResponseByActivity.values() + internalResponseByStatement.values()" />
+            <set field="internalEvaluationComplete"
+                from="internalResponseCountList.every{it -> it > 0}" />
         </actions>
     </service>
 
@@ -654,7 +800,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-update value-field="productEvaluation" />
         </actions>
     </service>
-    
+
     <service verb="reopen" noun="ProductEvaluationActivitySelection">
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
@@ -731,11 +877,54 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="checkComplete" noun="ProductEvaluation">
+    <service verb="complete" noun="ProductEvaluation">
         <in-parameters>
             <parameter name="productEvaluationId" required="true" />
         </in-parameters>
         <actions>
+            <entity-find-one entity-name="coarchy.product.ProductEvaluation"
+                value-field="productEvaluation" for-update="true"/>
+
+            <!-- Make sure we're in the correct status -->
+            <if condition="!['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)">
+                <return />
+            </if>
+
+            <!-- update status -->
+            <if condition="vendorRespondedToAll &amp;&amp; internalRespondedToAll">
+                <set field="productEvaluation.statusId" value="PeCompleted" />
+                <entity-update value-field="productEvaluation" />
+                <else>
+                    <if condition="!vendorRespondedToAll">
+                        <message type="warning">
+                            The invited vendor has not evaluated all statements and stories.
+                        </message>
+                    </if>
+                    <if condition="!internalRespondedToAll">
+                        <message type="warning">
+                            Not all statements and process stories have internal evaluations.
+                        </message>
+                    </if>
+                </else>
+            </if>
+
+        </actions>
+    </service>
+    
+    <service verb="get" noun="ProductEvaluationCompleteWarnings">
+        <in-parameters>
+            <parameter name="productEvaluationId" required="true" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="hasWarnings" type="Boolean"/>
+            <parameter name="vendorRespondedToAllStories" type="Boolean"/>
+            <parameter name="vendorRespondedToAllStatements" type="Boolean"/>
+            <parameter name="internalRespondedToAllStories" type="Boolean"/>
+            <parameter name="internalRespondedToAllStatements" type="Boolean"/>
+        </out-parameters>
+        <actions>
+            <set field="hasWarnings" from="false"/>
+
             <entity-find-one entity-name="coarchy.product.ProductEvaluation"
                 value-field="productEvaluation" />
 
@@ -747,100 +936,75 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- see if all activites on the product evaluation have responses from all vendors, if
             they do, change status to complete -->
             <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationActivites"
-                in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />            
+                in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
             <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationStatements"
                 in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalStatements" />
-                
-            <!-- get vendors on the product evaluation -->
-            <entity-find entity-name="coarchy.product.ProductEvaluationParty"
-                list="productEvalPartyList">
-                <date-filter />
-                <econdition field-name="productEvaluationId" />
-                <econdition field-name="roleTypeId" value="VendorRepresentative" />
-                <econdition field-name="statusId" operator="in" value="PepInvited,PepAccepted" />
-            </entity-find>
-            <set field="vendorPartyIds" from="productEvalPartyList*.partyId" />
-
+        
             <!-- check if all vendors responded -->
-            <set field="allVendorsResponded" from="true" />
-            <iterate list="vendorPartyIds" entry="vendorPartyId">
-                <if condition="!allVendorsResponded">
-                    <break />
-                </if>
-
-                <iterate list="productEvalActivities.activityIds" entry="activityId">
-                    <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
-                        count-field="productEvalResponseCount">
-                        <econdition field-name="productEvaluationId" />
-                        <econdition field-name="activityId" />
-                        <!-- <econdition field-name="responsePartyId" from="vendorPartyId" /> -->
-                        <econdition field-name="evaluationByEnumId" value="EbVendor" />
-                    </entity-find-count>
-
-                    <if condition="!productEvalResponseCount">
-                        <set field="allVendorsResponded" from="false" />
-                        <break />
-                    </if>
-                </iterate>
-                
-                <if condition="allVendorsResponded">
-                    <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
-                        <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
-                            count-field="productEvalResponseCount">
-                            <econdition field-name="productEvaluationId" />
-                            <econdition field-name="statementId" from="valueStatementId" />
-                            <!-- <econdition field-name="responsePartyId" from="vendorPartyId" /> -->
-                            <econdition field-name="evaluationByEnumId" value="EbVendor" />
-                        </entity-find-count>
-
-                        <if condition="!productEvalResponseCount">
-                            <set field="allVendorsResponded" from="false" />
-                            <break />
-                        </if>
-                    </iterate>
-                </if>
-            </iterate>
-
-            <!-- check if all internal responded -->
-            <set field="allInternalResponded" from="true" />
+            <set field="vendorRespondedToAllStories" from="true" />
+            <set field="vendorRespondedToAllStatements" from="true" />
+       
             <iterate list="productEvalActivities.activityIds" entry="activityId">
                 <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
                     count-field="productEvalResponseCount">
                     <econdition field-name="productEvaluationId" />
                     <econdition field-name="activityId" />
-                    <!-- <econdition field-name="responsePartyId" operator="not-in" from="vendorPartyId" /> -->
+                    <econdition field-name="evaluationByEnumId" value="EbVendor" />
+                </entity-find-count>
+
+                <if condition="!productEvalResponseCount">
+                    <set field="vendorRespondedToAllStories" from="false" />
+                    <break />
+                </if>
+            </iterate>
+
+            <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                    count-field="productEvalResponseCount">
+                    <econdition field-name="productEvaluationId" />
+                    <econdition field-name="statementId" from="valueStatementId" />
+                    <econdition field-name="evaluationByEnumId" value="EbVendor" />
+                </entity-find-count>
+
+                <if condition="!productEvalResponseCount">
+                    <set field="vendorRespondedToAllStatements" from="false" />
+                    <break />
+                </if>
+            </iterate>
+
+            <!-- check if all internal responded -->
+            <set field="internalRespondedToAllStories" from="true" />
+            <set field="internalRespondedToAllStatements" from="true" />
+
+            <iterate list="productEvalActivities.activityIds" entry="activityId">
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                    count-field="productEvalResponseCount">
+                    <econdition field-name="productEvaluationId" />
+                    <econdition field-name="activityId" />
                     <econdition field-name="evaluationByEnumId" value="EbInternal" />
                 </entity-find-count>
 
                 <if condition="!productEvalResponseCount">
-                    <set field="allInternalResponded" from="false" />
+                    <set field="internalRespondedToAllStories" from="false" />
                     <break />
                 </if>
             </iterate>
-            
-            <if condition="allInternalResponded">
-                <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
-                    <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
-                        count-field="productEvalResponseCount">
-                        <econdition field-name="productEvaluationId" />
-                        <econdition field-name="statementId" from="valueStatementId" />
-                        <!-- <econdition field-name="responsePartyId" operator="not-in" from="vendorPartyId" /> -->
-                        <econdition field-name="evaluationByEnumId" value="EbInternal" />
-                    </entity-find-count>
 
-                    <if condition="!productEvalResponseCount">
-                        <set field="allInternalResponded" from="false" />
-                        <break />
-                    </if>
-                </iterate>
-            </if>
+            <iterate list="productEvalStatements.valueStatementIds" entry="valueStatementId">
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationResponse"
+                    count-field="productEvalResponseCount">
+                    <econdition field-name="productEvaluationId" />
+                    <econdition field-name="statementId" from="valueStatementId" />
+                    <econdition field-name="evaluationByEnumId" value="EbInternal" />
+                </entity-find-count>
 
-            <!-- update status -->
-            <if condition="allVendorsResponded &amp;&amp; allInternalResponded">
-                <set field="productEvaluation.statusId" value="PeCompleted" />
-                <entity-update value-field="productEvaluation" />
-            </if>
+                <if condition="!productEvalResponseCount">
+                    <set field="internalRespondedToAllStatements" from="false" />
+                    <break />
+                </if>
+            </iterate>
 
+            <set field="hasWarnings" from="!vendorRespondedToAllStories || !vendorRespondedToAllStatements || !internalRespondedToAllStories || !internalRespondedToAllStatements"/>
         </actions>
     </service>
 
