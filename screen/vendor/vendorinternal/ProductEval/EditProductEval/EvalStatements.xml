@@ -21,22 +21,6 @@ along with this software (see the LICENSE.md file). If not, see
         <error-response url="." save-parameters="true"/>
     </transition>
 
-    <transition name="includeStatement">
-        <parameter name="productEvaluationId" required="true"/>        
-        <actions>
-            <service-call name="coarchy.ProductEvaluationServices.include#ProductEvaluationStatement" in-map="[productEvaluationId:productEvaluationId,statementId:statementId,organizationId:activeOrgId]"/>
-        </actions>
-        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId]"/>
-    </transition>
-
-    <transition name="excludeStatement">
-        <parameter name="productEvaluationId" required="true"/>        
-        <actions>
-            <service-call name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationStatement" in-map="[productEvaluationId:productEvaluationId,statementId:statementId,organizationId:activeOrgId]"/>
-        </actions>
-        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId]"/>
-    </transition>
-
     <actions>
         <!-- find product eval -->
         <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>

@@ -92,8 +92,14 @@ along with this software (see the LICENSE.md file). If not, see
 
     <actions>
         <!-- find product eval -->
-        <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
-        <set field="activeOrgId" from="productEvaluation.organizationId"/>
+        <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation">
+            <field-map field-name="productEvaluationId" />
+        </entity-find-one>
+
+        <if condition="productEvaluation.organizationId != activeOrgId">
+            <return error="true" message="Product Evaluation not found"/>
+        </if>
+
         <!-- find root process stories -->
         <entity-find entity-name="coarchy.product.ProductEvaluationStory" list="productEvalStoryList">
             <econdition field-name="productEvaluationId" />
@@ -153,9 +159,9 @@ along with this software (see the LICENSE.md file). If not, see
                     <label text="Product Evaluation on ${productEvaluation?.productName}" style="text-h4"/>
                     <label text="(#${productEvaluation?.productEvaluationId})" style="text-subtitle2 text-grey-8"/>
                     <container style="q-mb-md">
-                        <label text="In the Requirements Selection step, add the requirements you want the product to be evaluated against." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeRequirementsSelection'"/>
+                        <label text="In the Requirements Selection step, finalize requirements the product should be evaluated against." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeRequirementsSelection'"/>
                         <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeInviteVendors'"/>
-                        <label text="You are waiting for vendor evaluations. You can track their responses below." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeAwaitingVendorResponse'"/>
+                        <label text="This Product Evaluation is awaiting your responses. Please review the statements and stories below." style="text-subtitle2 text-grey-8" condition="productEvaluation.statusId == 'PeAwaitingVendorResponse'"/>
                     </container>
 
                 </row-col>
@@ -175,13 +181,6 @@ along with this software (see the LICENSE.md file). If not, see
             </container-row>
         </container>
 
-
-        <link url="finalizeActivitySelection" text="Finalize Requirements Selection" confirmation="Are you sure you want to finalize the requirements selection?" btn-type="success" tooltip="Finalize Requirements Selection" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeRequirementsSelection'"/>
-        <link url="reopenActivitySelection" text="Modify Requirements" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeInviteVendors'"/>
-        <link url="finalizeVendorInvitations" text="Finalize Invitations" confirmation="Are you sure you want to finalize the vendor invitations?" btn-type="success" tooltip="Finalize Vendor Invitations" parameter-map="[productEvaluationId:productEvaluationId]" condition="productEvaluation.statusId=='PeInviteVendors'"/>
-        <link url="cancelProductEvaluation" text="Cancel Evaluation" confirmation="Are you sure you want to cancel this product evaluation?" btn-type="danger" tooltip="Cancel Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
-
-
         <container-row >           
             <row-col sm="8">
                 <subscreens-panel id="ProductEvalPanel" type="tab" />
@@ -193,7 +192,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <box-header>
                                 <container-dialog id="ProductVendorInviteDialog" button-text="${(productEvaluation.statusId=='PeAwaitingVendorResponse'?'Invite':'Add')}" button-style="float-right" condition="canInviteVendors">
                                     <container>
-                                        <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." />
+                                        <label text="Invite your team members by adding their email address below." />
                                     </container>
                                     <form-single name="ProductVendorInviteForm" transition="inviteVendor">
                                         <field name="productEvaluationId">
@@ -223,12 +222,10 @@ along with this software (see the LICENSE.md file). If not, see
                                         </field-layout>
                                     </form-single>
                                 </container-dialog>
-                                <label text="Invite Vendor Representatives" style="text-bold q-mx-md" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
-                                <label text="Invited Vendors" style="text-bold q-mx-md" condition="!['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
+                                <label text="Invite team members" style="text-bold q-mx-md" />
                             </box-header>
                             <box-body>
-                                <label text="Add as many vendor representatives you would like to evaluate the product, against these requirements. Invitations will only be sent when you click 'Finalize Invitations'." style="text-caption text-grey-8" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
-                                <label text="You have invited the following vendors to evaluate this product." style="text-caption text-grey-8" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>                                
+                                <label text="The following users are part of this evaluation. You can add team members to assist you with this evaluation by clicking on the 'Invite' button." style="text-caption text-grey-8" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>                                
 
                                 <section name="VendorListSection" condition="vendorRepList">
                                     <widgets>

@@ -95,7 +95,7 @@ along with this software (see the LICENSE.md file). If not, see
 <#--            <template v-for="navPlugin in navPlugins"><component :is="navPlugin"></component></template>-->
 
             <#-- notify history See in root CoarchyComVue.qvt.ftl -->
-
+                <active-org-nav></active-org-nav>
             <#-- screen history menu See in root CoarchyComVue.qvt.ftl -->
 
                 <q-btn color="secondary" class="text-black" label="${(ec.user.userAccount.userFullName)!'Account'}">
@@ -111,6 +111,11 @@ along with this software (see the LICENSE.md file). If not, see
                                 </q-item>
                             </#if>
                             -->
+                             <q-item clickable>
+                                <q-item-section><q-btn flat label="Go to Settings" type="a" href="${sri.buildUrl("/settings").url}">
+                                        <q-tooltip><span v-pre>Go to Settings</span></q-tooltip></q-btn>
+                                </q-item-section>
+                            </q-item>
                             <q-item clickable>
                                 <q-item-section>
                                     <q-btn flat label="Logout" color="negative" type="a" href="${sri.buildUrl("/Login/logout").url}"

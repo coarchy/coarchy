@@ -25,6 +25,15 @@ along with this software (see the LICENSE.md file). If not, see
             </econditions>
             <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
             <order-by field-name="-visibilityEnumId"/></entity-find>
+            
+        <entity-find entity-name="mantle.party.PartyToAndRelationship" list="vendorOrganizationList" distinct="true">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtVendorRepresentative"/>
+            <econditions combine="or">
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            </econditions>
+            <select-field field-name="toPartyId,ownerPartyId,organizationName,visibilityEnumId"/>
+            <order-by field-name="-visibilityEnumId"/></entity-find>
         <set field="ownerOfAnyOrganization" from="organizationList*.ownerPartyId.contains(ec.user.userAccount.partyId)"/>
     </always-actions>
 
@@ -103,6 +112,24 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
         </if>
     </actions><default-response url="/coapp/Home" url-type="plain"/></transition>
+
+    <transition name="goToProductEvaluation">
+        <actions>
+            <entity-find-one entity-name="moqui.security.UserPreference" value-field="userPreference" auto-field-map="[userId:ec.user.userId,preferenceKey:'ACTIVE_ORGANIZATION']"/>
+            <if condition="organizationId &amp;&amp; userPreference?.preferenceValue != organizationId">
+                <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                    <date-filter/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtVendorRepresentative"/>
+                    <econdition field-name="toRoleTypeId" value="VendorRepresentative"/>
+                    <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                    <econdition field-name="toPartyId" from="organizationId"/></entity-find-count>
+                <if condition="partyRelationshipCount &gt; 0">
+                    <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationId]"/>
+                </if>
+            </if>
+        </actions>
+        <default-response url="/vendor/ProductEval/EditProductEval" parameter-map="[productEvaluationId:productEvaluationId]" url-type="plain"/>
+    </transition>
 
     <actions>
         <entity-find entity-name="mantle.account.financial.FinancialAccountAndTrans" list="finAccountAndTrans" limit="1">
@@ -253,5 +280,69 @@ along with this software (see the LICENSE.md file). If not, see
             </row-col>
             <row-col md="2"/>
         </container-row>
+        <section name="VendorProductEvalSummary" condition="vendorOrganizationList.size()">
+            <widgets>
+            <container-row>
+                <row-col md="2"/>
+                <row-col md="8">
+                    <label text="Outstanding Product Evaluations" type="h4"/>
+                                                    
+                    <form-list name="ProductEvaluationSummaryList" header-dialog="true" list="evalPartyAndEvalList">
+                        <entity-find entity-name="coarchy.product.ProductEvaluationPartyAndEval" list="evalPartyAndEvalList">
+                            <date-filter />
+                            <econdition field-name="organizationId" operator="in" from="vendorOrganizationList*.toPartyId" />
+                            <econdition field-name="partyId" from="ec.user.userAccount.partyId" />
+                            <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                            <econdition field-name="statusId" operator="not-in" value="PepPlanned,PepCancelled,PepRejected" />
+                            <econdition field-name="evaluationStatusId" value="PeAwaitingVendorResponse" />
+                        </entity-find>           
+                        <row-actions>
+                            <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
+                        </row-actions>                     
+                        <field name="partyId">
+                            <default-field>
+                                <hidden />
+                            </default-field>
+                        </field>
+                        <field name="productEvaluationId">
+                            <default-field title="Evaluation Request #">
+                                <display />
+                            </default-field>
+                            </field>
+                        <field name="productId" from="productEvaluation?.productId">
+                            <default-field title="Product">
+                                <display-entity entity-name="mantle.product.Product" text="${productName}" />
+                            </default-field>
+                        </field>          
+                        <field name="organizationPartyId" from="productEvaluation?.organizationId">
+                            <default-field title="Organization">
+                                <display-entity entity-name="mantle.party.PartyDetail" text="PartyNameOnlyTemplate"  />
+                            </default-field>
+                        </field>   
+                        <!-- <field name="statusId" >
+                            <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem" /></default-field>
+                        </field> -->
+                        <field name="evaluationStatusId">
+                            <conditional-field condition="evaluationStatusId=='PeAwaitingVendorResponse'">
+                                <display text="Awaiting Response"/>
+                            </conditional-field>
+                            <default-field title="Status">
+                                <display-entity entity-name="moqui.basic.StatusItem" />
+                            </default-field>
+                        </field>
+                        <field name="actions">
+                            <default-field title="">
+                                <link url="goToProductEvaluation" text="Complete Evaluation" condition="evaluationStatusId=='PeAwaitingVendorResponse'" parameter-map="[productEvaluationId:productEvaluationId, organizationId:organizationPartyId]"/>
+                                <!-- <link url="acceptInvitation" text="Accept Invitation" condition="statusId=='PpInvited'" parameter-map="[productId:productId, vendorPartyId:ec.user.userAccount.partyId, organizationId:organizationPartyId]"/>
+                                <link url="rejectInvitation" text="Reject Invitation" condition="statusId=='PpInvited'" parameter-map="[productId:productId, vendorPartyId:ec.user.userAccount.partyId, organizationId:organizationPartyId]"/> -->
+                            </default-field>
+                        </field>              
+                    </form-list>
+                </row-col>
+                <row-col md="2"/>
+            </container-row>
+            </widgets>
+        </section>
+
     </widgets>
 </screen>

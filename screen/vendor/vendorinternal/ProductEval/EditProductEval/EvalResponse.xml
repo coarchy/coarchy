@@ -25,7 +25,17 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="addEvalResponse">    
         <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationResponse" in-map="[productEvaluationId:productEvaluationId, activityId:activityId, statementId:statementId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments,  _openDialog:_openDialog]"/>
-        <default-response url=".." parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]"/>
+        <conditional-response url="../EvalProcessStories" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]">
+            <condition>
+                <expression>activityId</expression>
+            </condition>            
+        </conditional-response>
+        <conditional-response url="../EvalStatements" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]">
+            <condition>
+                <expression>statementId</expression>
+            </condition>            
+        </conditional-response>
+        <default-response url="../EvalStatements" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]"/>
         <error-response url="." save-parameters="true"/>
     </transition>
 
