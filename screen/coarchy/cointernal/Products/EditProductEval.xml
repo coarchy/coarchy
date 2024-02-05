@@ -39,7 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
         <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationParty" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,organizationId:activeOrgId]"/>
-        <default-response url="."/>
+        <default-response url="." />
     </transition>
 
     <transition name="finalizeActivitySelection">
@@ -82,7 +82,7 @@ along with this software (see the LICENSE.md file). If not, see
         <condition>
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
-        <service-call name="coarchy.ProductEvaluationServices.checkComplete#ProductEvaluation" in-map="[productEvaluationId:productEvaluationId]"/>
+        <service-call name="coarchy.ProductEvaluationServices.complete#ProductEvaluation" in-map="[productEvaluationId:productEvaluationId]"/>
         <default-response/>
         <error-response url="." save-parameters="true"/>
     </transition>
@@ -98,14 +98,6 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- find product eval -->
         <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
 
-        <!-- find root process stories -->
-        <entity-find entity-name="coarchy.product.ProductEvaluationStory" list="productEvalStoryList">
-            <econdition field-name="productEvaluationId" />
-        </entity-find>
-        <set field="processStoryIdList" from="productEvalStoryList*.processStoryId"/>
-
-        <!-- find inculded activities -->
-        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationActivites" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationResponseStats" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationCompleteWarnings" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
 

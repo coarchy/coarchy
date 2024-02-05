@@ -60,4 +60,109 @@
         </actions>
     </service>
 
+    <service verb="get" noun="PartyVendorOrganizationInfo">
+        <in-parameters><parameter name="partyId" default="ec.user.userAccount?.partyId"/></in-parameters>
+        <out-parameters>
+            <parameter name="activeVendorOrgId"/>
+            <parameter name="userVendorOrgIds" type="List"><parameter name="userVendorOrgId"/></parameter>
+            <parameter name="filterVendorOrgIds" type="List"><parameter name="userVendorOrgId"/></parameter>
+        </out-parameters>
+        <actions>
+            <if condition="!partyId">
+                <set field="userVendorOrgIds" from="[]"/><set field="filterVendorOrgIds" from="[]"/>
+                <return/>
+            </if>
+            <!-- get user organizations data (agent/employee/member rel from member to org) -->
+            <entity-find entity-name="mantle.party.PartyToAndRelationship" list="userVendorOrgRelList">
+                <date-filter/>
+                <econdition field-name="relationshipTypeEnumId" operator="in" value="PrtVendorRepresentative"/>
+                <econdition field-name="toRoleTypeId" value="VendorRepresentative"/>
+                <econdition field-name="fromPartyId" from="partyId"/>
+            </entity-find>
+            <set field="userVendorOrgIds" from="[]"/>
+            <iterate list="userVendorOrgRelList" entry="userVendorOrgRel">
+                <if condition="!userVendorOrgIds.contains(userVendorOrgRel.toPartyId)">
+                    <script>userVendorOrgIds.add(userVendorOrgRel.toPartyId)</script>
+                    <!-- look for direct child orgs and allow them too (rollup rel from child to parent) -->
+                    <!-- NOTE: consider making this recursive (inline method or other service) to walk down multiple levels -->
+                    <entity-find entity-name="mantle.party.PartyRelationship" list="childRelList">
+                        <date-filter/>
+                        <econdition field-name="relationshipTypeEnumId" value="PrtOrgRollup"/>
+                        <econdition field-name="toPartyId" from="userVendorOrgRel.toPartyId"/>
+                        <econdition field-name="fromPartyId" operator="is-not-null"/>
+                    </entity-find>
+                    <iterate list="childRelList" entry="childRel">
+                        <if condition="!userVendorOrgIds.contains(childRel.fromPartyId)">
+                            <entity-find-one entity-name="mantle.party.PartyDetail" value-field="childOrg">
+                                <field-map field-name="partyId" from="childRel.fromPartyId"/></entity-find-one>
+                            <script>userVendorOrgIds.add(childRel.fromPartyId)</script>
+                        </if>
+                    </iterate>
+                </if>
+            </iterate>
+
+            <!-- active org -->
+            <set field="activeVendorOrgId" from="ec.user.getPreference('ACTIVE_VENDOR_ORGANIZATION')"/>
+            <if condition="activeVendorOrgId != null &amp;&amp; activeVendorOrgId.length() == 0"><set field="activeVendorOrgId" from="null"/></if>
+            <!-- if active org is not valid for the user ignore it -->
+            <if condition="activeVendorOrgId &amp;&amp; !userVendorOrgIds.contains(activeVendorOrgId)">
+                <set field="activeVendorOrgId" from="null"/>
+                <script>ec.user.setPreference('ACTIVE_VENDOR_ORGANIZATION', null)</script>
+            </if>
+
+            <!-- get org ids to filter by (for queries, etc) -->
+            <set field="filterVendorOrgIds" from="activeVendorOrgId ? [activeVendorOrgId] : userVendorOrgIds"/>
+        </actions>
+    </service>
+
+    <service verb="setup" noun="UserVendorOrganizationInfo" authenticate="anonymous-view">
+        <description>
+            Get internal organizations the current user is related to and the user's active organization if set
+            (in the ACTIVE_ORGANIZATION UserPreference) Designed to be called per screen render in screen.pre-actions,
+            and may be useful in other contexts.
+
+            This service gets data that is meant to be used in filterMap fields of moqui.security.EntityFilterSet
+            records so returns results limited to the organizations a user is directly related to.
+        </description>
+        <out-parameters>
+            <!-- Vendor organization -->
+            <parameter name="userVendorOrgList" type="List"><parameter name="userVendorOrg" type="Map">
+                <auto-parameters entity-name="mantle.party.PartyDetail"/></parameter></parameter>
+            <parameter name="userVendorOrgIds" type="List"><parameter name="userVendorOrgId"/></parameter>
+
+            <parameter name="activeVendorOrgId"/>
+            <parameter name="activeVendorOrg" type="Map"><auto-parameters entity-name="mantle.party.PartyDetail"/></parameter>
+
+            <parameter name="filterVendorOrgIds" type="List"><parameter name="userVendorOrgId"/></parameter>
+        </out-parameters>
+        <actions>
+            <set field="partyId" from="ec.user.userAccount?.partyId"/>
+            <if condition="!partyId">
+                <log level="warn" message="Cannot setup#UserVendorOrganizationInfo, no user with partyId logged in"/>
+                <return/>
+            </if>
+
+            <!-- get activeOrgId, userOrgIds, filterOrgIds -->
+            <service-call name="mantle.party.PartyServices.get#PartyVendorOrganizationInfo" out-map="context" in-map="[partyId:partyId]"/>
+
+            <!-- get userOrgList with userOrgIds -->
+            <entity-find entity-name="mantle.party.PartyDetail" list="userVendorOrgList">
+                <econdition field-name="partyId" operator="in" from="userVendorOrgIds"/>
+                <order-by field-name="pseudoId"/>
+            </entity-find>
+
+            <!-- get the active org detail for display, etc -->
+            <if condition="activeVendorOrgId"><entity-find-one entity-name="mantle.party.PartyDetail" value-field="activeVendorOrg" cache="true">
+                <field-map field-name="partyId" from="activeVendorOrgId"/></entity-find-one></if>
+
+            <!-- <log level="warn" message="activeVendorOrgId ${activeVendorOrgId} (${activeVendorOrgId?.class?.name}) filterVendorOrgIds ${filterVendorOrgIds}"/> -->
+
+            <!-- set userVendorOrgIds, filterVendorOrgIds, and activeVendorOrgId in user context -->
+            <script>                
+                ec.user.context.userVendorOrgIds = userVendorOrgIds
+                ec.user.context.filterVendorOrgIds = filterVendorOrgIds
+                ec.user.context.activeVendorOrgId = activeVendorOrgId
+            </script>
+        </actions>
+    </service>
 </services>

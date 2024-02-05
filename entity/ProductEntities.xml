@@ -21,6 +21,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="productId" type="id" />
         <field name="organizationId" type="id" />
         <field name="statusId" type="id" />
+        <field name="createdDate" type="date-time" default="ec.user.nowTimestamp"/>
+        <field name="requirementsSetDate" type="date-time" />
 
         <relationship type="one" title="ProductEvaluation" related="moqui.basic.StatusItem"
             short-alias="statusEnum" />
@@ -284,6 +286,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias-all entity-alias="PE">
             <exclude field="organizationId" />
         </alias-all>
+        <alias name="evaluationOrganizationId" field="organizationId" entity-alias="PE" />    
     </view-entity>
 
     <view-entity entity-name="ProductEvaluationStatementAndDetail" package="coarchy.product">
@@ -297,6 +300,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias-all entity-alias="PE">
             <exclude field="organizationId" />
         </alias-all>
+        <alias name="evaluationOrganizationId" field="organizationId" entity-alias="PE" />
     </view-entity>
 
     <view-entity entity-name="ProductEvaluationPartyAndEval" package="coarchy.product">
