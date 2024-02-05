@@ -56,9 +56,9 @@ along with this software (see the LICENSE.md file). If not, see
 
             <moqui.basic.StatusFlowTransition statusFlowId="Default"
                 statusId="PeRequirementsSelection"
-                toStatusId="PeRequirementsSelection" transitionName="Cancel" />
+                toStatusId="PeCancelled" transitionName="Cancel" />
             <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeInviteVendors"
-                toStatusId="PeInviteVendors" transitionName="Cancel" />
+                toStatusId="PeCancelled" transitionName="Cancel" />
             <moqui.basic.StatusFlowTransition statusFlowId="Default"
                 statusId="PeAwaitingVendorResponse"
                 toStatusId="PeCancelled" transitionName="Withdraw Request" />
@@ -248,6 +248,18 @@ along with this software (see the LICENSE.md file). If not, see
         </member-entity>
 
         <alias-all entity-alias="PEA" />
+        <alias-all entity-alias="PE" >
+            <!-- <exclude field="organizationId" /> -->
+        </alias-all>
+    </view-entity>
+    
+    <view-entity entity-name="ProductEvaluationStatementAndDetail" package="coarchy.product">
+        <member-entity entity-alias="PES" entity-name="coarchy.product.ProductEvaluationStatement" />
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation" join-from-alias="PES">
+            <key-map field-name="productEvaluationId" />
+        </member-entity>
+
+        <alias-all entity-alias="PES" />
         <alias-all entity-alias="PE" >
             <!-- <exclude field="organizationId" /> -->
         </alias-all>
