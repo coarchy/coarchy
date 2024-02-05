@@ -50,6 +50,7 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- find existing response by activityId -->
         <entity-find entity-name="coarchy.product.ProductEvaluationResponse" list="productEvaluationResponseList">
             <econdition field-name="productEvaluationId" />
+            <econdition field-name="organizationId" from="activeOrgId" />
             <econdition field-name="activityId" ignore="!activityId"/>
             <econdition field-name="statementId" from="valueStatementId" ignore="!valueStatementId"/>
             <econdition field-name="evaluationByEnumId" operator="in" value="EbInternal,EbVendor"/>
@@ -75,7 +76,11 @@ along with this software (see the LICENSE.md file). If not, see
                 </container>
             </widgets>
         </section>
-        <form-list name="ProductEvalResponseFormList" list="productEvaluationResponseList">
+        <form-list name="ProductEvalResponseFormList" list="productEvaluationResponseList" list-entry="responseEntry">
+            <row-actions>
+                <entity-find-one entity-name="mantle.party.PersonWithUserAccount" value-field="userAccount">
+                    <field-map field-name="userId" from="responseEntry.lastEditedByUserId"/></entity-find-one>
+            </row-actions>
             <field name="productEvaluationId">
                 <default-field>
                     <hidden/>
@@ -98,7 +103,7 @@ along with this software (see the LICENSE.md file). If not, see
             </field>
             <field name="lastEditedByUserId">
                 <default-field title="Last updated by">
-                    <display-entity entity-name="mantle.party.PersonAndUserAccount" text="PartyNameOnlyTemplate" parameter-map="[userId:lastEditedByUserId]" />
+                    <label text="${ec.resource.expand('UsernameTemplate','',userAccount)}" condition="userAccount"/>
                 </default-field>
             </field>
             <field name="implementationStatusEnumId">

@@ -24,7 +24,7 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="orderByField"/>
 
     <transition name="addEvalResponse">    
-        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationResponse" in-map="[productEvaluationId:productEvaluationId, activityId:activityId, statementId:statementId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments,  _openDialog:_openDialog]"/>
+        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationResponse" in-map="[productEvaluationId:productEvaluationId, activityId:activityId, statementId:statementId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments,organizationId:activeOrgId,  _openDialog:_openDialog]"/>
         <conditional-response url="../EvalProcessStories" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]">
             <condition>
                 <expression>activityId</expression>

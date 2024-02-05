@@ -50,14 +50,7 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- find product eval -->
         <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
 
-        <!-- find root process stories -->
-        <entity-find entity-name="coarchy.product.ProductEvaluationStory" list="productEvalStoryList">
-            <econdition field-name="productEvaluationId" />
-        </entity-find>
-        <set field="processStoryIdList" from="productEvalStoryList*.processStoryId"/>
-
         <!-- find inculded activities -->
-        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationActivites" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationStatements" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalStatements" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationResponseStats" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
 
@@ -80,9 +73,6 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="showOrgResponseView" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
         <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
         <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
-
-        <set field="activityResponseDialogIndexMap" from="[:]" />
-        <set field="statementResponseDialogIndexMap" from="[:]" />
     </actions>
 
     <widgets>

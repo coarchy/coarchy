@@ -39,7 +39,6 @@ along with this software (see the LICENSE.md file). If not, see
 
         <!-- find inculded activities -->
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationActivites" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
-        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationStatements" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalStatements" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationResponseStats" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
 
         <!-- find invited vendors -->
@@ -61,9 +60,6 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="showOrgResponseView" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
         <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
         <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
-
-        <set field="activityResponseDialogIndexMap" from="[:]" />
-        <set field="statementResponseDialogIndexMap" from="[:]" />
     </actions>
 
     <widgets>

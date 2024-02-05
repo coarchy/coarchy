@@ -22,36 +22,11 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="orderByField" value="productName"/>
 
     <always-actions>
-        <!-- <if condition="!activeOrgId">
+        <!-- <if condition="!activeVendorOrgId">
             <message type="info">Select an Organization before moving forward.</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
-        </if> -->
-        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
-            <date-filter/>
-            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
-            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
-            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
-            <econdition field-name="toPartyId" from="activeOrgId"/></entity-find-count>
-        <entity-find-count entity-name="mantle.party.PartyActivation" count-field="partyActivationCount">
-            <date-filter/><econdition field-name="partyId" from="activeOrgId"/></entity-find-count>
-        <!--        <log level="warn" message="Actors always-actions context.toString()
-        ${context.toString()}"/>-->
+        </if> -->    
     </always-actions>
-
-    <transition name="createProductEvaluation">
-        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="coarchy.ProductEvaluationServices.create#ProductEvaluation" in-map="[productId:productId,processStoryIds:processStoryIds,organizationId:activeOrgId]"/>
-        <default-response/><error-response url="." save-parameters="true"/>
-    </transition>
-
-    <transition name="cancelProductEvaluation">
-        <condition>
-            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
-        </condition>
-        <service-call name="coarchy.ProductEvaluationServices.cancel#ProductEvaluation" in-map="[productEvaluationId:productEvaluationId]"/>
-        <default-response/>
-        <error-response url="."/>
-    </transition>
     
     <transition name="goToProductEvaluation">
         <default-response url="../EditProductEval" parameter-map="[productEvaluationId:productEvaluationId]"/>
@@ -65,7 +40,7 @@ along with this software (see the LICENSE.md file). If not, see
                    show-csv-button="true" list="evalPartyAndEvalList">
             <entity-find entity-name="coarchy.product.ProductEvaluationPartyAndEval" list="evalPartyAndEvalList">
                 <date-filter />
-                <econdition field-name="organizationId" from="activeOrgId" />
+                <econdition field-name="organizationId" from="activeVendorOrgId" />
                 <econdition field-name="partyId" from="ec.user.userAccount.partyId" />
                 <econdition field-name="roleTypeId" value="VendorRepresentative" />
                 <econdition field-name="statusId" operator="not-in" value="PepPlanned,PepCancelled,PepRejected" />
