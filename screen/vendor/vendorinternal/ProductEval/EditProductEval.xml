@@ -38,9 +38,9 @@ along with this software (see the LICENSE.md file). If not, see
     </always-actions>
     
     <transition name="inviteVendor">
-        <condition>
+        <!-- <condition>
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
-        </condition>
+        </condition> -->
         <!-- <service-call name="coarchy.VendorServices.invite#VendorUser"
         in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,partyId:activeOrgId]"/> -->
         <service-call name="coarchy.VendorServices.add#ProductEvaluationParty" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,organizationId:activeOrgId]"/>
@@ -85,9 +85,9 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
 
-    <subscreens default-item="EvalProcessStories">
-        <subscreens-item name="EvalProcessStories" menu-include="true" location="component://coarchy/screen/vendor/vendorinternal/ProductEval/EditProductEval/EvalProcessStories.xml"/>
-        <subscreens-item name="EvalStatements" menu-include="true" location="component://coarchy/screen/vendor/vendorinternal/ProductEval/EditProductEval/EvalStatements.xml"/>
+    <subscreens default-item="EvalStatements">
+        <subscreens-item name="EvalStatements" menu-include="true" menu-index="10" location="component://coarchy/screen/vendor/vendorinternal/ProductEval/EditProductEval/EvalStatements.xml"/>
+        <subscreens-item name="EvalProcessStories" menu-include="true" menu-index="20" location="component://coarchy/screen/vendor/vendorinternal/ProductEval/EditProductEval/EvalProcessStories.xml"/>
     </subscreens>
 
     <actions>
@@ -187,7 +187,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <subscreens-panel id="ProductEvalPanel" type="tab" />
             </row-col>
             <row-col sm="4">                     
-                <section name="ProductVendorInviteListSection" condition="true || showInviteVendorsSection">
+                <section name="ProductVendorInviteListSection" condition="showInviteVendorsSection">
                     <widgets>
                         <container-box>
                             <box-header>
@@ -224,7 +224,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     </form-single>
                                 </container-dialog>
                                 <label text="Invite Vendor Representatives" style="text-bold q-mx-md" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
-                                <label text="Invited Vendors" style="text-bold q-mx-md" condition="['PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
+                                <label text="Invited Vendors" style="text-bold q-mx-md" condition="!['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>
                             </box-header>
                             <box-body>
                                 <label text="Add as many vendor representatives you would like to evaluate the product, against these requirements. Invitations will only be sent when you click 'Finalize Invitations'." style="text-caption text-grey-8" condition="['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)"/>

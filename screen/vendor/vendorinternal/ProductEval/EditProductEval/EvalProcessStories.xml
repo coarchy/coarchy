@@ -12,44 +12,15 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Process Stories" default-menu-index="10" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="false">
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Process Stories" default-menu-index="20" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="false">
 
     <parameter name="productEvaluationId" required="true"/>
     <parameter name="processStoryIds" />
 
     <transition name="filterProcessStories">        
-        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,processStoryIds:processStoryIds]"/>
+        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,processStoryIds:processStoryIds?:[]]"/>
         <error-response url="." save-parameters="true"/>
     </transition>
-
-    <transition name="addProcessStory">        
-        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationProcessStory" in-map="[productEvaluationId:productEvaluationId,processStoryIds:processStoryIds,organizationId:activeOrgId]"/>
-        <default-response/>
-        <error-response url="." save-parameters="true"/>
-    </transition>
-
-    <transition name="removeProcessStory">        
-        <service-call name="coarchy.ProductEvaluationServices.remove#ProductEvaluationProcessStory" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,organizationId:activeOrgId]"/>
-        <default-response/>
-        <error-response url="." save-parameters="true"/>
-    </transition>
-
-    <transition name="includeActivity" method="post">
-        <parameter name="productEvaluationId" required="true"/>        
-        <actions>
-            <service-call name="coarchy.ProductEvaluationServices.include#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,activityId:activityId,organizationId:activeOrgId]"/>
-        </actions>
-        <default-response url="/coapp/Products/EditProductEval" parameter-map="[productEvaluationId:productEvaluationId]" save-parameters="true"/>
-    </transition>
-
-    <transition name="excludeActivity" method="post">
-        <parameter name="productEvaluationId" required="true"/>        
-        <actions>
-            <service-call name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,activityId:activityId,organizationId:activeOrgId]"/>
-        </actions>
-        <default-response url="/coapp/Products/EditProductEval" parameter-map="[productEvaluationId:productEvaluationId]" save-parameters="true"/>
-    </transition>
-
 
     <actions>
         <!-- find product eval -->
@@ -174,7 +145,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <set field="processStoryId" from="filterProductEvalStory.processStoryId"/>
                         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory" />
 
-                        <service-call name="coarchy.CoarchyServices.find#ProcessStoryActivityList" in-map="[processStoryId:processStoryId,
+                        <service-call name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,
                             showSubstories:'Y',organizationId:productEvaluation.organizationId]" out-map="context"/>
 
                         <set field="showSubstories" value="Y"/>

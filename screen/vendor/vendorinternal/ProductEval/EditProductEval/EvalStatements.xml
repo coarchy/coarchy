@@ -12,7 +12,7 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Statements" default-menu-index="20" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="false">
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Statements" default-menu-index="10" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="false">
 
     <parameter name="productEvaluationId" required="true"/>
 
@@ -128,6 +128,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <form-list name="EvalStatementsList" list="allValueStatementList">
                     <entity-find entity-name="coarchy.ValueStatement" list="allValueStatementList">
                         <search-form-inputs default-order-by="typeEnumId" />
+                        <econditions combine="or">
+                            <econdition field-name="valueStatementId" operator="in" from="productEvalStatements.valueStatementIds" />
+                            <econdition field-name="replacedByValueStatementId" operator="is-not-null" />
+                        </econditions>
                         <econdition field-name="typeEnumId" operator="in" from="typeEnumIds" ignore-if-empty="true" />
                         <econdition field-name="organizationId" operator="in" from="productEvaluation.organizationId" />
                         <econdition field-name="valueStatementId" operator="in" from="productEvalStatements.valueStatementIds" ignore="canModifyProcessStory" />
@@ -160,6 +164,18 @@ along with this software (see the LICENSE.md file). If not, see
                             <hidden />
                         </default-field>
                     </field>
+                    <field name="value">
+                        <conditional-field title="Statement" condition="isStatementIncluded">
+                            <render-mode >
+                                <text>${value}</text>
+                            </render-mode>
+                        </conditional-field>
+                        <conditional-field title="Statement" condition="!isStatementIncluded">
+                            <render-mode >
+                                <text><![CDATA[<s class="text-grey-8">${value}</s>]]></text>
+                            </render-mode>
+                        </conditional-field>
+                    </field>
                     <field name="typeEnumId">
                         <!-- <header-field title="Type">
                             <drop-down allow-empty="true" allow-multiple="true">
@@ -173,27 +189,15 @@ along with this software (see the LICENSE.md file). If not, see
                         <default-field title="Type">
                             <display-entity entity-name="moqui.basic.Enumeration"/>
                         </default-field>
-                    </field>
-                    <field name="value">
-                        <conditional-field title="Statement" condition="isStatementIncluded">
-                            <render-mode >
-                                <text>${value}</text>
-                            </render-mode>
-                        </conditional-field>
-                        <conditional-field title="Statement" condition="!isStatementIncluded">
-                            <render-mode >
-                                <text><![CDATA[<s class="text-grey-8">${value}</s>]]></text>
-                            </render-mode>
-                        </conditional-field>
-                    </field>
+                    </field>                    
                     <field name="actions">  
                         <conditional-field condition="isUserVendor" title="">
-                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${vendorResponseComplete?'Update Evaluation':'Evaluate'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" type="${vendorResponseComplete?'success':'danger'}" condition="showVendorResponseView"/>
-                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View Evals (${responseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showOrgResponseView"/>
+                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${vendorResponseComplete?'Update':'Evaluate'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" type="${vendorResponseComplete?'success':'danger'}" condition="showVendorResponseView"/>
+                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showOrgResponseView"/>
                         </conditional-field> 
                         <conditional-field condition="isUserInternalOrgMember" title="">
-                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${internalResponseComplete?'Update Internal Evaluation':'Internal Evaluation'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" type="${internalResponseComplete?'success':'danger'}" condition="showInternalResponseView"/>
-                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View Evals (${responseCount+internalResponseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showOrgResponseView"/>
+                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${internalResponseComplete?'Update Internal':'Internal Evaluation'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" type="${internalResponseComplete?'success':'danger'}" condition="showInternalResponseView"/>
+                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount+internalResponseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showOrgResponseView"/>
                         </conditional-field>                
                         <default-field title="">
                             <hidden />
