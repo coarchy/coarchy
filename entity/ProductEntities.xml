@@ -73,6 +73,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="productEvaluationId" type="id" is-pk="true" />
         <field name="processStoryId" type="id" is-pk="true"/>
 
+        <field name="organizationId" type="id" />
+
         <relationship type="one" related="coarchy.product.ProductEvaluation"
             short-alias="productEvaluation" />
         <relationship type="one" related="coarchy.ProcessStory" short-alias="processStory" />
@@ -88,6 +90,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="processStoryId" type="id" is-pk="true" />
         <field name="activityId" type="id" is-pk="true" />
         <field name="excludeFlag" type="text-indicator" />
+
+        <field name="organizationId" type="id" />
 
         <relationship type="one" related="coarchy.product.ProductEvaluation"
             short-alias="productEvaluation" />
@@ -108,6 +112,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="productEvaluationId" type="id" is-pk="true" />
         <field name="statementId" type="id"  is-pk="true"/>
 
+        <field name="organizationId" type="id" />
+
         <relationship type="one" related="coarchy.product.ProductEvaluation"
             short-alias="productEvaluation" />
         <relationship type="one" related="coarchy.ValueStatement" short-alias="statement">
@@ -125,6 +131,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="fromDate" type="date-time" is-pk="true" />
         <field name="thruDate" type="date-time" />
         <field name="statusId" type="id" enable-audit-log="update"/>
+
+        <field name="organizationId" type="id" />
 
         <relationship type="one" related="coarchy.product.ProductEvaluation"
             short-alias="productEvalRequest" />
@@ -179,6 +187,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="value" type="number-integer" />
         <field name="comments" type="text-long" />
         <field name="lastEditedByUserId" type="id" enable-audit-log="update" />
+
+        <field name="organizationId" type="id" />
 
         <relationship type="one" related="coarchy.product.ProductEvaluation" />
         <relationship type="one" related="coarchy.Activity">
@@ -237,7 +247,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <alias-all entity-alias="PES" />
         <alias-all entity-alias="PS" >
-            <!-- <exclude field="organizationId" /> -->
+            <exclude field="organizationId" />
         </alias-all>
     </view-entity>
     
@@ -249,7 +259,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <alias-all entity-alias="PEA" />
         <alias-all entity-alias="PE" >
-            <!-- <exclude field="organizationId" /> -->
+            <exclude field="organizationId" />
         </alias-all>
     </view-entity>
     
@@ -261,7 +271,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <alias-all entity-alias="PES" />
         <alias-all entity-alias="PE" >
-            <!-- <exclude field="organizationId" /> -->
+            <exclude field="organizationId" />
         </alias-all>
     </view-entity>
     
@@ -274,6 +284,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias-all entity-alias="PEP" />
         <alias-all entity-alias="PE" >
             <exclude field="statusId" />
+            <exclude field="organizationId" />
         </alias-all>
         <alias name="evaluationStatusId" field="statusId" entity-alias="PE"/>
     </view-entity>
