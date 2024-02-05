@@ -5,16 +5,16 @@
             <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
             <#assign vendorResponseComplete = responseCount &gt; 0/>
             <m-dynamic-dialog url="${sri.buildUrl('../EvalList')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
-                buttonText="View Evals (${internalResponseCount+responseCount})" noIcon 
-                buttonClass="text-caption" title="Activity ${processStoryActivity.activityId} Evaluations" 
+                buttonText="View (${internalResponseCount+responseCount})" noIcon 
+                buttonClass="text-caption" title="Activity Evaluations" 
                 color="<#if vendorResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>
         <#elseif isUserVendor>
             <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
             <#assign vendorResponseComplete = responseCount &gt; 0/>
             <#if vendorResponseComplete>
             <m-dynamic-dialog url="${sri.buildUrl('../EvalList')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
-                buttonText="View Eval" noIcon 
-                buttonClass="text-caption" title="Activity ${processStoryActivity.activityId} Evaluations" 
+                buttonText="View" noIcon 
+                buttonClass="text-caption" title="Activity Evaluations" 
                 color="info"></m-dynamic-dialog>
             </#if>
         </#if>
@@ -25,7 +25,7 @@
         <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
         <#assign vendorResponseComplete = responseCount &gt; 0/>
         <m-dynamic-dialog url="${sri.buildUrl('../EvalResponse')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
-            buttonText="<#if vendorResponseComplete>Update Evaluation<#else>Evaluate</#if>" noIcon 
+            buttonText="<#if vendorResponseComplete>Update<#else>Evaluate</#if>" noIcon 
             buttonClass="text-caption" title="<#if isUserInternalOrgMember>Add Internal Evaluation on Activity<#else>Evaluate Activity</#if>" 
             color="<#if vendorResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>        
     </#if>
@@ -33,7 +33,7 @@
         <#assign responseCount = internalResponseByActivity[processStoryActivity.activityId] />
         <#assign internalResponseComplete = responseCount &gt; 0/>
         <m-dynamic-dialog url="${sri.buildUrl('../EvalResponse')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
-            buttonText="<#if internalResponseComplete>Update Internal Evaluation<#else>Internal Evaluation</#if>" noIcon 
+            buttonText="<#if internalResponseComplete>Update Internal<#else>Internal Evaluation</#if>" noIcon 
             buttonClass="text-caption" title="<#if isUserInternalOrgMember>Add Internal Evaluation on Activity<#else>Evaluate Activity</#if>" 
             color="<#if internalResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>
     </#if>
@@ -47,6 +47,7 @@
                 <input type="hidden" name="activityId" value="${processStoryActivity.activityId}">
                 <input type="hidden" name="processStoryId" value="${processStoryActivity.processStoryId}">
                 <input type="hidden" name="productEvaluationId" value="${productEvaluationId}">
+                <input type="hidden" name="processStoryIds" value="${processStoryIds!''}">
                 <q-btn padding="1px" dense flat no-caps size="sm" class="text-positive" icon="check" type="submit">${ec.l10n.localize("Included")}</q-btn>
             </form>
             <#else>
@@ -55,6 +56,7 @@
                 <input type="hidden" name="activityId" value="${processStoryActivity.activityId}">
                 <input type="hidden" name="processStoryId" value="${processStoryActivity.processStoryId}">
                 <input type="hidden" name="productEvaluationId" value="${productEvaluationId}">
+                <input type="hidden" name="processStoryIds" value="${processStoryIds!''}">
                 <q-btn padding="1px" dense flat no-caps size="sm" class="text-negative" icon="close" type="submit">${ec.l10n.localize("Excluded")}</q-btn>
             </form>
             </#if>
