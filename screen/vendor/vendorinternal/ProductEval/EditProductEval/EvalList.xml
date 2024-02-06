@@ -112,7 +112,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </default-field>
             </field>
             <field name="rating">
-                <default-field title="Rating">
+                <default-field title="Quality Rating">
                     <display />                   
                 </default-field>
             </field>

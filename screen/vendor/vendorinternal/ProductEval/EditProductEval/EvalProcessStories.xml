@@ -19,7 +19,6 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="filterProcessStories">        
         <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,processStoryIds:processStoryIds?:[]]"/>
-        <error-response url="." save-parameters="true"/>
     </transition>
 
     <actions>

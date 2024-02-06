@@ -21,7 +21,6 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
         <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,typeEnumIds:typeEnumIds]"/>
-        <error-response url="." save-parameters="true"/>
     </transition>
 
     <transition name="includeStatement">
@@ -32,7 +31,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call name="coarchy.ProductEvaluationServices.include#ProductEvaluationStatement" in-map="[productEvaluationId:productEvaluationId,statementId:statementId,organizationId:activeOrgId]"/>
         </actions>
-        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId]"/>
+        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,typeEnumIds:typeEnumIds]"/>
     </transition>
 
     <transition name="excludeStatement">
@@ -43,7 +42,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationStatement" in-map="[productEvaluationId:productEvaluationId,statementId:statementId,organizationId:activeOrgId]"/>
         </actions>
-        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId]"/>
+        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,typeEnumIds:typeEnumIds]"/>
     </transition>
 
     <actions>
@@ -147,10 +146,10 @@ along with this software (see the LICENSE.md file). If not, see
                     </row-actions>
                     <field name="toggleInclusion">
                         <conditional-field condition="canModifyStatements &amp;&amp; isStatementIncluded" title="">
-                            <link url="excludeStatement" text="Included" btn-type="success" condition="isStatementIncluded" icon="fa fa-check" style="text-caption" parameter-map="[productEvaluationId:productEvaluationId, statementId:valueStatementId]"/>
+                            <link url="excludeStatement" text="Included" btn-type="success" condition="isStatementIncluded" icon="fa fa-check" style="text-caption" parameter-map="[productEvaluationId:productEvaluationId, statementId:valueStatementId, typeEnumIds:typeEnumIds]"/>
                         </conditional-field>
                         <conditional-field condition="canModifyStatements &amp;&amp; !isStatementIncluded" title="">
-                            <link url="includeStatement" text="Excluded" btn-type="danger" condition="!isStatementIncluded" icon="fa fa-close" style="text-caption" parameter-map="[productEvaluationId:productEvaluationId, statementId:valueStatementId]"/>
+                            <link url="includeStatement" text="Excluded" btn-type="danger" condition="!isStatementIncluded" icon="fa fa-close" style="text-caption" parameter-map="[productEvaluationId:productEvaluationId, statementId:valueStatementId, typeEnumIds:typeEnumIds]"/>
                         </conditional-field>
                         <default-field title="">
                             <hidden/>
@@ -194,11 +193,11 @@ along with this software (see the LICENSE.md file). If not, see
                     </field>                   
                     <field name="actions">  
                         <conditional-field condition="isUserVendor" title="">
-                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${vendorResponseComplete?'Update':'Evaluate'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" type="${vendorResponseComplete?'success':'danger'}" condition="showVendorResponseView"/>
+                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${vendorResponseComplete?'Update':'Evaluate'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId,typeEnumIds:typeEnumIds]" button-style="text-caption" type="${vendorResponseComplete?'success':'danger'}" condition="showVendorResponseView"/>
                             <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showOrgResponseView"/>
                         </conditional-field> 
                         <conditional-field condition="isUserInternalOrgMember" title="">
-                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${internalResponseComplete?'Update Internal':'Internal Evaluation'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" type="${internalResponseComplete?'success':'danger'}" condition="showInternalResponseView"/>
+                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${internalResponseComplete?'Update Internal':'Internal Evaluation'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId,typeEnumIds:typeEnumIds]" button-style="text-caption" type="${internalResponseComplete?'success':'danger'}" condition="showInternalResponseView"/>
                             <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount+internalResponseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showOrgResponseView"/>
                         </conditional-field>                 
                         <default-field title="">

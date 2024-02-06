@@ -19,24 +19,25 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="productEvaluationId" required="true"/>
     <parameter name="activityId"/>
     <parameter name="valueStatementId "/>
+    <parameter name="processStoryIds "/>
+    <parameter name="typeEnumIds"/>
     <parameter name="pageIndex"/>
     <parameter name="pageSize"/>
     <parameter name="orderByField"/>
 
     <transition name="addEvalResponse">    
         <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationResponse" in-map="[productEvaluationId:productEvaluationId, activityId:activityId, statementId:statementId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments,organizationId:activeOrgId,  _openDialog:_openDialog]"/>
-        <conditional-response url="../EvalProcessStories" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]">
+        <conditional-response url="../EvalProcessStories" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null, processStoryIds:processStoryIds]">
             <condition>
                 <expression>activityId</expression>
             </condition>            
         </conditional-response>
-        <conditional-response url="../EvalStatements" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]">
+        <conditional-response url="../EvalStatements" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null,typeEnumIds:typeEnumIds]">
             <condition>
                 <expression>statementId</expression>
             </condition>            
         </conditional-response>
-        <default-response url="../EvalStatements" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null]"/>
-        <error-response url="." save-parameters="true"/>
+        <default-response url="../EvalStatements" parameter-map="[_openDialog:_openDialog, productEvaluationId:productEvaluationId, activityId:null,statementId:null,typeEnumIds:typeEnumIds]"/>
     </transition>
 
     <actions>
@@ -153,6 +154,18 @@ along with this software (see the LICENSE.md file). If not, see
                 </default-field>
             </field>
             <field name="statementId" from="valueStatementId">
+                <default-field>
+                    <hidden/>
+                </default-field>
+            </field>
+            <field name="typeEnumIds" from="typeEnumIds">
+                <!-- filter pass through -->
+                <default-field>
+                    <hidden/>
+                </default-field>
+            </field>
+             <field name="processStoryIds" from="processStoryIds">
+                <!-- filter pass through -->
                 <default-field>
                     <hidden/>
                 </default-field>

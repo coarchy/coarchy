@@ -202,7 +202,7 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="activityId" type="id" />
         <field name="evaluationByEnumId" type="id" />
         <field name="implementationStatusEnumId" type="id" />
-        <field name="value" type="number-integer" />
+        <field name="rating" type="number-integer" />
         <field name="comments" type="text-long" />
         <field name="lastEditedByUserId" type="id" enable-audit-log="update" />
 

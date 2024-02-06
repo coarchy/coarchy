@@ -56,7 +56,12 @@ along with this software (see the LICENSE.md file). If not, see
             </field>
             <field name="productName" from="productEvaluation?.productName">
                 <default-field><display /></default-field>
-            </field>          
+            </field>     
+            <field name="organizationPartyId" from="productEvaluation?.organizationId">
+                <default-field title="Organization">
+                    <display-entity entity-name="mantle.party.PartyDetail" text="PartyNameOnlyTemplate"  />
+                </default-field>
+            </field>        
             <field name="evaluationStatusId">
                 <conditional-field condition="evaluationStatusId=='PeAwaitingVendorResponse'">
                     <display text="Awaiting Response"/>
