@@ -27,6 +27,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="valueList" from="[]"/>
             <if condition="term == null &amp;&amp; valueIdList ? valueIdList?.size() &gt; 0 : false"><then>
                 <entity-find entity-name="coarchy.ValueStatement" list="valueList" limit="50">
+                    <econdition field-name="disabled" value="N" or-null="true" />
                     <econdition field-name="replacedByValueStatementId" operator="is-null" />
                     <econdition field-name="valueStatementId" operator="in" from="valueIdList"/>
                     <econdition field-name="valueStatementId" operator="not-in" from="excludeValueIds" ignore-if-empty="true"/>
@@ -34,6 +35,7 @@ along with this software (see the LICENSE.md file). If not, see
             </then><else>
                 <!-- TODO: Also find by actor name -->
                 <entity-find entity-name="coarchy.ValueStatement" list="valueList" limit="50">
+                    <econdition field-name="disabled" value="N" or-null="true" />
                     <econdition field-name="replacedByValueStatementId" operator="is-null" />                   
                     <econdition field-name="value" operator="like" value="%${term}%" ignore-case="true"/>
                     <econdition field-name="valueStatementId" operator="not-in" from="excludeValueIds" ignore-if-empty="true"/>
@@ -75,6 +77,7 @@ along with this software (see the LICENSE.md file). If not, see
     <actions>
         <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
             <date-filter />
+            <econdition field-name="disabled" value="N" or-null="true" />
             <econdition field-name="activityId" from="activityId"/>
             <select-field field-name="valueStatementActivityId,valueStatementId,value"/>
             <order-by field-name="^value"/></entity-find>

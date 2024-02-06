@@ -262,6 +262,7 @@ along with this software (see the LICENSE.md file). If not, see
                 select-columns="true">
             <entity-find entity-name="coarchy.ValueStatementAndTag" list="valueStatementList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum,value"/>
+                <econdition field-name="disabled" value="N" or-null="true" />
                 <econdition field-name="organizationId" from="activeOrgId" />
                 <econdition field-name="replacedByValueStatementId" operator="is-null" />
                 <econdition field-name="tagId" operator="in" from="tagIdList" ignore-if-empty="true"/>

@@ -41,6 +41,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- By default, add all value statements in this organization to ProductEvaluation -->
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
                 <econdition field-name="replacedByValueStatementId" operator="is-null" />
+                <econdition field-name="disabled" value="N" or-null="true" />
                 <econdition field-name="organizationId" />
                 <order-by field-name="sequenceNum,value" />
             </entity-find>
@@ -349,7 +350,10 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="coarchy.ValueStatement" list="allValueStatementList">
                 <econditions combine="or">
                     <econdition field-name="valueStatementId" operator="in" from="valueStatementIds" />
-                    <econdition field-name="replacedByValueStatementId" operator="is-null" />
+                    <econditions>
+                        <econdition field-name="disabled" value="N" or-null="true" />
+                        <econdition field-name="replacedByValueStatementId" operator="is-null" />
+                    </econditions>
                 </econditions>
                 <econdition field-name="organizationId" operator="in"
                     from="productEvaluation.organizationId" />
