@@ -130,8 +130,11 @@ along with this software (see the LICENSE.md file). If not, see
             <widgets>
                 <container style="q-pa-md">
                     <section-iterate name="ValueStatementList" list="valueStatementActivityList" entry="valueStatementActivity">
+                        <actions>
+                            <entity-find-one entity-name="moqui.basic.Enumeration" value-field="typeEnum" auto-field-map="[enumId:valueStatementActivity.typeEnumId]"></entity-find-one>
+                        </actions>
                         <widgets>
-                            <label text="${valueStatementActivity_index+1}. ${valueStatementActivity.value} (${valueStatementActivity.typeEnumId})" type="div" style="text-bold"/>
+                            <label text="${valueStatementActivity_index+1}. ${valueStatementActivity.value} (${typeEnum.description})" type="div" style="text-bold"/>
                         </widgets>
                     </section-iterate>
                 </container>
