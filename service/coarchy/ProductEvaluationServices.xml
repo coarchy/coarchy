@@ -465,7 +465,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <if condition="!excludedActivityList">
                 <service-call name="store#coarchy.product.ProductEvaluationActivity"
-                    in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryId, activityId:activityId, excludeFlag:'N']" />
+                    in-map="[productEvaluationId:productEvaluationId, processStoryId:processStoryId, activityId:activityId, excludeFlag:'N', organizationId:productEvaluation.organizationId]" />
 
                     <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
                 list="excludedActivityList">
