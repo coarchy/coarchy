@@ -1110,7 +1110,7 @@ along with this software (see the LICENSE.md file). If not, see
                         in-map="[userGroupId:'COARCHY_VENDORS',
                             userId:newUser.userId, fromDate:ec.user.nowTimestamp]" />
                     <service-call name="org.moqui.impl.UserServices.set#Preference"
-                        in-map="[preferenceKey:'ACTIVE_VENDOR_ORGANIZATION',preferenceValue:organizationId]" />
+                        in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationId]" />
 
                     <!-- Sales Journey Prospect for invited user -->
                     <!-- <service-call name="mantle.party.PartyServices.set#PartyClassification"
@@ -1149,7 +1149,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="partyId" from="newPartyId" />
                 <econdition field-name="roleTypeId" value="VendorRepresentative" />
                 <!-- only allow re-adding vendor if invitation was cancelled by org member -->
-                <econdition field-name="statusId" operator="not-in"
+                <econdition field-name="statusId" operator="in"
                     value="PepPlanned,PepInvited,PepAccepted,PepRejected" />
                 <order-by field-name="-fromDate" />
             </entity-find>
@@ -1164,6 +1164,7 @@ along with this software (see the LICENSE.md file). If not, see
                         in-map="[productEvaluationId:productEvaluationId]" />
                 </if>
                 <else>
+                    <entity-find-one entity-name="mantle.product.Product" value-field="product" auto-field-map="[productId:productEvaluation.productId]"></entity-find-one>
                     <return type="warning"
                     message="${ec.resource.expand('CoarchyProductVendorAlreadyInvited', null, [emailAddress:emailAddress, productName:product.productName])}" />
                 </else>
