@@ -313,6 +313,13 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="name"/></entity-find>
                 <set field="actorIdList" from="activityActorList*.actorId"/>
 
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationActivityAndDetail" count-field="existingEvaluationRecordCount">
+                    <econdition field-name="statusId" operator="not-equals" value="PeRequirementsSelection"/>
+                    <econdition field-name="activityId" />
+                    <econdition field-name="excludeFlag" value="N" or-null="true" />
+                    <econdition field-name="organizationId" from="activeOrgId" />
+               </entity-find-count>
+               <set field="canCopyOnWrite" from="existingEvaluationRecordCount &gt; 0" />        
                 <!--                <log level="warn" message="form-list ProcessStory context.toString() ${context.toString()}"/>-->
             </row-actions>
             <row-selection id-field="activityId">
@@ -430,7 +437,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </entity-options>
                     </drop-down>
                 </header-field>
-                <conditional-field condition="action"><drop-down allow-empty="true" submit-on-select="true">
+                <conditional-field condition="action"><drop-down allow-empty="true" submit-on-select="false">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ActivityImplementation"/>
@@ -453,7 +460,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <list-options list="headerActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></header-field>
-                <conditional-field condition="action" title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="true">
+                <conditional-field condition="action" title="Actor"><drop-down allow-empty="true" allow-multiple="true" submit-on-select="false">
                     <list-options list="activityActorList" key="${actorId}" text="${name}"/>
                     <dynamic-options server-search="true" transition="getActorList" min-length="0"/>
                 </drop-down></conditional-field>
@@ -463,9 +470,19 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="action"><header-field title="Action" show-order-by="case-insensitive"><text-find size="25"/></header-field>
                 <conditional-field condition="action"><text-area rows="2" cols="80" autogrow="true"/></conditional-field>
                 <last-row-field><text-area rows="2" cols="80"/></last-row-field></field>
-
+            <field name="ignoreCopyOnWrite">
+                <conditional-field title="" condition="canCopyOnWrite">
+                    <!-- <label text="This activity was used in at least one Product Evaluation. Do you also want these changes applied to any product evaluation? Warning! This is unreversible." style="text-negative" /> -->
+                    <check no-current-selected-key="false">
+                        <option key="true" text="Save the changes to all existing product evaluations." />
+                    </check>
+                </conditional-field>
+                <default-field title="">
+                    <hidden />
+                </default-field>
+            </field>
             <field name="submit"><header-field title="Update"><submit/></header-field>
-                <conditional-field condition="action"><submit text="Update"/></conditional-field>
+                <conditional-field condition="action"><submit text="Update" /></conditional-field>
                 <last-row-field><submit text="Add Activity" type="success"/></last-row-field></field>
 
             <field name="actionMenu"><default-field title="Actions">
@@ -494,7 +511,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <column><field-ref name="move"/></column>
                 <column><field-ref name="condition"/><field-ref name="implementationId"/></column>
                 <column><field-ref name="actorIdList"/><field-ref name="action"/></column>
-                <column><field-ref name="submit"/></column>
+                <column><field-ref name="ignoreCopyOnWrite" /><field-ref name="submit"/></column>
                 <column><field-ref name="actionMenu"/><field-ref name="newParagraph"/></column>
             </columns>
         </form-list>

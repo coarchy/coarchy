@@ -913,6 +913,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="action" required="true"/>
             <parameter name="implementationId"/>
             <parameter name="organizationId" required="true"/>
+            <parameter name="ignoreCopyOnWrite" type="Boolean" default="false"/>
         </in-parameters>
         <actions>
              <!-- check if activity is references in product evaluation records of status other than RequirementsSelection -->
@@ -929,7 +930,8 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="coarchy.Activity" value-field="activity">
                 <field-map field-name="activityId" />
             </entity-find-one>
-            <if condition="activity.condition != condition?.trim() || activity.action != action?.trim() || activity.implementationId != implementationId">
+ 
+            <if condition="(activity.condition?:'') != (condition?.trim()?:'') || (activity.action?:'') != (action?.trim()?:'') || (activity.implementationId?:'') != (implementationId?:'')">
                 <set field="valueChanged" from="true"/>
             </if>
 
@@ -939,7 +941,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="activityId" />
                     <econdition field-name="organizationId" />
                 </entity-find>
-                <if condition="!activityActorList*.actorIds.equals(actorIdList)">
+                <if condition="!activityActorList*.actorId.equals(actorIdList)">
                     <set field="valueChanged" from="true"/>
                 </if>
             </if>
@@ -949,7 +951,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <return />
             </if>
 
-            <if condition="existingEvaluationRecords">
+            <if condition="existingEvaluationRecords &amp;&amp; !ignoreCopyOnWrite">
                 <!-- we have ProductEvaluationItem records, perform copy on write -->             
 
                 <!-- duplicate existing activity -->
@@ -1501,6 +1503,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="typeEnumId"/>
             <parameter name="sequenceNum"/>
             <parameter name="organizationId" required="true"/>
+            <parameter name="ignoreCopyOnWrite" type="Boolean" default="false"/>
         </in-parameters>
         <out-parameters>
             <parameter name="valueStatementId"/>
@@ -1529,13 +1532,13 @@ along with this software (see the LICENSE.md file). If not, see
            <entity-find-one entity-name="coarchy.ValueStatement" value-field="valueStatement">
                <field-map field-name="valueStatementId" />
            </entity-find-one>
-           <if condition="valueStatement.value != value?.trim() || valueStatement.typeEnumId != typeEnumId || valueStatement.sequenceNum != sequenceNum">
+           <if condition="(valueStatement.value?:'') != (value?.trim()?:'') || (valueStatement.typeEnumId?:'') != (typeEnumId?:'')">
                <set field="valueChanged" from="true"/>
            </if>
 
            <!-- nothing changed, return -->
            <if condition="valueChanged">
-                <if condition="existingEvaluationRecords">
+                <if condition="existingEvaluationRecords &amp;&amp; !ignoreCopyOnWrite">
                     <then>
                         <!-- duplicate existing value statement -->
                         <service-call name="create#coarchy.ValueStatement" in-map="valueStatement + [valueStatementId:null, value:value,typeEnumId:typeEnumId]" out-map="newStatementOut"/>
