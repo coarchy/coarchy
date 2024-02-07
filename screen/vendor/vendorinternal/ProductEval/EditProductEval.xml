@@ -35,7 +35,7 @@ along with this software (see the LICENSE.md file). If not, see
     
     <transition name="inviteVendor">
         <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationParty" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,organizationId:activeVendorOrgId]"/>
-        <default-response url="."/>
+        <default-response url="." type="screen-last" />
     </transition>
 
     <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>

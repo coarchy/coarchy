@@ -39,7 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
         <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationParty" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,organizationId:activeOrgId]"/>
-        <default-response url="."  />
+        <default-response url="." type="screen-last" />
     </transition>
 
     <transition name="finalizeActivitySelection">
@@ -47,7 +47,7 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
         <service-call name="coarchy.ProductEvaluationServices.finalize#ProductEvaluationActivitySelection" in-map="[productEvaluationId:productEvaluationId]"/>
-        <default-response/>
+        <default-response url="." type="screen-last"/>
     </transition>
 
     <transition name="finalizeVendorInvitations">
@@ -55,7 +55,7 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
         <service-call name="coarchy.ProductEvaluationServices.finalize#ProductEvaluationVendorInvitations" in-map="[productEvaluationId:productEvaluationId]"/>
-        <default-response/>
+        <default-response url="." type="screen-last"/>
     </transition>
 
     <transition name="reopenActivitySelection">
@@ -63,7 +63,7 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
         <service-call name="coarchy.ProductEvaluationServices.reopen#ProductEvaluationActivitySelection" in-map="[productEvaluationId:productEvaluationId]"/>
-        <default-response/>
+        <default-response url="." type="screen-last"/>
     </transition>
 
     <transition name="cancelProductEvaluation">
@@ -71,7 +71,7 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
         <service-call name="coarchy.ProductEvaluationServices.cancel#ProductEvaluation" in-map="[productEvaluationId:productEvaluationId]"/>
-        <default-response/>
+        <default-response url="." type="screen-last"/>
     </transition>
 
     <transition name="completeProductEvaluation">
@@ -79,7 +79,7 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
         </condition>
         <service-call name="coarchy.ProductEvaluationServices.complete#ProductEvaluation" in-map="[productEvaluationId:productEvaluationId]"/>
-        <default-response/>
+        <default-response url="." type="screen-last"/>
     </transition>
 
     <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
