@@ -15,7 +15,7 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Organizations" default-menu-index="40" menu-image="fa fa-building" menu-image-type="icon">
 
-    <always-actions>
+    <always-actions>        
         <entity-find entity-name="mantle.party.PartyToAndRelationship" list="organizationList" distinct="true">
             <date-filter/>
             <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
@@ -114,7 +114,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="goToProductEvaluation">
         <actions>
-            <entity-find-one entity-name="moqui.security.UserPreference" value-field="userPreference" auto-field-map="[userId:ec.user.userId,preferenceKey:'ACTIVE_VENDOR_ORGANIZATION']"/>
+            <entity-find-one entity-name="moqui.security.UserPreference" value-field="userPreference" auto-field-map="[userId:ec.user.userId,preferenceKey:'ACTIVE_ORGANIZATION']"/>
             <if condition="organizationId &amp;&amp; userPreference?.preferenceValue != organizationId">
                 <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
                     <date-filter/>
@@ -123,11 +123,29 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
                     <econdition field-name="toPartyId" from="organizationId"/></entity-find-count>
                 <if condition="partyRelationshipCount &gt; 0">
-                    <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_VENDOR_ORGANIZATION',preferenceValue:organizationId]"/>
+                    <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationId]"/>
                 </if>
             </if>
         </actions>
         <default-response url="/vendor/ProductEval/EditProductEval" parameter-map="[productEvaluationId:productEvaluationId]" url-type="plain"/>
+    </transition>
+    
+    <transition name="goToVendorHome">
+        <actions>
+            <entity-find-one entity-name="moqui.security.UserPreference" value-field="userPreference" auto-field-map="[userId:ec.user.userId,preferenceKey:'ACTIVE_ORGANIZATION']"/>
+            <if condition="organizationId &amp;&amp; userPreference?.preferenceValue != organizationId">
+                <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+                    <date-filter/>
+                    <econdition field-name="relationshipTypeEnumId" value="PrtVendorRepresentative"/>
+                    <econdition field-name="toRoleTypeId" value="VendorRepresentative"/>
+                    <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+                    <econdition field-name="toPartyId" from="organizationId"/></entity-find-count>
+                <if condition="partyRelationshipCount &gt; 0">
+                    <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:organizationId]"/>
+                </if>
+            </if>
+        </actions>
+        <default-response url="/vendor" url-type="plain"/>
     </transition>
 
     <actions>
@@ -258,8 +276,8 @@ along with this software (see the LICENSE.md file). If not, see
                                 ]]></text></render-mode></conditional-field>
                         <default-field title="View Organization"><link url="goToApplication" text="${organizationName}"
                                 parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home" condition="isMember"/>
-                            <link url="" text="${organizationName} Response"
-                                parameter-map="[partyId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/></default-field>
+                            <link url="goToVendorHome" text="${organizationName} Response"
+                                parameter-map="[organizationId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/></default-field>
                     </field>
                     <field name="organizationName"><conditional-field title="Organization Settings" condition="
                         !(isRep &amp;&amp; !isMember) &amp;&amp; visibilityEnumId!='PvPublic' || ownerPartyId == ec.user.userAccount.partyId">
@@ -286,8 +304,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <row-col md="8">
                     <label text="Outstanding Product Evaluations" type="h4"/>
                                                     
-                    <form-list name="ProductEvaluationSummaryList" header-dialog="true" list="evalPartyAndEvalList">
-                        <entity-find entity-name="coarchy.product.ProductEvaluationPartyAndEval" list="evalPartyAndEvalList">
+                    <form-list name="ProductEvaluationSummaryList" header-dialog="true" list="evalPartyAndEvalList" >
+                        <entity-find entity-name="coarchy.product.ProductEvaluationPartyAndEval" list="evalPartyAndEvalList" distinct="true">
                             <date-filter />
                             <econdition field-name="organizationId" operator="in" from="vendorOrganizationList*.toPartyId" />
                             <econdition field-name="partyId" from="ec.user.userAccount.partyId" />
