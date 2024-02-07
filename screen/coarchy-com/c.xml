@@ -31,59 +31,10 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <transition name="sitemap.xml" read-only="true" require-session-token="false">
-        <!-- TODO: get fancier with this, crawl screen tree looking for screens that don't require authc, maybe some sort of setting to allow robots or not -->
-        <!-- TODO: also generate sitemap XML with paths we want crawled, based on ? -->
-        <actions>
-            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
-            <set field="urlList" from="[]"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/', changefreq:'daily', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/Services', changefreq:'monthly', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/Newsletter', changefreq:'monthly', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/HempExcerpts', changefreq:'monthly', priority:'1.0']"/>
-            <set field="blogListOut" from="ec.entity.find('moqui.resource.wiki.WikiBlogFindView').condition('wikiPageCategoryId', 'Newsletter').condition('publishedVersionName', 'is-not-null').list()"/>
-            <entity-find entity-name="moqui.resource.wiki.WikiBlogFindView" list="blogListOut" cache="true">
-                <econdition field-name="wikiPageCategoryId" value="Newsletter"/>
-                <econdition field-name="publishedVersionName" operator="is-not-null"/>
-                <order-by field-name="publishDate"/>
-            </entity-find>
-            <iterate list="blogListOut" entry="blog">
-                <script>urlList.push([loc:baseLinkUrl+'/Article?wikiBlogId='+blog.wikiBlogId,
-                                      lastmod:ec.l10n.format(blog.publishDate, 'yyyy-MM-dd'),
-                                      changefreq:'weekly', priority:'1.0']);
-                urlList.push([loc:baseLinkUrl+'/content/downloadSmallImage?wikiBlogId='+blog.wikiBlogId,
-                              lastmod:ec.l10n.format(blog.publishDate, 'yyyy-MM-dd'),
-                              changefreq:'monthly', priority:'1.0'])
-                </script>
-            </iterate>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/TermsOfUse', changefreq:'monthly', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/PrivacyPolicy', changefreq:'monthly', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/PrivacyPolicyCaResidents', changefreq:'monthly', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/CopyrightPolicy', changefreq:'monthly', priority:'1.0']"/>
-
-            <script><![CDATA[
-                try (def outWriter = new StringWriter()) {
-                    outWriter.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-                    outWriter.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:news=\"http://www.google.com/schemas/sitemap-news/0.9\" xmlns:xhtml=\"http://www.w3.org/1999/xhtml\" xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\" xmlns:video=\"http://www.google.com/schemas/sitemap-video/1.1\">\n");
-
-                    for (Map url : urlList) {
-                        ec.logger.warn("Adding URL to sitemap: " + url);
-                        outWriter.append("\t<url>\n");
-                        outWriter.append("\t\t<loc>" + url.loc + "</loc>\n");
-                        if (url.lastmod) {
-                            outWriter.append("\t\t<lastmod>" + url.lastmod + "</lastmod>\n");
-                        }
-                        outWriter.append("\t\t<changefreq>" + url.changefreq + "</changefreq>\n");
-                        outWriter.append("\t\t<priority>" + url.priority + "</priority>\n");
-                        outWriter.append("\t</url>\n");
-                    }
-
-                    outWriter.append("</urlset>");
-                    ec.web.sendTextResponse(outWriter.toString())
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                ]]></script>
+        <service-call name="coarchy.CoarchyServices.generate#Sitemap" out-map="context"/>
+        <actions><script><![CDATA[
+                ec.web.sendTextResponse(sitemapXml)
+            ]]></script>
         </actions>
         <default-response type="none"/>
     </transition>
