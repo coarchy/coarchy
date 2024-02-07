@@ -20,7 +20,7 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="productEvaluationId" required="true"/>
 
     <always-actions>
-        <!-- <if condition="!activeVendorOrgId">
+        <!-- <if condition="!activeOrgId">
             <message>${ec.resource.expand('CoarchySelectAnOrg', null)}</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if> -->
@@ -29,12 +29,12 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
             <econdition field-name="toRoleTypeId" value="OrgInternal"/>
             <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
-            <econdition field-name="toPartyId" from="activeVendorOrgId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/>
         </entity-find-count>      
     </always-actions>
     
     <transition name="inviteVendor">
-        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationParty" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,organizationId:activeVendorOrgId]"/>
+        <service-call name="coarchy.ProductEvaluationServices.add#ProductEvaluationParty" in-map="[productEvaluationId:productEvaluationId,emailAddress:emailAddress,firstName:firstName,lastName:lastName,organizationId:activeOrgId]"/>
         <default-response url="." type="screen-last" />
     </transition>
 

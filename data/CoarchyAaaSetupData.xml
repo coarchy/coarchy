@@ -40,25 +40,6 @@ along with this software (see the LICENSE.md file). If not, see
         <filters entityFilterId="COARCHY_FILTER_C25" entityName="coarchy.product.ProductEvaluationResponse" filterMap="[organizationId:activeOrgId]"/>
 
     </moqui.security.EntityFilterSet>
-    
-    <moqui.security.EntityFilterSet entityFilterSetId="COARCHY_VENDOR_FILTER">
-        <filters entityFilterId="COARCHY_FILTER_V1" entityName="coarchy.Activity" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V2" entityName="coarchy.Actor" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V3" entityName="coarchy.ProcessStory" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V4" entityName="coarchy.ActivityActor" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V5" entityName="coarchy.ProcessStoryActivity" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V6" entityName="coarchy.ValueStatement" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V7" entityName="coarchy.ValueStatementActivity" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V8" entityName="mantle.work.effort.WorkEffort" filterMap="[ownerPartyId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V9" entityName="coarchy.ValueStatementTag" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V10" entityName="coarchy.Tag" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V20" entityName="coarchy.product.ProductEvaluation" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V21" entityName="coarchy.product.ProductEvaluationProcessStory" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V22" entityName="coarchy.product.ProductEvaluationActivity" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V23" entityName="coarchy.product.ProductEvaluationStatement" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V24" entityName="coarchy.product.ProductEvaluationParty" filterMap="[organizationId:activeVendorOrgId]"/>
-        <filters entityFilterId="COARCHY_FILTER_V25" entityName="coarchy.product.ProductEvaluationResponse" filterMap="[organizationId:activeVendorOrgId]"/>
-    </moqui.security.EntityFilterSet>
 
     <!-- Artifact group and authz for Coarchy Apps -->
     <artifactGroups artifactGroupId="COARCHY" description="Coarchy App (via root screen)">
@@ -93,10 +74,10 @@ along with this software (see the LICENSE.md file). If not, see
     <artifactGroups artifactGroupId="COARCHY_VENDORAPP" description="Coarchy Vendors (via root screen)">
         <artifacts artifactName="component://coarchy/screen/vendor/vendorinternal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
         <authz artifactAuthzId="COARCHY_VENDORAPP_VENDORS" userGroupId="COARCHY_VENDORS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
-            <filters entityFilterSetId="COARCHY_VENDOR_FILTER"/>
+            <filters entityFilterSetId="COARCHY_FILTER"/>
         </authz>
         <authz artifactAuthzId="COARCHY_VENDORAPP_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
-            <filters entityFilterSetId="COARCHY_VENDOR_FILTER"/>
+            <filters entityFilterSetId="COARCHY_FILTER"/>
         </authz>
     </artifactGroups>
 

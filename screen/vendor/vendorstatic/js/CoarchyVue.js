@@ -57,23 +57,23 @@ Vue.component('c-menu-item-content', {
 Vue.component('active-org-nav', {
     name: "activeVendorOrgNav",
     template:
-        '<q-btn icon="group_add" :label="activeVendorOrg && activeVendorOrg.organizationName" :class="{\'text-positive\':activeVendorOrg}">\n' +
+        '<q-btn icon="group_add" :label="activeOrg && activeOrg.organizationName" :class="{\'text-positive\':activeOrg}">\n' +
         '    <q-tooltip>Select Organization</q-tooltip>\n' +
         '    <q-menu><q-list dense>\n' +
-        '        <q-item v-for="userVendorOrg in userVendorOrgList" :key="userVendorOrg.pseudoId" clickable v-close-popup @click="updateActive(userVendorOrg.partyId)"><q-item-section>\n' +
-        '            {{userVendorOrg.organizationName}}</q-item-section></q-item>\n' +
+        '        <q-item v-for="userOrg in userOrgList" :key="userOrg.pseudoId" clickable v-close-popup @click="updateActive(userOrg.partyId)"><q-item-section>\n' +
+        '            {{userOrg.organizationName}}</q-item-section></q-item>\n' +
         '    </q-list></q-menu>\n' +
         '</q-btn>',
-    data: function() { return { activeVendorOrg:null, userVendorOrgList:null } },
+    data: function() { return { activeOrg:null, userOrgList:null } },
     methods: {
         updateActive: function(partyId) {
             var vm = this;
             $.ajax({ type:'POST', url:'/apps/setPreference', error:moqui.handleAjaxError,
-                data:{ moquiSessionToken: this.$root.moquiSessionToken, preferenceKey:'ACTIVE_VENDOR_ORGANIZATION', preferenceValue:partyId },
+                data:{ moquiSessionToken: this.$root.moquiSessionToken, preferenceKey:'ACTIVE_ORGANIZATION', preferenceValue:partyId },
                 success: function() {
-                    var vendorOrgList = vm.userVendorOrgList;
-                    if (partyId) { for (var i=0; i<vendorOrgList.length; i++) { if (vendorOrgList[i].partyId === partyId) { vm.activeVendorOrg = vendorOrgList[i]; break; } } }
-                    else { vm.activeVendorOrg = null; }
+                    var orgList = vm.userOrgList;
+                    if (partyId) { for (var i=0; i<orgList.length; i++) { if (orgList[i].partyId === partyId) { vm.activeOrg = orgList[i]; break; } } }
+                    else { vm.activeOrg = null; }
                     vm.$root.reloadSubscreens();
                 }
             });
@@ -83,9 +83,9 @@ Vue.component('active-org-nav', {
     mounted: function() {
         var vm = this;
         $.ajax({ type:"GET", url:(this.$root.appRootPath + '/rest/s1/coarchy/my/userVendorOrgInfo'), error:moqui.handleAjaxError,
-            success: function(resp) { if (resp) { vm.activeVendorOrg = resp.activeVendorOrg; vm.userVendorOrgList = resp.userVendorOrgList; }}
+            success: function(resp) { if (resp) { vm.activeOrg = resp.activeOrg; vm.userOrgList = resp.userOrgList; }}
         });
-        // console.log("vm.activeVendorOrg " + vm.activeVendorOrg)
-        // console.log("vm.userVendorOrgList " + vm.userVendorOrgList)
+        // console.log("vm.activeOrg " + vm.activeOrg)
+        // console.log("vm.userOrgList " + vm.userOrgList)
     }
 });

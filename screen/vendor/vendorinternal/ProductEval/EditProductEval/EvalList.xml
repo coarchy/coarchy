@@ -50,7 +50,7 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- find existing response by activityId -->
         <entity-find entity-name="coarchy.product.ProductEvaluationResponse" list="productEvaluationResponseList">
             <econdition field-name="productEvaluationId" />
-            <econdition field-name="organizationId" from="activeVendorOrgId" />
+            <econdition field-name="organizationId" from="activeOrgId" />
             <econdition field-name="activityId" ignore="!activityId"/>
             <econdition field-name="statementId" from="valueStatementId" ignore="!valueStatementId"/>
             <econdition field-name="evaluationByEnumId" operator="in" value="EbVendor"/>

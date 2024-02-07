@@ -22,7 +22,7 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="orderByField" value="productName"/>
 
     <always-actions>
-        <!-- <if condition="!activeVendorOrgId">
+        <!-- <if condition="!activeOrgId">
             <message type="info">Select an Organization before moving forward.</message>
             <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
         </if> -->    
@@ -38,9 +38,9 @@ along with this software (see the LICENSE.md file). If not, see
         <label text="showing evaluations for organization ${organizationName}. You can switch organizations from the organization picker." style="text-grey-9"/>
         <form-list name="ProductEvalListForm" header-dialog="true" show-page-size="true" select-columns="true" saved-finds="true"
                    show-csv-button="true" list="evalPartyAndEvalList">
-            <entity-find entity-name="coarchy.product.ProductEvaluationPartyAndEval" list="evalPartyAndEvalList">
+            <entity-find entity-name="coarchy.product.ProductEvaluationPartyAndEval" list="evalPartyAndEvalList" distinct="true">
                 <date-filter />
-                <econdition field-name="organizationId" from="activeVendorOrgId" />
+                <econdition field-name="organizationId" from="activeOrgId" />
                 <econdition field-name="partyId" from="ec.user.userAccount.partyId" />
                 <econdition field-name="roleTypeId" value="VendorRepresentative" />
                 <econdition field-name="statusId" operator="not-in" value="PepPlanned,PepCancelled,PepRejected" />
