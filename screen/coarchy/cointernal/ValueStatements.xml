@@ -41,7 +41,7 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <transition name="updateValue"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,tagIdList:tagIdList,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,tagIdList:tagIdList,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,ignoreCopyOnWrite:ignoreCopyOnWrite,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
@@ -323,6 +323,13 @@ along with this software (see the LICENSE.md file). If not, see
                 </entity-find>
                 <set field="tagIdList" from="statementTagList*.tagId"/>
                 
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationStatementAndDetail" count-field="existingEvaluationRecordCount">
+                    <econdition field-name="statusId" operator="not-equals" value="PeRequirementsSelection"/>
+                    <econdition field-name="statementId" from="valueStatementId" />
+                    <econdition field-name="organizationId" from="activeOrgId" />
+               </entity-find-count>
+               <set field="canCopyOnWrite" from="existingEvaluationRecordCount &gt; 0" />
+
 <!--                <log level="warn" message="form-list Statements context.toString() ${context.toString()}"/>-->
             </row-actions>
 
@@ -366,7 +373,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></header-field>
-                <default-field title="Statement Type"><drop-down submit-on-select="true">
+                <default-field title="Statement Type"><drop-down submit-on-select="false">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
@@ -385,6 +392,18 @@ along with this software (see the LICENSE.md file). If not, see
             </field>
             <field name="valueStatementId">
                 <default-field><hidden/></default-field></field>
+            <field name="ignoreCopyOnWrite">
+                <conditional-field title="" condition="canCopyOnWrite">
+                    <!-- not enought space for this -->
+                    <!-- <label text="This statement was used in at least one Product Evaluation. Do you also want these changes applied to any product evaluation? Warning! This is unreversible." style="text-negative" /> -->
+                    <check no-current-selected-key="false">
+                        <option key="true" text="Save the changes to all existing product evaluations." />
+                    </check>
+                </conditional-field>
+                <default-field title="">
+                    <hidden />
+                </default-field>
+            </field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>
@@ -495,7 +514,7 @@ along with this software (see the LICENSE.md file). If not, see
             </field>        
             <columns>
                 <column><field-ref name="value"/><field-ref name="tagIdList"/></column>
-                <column><field-ref name="typeEnumId"/></column>
+                <column><field-ref name="typeEnumId"/><field-ref name="ignoreCopyOnWrite" /></column>
                 <column><field-ref name="submit"/></column>
                 <column><field-ref name="actions"/></column>
             </columns>

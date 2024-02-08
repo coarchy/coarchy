@@ -38,6 +38,14 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="activityId"/>
             <order-by field-name="name"/></entity-find>
         <set field="actorIdList" from="activityActorList*.actorId"/>
+
+        <entity-find-count entity-name="coarchy.product.ProductEvaluationActivityAndDetail" count-field="existingEvaluationRecordCount">
+            <econdition field-name="statusId" operator="not-equals" value="PeRequirementsSelection"/>
+            <econdition field-name="activityId" />
+            <econdition field-name="excludeFlag" value="N" or-null="true" />
+            <econdition field-name="organizationId" from="activeOrgId" />
+       </entity-find-count>
+       <set field="canCopyOnWrite" from="existingEvaluationRecordCount &gt; 0" />
     </actions>
 
     <widgets>
@@ -60,6 +68,17 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></default-field>
+            </field>
+            <field name="ignoreCopyOnWrite">
+                <conditional-field title="" condition="canCopyOnWrite">
+                    <label text="This activity was used in at least one Product Evaluation. Do you also want these changes applied to any product evaluation? Warning! This is unreversible." style="text-negative" />
+                    <check no-current-selected-key="false">
+                        <option key="true" text="Yes, save the changes to all existing product evaluations." />
+                    </check>
+                </conditional-field>
+                <default-field title="">
+                    <hidden />
+                </default-field>
             </field>
             <field name="submit"><default-field><submit text="Update"/></default-field></field>
         </form-single>
