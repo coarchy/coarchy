@@ -49,6 +49,7 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
             <econdition field-name="toPartyId" from="productEvaluation.organizationId"/>
         </entity-find-count>
+        <set field="isUserInternalOrgMember" from="partyRelationshipCount &gt; 0"/>
         
         <if condition="valueStatementId">
             <entity-find-one entity-name="coarchy.ValueStatement" value-field="valueStatement">
@@ -73,22 +74,16 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="activity" from="ec.resource.template('component://coarchy/template/ActivityStyled.html.ftl', '.ftl')"/>
         </if>
 
-        <entity-find entity-name="coarchy.product.ProductEvaluationParty" list="vendorRepList">
-            <date-filter />
-            <econdition field-name="productEvaluationId" />
-            <econdition field-name="roleTypeId" value="VendorRepresentative" />
-        </entity-find>
-
-        <set field="isUserInternalOrgMember" from="partyRelationshipCount &gt; 0"/>
-        <set field="isUserVendor" from="(vendorRepList*.partyId).contains(ec.user.userAccount?.partyId)"/>
 
         <!-- find existing response by activityId -->
         <entity-find entity-name="coarchy.product.ProductEvaluationResponse" list="productEvaluationResponseList">
             <econdition field-name="productEvaluationId" />
             <econdition field-name="activityId" ignore="!activityId"/>
             <econdition field-name="statementId" from="valueStatementId" ignore="!valueStatementId"/>
-            <econdition field-name="evaluationByEnumId" value="EbInternal" ignore="isUserVendor"/>
-            <econdition field-name="evaluationByEnumId" value="EbVendor" ignore="!isUserVendor"/>
+            <econdition field-name="evaluationByEnumId" value="EbInternal" ignore="isVendorView"/>
+            <econdition field-name="evaluationByEnumId" value="EbVendor" ignore="!isVendorView"/>
+            <!-- sort of a failsafe to protect internal responses -->
+            <econdition field-name="evaluationByEnumId" operator="not-equals" value="EbInternal" ignore="isUserInternalOrgMember"/>
         </entity-find>
         <if condition="productEvaluationResponseList.size() > 0">
             <set field="productEvaluationResponse" from="productEvaluationResponseList[0]"/>

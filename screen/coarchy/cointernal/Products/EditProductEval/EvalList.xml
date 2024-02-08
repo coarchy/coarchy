@@ -47,6 +47,15 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="activity" from="ec.resource.template('component://coarchy/template/ActivityStyled.html.ftl', '.ftl')"/>
         </if>
 
+        <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
+            <date-filter/>
+            <econdition field-name="relationshipTypeEnumId" value="PrtMember"/>
+            <econdition field-name="toRoleTypeId" value="OrgInternal"/>
+            <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId"/>
+            <econdition field-name="toPartyId" from="activeOrgId"/>
+        </entity-find-count>
+        <set field="isUserInternalOrgMember" from="partyRelationshipCount &gt; 0"/>
+        
         <!-- find existing response by activityId -->
         <entity-find entity-name="coarchy.product.ProductEvaluationResponse" list="productEvaluationResponseList">
             <econdition field-name="productEvaluationId" />
@@ -55,6 +64,8 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="statementId" from="valueStatementId" ignore="!valueStatementId"/>
             <econdition field-name="evaluationByEnumId" operator="in" value="EbInternal,EbVendor" ignore="isVendorView"/>
             <econdition field-name="evaluationByEnumId" operator="in" value="EbVendor" ignore="!isVendorView"/>
+            <!-- sort of a failsafe to protect internal responses -->
+            <econdition field-name="evaluationByEnumId" operator="not-equals" value="EbInternal" ignore="isUserInternalOrgMember"/>
         </entity-find>
     </actions>
 

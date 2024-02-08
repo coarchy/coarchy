@@ -96,11 +96,8 @@ along with this software (see the LICENSE.md file). If not, see
 
         <!-- safegaurd vendors from accessing product evaluation before its ready for them -->
         <if condition="isVendorView &amp;&amp; ['PeRequirementsSelection','PeInviteVendors'].contains(statusId)">
-            <!-- <return error="true" message="Not allowed"/> -->
+            <return error="true" message="Not allowed"/>
         </if>
-
-        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationResponseStats" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
-        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationCompleteWarnings" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
 
         <!-- find invited vendors -->
         <entity-find entity-name="coarchy.product.ProductEvaluationParty" list="vendorRepList">
@@ -109,23 +106,17 @@ along with this software (see the LICENSE.md file). If not, see
             <econdition field-name="roleTypeId" value="VendorRepresentative" />
         </entity-find>
 
+        <!-- note: isVendorView=true is set in always-actions in vendor app to determine where this is being accessed from -->
         <set field="isUserInternalOrgMember" from="partyRelationshipCount &gt; 0"/>
         <set field="isUserVendor" from="(vendorRepList*.partyId).contains(ec.user.userAccount?.partyId)"/>
-
-        <set field="canModifyProcessStory" from="statusId == 'PeRequirementsSelection'"/>
-        <set field="canModifyStatements" from="statusId == 'PeRequirementsSelection'"/>
-
-        <set field="showExcludedActivities" from="statusId == 'PeRequirementsSelection'"/>
         
         <!-- canInviteVendors controls the invite party dialog -->
         <set field="canInviteVendors" from="['PeRequirementsSelection','PeInviteVendors','PeAwaitingVendorResponse'].contains(statusId)"/>
         <!-- showInviteVendorsSection controls the whole vendor rep list section) -->
         <set field="showInviteVendorsSection" from="['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(statusId)"/>
 
-        <set field="showOrgResponseView" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(statusId)"/>
-        <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
-        <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
-
+        <!-- check if all statements and stories have been responded to -->
+        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationCompleteWarnings" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
     </actions>
 
     <widgets>
@@ -233,10 +224,8 @@ along with this software (see the LICENSE.md file). If not, see
                                     <box-header>
                                         <container-dialog id="ProductVendorInviteDialog" button-text="${(statusId=='PeAwaitingVendorResponse'?'Invite':'Add')}" button-style="float-right" condition="canInviteVendors">
                                             <container>
-                                                <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." condition="!isVendorView"/>
-                                                   
-                                                <label text="Invite your team members by adding their email address below." condition="isVendorView"/>
-                                                
+                                                <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." condition="!isVendorView"/>                                                   
+                                                <label text="Invite your team members by adding their email address below." condition="isVendorView"/>                                                
                                             </container>
                                             <form-single name="ProductVendorInviteForm" transition="inviteVendor">
                                                 <field name="productEvaluationId">
@@ -320,7 +309,6 @@ along with this software (see the LICENSE.md file). If not, see
                                                 <container style="text-center">
                                                     <label text="Please add at least one vendor representative to evaluate this product." style="text-bold text-negative" />
                                                 </container>
-
                                             </widgets>
                                         </section>
                                     </box-body>
@@ -331,7 +319,5 @@ along with this software (see the LICENSE.md file). If not, see
                 </container-row>
             </fail-widgets>
         </section>
-
-
     </widgets>
 </screen>

@@ -63,6 +63,7 @@ along with this software (see the LICENSE.md file). If not, see
     <actions>
         <!-- find product eval -->
         <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
+        <set field="statusId" from="productEvaluation.statusId"/>
 
         <!-- find root process stories -->
         <entity-find entity-name="coarchy.product.ProductEvaluationStoryDetail" list="productEvalStoryList">
@@ -89,15 +90,11 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="isUserInternalOrgMember" from="partyRelationshipCount &gt; 0"/>
         <set field="isUserVendor" from="(vendorRepList*.partyId).contains(ec.user.userAccount?.partyId)"/>
 
-        <set field="canModifyProcessStory" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="canModifyStatements" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="showExcludedStatements" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="showExcludedActivities" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="canInviteVendors" from="['PeInviteVendors','PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
-        <set field="showInviteVendorsSection" from="['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
-        <set field="showOrgResponseView" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
-        <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
-        <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
+        <set field="canModifyProcessStory" from="statusId == 'PeRequirementsSelection'"/>
+        <set field="showExcludedActivities" from="statusId == 'PeRequirementsSelection'"/>
+        <set field="showReponseListButton" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(statusId)"/>
+        <set field="showVendorRespondButton" from="isVendorView &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
+        <set field="showInternalRespondButton" from="!isVendorView &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
 
     </actions>
 
@@ -131,8 +128,9 @@ along with this software (see the LICENSE.md file). If not, see
             </container-dialog>
         </container>
         <container type="div">
-            <label text="Add the process stories you would like to be evaluated by vendors. You can include/exclude specific activities by clicking on the buttons below." style="text-caption text-grey-8" condition="productEvaluation.statusId=='PeRequirementsSelection'"/>
-            <label text="The following process story activities will be evaluated by vendors." style="text-caption text-grey-8" condition="productEvaluation.statusId!='PeRequirementsSelection'" />
+            <label text="Add the process stories you would like to be evaluated by vendors. You can include/exclude specific activities by clicking on the buttons below." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId=='PeRequirementsSelection')"/>
+            <label text="The following process story activities will be evaluated by vendors." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />
+            <label text="Evaluate the following process stories and activites." style="text-caption text-grey-8" condition="isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />
         </container>
 
         <container-row style="overflow-hidden">
@@ -178,12 +176,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <section-iterate name="ProcessStorySection" list="filterProductEvalStoryList" entry="filterProductEvalStory">
                     <actions>
                         <set field="processStoryId" from="filterProductEvalStory.processStoryId"/>
-                        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory" />
 
-                        <service-call name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,
-                            showSubstories:'Y',organizationId:productEvaluation.organizationId]" out-map="context"/>
-
+                        <!-- defaults to true for now -->
                         <set field="showSubstories" value="Y"/>
+                        
+                        <!-- find activities in process stories -->
+                        <service-call name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,
+                            showSubstories:showSubstories,organizationId:productEvaluation.organizationId]" out-map="context"/>
+
                         <set field="hasSubstories" from="processStoryActivityList*.detailProcessStoryId.any{ it != null }"/>
                         <set field="showSubstoriesActual" from="showSubstories=='Y' &amp;&amp; hasSubstories"/>
                     </actions>

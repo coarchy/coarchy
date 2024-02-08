@@ -1,40 +1,39 @@
-<#macro activityResponseStat processStoryActivity>
-    <#if showOrgResponseView>
-        <#if isUserInternalOrgMember>
-            <#assign internalResponseCount = internalResponseByActivity[processStoryActivity.activityId] />
-            <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
-            <#assign vendorResponseComplete = responseCount &gt; 0/>
+<#macro activityResponseList processStoryActivity>
+    <#if showReponseListButton>
+        <#assign internalResponseCount = internalResponseByActivity[processStoryActivity.activityId] />
+        <#assign vendorResponseCount = vendorResponseByActivity[processStoryActivity.activityId] />
+        <#assign vendorResponseComplete = vendorResponseCount &gt; 0/>
+        <#if !isVendorView!false>
             <m-dynamic-dialog url="${sri.buildUrl('../EvalList')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
-                buttonText="View (${internalResponseCount+responseCount})" noIcon 
+                buttonText="View (${internalResponseCount+vendorResponseCount})" noIcon 
                 buttonClass="text-caption" title="Activity Evaluations" 
                 color="<#if vendorResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>
-        <#elseif isUserVendor>
-            <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
-            <#assign vendorResponseComplete = responseCount &gt; 0/>
+        <#else>
             <#if vendorResponseComplete>
-            <m-dynamic-dialog url="${sri.buildUrl('../EvalList')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
-                buttonText="View" noIcon 
-                buttonClass="text-caption" title="Activity Evaluations" 
-                color="info"></m-dynamic-dialog>
+                <m-dynamic-dialog url="${sri.buildUrl('../EvalList')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}" 
+                    buttonText="View" noIcon 
+                    buttonClass="text-caption" title="Activity Evaluations" 
+                    color="info"></m-dynamic-dialog>
             </#if>
         </#if>
     </#if>
 </#macro>
+
 <#macro evaluateActivityButton processStoryActivity>
-    <#if showVendorResponseView>
+    <#if showVendorRespondButton>
         <#assign responseCount = vendorResponseByActivity[processStoryActivity.activityId] />
         <#assign vendorResponseComplete = responseCount &gt; 0/>
         <m-dynamic-dialog url="${sri.buildUrl('../EvalResponse')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}<#if processStoryIds!?has_content>&processStoryIds=${processStoryIds}</#if>" 
             buttonText="<#if vendorResponseComplete>Update<#else>Evaluate</#if>" noIcon 
-            buttonClass="text-caption" title="<#if isUserInternalOrgMember>Add Internal Evaluation on Activity<#else>Evaluate Activity</#if>" 
+            buttonClass="text-caption" title="Evaluate Activity" 
             color="<#if vendorResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>        
     </#if>
-    <#if showInternalResponseView>
+    <#if showInternalRespondButton>
         <#assign responseCount = internalResponseByActivity[processStoryActivity.activityId] />
         <#assign internalResponseComplete = responseCount &gt; 0/>
         <m-dynamic-dialog url="${sri.buildUrl('../EvalResponse')}?productEvaluationId=${productEvaluationId}&activityId=${processStoryActivity.activityId}<#if processStoryIds!?has_content>&processStoryIds=${processStoryIds}</#if>" 
             buttonText="<#if internalResponseComplete>Update Internal<#else>Internal Evaluation</#if>" noIcon 
-            buttonClass="text-caption" title="<#if isUserInternalOrgMember>Add Internal Evaluation on Activity<#else>Evaluate Activity</#if>" 
+            buttonClass="text-caption" title="Add Internal Evaluation on Activity" 
             color="<#if internalResponseComplete>positive<#else>negative</#if>"></m-dynamic-dialog>
     </#if>
 </#macro>
@@ -71,7 +70,7 @@
             <#assign isActivityIncluded = productEvalActivities.activityIds?seq_contains(processStoryActivity.activityId)/>
             <#if !isActivityIncluded && !showExcludedActivities><#continue/></#if>
             <li>
-            <@activityResponseStat processStoryActivity />
+            <@activityResponseList processStoryActivity />
             <@evaluateActivityButton processStoryActivity />
             <@toggleActivityInclusion processStoryActivity />
             <#if processStoryActivity.action!?has_content><#if !isActivityIncluded><s class="text-grey-8"></#if></#if>
@@ -90,18 +89,16 @@
     <#assign isActivityIncluded = productEvalActivities.activityIds?seq_contains(processStoryActivity.activityId)/>
     <#if !isActivityIncluded && !showExcludedActivities><#continue/></#if>
     <#if processStoryActivity.action!?has_content><li></#if>
-    <@activityResponseStat processStoryActivity />
+    <@activityResponseList processStoryActivity />
     <@evaluateActivityButton processStoryActivity />
     <@toggleActivityInclusion processStoryActivity />
     <#if processStoryActivity.action!?has_content><#if !isActivityIncluded><s class="text-grey-8"></#if></#if>
     <#include "ActivityStyledSpan.html.ftl"/>
     <#if processStoryActivity.action!?has_content><#if !isActivityIncluded></s></#if></#if>
-    <#--  <a href="${sri.buildUrl('refreshPageWithFilters').url}?productEvaluationId=100051&_openDialog=ReponseDialog_100011_0">Respond</a>  -->
     <#if processStoryActivity.detailProcessStoryId!?has_content && showSubstoriesActual>
         <@substory processStoryActivity 1/>
     </#if>
     <#if processStoryActivity.action!?has_content></li></#if>
-    <#--  <#if !processStoryActivity.detailProcessStoryId!?has_content><br/></#if>  -->
 </#list>
 </ol>
 </div>

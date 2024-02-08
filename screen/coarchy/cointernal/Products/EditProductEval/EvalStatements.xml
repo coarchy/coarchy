@@ -46,30 +46,16 @@ along with this software (see the LICENSE.md file). If not, see
     <actions>
         <!-- find product eval -->
         <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
+        <set field="statusId" from="productEvaluation.statusId"/>
 
         <!-- find inculded activities -->
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationStatements" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalStatements" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationResponseStats" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
 
-        <!-- find invited vendors -->
-        <entity-find entity-name="coarchy.product.ProductEvaluationParty" list="vendorRepList">
-            <date-filter />
-            <econdition field-name="productEvaluationId" />
-            <econdition field-name="roleTypeId" value="VendorRepresentative" />
-        </entity-find>
-
-        <set field="isUserInternalOrgMember" from="partyRelationshipCount &gt; 0"/>
-        <set field="isUserVendor" from="(vendorRepList*.partyId).contains(ec.user.userAccount?.partyId)"/>
-
-        <set field="canModifyProcessStory" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="canModifyStatements" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="showExcludedStatements" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="showExcludedActivities" from="productEvaluation.statusId == 'PeRequirementsSelection'"/>
-        <set field="canInviteVendors" from="['PeInviteVendors','PeAwaitingVendorResponse'].contains(productEvaluation.statusId)"/>
-        <set field="showInviteVendorsSection" from="['PeInviteVendors','PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
-        <set field="showOrgResponseView" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(productEvaluation.statusId)"/>
-        <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
-        <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
+        <set field="canModifyStatements" from="statusId == 'PeRequirementsSelection'"/>
+        <set field="showReponseListButton" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(statusId)"/>
+        <set field="showVendorRespondButton" from="isVendorView &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
+        <set field="showInternalRespondButton" from="!isVendorView &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
     </actions>
 
     <widgets>
@@ -77,8 +63,9 @@ along with this software (see the LICENSE.md file). If not, see
             <row-col sm="12">
                 <label text="Statements" style="text-bold" type="div"/>
                 <container type="div">
-                    <label text="By default, all statements in your organization will be evaluated by the vendors. You can choose to Include/Exclude them by clicking on the buttons below." style="text-caption text-grey-8" condition="productEvaluation.statusId=='PeRequirementsSelection'"/>
-                    <label text="The following statements will be evaluated by vendors." style="text-caption text-grey-8" condition="productEvaluation.statusId!='PeRequirementsSelection'" />
+                    <label text="By default, all statements in your organization will be evaluated by the vendors. You can choose to Include/Exclude them by clicking on the buttons below." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId=='PeRequirementsSelection')"/>
+                    <label text="The following statements will be evaluated by vendors." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />
+                    <label text="Evaluate the following statements." style="text-caption text-grey-8" condition="isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />                        
                 </container>
             </row-col>
         </container-row>
@@ -133,7 +120,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </econditions>
                         <econdition field-name="typeEnumId" operator="in" from="typeEnumIds" ignore-if-empty="true" />
                         <econdition field-name="organizationId" operator="in" from="productEvaluation.organizationId" />
-                        <econdition field-name="valueStatementId" operator="in" from="productEvalStatements.valueStatementIds" ignore="canModifyProcessStory" />
+                        <econdition field-name="valueStatementId" operator="in" from="productEvalStatements.valueStatementIds" ignore="canModifyStatements" />
                     </entity-find>
                     <row-actions>
                         <set field="isStatementIncluded" from="productEvalStatements.valueStatementIds.contains(valueStatementId)"/>
@@ -176,27 +163,18 @@ along with this software (see the LICENSE.md file). If not, see
                         </conditional-field>
                     </field>
                     <field name="typeEnumId">
-                        <!-- <header-field title="Type">
-                            <drop-down allow-empty="true" allow-multiple="true">
-                                <entity-options>
-                                    <entity-find entity-name="moqui.basic.Enumeration">
-                                        <econdition field-name="enumTypeId" value="ValueType" />
-                                    </entity-find>
-                                </entity-options>
-                            </drop-down>
-                        </header-field> -->
                         <default-field title="Type">
                             <display-entity entity-name="moqui.basic.Enumeration"/>
                         </default-field>
                     </field>                   
                     <field name="actions">  
-                        <conditional-field condition="isUserVendor" title="">
-                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${vendorResponseComplete?'Update':'Evaluate'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId,typeEnumIds:typeEnumIds]" button-style="text-caption" type="${vendorResponseComplete?'success':'danger'}" condition="showVendorResponseView"/>
-                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showOrgResponseView"/>
+                        <conditional-field condition="isVendorView" title="">
+                            <dynamic-dialog id="StatementResponseDialog" title="Evaluate Statement" button-text="${vendorResponseComplete?'Update':'Evaluate'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId,typeEnumIds:typeEnumIds]" button-style="text-caption" type="${vendorResponseComplete?'success':'danger'}" condition="showVendorRespondButton"/>
+                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showReponseListButton"/>
                         </conditional-field> 
-                        <conditional-field condition="isUserInternalOrgMember" title="">
-                            <dynamic-dialog id="StatementResponseDialog" title="${isUserInternalOrgMember?'Add Internal Evaluation on Statement':'Evaluate Statement'}" button-text="${internalResponseComplete?'Update Internal':'Internal Evaluation'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId,typeEnumIds:typeEnumIds]" button-style="text-caption" type="${internalResponseComplete?'success':'danger'}" condition="showInternalResponseView"/>
-                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount+internalResponseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showOrgResponseView"/>
+                        <conditional-field condition="!isVendorView" title="">
+                            <dynamic-dialog id="StatementResponseDialog" title="Add Internal Evaluation on Statement" button-text="${internalResponseComplete?'Update Internal':'Internal Evaluation'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId,typeEnumIds:typeEnumIds]" button-style="text-caption" type="${internalResponseComplete?'success':'danger'}" condition="showInternalRespondButton"/>
+                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount+internalResponseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showReponseListButton"/>
                         </conditional-field>                 
                         <default-field title="">
                             <hidden />
