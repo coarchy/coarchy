@@ -29,11 +29,14 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="activityId" type="id" is-pk="true"/>
         <field name="condition" type="text-intermediate"/>
         <field name="action" type="text-intermediate"/>
+        <field name="replacedByActivityId" type="id"/>
 
         <field name="implementationId" type="id"/>
 
         <field name="organizationId" type="id"/>
 
+        <relationship type="one-nofk" related="coarchy.Activity" short-alias="replacesActivity">
+            <key-map field-name="replacedByActivityId" related="activityId"/></relationship>
         <relationship type="many" related="ActivityActor" short-alias="actors">
             <key-map field-name="activityId"/></relationship>
 
@@ -57,9 +60,13 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="value" type="text-intermediate"/>
         <field name="sequenceNum" type="number-integer"/>
         <field name="typeEnumId" type="id"/>
+        <field name="disabled" type="text-indicator" enable-audit-log="true" default="'N'"/>
+        <field name="replacedByValueStatementId" type="id"/>
 
         <field name="organizationId" type="id"/>
 
+        <relationship type="one-nofk" related="coarchy.ValueStatement" short-alias="replacesValueStatement">
+            <key-map field-name="replacedByValueStatementId" related="valueStatementId"/></relationship>
         <relationship type="many" related="ValueStatementActivity" short-alias="activities">
             <key-map field-name="activityId"/></relationship>
         <relationship type="many" related="coarchy.ValueStatementTag" short-alias="tags">
@@ -105,6 +112,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="valueStatementActivityId" type="id" is-pk="true"/>
         <field name="valueStatementId" type="id"/>
         <field name="activityId" type="id"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
 
         <field name="organizationId" type="id"/>
 
@@ -266,6 +275,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="activityId" type="id"/>
         <field name="sequenceNum" type="number-integer"/>
         <field name="detailProcessStoryId" type="id"/>
+        <field name="fromDate" type="date-time"/>
+        <field name="thruDate" type="date-time"/>
 
         <field name="organizationId" type="id"/>
 

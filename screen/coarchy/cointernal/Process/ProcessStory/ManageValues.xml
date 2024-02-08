@@ -27,12 +27,16 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="valueList" from="[]"/>
             <if condition="term == null &amp;&amp; valueIdList ? valueIdList?.size() &gt; 0 : false"><then>
                 <entity-find entity-name="coarchy.ValueStatement" list="valueList" limit="50">
+                    <econdition field-name="disabled" value="N" or-null="true" />
+                    <econdition field-name="replacedByValueStatementId" operator="is-null" />
                     <econdition field-name="valueStatementId" operator="in" from="valueIdList"/>
                     <econdition field-name="valueStatementId" operator="not-in" from="excludeValueIds" ignore-if-empty="true"/>
                     <order-by field-name="value"/></entity-find>
             </then><else>
                 <!-- TODO: Also find by actor name -->
                 <entity-find entity-name="coarchy.ValueStatement" list="valueList" limit="50">
+                    <econdition field-name="disabled" value="N" or-null="true" />
+                    <econdition field-name="replacedByValueStatementId" operator="is-null" />                   
                     <econdition field-name="value" operator="like" value="%${term}%" ignore-case="true"/>
                     <econdition field-name="valueStatementId" operator="not-in" from="excludeValueIds" ignore-if-empty="true"/>
                     <order-by field-name="value"/></entity-find>
@@ -51,19 +55,20 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
     <transition name="deleteValueStatementActivity">
         <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId,organizationId:activeOrgId]"/>
+        <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId, thruDate:ec.user.nowTimestamp, organizationId:activeOrgId]"/>
         <default-response url=".." parameter-map="[_openDialog:_openDialog, processStoryId:processStoryId, activityId:null]"/><error-response url="." save-parameters="true"/>
     </transition>
     <transition name="deleteAllValueStatementActivities">
         <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
         <actions>
             <entity-find entity-name="coarchy.ValueStatementActivity" list="valueActivities">
+                <date-filter />
                 <econdition field-name="activityId" from="activityId" />
                 <econdition field-name="organizationId" from="activeOrgId" />
             </entity-find>
 
             <iterate list="valueActivities" entry="valueActivity">
-                <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId]"/>
+                <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId, thruDate:ec.user.nowTimestamp, organizationId:activeOrgId]"/>
             </iterate>
         </actions>
         <default-response url=".." parameter-map="[_openDialog:_openDialog, processStoryId:processStoryId, activityId:null]"/><error-response url="." save-parameters="true"/>
@@ -71,6 +76,8 @@ along with this software (see the LICENSE.md file). If not, see
 
     <actions>
         <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
+            <date-filter />
+            <econdition field-name="disabled" value="N" or-null="true" />
             <econdition field-name="activityId" from="activityId"/>
             <select-field field-name="valueStatementActivityId,valueStatementId,value"/>
             <order-by field-name="^value"/></entity-find>

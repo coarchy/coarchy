@@ -112,6 +112,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- copy ValueStatement -->
                 <set field="valueStatementIdMap" from="[:]"/>
                 <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList">
+                    <!-- copy history too -->
+                    <!-- <econdition field-name="replacedByValueStatementId" operator="is-null" /> -->
+                    <!-- <econdition field-name="disabled" value="N" or-null="true" /> -->
                     <econdition field-name="organizationId" from="oldOrganization.partyId"/>
                 </entity-find>
                 <iterate list="valueStatementList" entry="valueStatement">
@@ -191,6 +194,8 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <!-- copy ProcessStoryActivity -->                
                 <entity-find entity-name="coarchy.ProcessStoryActivity" list="processStoryActivityList">
+                    <!-- note: allow copying replaced records for Product Evals -->
+                    <!-- <date-filter /> -->
                     <econdition field-name="organizationId" from="oldOrganization.partyId"/>
                 </entity-find>
                 <iterate list="processStoryActivityList" entry="processStoryActivity">
@@ -446,108 +451,6 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="invite" noun="VendorUser">
-        <in-parameters>
-            <parameter name="partyId" required="true"/>
-            <parameter name="productId" required="true"/>
-            <parameter name="emailAddress" required="true"/>
-            <parameter name="firstName" />
-            <parameter name="lastName" />
-        </in-parameters>
-        <out-parameters>
-            <parameter name="newUserId"/>
-            <parameter name="newPartyId"/>
-        </out-parameters>
-        <actions>
-            <entity-find-one entity-name="mantle.product.Product" value-field="product" auto-field-map="[productId:productId]" />
-            <if condition="product.productClassEnumId != 'PclsCoarchy'">
-                <return error="true" message="Invalid product."/>
-            </if>
-
-            <entity-find-one entity-name="mantle.party.PartyDetail" value-field="organization" auto-field-map="[partyId:partyId]"/>
-            <if condition="!organization || !organization.ownerPartyId"><return/></if>
-            <if condition="organization.ownerPartyId == ec.user.userAccount.partyId">
-                <entity-find entity-name="moqui.security.UserAccount" list="existingUaList">
-                    <econdition field-name="emailAddress" ignore-case="true"/></entity-find>
-
-                <if condition="!existingUaList"><then>
-                    <service-call name="coarchy.CoarchyServices.create#Account" out-map="newUser"
-                        in-map="[emailAddress:emailAddress,firstName:firstName?:'Not',lastName:lastName?:'Set',username:emailAddress]"/>
-                    <service-call name="create#mantle.party.PartyRole" in-map="[partyId:newUser.partyId,roleTypeId:'VendorRepresentative']"/>
-                    <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS',
-                        userId:newUser.userId, fromDate:ec.user.nowTimestamp]"/>
-                    <!-- Sales Journey Prospect for invited user -->
-                    <!-- <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:newUser.partyId,partyClassificationId:'Prospect']"/> -->
-                </then><else>
-                    <set field="newUser" from="existingUaList?.getFirst()"/>
-                </else></if>
-                <set field="newPartyId" from="newUser.partyId"/>
-                <set field="newUserId" from="newUser.userId"/>
-
-                <!-- find if invited user is already an existing member of organization -->
-                <entity-find-count entity-name="mantle.party.PartyRelationship" count-field="partyRelationshipCount">
-                    <date-filter/>
-                    <econdition field-name="relationshipTypeEnumId" value="PrtVendorRepresentative"/>
-                    <econdition field-name="toRoleTypeId" value="VendorRepresentative"/>
-                    <econdition field-name="fromPartyId" from="newPartyId"/>
-                    <econdition field-name="toPartyId" from="partyId"/>
-                </entity-find-count>
-                <set field="isInvitedUserOrgMember" from="partyRelationshipCount > 0"/>
-                <if condition="!isInvitedUserOrgMember">
-                    <then>
-                        <service-call name="create#mantle.party.PartyRelationship" in-map="[relationshipTypeEnumId:'PrtVendorRepresentative',
-                            fromPartyId:newUser.partyId,toRoleTypeId:'VendorRepresentative',toPartyId:partyId,fromDate:ec.user.nowTimestamp]"/>
-                    </then>
-                </if>
-
-                <entity-find entity-name="mantle.product.ProductParty" list="productPartyList">
-                    <date-filter />
-                    <econdition field-name="productId" />
-                    <econdition field-name="partyId" from="newPartyId"/>
-                    <econdition field-name="roleTypeId" value="VendorRepresentative" />
-                </entity-find>
-                <set field="isVendorAlreadyInvitedToProduct" from="productPartyList.size() > 0" />
-                <if condition="!productPartyList">
-                    <service-call name="create#mantle.product.ProductParty" in-map="[productId:productId,partyId:newPartyId,roleTypeId:'VendorRepresentative',fromDate:ec.user.nowTimestamp]"/>
-                </if>
-
-                <service-call name="org.moqui.impl.UserServices.set#Preference" in-map="[preferenceKey:'ACTIVE_ORGANIZATION',preferenceValue:partyId]"/>
-
-                <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
-                <if condition="!existingUaList">
-                    <then>
-                        <!-- if account does not exist (ie, new user), create one & send a VENDOR_INVITE_RESET_PASSWORD email -->
-                        <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" auto-field-map="[userId:newUser.userId]" for-update="true"/>
-                        <!-- reset the password to a random value -->
-                        <set field="resetPassword" from="getRandomString(12)"/>
-                        <set field="passwordNode" from="ec.ecfi.confXmlRoot.first('user-facade').first('password')"/>
-                        <set field="userAccount.resetPassword" from="ec.ecfi.getSimpleHash(resetPassword, userAccount.passwordSalt, userAccount.passwordHashType, 'Y'.equals(userAccount.passwordBase64))"/>
-                        <set field="userAccount.requirePasswordChange" from="(passwordNode.attribute('email-require-change') == 'true') ? 'Y' : 'N'"/>
-                        <entity-update value-field="userAccount"/>
-
-                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                            contactListId:'CoarchyInvitation',emailTemplateId:'VENDOR_INVITE_RESET_PASSWORD',
-                            partyId:newPartyId,preferredContactMechId:newUser.emailContactMechId,toAddresses:emailAddress,
-                            bodyParameters:[organization:organization, product:product, linkUrl:baseLinkUrl+'/ChangePassword?username='+emailAddress+'&amp;oldPassword='+resetPassword+'&amp;action=signup',
-                            title: (organization.organizationName+' is Requesting for Information about ' + product.productName), baseLinkUrl:baseLinkUrl]]" out-map="context"/>
-                    </then>
-                    <else-if condition="existingUaList &amp;&amp; (!isInvitedUserOrgMember || (isInvitedUserOrgMember &amp;&amp; !isVendorAlreadyInvitedToProduct))">
-                        <!-- if account DOES exist, existing/invited user, but NOT already invited to product, send a VENDOR_INVITE email -->
-                        <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                            contactListId:'CoarchyInvitation',emailTemplateId:'VENDOR_INVITE',
-                            partyId:newPartyId,preferredContactMechId:null,toAddresses:emailAddress,
-                            bodyParameters:[organization:organization, product:product, linkUrl:baseLinkUrl+'/Login?username='+existingUaList.getFirst()?.username?:emailAddress,
-                            title: (organization.organizationName+' is Requesting for Information about ' + product.productName), baseLinkUrl:baseLinkUrl]]" out-map="context"/>
-                    </else-if>
-                    <else>
-                        <!-- otherwise, do nothing (account exists, and is already invited to product)-->
-                        <return type="warning" message="${ec.resource.expand('CoarchyProductVendorAlreadyInvited', null, [emailAddress:emailAddress, productName:product.productName])}"/>
-                    </else>
-                </if>
-                <else><return type="danger" error="true" message="${ec.resource.expand('CoarchyGeneralNotAllowed', null)}"/></else>
-            </if>
-        </actions>
-    </service>
     <service verb="send" noun="ContactListEmail">
         <in-parameters>
             <parameter name="contactListId" required="true"/>
@@ -913,6 +816,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupProcessStoryActivityList">
+                <date-filter />
                 <econdition field-name="processStoryId"/>
                 <select-field field-name="activityId,condition,action,detailProcessStoryId,processStoryId"/>
                 <order-by field-name="sequenceNum"/></entity-find>
@@ -931,6 +835,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-find-one entity-name="coarchy.ProcessStory" value-field="detailProcessStory" auto-field-map="[processStoryId:processStoryActivity.detailProcessStoryId]"/>
                     <set field="detailProcessStoryName" from="detailProcessStory.name"/>
                     <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupDetailProcessStoryActivityList">
+                        <date-filter />
                         <econdition field-name="processStoryId" from="processStoryActivity.detailProcessStoryId"/>
                         <select-field field-name="activityId,condition,action"/>
                         <order-by field-name="sequenceNum"/></entity-find>
@@ -942,7 +847,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
                 </if>
 
-                <script>processStoryActivityList.add([processStoryId:processStoryActivity.processStoryId,
+                <script>processStoryActivityList.add([processStoryId:processStoryActivity.processStoryId,activityId:processStoryActivity.activityId,
                     sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,
                     actorNames:activityActorList*.name,action:processStoryActivity.action,detailProcessStoryId:detailProcessStoryId,
                     detailProcessStoryName:detailProcessStoryName,detailProcessStoryActivityList:detail?.processStoryActivityList?.clone()])</script>
@@ -975,12 +880,13 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="newSequenceNum" from="sequenceNum"/>
             <if condition="!sequenceNum">
                 <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryActivityList">
+                    <date-filter />
                     <econdition field-name="processStoryId"/>
                     <order-by field-name="-sequenceNum"/></entity-find>
                 <set field="highestProcessStoryActivity" from="processStoryActivityList?.getFirst()"/>
                 <set field="newSequenceNum" from="highestProcessStoryActivity?.sequenceNum != null ? highestProcessStoryActivity?.sequenceNum + 1 : 0"/>
             </if>
-            <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, organizationId:organizationId]" out-map="newStoryActivity"/>
+            <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:newSequenceNum, fromDate:ec.user.nowTimestamp, organizationId:organizationId]" out-map="newStoryActivity"/>
             <set field="processStoryActivityId" from="newStoryActivity.processStoryActivityId"/>
             <set field="sequenceNum" from="newStoryActivity.sequenceNum"/>
 
@@ -1007,17 +913,122 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="action" required="true"/>
             <parameter name="implementationId"/>
             <parameter name="organizationId" required="true"/>
+            <parameter name="ignoreCopyOnWrite" type="Boolean" default="false"/>
         </in-parameters>
         <actions>
-<!--            <log level="warn" message="update activity context.toString() ${context.toString()}"/>-->
-            <service-call name="update#coarchy.Activity" in-map="[activityId:activityId,condition:condition.trim(),action:action.trim(),implementationId:implementationId]"/>
+             <!-- check if activity is references in product evaluation records of status other than RequirementsSelection -->
+             <!-- if so, perform a copy on write on Activity & related entities, otherwise update it -->
+             <entity-find entity-name="coarchy.product.ProductEvaluationActivityAndDetail" list="existingEvaluationRecords">
+                 <econdition field-name="statusId" operator="not-equals" value="PeRequirementsSelection"/>
+                 <econdition field-name="activityId" />
+                 <econdition field-name="excludeFlag" value="N" or-null="true" />
+                 <econdition field-name="organizationId" />
+            </entity-find>
+
+            <!-- check if any fields on activity have changed -->
+            <set field="valueChanged" from="false"/>
+            <entity-find-one entity-name="coarchy.Activity" value-field="activity">
+                <field-map field-name="activityId" />
+            </entity-find-one>
+ 
+            <if condition="(activity.condition?:'') != (condition?.trim()?:'') || (activity.action?:'') != (action?.trim()?:'') || (activity.implementationId?:'') != (implementationId?:'')">
+                <set field="valueChanged" from="true"/>
+            </if>
+
+            <!-- check if activity actors have changed -->
+            <if condition="!valueChanged">
+                <entity-find entity-name="coarchy.ActivityActor" list="activityActorList">
+                    <econdition field-name="activityId" />
+                    <econdition field-name="organizationId" />
+                </entity-find>
+                <if condition="!activityActorList*.actorId.equals(actorIdList)">
+                    <set field="valueChanged" from="true"/>
+                </if>
+            </if>
+            
+            <!-- nothing changed, return -->
+            <if condition="!valueChanged">
+                <return />
+            </if>
+
+            <if condition="existingEvaluationRecords &amp;&amp; !ignoreCopyOnWrite">
+                <!-- we have ProductEvaluationItem records, perform copy on write -->             
+
+                <!-- duplicate existing activity -->
+                <service-call name="create#coarchy.Activity" in-map="activity + [activityId:null, replacedByActivityId:null, condition:condition.trim(), action:action.trim(), implementationId:implementationId]" out-map="newActivityOut"/>
+                <set field="newActivityId" from="newActivityOut.activityId"/>
+
+                <!-- duplicate existing activity actors -->
+                <entity-find entity-name="coarchy.ActivityActor" list="activityActorList">
+                    <econdition field-name="activityId" />
+                    <econdition field-name="organizationId" />
+                </entity-find>
+                <iterate list="activityActorList" entry="activityActor">
+                    <service-call name="create#coarchy.ActivityActor" in-map="activityActor + [activityId:newActivityId]"/>
+                </iterate>
+
+                <!-- duplicate existing value statements -->
+                <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
+                    <econdition field-name="activityId" />
+                    <econdition field-name="organizationId" />
+                </entity-find>
+                <iterate list="valueStatementActivityList" entry="valueActivity">
+                    <service-call name="create#coarchy.ValueStatementActivity" in-map="valueActivity + [valueStatementActivityId:null, activityId:newActivityId, fromDate:ec.user.nowTimestamp]"/>
+                    <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId, thruDate:ec.user.nowTimestamp]"/>
+                </iterate>
+
+                <!-- duplicate existing ProcessStoryActivity records, disable the old one -->
+                <entity-find entity-name="coarchy.ProcessStoryActivity" list="processStoryActivityList" for-update="true">
+                    <econdition field-name="activityId" />
+                    <econdition field-name="organizationId" />
+                </entity-find>
+                <iterate list="processStoryActivityList" entry="processStoryActivity">
+                    <service-call name="create#coarchy.ProcessStoryActivity" in-map="processStoryActivity + [processStoryActivityId:null, activityId:newActivityId, fromDate:ec.user.nowTimestamp]"/>
+                    <set field="processStoryActivity.thruDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="processStoryActivity" />
+                </iterate>
+
+                <!-- update checklists to reference new Activity -->
+                <entity-find entity-name="mantle.work.effort.WorkEffort" list="checklistWorkEffortList" for-update="true">
+                    <econdition field-name="workEffortTypeEnumId" value="WetChecklistItem"/>
+                    <econdition field-name="ownerPartyId" from="organizationId"/>
+                    <econdition field-name="activityId" />
+                </entity-find>
+                <iterate list="checklistWorkEffortList" entry="checklistWorkEffort">
+                    <set field="checklistWorkEffort.activityId" from="newActivityId"/>
+                    <entity-update value-field="checklistWorkEffort" />
+                </iterate>
+
+                <!-- for any ProductEvaluationActivity record in status PeRequirementsSelection (ie. open), use newest activity -->
+                <entity-find entity-name="coarchy.product.ProductEvaluationActivityAndDetail" list="existingEvaluationActivityList">
+                    <econdition field-name="statusId" value="PeRequirementsSelection"/>
+                    <econdition field-name="activityId" />
+                </entity-find>
+                <iterate list="existingEvaluationActivityList" entry="existingEvaluationActivity">
+                    <service-call name="create#coarchy.product.ProductEvaluationActivity" in-map="existingEvaluationActivity+[activityId:newActivityId]"/>                   
+                    <service-call name="delete#coarchy.product.ProductEvaluationActivity" in-map="[activityId:activityId, productEvaluationId:existingEvaluationActivity.productEvaluationId, processStoryId:existingEvaluationActivity.processStoryId]"/>                   
+                </iterate>
+
+                <!-- set replacedByActivityId on existing activity -->
+                <service-call name="update#coarchy.Activity" in-map="[activityId:activityId, replacedByActivityId:newActivityId]"/> 
+
+                <!-- finally, set activityId to be newActivityId for handling ActivityActor changes -->
+                <set field="activityId" from="newActivityId"/>
+                <else>
+                    <!-- <log level="warn" message="update activity context.toString() ${context.toString()}"/>-->
+                    <service-call name="update#coarchy.Activity" in-map="[activityId:activityId, condition:condition.trim(), action:action.trim(), implementationId:implementationId]"/>                   
+                </else>
+            </if>
+
             <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
                 <econdition field-name="activityId"/>
-                <order-by field-name="name"/></entity-find>
+                <order-by field-name="name"/>
+            </entity-find>
+
             <set field="actorIdServerList" from="activityActorList*.actorId"/>
             <if condition="actorIdServerList">
                 <set field="actorIdDeleteList" from="actorIdServerList - actorIdList?:[]"/>
-<!--                                    <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>-->
+                <!-- <log level="warn" message="actorIdDeleteList ${actorIdDeleteList}"/>-->
                 <iterate list="actorIdDeleteList" entry="actorIdDelete">
                     <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId,actorId:actorIdDelete]"/>
                 </iterate>
@@ -1033,6 +1044,8 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
                 </else>
             </if>
+            
+            <!-- TODO: also consider updating any Checklist item task name, since that activity conditions/actions/actors might have changed -->
         </actions>
     </service>
 
@@ -1068,6 +1081,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <return error="true" message="${ec.resource.expand('CoarchyProcessChecklistInvalidDate', null)}"/>
             </if>
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                <date-filter />
                 <econdition field-name="processStoryId"/>
                 <select-field field-name="activityId,condition,action"/>
                 <order-by field-name="sequenceNum"/></entity-find>
@@ -1412,11 +1426,15 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="value" from="value.trim()"/>
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList" limit="20">
                 <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
+                <econdition field-name="replacedByValueStatementId" operator="is-null" />
+                <econdition field-name="disabled" value="N" or-null="true" />
                 <econdition field-name="value" from="value" ignore-case="true"/>
             </entity-find>
             <if condition="valueStatementList"><return type="danger" message="Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
 
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList" limit="1">
+                <econdition field-name="replacedByValueStatementId" operator="is-null" />
+                <econdition field-name="disabled" value="N" or-null="true" />
                 <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
                 <order-by field-name="-sequenceNum,value"/>
             </entity-find>
@@ -1440,6 +1458,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
+                <date-filter />
                 <econdition field-name="activityId"/>
                 <econdition field-name="organizationId" />
                 <order-by field-name="name"/></entity-find>
@@ -1448,7 +1467,7 @@ along with this software (see the LICENSE.md file). If not, see
         
             <set field="valueIdCreateList" from="valueIdList?:[] - valueIdServerList?:[]" />
             <iterate list="valueIdCreateList" entry="valueIdCreate">
-                <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementId:valueIdCreate, activityId:activityId, organizationId:organizationId]"/>
+                <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementId:valueIdCreate, activityId:activityId, fromDate:ec.user.nowTimestamp, organizationId:organizationId]"/>
             </iterate>
         </actions>
     </service>
@@ -1461,6 +1480,7 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <actions>
             <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
+                <date-filter />
                 <econdition field-name="valueStatementId"/>
                 <econdition field-name="activityId"/>
                 <econdition field-name="organizationId"/>
@@ -1470,7 +1490,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <return />
             </if>
             <iterate list="activityIdList" entry="activityId">
-                <service-call name="create#coarchy.ValueStatementActivity" in-map="[valueStatementId:valueStatementId, activityId:activityId, organizationId:organizationId]"/>            
+                <service-call name="create#coarchy.ValueStatementActivity" in-map="[valueStatementId:valueStatementId, activityId:activityId, fromDate:ec.user.nowTimestamp, organizationId:organizationId]"/>            
             </iterate>
         </actions>
     </service>
@@ -1479,11 +1499,11 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="valueStatementId" required="true"/>
             <parameter name="value" required="true"/>
-            <parameter name="activityIdList" type="List"/>
             <parameter name="tagIdList" type="List"/>
             <parameter name="typeEnumId"/>
             <parameter name="sequenceNum"/>
             <parameter name="organizationId" required="true"/>
+            <parameter name="ignoreCopyOnWrite" type="Boolean" default="false"/>
         </in-parameters>
         <out-parameters>
             <parameter name="valueStatementId"/>
@@ -1491,45 +1511,79 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <set field="value" from="value.trim()"/>
             <entity-find entity-name="coarchy.ValueStatement" list="valueStatementList" limit="20">
+                <econdition field-name="disabled" value="N" or-null="true" />
+                <econdition field-name="replacedByValueStatementId" operator="is-null" />
                 <!-- NOTE: ignore case but don't do like for contains, makes things like "Customer" after "Placing Customer" an error -->
                 <econdition field-name="valueStatementId" operator="not-equals"/>
                 <econdition field-name="value" from="value" ignore-case="true"/>
             </entity-find>
             <if condition="valueStatementList"><return type="danger" message="Statement '${valueStatementList?.getFirst()?.value}' already exists"/></if>
 
-            <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,organizationId:organizationId]" out-map="context"/>
+            <!-- check if value statement references in product evaluation records of status other than RequirementsSelection -->
+             <!-- if so, perform a copy on write on Activity & related entities, otherwise update it -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationStatementAndDetail" list="existingEvaluationRecords">
+                <econdition field-name="statusId" operator="not-equals" value="PeRequirementsSelection"/>
+                <econdition field-name="statementId" from="valueStatementId" />
+                <econdition field-name="organizationId" />
+           </entity-find>
 
-            <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
-                <econdition field-name="valueStatementId"/>
-                <order-by field-name="name"/></entity-find>
-            <set field="activityIdServerList" from="valueStatementActivityList*.activityId"/>
-            <if condition="activityIdServerList">
-                <set field="activityIdDeleteList" from="activityIdServerList - activityIdList?:[]"/>
+           <!-- check if any fields on activity have changed -->
+           <set field="valueChanged" from="false"/>
+           <entity-find-one entity-name="coarchy.ValueStatement" value-field="valueStatement">
+               <field-map field-name="valueStatementId" />
+           </entity-find-one>
+           <if condition="(valueStatement.value?:'') != (value?.trim()?:'') || (valueStatement.typeEnumId?:'') != (typeEnumId?:'')">
+               <set field="valueChanged" from="true"/>
+           </if>
 
-                <!--                                    <log level="warn" message="activityIdDeleteList ${activityIdDeleteList}"/>-->
-                <iterate list="activityIdDeleteList" entry="activityIdDelete">
-                    <entity-find-one entity-name="ValueStatementActivity" value-field="valueStatementActivity" auto-field-map="[activityId:activityIdDelete,valueStatementId:valueStatementId]"/>
-                    <if condition="valueStatementActivity"><then>
-                        <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity.valueStatementActivityId]"/>
-                    </then><else>
-                        <message type="warning">Unable to delete activity connection ${activityId}</message>
-                    </else></if>
-                </iterate>
-            </if>
+           <!-- nothing changed, return -->
+           <if condition="valueChanged">
+                <if condition="existingEvaluationRecords &amp;&amp; !ignoreCopyOnWrite">
+                    <then>
+                        <!-- duplicate existing value statement -->
+                        <service-call name="create#coarchy.ValueStatement" in-map="valueStatement + [valueStatementId:null, value:value,typeEnumId:typeEnumId]" out-map="newStatementOut"/>
+                        <set field="newValueStatementId" from="newStatementOut.valueStatementId"/>
 
-            <set field="activityIdCreateList" from="activityIdList?:[] - activityIdDeleteList?:[]"/>
-<!--            <log level="warn" message="update#ValueStatement context.toString() ${context.toString()}"/>-->
-            <if condition="activityIdCreateList instanceof String">
-                <then>
-                    <entity-find-one entity-name="ValueStatementActivity" value-field="valueStatementActivity" auto-field-map="[activityId:activityIdCreateList,valueStatementId:valueStatementId]"/>
-                    <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity?.valueStatementActivityId,valueStatementId:valueStatementId, activityId:activityIdCreateList, organizationId:organizationId]"/>
-                </then><else>
-                    <iterate list="activityIdCreateList" entry="activityIdCreate">
-                        <entity-find-one entity-name="ValueStatementActivity" value-field="valueStatementActivity" auto-field-map="[activityId:activityIdCreate,valueStatementId:valueStatementId]"/>
-                        <service-call name="store#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivity?.valueStatementActivityId,valueStatementId:valueStatementId, activityId:activityIdCreate, organizationId:organizationId]"/>
-                    </iterate>
-                </else>
-            </if>
+                        <!-- clone tags -->
+                        <entity-find entity-name="coarchy.ValueStatementTag" list="statementTagList">
+                            <date-filter />
+                            <econdition field-name="valueStatementId"/>
+                            <econdition field-name="organizationId" />
+                        </entity-find>
+                        <iterate list="statementTagList" entry="statementTag">
+                            <service-call name="create#coarchy.ValueStatementTag" in-map="statementTag+[valueStatementId:newValueStatementId]"/>
+                        </iterate>
+                        
+                        <!-- for any ProductEvaluationActivity record in status PeRequirementsSelection (ie. open), use newest statement -->
+                        <entity-find entity-name="coarchy.product.ProductEvaluationStatementAndDetail" list="existingEvaluationStatementList">
+                            <econdition field-name="statusId" value="PeRequirementsSelection"/>
+                            <econdition field-name="statementId" from="valueStatementId" />
+                        </entity-find>
+                        <iterate list="existingEvaluationStatementList" entry="existingEvaluationStatement">
+                            <service-call name="create#coarchy.product.ProductEvaluationStatement" in-map="existingEvaluationStatement+[statementId:newValueStatementId]"/>                   
+                            <service-call name="delete#coarchy.product.ProductEvaluationStatement" in-map="[statementId:valueStatementId, productEvaluationId:existingEvaluationStatement.productEvaluationId]"/>                   
+                        </iterate>    
+                        
+                        <!-- duplicate existing value statements -->
+                        <entity-find entity-name="coarchy.ValueStatementActivity" list="valueStatementActivityList">
+                            <date-filter />
+                            <econdition field-name="valueStatementId" />
+                            <econdition field-name="organizationId" />
+                        </entity-find>
+                        <iterate list="valueStatementActivityList" entry="valueActivity">
+                            <service-call name="create#coarchy.ValueStatementActivity" in-map="valueActivity + [valueStatementActivityId:null, valueStatementId:newValueStatementId, fromDate:fromDate]"/>
+                            <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId,thruDate:ec.user.nowTimestamp]"/>
+                        </iterate>
+                        
+                        <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId, replacedByValueStatementId:newValueStatementId]"/>
+
+                        <set field="valueStatementId" from="newValueStatementId"/>
+                    </then>
+                    <else>
+                        <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum]" out-map="context"/>
+                    </else>
+                </if>
+           </if>
 
             <!-- tags -->
             <entity-find entity-name="coarchy.ValueStatementTag" list="statementTagList">
@@ -1562,7 +1616,9 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <entity-find-count entity-name="coarchy.ValueStatementActivity" count-field="valueStatementActivityCount">
-                <econdition field-name="valueStatementId"/></entity-find-count>
+                <date-filter />
+                <econdition field-name="valueStatementId"/>
+            </entity-find-count>
             <if condition="valueStatementActivityCount &gt; 0">
                 <return type="warning" message="${ec.resource.expand('CoarchyProcessValueStatementDeleteError', null)}"/>
             </if>
@@ -1580,12 +1636,17 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-update value-field="statementTag" />
             </iterate>  
 
-            <!-- delete value statement -->
-            <entity-find-one entity-name="coarchy.ValueStatement" value-field="valueStatement" auto-field-map="[valueStatementId:valueStatementId,organizationId:organizationId]"/>
+            <entity-find-count entity-name="coarchy.product.ProductEvaluationStatement" count-field="existingEvaluationRecordCount">
+                <econdition field-name="statementId" from="valueStatementId" />
+                <econdition field-name="organizationId" />
+           </entity-find-count>
 
-            <if condition="valueStatement">
-                <service-call name="delete#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId]"/>
-            </if>
+           <if condition="existingEvaluationRecordCount &gt; 0">
+            <service-call name="update#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId, disabled:'Y']"/>
+               <else>
+                   <service-call name="delete#coarchy.ValueStatement" in-map="[valueStatementId:valueStatementId]"/>
+               </else>
+            </if>        
         </actions>
     </service>
 
@@ -2428,7 +2489,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <date-filter/></entity-find-count>
                 <set field="ec.user.context?.activeOrgId" from="organization.toPartyId"/>
                 <set field="ec.user.context?.filterOrgIds" from="[organization.toPartyId]"/>
-                <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="processStoryActivityCount"/>
+                <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="processStoryActivityCount">
+                    <!-- <econdition field-name="disabled" value="N" or-null="true" /> -->
+                    <date-filter />
+                </entity-find-count>
                 <if condition="partyActivationCount &gt; 0 &amp;&amp; processStoryActivityCount &gt; 0">
                     <script>outList.add([value:organization.toPartyId, label:organization.organizationName])</script>
                 </if>
@@ -2484,6 +2548,8 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="activityList" from="[]"/>
             <if condition="!term"><then>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
+                    <date-filter />
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
                     <econdition field-name="processStoryId"/>
                     <econdition field-name="action" operator="is-not-null"/>
                     <!--                    <econdition field-name="storyActivityOrganizationId" from="organizationId"/>-->
@@ -2494,6 +2560,8 @@ along with this software (see the LICENSE.md file). If not, see
             </then><else>
                 <!-- TODO: Also find by actor name -->
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="activityList">
+                    <date-filter />
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
                     <econdition field-name="processStoryId"/>
                     <econdition field-name="action" operator="is-not-null"/>
                     <!--                    <econdition field-name="storyActivityOrganizationId" from="organizationId"/>-->
@@ -2545,6 +2613,7 @@ along with this software (see the LICENSE.md file). If not, see
 <!--            <log level="warn" message="copy#Activities context.toString() ${context.toString()} activityIdList.size() ${activityIdList.size()}"/>-->
             <if condition="activityIdList.size() == activityIdNum.toInteger()">
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="originalProcessStoryActivityList" distinct="true">
+                    <date-filter />
                     <econdition field-name="activityId" operator="in" from="activityIdList"/>
                     <!-- Don't select fields from activityactor (actorId) -->
                     <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
@@ -2555,6 +2624,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="ec.user.context?.filterOrgIds" from="[organizationId]"/>
 
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="insertProcessStoryActivityList" distinct="true" limit="1">
+                    <date-filter />
                     <econdition field-name="activityId" from="insertActivityId"/>
                     <!-- Don't select fields from activityactor (actorId) -->
                     <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
@@ -2566,6 +2636,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="insertType=='below'">
                     <set field="pageIndex" from="downPageIndex"/>
                     <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                        <date-filter />
                         <econdition field-name="processStoryId"/>
                         <econdition field-name="sequenceNum" operator="greater" from="insertActivity?.sequenceNum?.toInteger()" ignore="!insertActivity"/>
                         <select-field field-name="processStoryActivityId,sequenceNum"/>
@@ -2574,6 +2645,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="insertSequenceNum" from="processStoryActivityMaxList?.getFirst()?.sequenceNum?:(insertSequenceNum?:0)"/>
                 </if>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                    <date-filter />
                     <econdition field-name="processStoryId"/>
                     <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum?.toInteger()" ignore-if-empty="true"/>
                     <select-field field-name="processStoryActivityId,sequenceNum,activityId"/>
@@ -2595,6 +2667,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <select-field field-name="actorId,activityId,name,description"/>
                     <order-by field-name="name"/></entity-find>
                 <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="statementActivityDetailList" distinct="true">
+                    <date-filter />
                     <econdition field-name="activityId" from="originalProcessStoryActivityList*.activityId"/>
                     <select-field field-name="valueStatementId,activityId,value,typeEnumId"/>
                     <order-by field-name="statementSeqId"/></entity-find>
@@ -2620,6 +2693,8 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <iterate list="statementActivityDetailList" entry="statementActivity">
                     <entity-find entity-name="coarchy.ValueStatement" list="insideStatementList" distinct="true" limit="1">
+                        <econdition field-name="disabled" value="N" or-null="true" />
+                        <econdition field-name="replacedByValueStatementId" operator="is-null" />
                         <econdition field-name="value" from="statementActivity.value"/>
                         <econdition field-name="typeEnumId" from="statementActivity.typeEnumId"/>
                         <select-field field-name="valueStatementId,value,typeEnumId"/>
@@ -2807,6 +2882,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- check if we're pasting into a store with zero activities -->
             <entity-find-count entity-name="coarchy.ProcessStoryActivity" count-field="processActivityCount">
+                <date-filter />
                 <econdition field-name="processStoryId" />
             </entity-find-count>
             <if condition="processActivityCount">
@@ -2827,6 +2903,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="insertType=='below'">
                 <set field="pageIndex" from="downPageIndex"/>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                    <date-filter />
                     <econdition field-name="processStoryId"/>
                     <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
                     <select-field field-name="processStoryActivityId,sequenceNum"/>
@@ -2836,6 +2913,7 @@ along with this software (see the LICENSE.md file). If not, see
                     processStoryActivityMaxList?.getFirst()?.sequenceNum:sequenceNum.toInteger()+1"/>
             </if>
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                <date-filter />
                 <econdition field-name="processStoryId"/>
                 <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
                 <select-field field-name="processStoryActivityId,sequenceNum,activityId"/>
@@ -2872,6 +2950,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="statementSeqId"/></entity-find>
             <iterate list="activityStatementList" entry="activityStatement">
                 <entity-find entity-name="coarchy.ValueStatement" list="insideStatementList" distinct="true" limit="1">
+                    <econdition field-name="disabled" value="N" or-null="true" />
+                    <econdition field-name="replacedByValueStatementId" operator="is-null" />
                     <econdition field-name="value" from="activityStatement.value"/>
                     <econdition field-name="typeEnumId" from="activityStatement.typeEnumId"/>
                     <select-field field-name="valueStatementId,value,typeEnumId"/>
@@ -2897,11 +2977,11 @@ along with this software (see the LICENSE.md file). If not, see
 <!--            <log level="warn" message="paste#Activities context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
+    
     <service verb="delete" noun="Activity">
         <in-parameters>
             <parameter name="activityId" required="true"/>
             <parameter name="processStoryActivityId"/>
-            <parameter name="statementIdList" type="List"/>
             <parameter name="actorIdList" type="List"/>
             <parameter name="pageIndex"/>
         </in-parameters>
@@ -2912,34 +2992,71 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <if condition="!processStoryActivityId">
                 <entity-find entity-name="coarchy.ProcessStoryActivity" list="activityList">
+                    <date-filter />
                     <econdition field-name="activityId"/>
                 </entity-find>
                 <if condition="activityList.size() == 0"><return type="danger" error="true" message="${ec.resource.expand('CoarchyProcessActivityNotFound', null)}"/></if>
                 <if condition="activityList.size() &gt; 1"><return type="info" message="${ec.resource.expand('CoarchyProcessActivityMultiFound', null)}"/></if>
                 <set field="processStoryActivityId" from="activityList.getFirst().processStoryActivityId"/>
             </if>
-            <if condition="!actorIdList">
-                <entity-find entity-name="coarchy.ActivityActor" list="actorList">
+
+            <!-- check if activity is references in product evaluation records of status other than RequirementsSelection -->
+            <!-- if we do, then set as disabled, otherwise delete it completely -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationActivityAndDetail" list="existingEvaluationRecords">
+                <econdition field-name="statusId" operator="not-equals" value="PeRequirementsSelection"/>
+                <econdition field-name="activityId" />
+                <!-- <econdition field-name="organizationId" /> -->
+            </entity-find>
+
+            <if condition="!existingEvaluationRecords">
+                <!-- If we have any open evaluation records referencing this activity, delete them -->
+                <entity-find entity-name="coarchy.product.ProductEvaluationActivityAndDetail" list="openEvaluationRecords">
+                    <econdition field-name="statusId" value="PeRequirementsSelection"/>
+                    <econdition field-name="activityId" />
+                    <!-- <econdition field-name="organizationId" /> -->
+                </entity-find>
+
+                <iterate list="openEvaluationRecords" entry="openEvaluationRecord">
+                    <service-call name="delete#coarchy.product.ProductEvaluationActivity" in-map="[productEvaluationId:openEvaluationRecord.productEvaluationId, processStoryId:openEvaluationRecord.processStoryId, activityId:openEvaluationRecord.activityId]" />
+                </iterate>
+
+                <!-- keep these for history -->
+                <!-- <if condition="!actorIdList">
+                    <entity-find entity-name="coarchy.ActivityActor" list="actorList">
+                        <econdition field-name="activityId" from="activityId"/>
+                    </entity-find>
+                    <set field="actorIdList" from="actorList*.actorId"/>
+                </if>
+                <iterate list="actorIdList" entry="actorId">
+                    <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
+                </iterate> -->
+                
+                <!-- delete associated valuestatement activities -->
+                <entity-find entity-name="coarchy.ValueStatementActivity" list="statementList">
+                    <date-filter />
                     <econdition field-name="activityId" from="activityId"/>
                 </entity-find>
-                <set field="actorIdList" from="actorList*.actorId"/>
+                <set field="statementActivityIdList" from="statementList*.valueStatementActivityId"/>
+                <iterate list="statementActivityIdList" entry="valueStatementActivityId">
+                    <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId, thruDate:ec.user.nowTimestamp]"/>
+                </iterate>
+    
+                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId,thruDate:ec.user.nowTimestamp]"/>
+                <else>                    
+                    <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId, thruDate:ec.user.nowTimestamp]"/>
+                    <entity-find entity-name="coarchy.ValueStatementActivity" list="statementList">
+                        <date-filter />
+                        <econdition field-name="activityId" from="activityId"/>
+                    </entity-find>
+                    <set field="statementActivityIdList" from="statementList*.valueStatementActivityId"/>
+                    <iterate list="statementActivityIdList" entry="valueStatementActivityId">
+                        <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId, thruDate:ec.user.nowTimestamp]"/>
+                    </iterate>    
+                </else>
             </if>
-            <iterate list="actorIdList" entry="actorId">
-                <service-call name="delete#coarchy.ActivityActor" in-map="[activityId:activityId, actorId:actorId]"/>
-            </iterate>
-            <!-- delete associated valuestatement activities -->
-            <entity-find entity-name="coarchy.ValueStatementActivity" list="statementList">
-                <econdition field-name="valueStatementId" operator="in" from="statementIdList" ignore-if-empty="true" />
-                <econdition field-name="activityId" from="activityId"/>
-            </entity-find>
-            <set field="statementActivityIdList" from="statementList*.valueStatementActivityId"/>
-            <iterate list="statementActivityIdList" entry="valueStatementActivityId">
-                <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId]"/>
-            </iterate>
-
-            <service-call name="delete#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivityId]"/>
         </actions>
     </service>
+
     <service verb="insert" noun="Activity">
         <in-parameters>
             <parameter name="pageIndex"/>
@@ -2965,6 +3082,8 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="insertType=='below'">
                 <set field="pageIndex" from="downPageIndex"/>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                    <date-filter />
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
                     <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
                     <select-field field-name="processStoryActivityId,sequenceNum"/>
                     <order-by field-name="sequenceNum"/></entity-find>
@@ -2973,6 +3092,8 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                <date-filter />
+                <econdition field-name="replacedByActivityId" operator="is-null" />
                 <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
                 <select-field field-name="processStoryActivityId,sequenceNum"/>
                 <order-by field-name="-sequenceNum"/></entity-find>

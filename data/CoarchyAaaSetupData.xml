@@ -18,6 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- NOTE: see SimpleScreensSetupData.xml for Artifact Groups for parts of SimpleScreens -->
     <moqui.basic.Enumeration description="Coarchy App" enumId="UgtCoarchyApp" enumTypeId="UserGroupType"/>
     <userGroups userGroupId="COARCHY_USERS" description="Coarchy Users" groupTypeEnumId="UgtCoarchyApp"/>
+    <userGroups userGroupId="COARCHY_VENDORS" description="Coarchy Vendors" groupTypeEnumId="UgtCoarchyApp"/>
 
     <!-- TODO: Add a filter for organizations so that owners can only see parties and relationships of the organizations they own. -->
     <moqui.security.EntityFilterSet entityFilterSetId="COARCHY_FILTER">
@@ -31,6 +32,13 @@ along with this software (see the LICENSE.md file). If not, see
         <filters entityFilterId="COARCHY_FILTER_C8" entityName="mantle.work.effort.WorkEffort" filterMap="[ownerPartyId:activeOrgId]"/>
         <filters entityFilterId="COARCHY_FILTER_C9" entityName="coarchy.ValueStatementTag" filterMap="[organizationId:activeOrgId]"/>
         <filters entityFilterId="COARCHY_FILTER_C10" entityName="coarchy.Tag" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C20" entityName="coarchy.product.ProductEvaluation" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C21" entityName="coarchy.product.ProductEvaluationProcessStory" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C22" entityName="coarchy.product.ProductEvaluationActivity" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C23" entityName="coarchy.product.ProductEvaluationStatement" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C24" entityName="coarchy.product.ProductEvaluationParty" filterMap="[organizationId:activeOrgId]"/>
+        <filters entityFilterId="COARCHY_FILTER_C25" entityName="coarchy.product.ProductEvaluationResponse" filterMap="[organizationId:activeOrgId]"/>
+
     </moqui.security.EntityFilterSet>
 
     <!-- Artifact group and authz for Coarchy Apps -->
@@ -61,6 +69,22 @@ along with this software (see the LICENSE.md file). If not, see
         <artifacts artifactName="mantle.order.OrderServices.add#OrderPartPayment" artifactTypeEnumId="AT_SERVICE" inheritAuthz="Y" nameIsPattern="N"/>
         <authz artifactAuthzId="COARCHY_SETTINGS_USERS" userGroupId="COARCHY_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
         <authz artifactAuthzId="COARCHY_SETTINGS_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
+    </artifactGroups>
+    
+    <artifactGroups artifactGroupId="COARCHY_VENDORAPP" description="Coarchy Vendors (via root screen)">
+        <artifacts artifactName="component://coarchy/screen/vendor/vendorinternal.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/>
+        <authz artifactAuthzId="COARCHY_VENDORAPP_VENDORS" userGroupId="COARCHY_VENDORS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
+            <filters entityFilterSetId="COARCHY_FILTER"/>
+        </authz>
+        <authz artifactAuthzId="COARCHY_VENDORAPP_ADMIN" userGroupId="ADMIN" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL">
+            <filters entityFilterSetId="COARCHY_FILTER"/>
+        </authz>
+    </artifactGroups>
+
+    <!-- Artifact group for all of the Coarchy REST API via the coarchy resource (the root resource) -->
+    <artifactGroups artifactGroupId="COARCHY_MY_API" description="Coarchy My Info REST API">
+        <artifacts artifactTypeEnumId="AT_REST_PATH" artifactName="/coarchy/my" inheritAuthz="Y"/>
+        <authz artifactAuthzId="COARCHY_MY_API_ALL" userGroupId="ALL_USERS" authzTypeEnumId="AUTHZT_ALLOW" authzActionEnumId="AUTHZA_ALL"/>
     </artifactGroups>
 
     <!-- Theme Resources -->
