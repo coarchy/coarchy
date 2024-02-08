@@ -637,7 +637,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="vendorResponseByActivity" type="Map" />
             <parameter name="internalResponseByStatement" type="Map" />
             <parameter name="vendorResponseByStatement" type="Map" />
-            <parameter name="totalVendorCount" type="Integer" />
         </out-parameters>
         <actions>
             <entity-find-one entity-name="coarchy.product.ProductEvaluation"
@@ -747,6 +746,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <return error="true" message="Cannot modify requirements in this status." />
             </if>
 
+            <set field="productEvaluation.requirementsSetDate" from="null" />
             <set field="productEvaluation.statusId" value="PeRequirementsSelection" />
             <entity-update value-field="productEvaluation" />
         </actions>
