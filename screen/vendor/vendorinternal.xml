@@ -20,6 +20,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.party.Organization" value-field="organization" auto-field-map="[partyId:activeOrgId]"/>
             <set field="organizationName" from="organization?.organizationName"/>
         </if>
+        <script>context.isVendorView = true</script>
     </always-actions>
     
     <subscreens default-item="ProductEval"/>

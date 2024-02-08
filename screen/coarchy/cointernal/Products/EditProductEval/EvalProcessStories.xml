@@ -18,9 +18,6 @@ along with this software (see the LICENSE.md file). If not, see
     <parameter name="processStoryIds" />
 
     <transition name="filterProcessStories">
-        <condition>
-            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
-        </condition>
         <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,processStoryIds:processStoryIds]"/>
     </transition>
 
@@ -102,8 +99,6 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="showVendorResponseView" from="isUserVendor &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
         <set field="showInternalResponseView" from="isUserInternalOrgMember &amp;&amp; (productEvaluation.statusId == 'PeAwaitingVendorResponse')"/>
 
-        <set field="activityResponseDialogIndexMap" from="[:]" />
-        <set field="statementResponseDialogIndexMap" from="[:]" />
     </actions>
 
     <widgets>
@@ -186,7 +181,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory" />
 
                         <service-call name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,
-                            showSubstories:'Y',organizationId:activeOrgId]" out-map="context"/>
+                            showSubstories:'Y',organizationId:productEvaluation.organizationId]" out-map="context"/>
 
                         <set field="showSubstories" value="Y"/>
                         <set field="hasSubstories" from="processStoryActivityList*.detailProcessStoryId.any{ it != null }"/>

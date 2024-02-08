@@ -15,11 +15,9 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Statements" default-menu-index="10" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="false">
 
     <parameter name="productEvaluationId" required="true"/>
+    <parameter name="typeEnumIds" />
 
     <transition name="filterStatementType">
-        <condition>
-            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
-        </condition>
         <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,typeEnumIds:typeEnumIds]"/>
     </transition>
 
