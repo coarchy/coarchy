@@ -222,6 +222,40 @@ along with this software (see the LICENSE.md file). If not, see
                                 </radio>
                             </default-field>
                         </field>
+                        <field name="copyProducts">
+                            <default-field title="Do you want to do with your existing products?">
+                                <radio no-current-selected-key="none">
+                                    <option key="none" text="Do nothing" />
+                                    <option key="copy" text="Copy to new values" />
+                                    <option key="move" text="Move to new organization" />
+                                </radio>
+                            </default-field>
+                        </field>
+                        <field name="copyEvaluations">
+                            <default-field title="Do you want to do with your existing product evaluations?">
+                                <radio no-current-selected-key="none">
+                                    <option key="none" text="Do nothing" />
+                                    <option key="copy" text="Copy to new values" />
+                                    <option key="move" text="Move to new organization" />
+                                </radio>
+                            </default-field>
+                        </field>
+                        <field name="copyEvaluationResponses">
+                            <default-field title="Do you also want to keep the internal and vendor responses when copying/moving evaluations?">
+                                <radio no-current-selected-key="false">
+                                    <option key="false" text="No" />
+                                    <option key="true" text="Yes" />
+                                </radio>
+                            </default-field>
+                        </field>
+                        <field name="copyEvaluationVendors">
+                            <default-field title="Do you also want to keep the same vendor representatives when copying/moving evaluations?">
+                                <radio no-current-selected-key="false">
+                                    <option key="false" text="No" />
+                                    <option key="true" text="Yes" />
+                                </radio>
+                            </default-field>
+                        </field>
                         <field name="create"><default-field><submit/></default-field></field>
                     </form-single>
                 </container-dialog>
