@@ -34,10 +34,19 @@ along with this software (see the LICENSE.md file). If not, see
         </entity-find-count>
 
         <entity-find-one entity-name="coarchy.product.ProductEvaluation" value-field="productEvaluation"/>
-        <set field="statusId" from="productEvaluation.statusId"/>
+        <if condition="!productEvaluation">
+            <if condition="isVendorView">
+                <script>sri.sendRedirectAndStopRender('/vendor')</script>
+                <else>
+                    <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+                </else>
+            </if>
+        </if>
+
+        <set field="statusId" from="productEvaluation?.statusId"/>
         
         <!-- safegaurd vendors from accessing product evaluation before its ready for them -->
-        <if condition="isVendorView &amp;&amp; ['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)">
+        <if condition="isVendorView &amp;&amp; ['PeRequirementsSelection','PeInviteVendors'].contains(statusId)">
             <return error="true" message="Not allowed"/>
         </if>
 
