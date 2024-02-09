@@ -45,7 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call name="coarchy.ProductEvaluationServices.include#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,activityId:activityId,organizationId:activeOrgId]"/>
         </actions>
-        <default-response url="/coapp/Products/EditProductEval/EvalProcessStories" parameter-map="[productEvaluationId:productEvaluationId, processStoryIds:processStoryIds?:[]]" save-parameters="true"/>
+        <default-response url="/coapp/Products/EditProductEval/EvalProcessStories" parameter-map="[productEvaluationId:productEvaluationId, processStoryIds:processStoryIds?:[]]" />
     </transition>
 
     <transition name="excludeActivity" method="post">
@@ -56,9 +56,16 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,activityId:activityId,organizationId:activeOrgId]"/>
         </actions>
-        <default-response url="/coapp/Products/EditProductEval/EvalProcessStories" parameter-map="[productEvaluationId:productEvaluationId, processStoryIds:processStoryIds?:[]]" save-parameters="true"/>
+        <default-response url="/coapp/Products/EditProductEval/EvalProcessStories" parameter-map="[productEvaluationId:productEvaluationId, processStoryIds:processStoryIds?:[]]" />
     </transition>
 
+    <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
+    <transition-include name="inviteVendor" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
+    <transition-include name="finalizeActivitySelection" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
+    <transition-include name="finalizeVendorInvitations" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
+    <transition-include name="reopenActivitySelection" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
+    <transition-include name="cancelProductEvaluation" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
+    <transition-include name="completeProductEvaluation" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
 
     <actions>
         <!-- find product eval -->
@@ -79,131 +86,133 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- find inculded activities -->
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationActivites" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalActivities" />
         <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationResponseStats" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
-
-        <!-- find invited vendors -->
-        <entity-find entity-name="coarchy.product.ProductEvaluationParty" list="vendorRepList">
-            <date-filter />
-            <econdition field-name="productEvaluationId" />
-            <econdition field-name="roleTypeId" value="VendorRepresentative" />
-        </entity-find>
-
-        <set field="isUserInternalOrgMember" from="partyRelationshipCount &gt; 0"/>
-        <set field="isUserVendor" from="(vendorRepList*.partyId).contains(ec.user.userAccount?.partyId)"/>
-
+       
         <set field="canModifyProcessStory" from="statusId == 'PeRequirementsSelection'"/>
-        <set field="showExcludedActivities" from="statusId == 'PeRequirementsSelection'"/>
-        <set field="showReponseListButton" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(statusId)"/>
-        <set field="showVendorRespondButton" from="isVendorView &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
-        <set field="showInternalRespondButton" from="!isVendorView &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
-
+        <set field="showExcludedActivities" from="statusId == 'PeRequirementsSelection'"/>       
     </actions>
 
     <widgets>
-        <container type="div">
-            <label text="Process Stories" style="text-bold" />
-            <container-dialog id="AddProcessStoryDialog" icon="add" button-text="Add Process Story to Evaluation" button-style="text-caption float-right" type="info" condition="canModifyProcessStory">
-                <form-single name="AddProcessStoryForm" transition="addProcessStory">
-                    <field name="productEvaluationId">
-                        <default-field>
-                            <hidden />
-                        </default-field>
-                    </field>
-                    <field name="processStoryIds">
-                        <default-field title="Process Stories">
-                            <drop-down allow-empty="false" allow-multiple="true">
-                                <entity-options key="${processStoryId}" text="${name}">
-                                    <entity-find entity-name="coarchy.ProcessStory">
-                                        <econdition field-name="organizationId" from="activeOrgId" />
-                                    </entity-find>
-                                </entity-options>
-                            </drop-down>
-                        </default-field>
-                    </field>
-                    <field name="submit">
-                        <default-field>
-                            <submit text="Add"/>
-                        </default-field>
-                    </field>
-                </form-single>
-            </container-dialog>
-        </container>
-        <container type="div">
-            <label text="Add the process stories you would like to be evaluated by vendors. You can include/exclude specific activities by clicking on the buttons below." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId=='PeRequirementsSelection')"/>
-            <label text="The following process story activities will be evaluated by vendors." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />
-            <label text="Evaluate the following process stories and activites." style="text-caption text-grey-8" condition="isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />
-        </container>
+        <section-include name="FreemiumBanner" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval/EvalHeader.xml" />
+        <section-include name="TitleStatusSection" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval/EvalHeader.xml" />
 
-        <container-row style="overflow-hidden">
-            <row-col sm="12">
-                <form-single name="FilterProcessStory" transition="filterProcessStories">
-                    <field name="productEvaluationId">
-                        <default-field>
-                            <hidden />
-                        </default-field>
-                    </field>
-                    <field name="processStoryIds">
-                        <default-field title="Filter By Process Story">
-                            <drop-down allow-empty="true" allow-multiple="true" submit-on-select="false">
-                                <!-- <entity-options>
-                                    <entity-find entity-name="coarchy.product.ProductEvaluationStoryDetail">
-                                        <econdition field-name="" />
-                                    </entity-find>
-                                </entity-options> -->
-                                <list-options list="productEvalStoryList" key="${processStoryId}" text="${name}" />
-                            </drop-down>
-                        </default-field>
-                    </field>
-                    <field name="submit">
-                        <default-field title="Filter">
-                            <submit></submit>
-                        </default-field>
-                    </field>
-                    <field-layout>
-                        <field-col-row>
-                            <field-col xs="10">
-                                <field-ref name="processStoryIds" />
-                            </field-col>
-                            <field-col xs="2">
-                                <field-ref name="submit" />
-                            </field-col>
-                        </field-col-row>
-                    </field-layout>
-                </form-single>
+        <container-row style="q-mt-lg">
+            <row-col style="${showInviteVendorsSection?'col-8':'col-12'}">        
+                <container type="div">
+                    <label text="Process Stories" style="text-bold" />
+                    <container-dialog id="AddProcessStoryDialog" icon="add" button-text="Add Process Story to Evaluation" button-style="text-caption float-right" type="info" condition="canModifyProcessStory">
+                        <form-single name="AddProcessStoryForm" transition="addProcessStory">
+                            <field name="productEvaluationId">
+                                <default-field>
+                                    <hidden />
+                                </default-field>
+                            </field>
+                            <field name="processStoryIds">
+                                <default-field title="Process Stories">
+                                    <drop-down allow-empty="false" allow-multiple="true">
+                                        <entity-options key="${processStoryId}" text="${name}">
+                                            <entity-find entity-name="coarchy.ProcessStory">
+                                                <econdition field-name="organizationId" from="activeOrgId" />
+                                            </entity-find>
+                                        </entity-options>
+                                    </drop-down>
+                                </default-field>
+                            </field>
+                            <field name="submit">
+                                <default-field>
+                                    <submit text="Add"/>
+                                </default-field>
+                            </field>
+                        </form-single>
+                    </container-dialog>
+                </container>
+
+                <container type="div">
+                    <label text="Add the process stories you would like to be evaluated by vendors. You can include/exclude specific activities by clicking on the buttons below." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId=='PeRequirementsSelection')"/>
+                    <label text="The following process story activities will be evaluated by vendors." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />
+                    <label text="Evaluate the following process stories and activites." style="text-caption text-grey-8" condition="isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />
+                </container>
+
+                <container-row style="overflow-hidden">
+                    <row-col sm="12">
+                        <form-single name="FilterProcessStory" transition="filterProcessStories">
+                            <field name="productEvaluationId">
+                                <default-field>
+                                    <hidden />
+                                </default-field>
+                            </field>
+                            <field name="processStoryIds">
+                                <default-field title="Filter By Process Story">
+                                    <drop-down allow-empty="true" allow-multiple="true" submit-on-select="false">
+                                        <!-- <entity-options>
+                                            <entity-find entity-name="coarchy.product.ProductEvaluationStoryDetail">
+                                                <econdition field-name="" />
+                                            </entity-find>
+                                        </entity-options> -->
+                                        <list-options list="productEvalStoryList" key="${processStoryId}" text="${name}" />
+                                    </drop-down>
+                                </default-field>
+                            </field>
+                            <field name="submit">
+                                <default-field title="Filter">
+                                    <submit></submit>
+                                </default-field>
+                            </field>
+                            <field-layout>
+                                <field-col-row>
+                                    <field-col xs="10">
+                                        <field-ref name="processStoryIds" />
+                                    </field-col>
+                                    <field-col xs="2">
+                                        <field-ref name="submit" />
+                                    </field-col>
+                                </field-col-row>
+                            </field-layout>
+                        </form-single>
+                    </row-col>
+                    <row-col sm="12">
+                        <label text="Showing ${filterProductEvalStoryList.size()} of ${processStoryIdList.size()} process stories" style="text-bold" />
+
+                        <section-iterate name="ProcessStorySection" list="filterProductEvalStoryList" entry="filterProductEvalStory">
+                            <actions>
+                                <set field="processStoryId" from="filterProductEvalStory.processStoryId"/>
+
+                                <!-- defaults to true for now -->
+                                <set field="showSubstories" value="Y"/>
+                                
+                                <!-- find activities in process stories -->
+                                <service-call name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,
+                                    showSubstories:showSubstories,organizationId:productEvaluation.organizationId]" out-map="context"/>
+
+                                <set field="hasSubstories" from="processStoryActivityList*.detailProcessStoryId.any{ it != null }"/>
+                                <set field="showSubstoriesActual" from="showSubstories=='Y' &amp;&amp; hasSubstories"/>
+                            </actions>
+                            <widgets>
+                                <container-box>
+                                    <box-header>
+                                        <container type="span" style="q-mr-xs">
+                                            <link url="removeProcessStory" parameter-map="[processStoryId:processStoryId]" text="Remove" style="text-caption text-negative" condition="canModifyProcessStory"/>
+                                        </container>
+                                        <label text="Process Story (${filterProductEvalStory_index+1} of ${processStoryIdList.size()})" style="q-pr-sm"/>
+                                        <label text="${filterProductEvalStory?.name?' - '+filterProductEvalStory.name:''}" style="text-bold"/>
+                                    </box-header>
+                                    <box-body>
+                                        <render-mode>
+                                            <text type="html,vuet,qvt" location="component://coarchy/template/ProcessStoryEvalOutline.html.ftl"/>
+                                        </render-mode>
+                                    </box-body>
+                                </container-box>
+                            </widgets>
+                        </section-iterate>
+                    </row-col>
+                </container-row>
             </row-col>
-            <row-col sm="12">
-                <label text="Showing ${filterProductEvalStoryList.size()} of ${processStoryIdList.size()} process stories" style="text-bold" />
-
-                <section-iterate name="ProcessStorySection" list="filterProductEvalStoryList" entry="filterProductEvalStory">
-                    <actions>
-                        <set field="processStoryId" from="filterProductEvalStory.processStoryId"/>
-
-                        <!-- defaults to true for now -->
-                        <set field="showSubstories" value="Y"/>
-                        
-                        <!-- find activities in process stories -->
-                        <service-call name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,
-                            showSubstories:showSubstories,organizationId:productEvaluation.organizationId]" out-map="context"/>
-
-                        <set field="hasSubstories" from="processStoryActivityList*.detailProcessStoryId.any{ it != null }"/>
-                        <set field="showSubstoriesActual" from="showSubstories=='Y' &amp;&amp; hasSubstories"/>
-                    </actions>
+            
+            <row-col style="${showInviteVendorsSection?'col-4':'hidden'}">
+                <section name="ProductVendorInviteContainerSection" condition="showInviteVendorsSection">
                     <widgets>
-                        <container-box>
-                            <box-header>
-                                <container type="span" style="q-mr-xs">
-                                    <link url="removeProcessStory" parameter-map="[processStoryId:processStoryId]" text="Remove" style="text-caption text-negative" condition="canModifyProcessStory"/>
-                                </container>
-                                <label text="Process Story (${filterProductEvalStory_index+1} of ${processStoryIdList.size()})" style="q-pr-sm"/>
-                                <label text="${filterProductEvalStory?.name?' - '+filterProductEvalStory.name:''}" style="text-bold"/>
-                            </box-header>
-                            <box-body>
-                                <render-mode>
-                                    <text type="html,vuet,qvt" location="component://coarchy/template/ProcessStoryEvalOutline.html.ftl"/>
-                                </render-mode>
-                            </box-body>
-                        </container-box>
+                        <section-include name="ProductVendorInviteListSection" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval/EvalInviteVendor.xml" />
                     </widgets>
-                </section-iterate>
+                </section>
             </row-col>
         </container-row>
     </widgets>

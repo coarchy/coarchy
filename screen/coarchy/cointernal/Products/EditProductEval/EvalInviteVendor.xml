@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+    default-menu-include="false" standalone="true" default-menu-title="Invite Vendor">
+
+    <widgets>
+        <section name="ProductVendorInviteListSection" >          
+            <widgets>
+                <container-box>
+                    <box-header>
+                        <container-dialog id="ProductVendorInviteDialog" button-text="${(statusId=='PeAwaitingVendorResponse'?'Invite':'Add')}" button-style="float-right" condition="canInviteVendors">
+                            <container>
+                                <label text="Send invitations to product vendor representatives with a request for information about the applicability of their product to your requirement statements and process story activities." condition="!isVendorView"/>                                                   
+                                <label text="Invite your team members by adding their email address below." condition="isVendorView"/>                                                
+                            </container>
+                            <form-single name="ProductVendorInviteForm" transition="inviteVendor">
+                                <field name="productEvaluationId">
+                                    <default-field>
+                                        <hidden />
+                                    </default-field>
+                                </field>
+                                <field name="emailAddress">
+                                    <default-field>
+                                        <text-line input-type="email"/>
+                                    </default-field>
+                                </field>
+                                <field name="submit">
+                                    <default-field>
+                                        <submit text="Invite"/>
+                                    </default-field>
+                                </field>
+                                <field-layout>
+                                    <field-col-row>
+                                        <field-col sm="9">
+                                            <field-ref name="emailAddress" />
+                                        </field-col>
+                                        <field-col sm="3">
+                                            <field-ref name="submit" />
+                                        </field-col>
+                                    </field-col-row>
+                                </field-layout>
+                            </form-single>
+                        </container-dialog>
+                        <label text="Vendor Representatives" style="text-bold q-mx-md"/>
+                    </box-header>
+                    <box-body>
+                        <label text="Add as many vendor representatives you would like to evaluate the product, against these requirements. Invitations will only be sent when you click 'Finalize Invitations'." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; ['PeRequirementsSelection','PeInviteVendors'].contains(statusId)"/>
+                        <label text="You have invited the following vendors representatives to evaluate this product. You can either invite more representatives to collaborate, or let the invited representatives add more of their team members." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; ['PeAwaitingVendorResponse'].contains(statusId)"/>
+
+                        <label text="The following users are part of this evaluation. You can add team members to assist you with this evaluation by clicking on the 'Invite' button." style="text-caption text-grey-8" condition="isVendorView &amp;&amp; ['PeAwaitingVendorResponse'].contains(statusId)"/> 
+                        
+                        <label text="The following users are part of this evaluation." style="text-caption text-grey-8" condition="isVendorView &amp;&amp; !['PeAwaitingVendorResponse'].contains(statusId)"/>   
+
+                        <section name="VendorListSection" condition="vendorRepList">
+                            <widgets>
+                                <form-list name="ProductVendorInviteList" list="vendorRepList">
+                                    <row-actions>
+                                        <entity-find-one entity-name="mantle.party.PersonAndUserAccount" value-field="personAndAccount">
+                                            <field-map field-name="partyId" />
+                                        </entity-find-one>
+                                    </row-actions>
+                                    <field name="partyId">
+                                        <default-field>
+                                            <hidden/>
+                                        </default-field>
+                                    </field>
+                                    <field name="combinedName">
+                                        <default-field title="Representative Name">
+                                            <display text="${personAndAccount?.firstName} ${personAndAccount?.lastName}" parameter-map="personAndAccount"/>
+                                        </default-field>
+                                    </field>
+                                    <field name="emailAddress">
+                                        <default-field>
+                                            <display text="${personAndAccount.emailAddress}"/>
+                                        </default-field>
+                                    </field>
+                                    <!-- simplified status -->
+                                    <field name="statusId">
+                                        <conditional-field condition="statusId=='PepPlanned'">
+                                            <display text="Pending" style="text-grey-8"/>
+                                        </conditional-field>
+                                        <conditional-field condition="['PepInvited','PepAccepted'].contains(statusId)">
+                                            <display text="Invited" style="text-grey-8"/>
+                                        </conditional-field>
+                                        <default-field title="Status">
+                                            <!-- <display-entity entity-name="moqui.basic.StatusItem"/> -->
+                                            <label text="N/A" />
+                                        </default-field>
+                                    </field>
+                                </form-list>
+                            </widgets>
+                        </section>
+                        <section name="NoVendorListSection" condition="!vendorRepList">
+                            <widgets>
+                                <container style="text-center">
+                                    <label text="Please add at least one vendor representative to evaluate this product." style="text-bold text-negative" />
+                                </container>
+                            </widgets>
+                        </section>
+                    </box-body>
+                </container-box>
+            </widgets>
+        </section>
+    </widgets>
+</screen>
