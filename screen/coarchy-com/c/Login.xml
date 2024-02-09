@@ -72,7 +72,18 @@ along with this software (see the LICENSE.md file). If not, see
     <pre-actions><script>
         // if user already logged in redirect to application
         if (ec.user.userId) sri.sendRedirectAndStopRender('/settings')
-    </script></pre-actions>
+    </script>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
+
+        <set field="head_keywords" value="coarchy log in"/>
+        <set field="head_title" value="Coarchy Log In: Log In to Coarchy to Achieve Greatness"/>
+        <set field="head_description" value="Log In to Coarchy to Achieve Greatness"/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_url" from="baseLinkUrl+'/Login'"/>
+        <set field="html_type" value="website"/>
+        <set field="html_site_name" value="Coarchy"/>
+    </pre-actions>
     <widgets>
         <section name="NeedsSetupSection" condition="ec.entity.find('moqui.security.UserAccount').disableAuthz().count() > 1"><widgets>
             <render-mode>

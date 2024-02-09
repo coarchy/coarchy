@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="en">
 <head lang="en-us" dir="ltr">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -86,13 +86,13 @@
 
                 <q-space></q-space>
 
-                <q-btn stretch flat label="Services" href="/Services"></q-btn>
+                <q-btn stretch flat label="Services" href="/Services"><a href="/Services"></a></q-btn>
                 <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Blog" href="/Newsletter"></q-btn>
+                <q-btn stretch flat label="Blog" href="/Newsletter"><a href="/Newsletter"></a></q-btn>
                 <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Log In" href="/Login"></q-btn>
+                <q-btn stretch flat label="Log In" href="/Login"><a href="/Login"></a></q-btn>
                 <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Sign Up" href="/SignUp"></q-btn>
+                <q-btn stretch flat label="Sign Up" href="/SignUp"><a href="/SignUp"></a></q-btn>
 
                 <q-space></q-space>
 

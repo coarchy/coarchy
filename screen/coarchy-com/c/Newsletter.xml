@@ -15,6 +15,19 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Newsletter" require-authentication="anonymous-view">
 
+    <pre-actions>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
+
+        <set field="head_keywords" value="coarchy newsletter"/>
+        <set field="head_title" value="Coarchy Newsletter: The greatest source of Coarchy news"/>
+        <set field="head_description" value="Subscribe to Coarchy's Newsletter for the latest updates on requirements and product innovations. Stay informed and ahead with our news directly in your inbox."/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_url" from="baseLinkUrl+'/Newsletter'"/>
+        <set field="html_type" value="website"/>
+        <set field="html_site_name" value="Coarchy"/>
+    </pre-actions>
+
     <actions>
         <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
         <entity-find entity-name="moqui.resource.wiki.WikiBlogFindView" list="blogListOut">
@@ -37,10 +50,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <div class="row">
                     <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2 col-sm-10 offset-sm-1 col-xs-12 offset-xs-0">
                         <div class="column justify-center" style="height: 150px">
-                            <div class="col-4">
+                            <h1 class="col-4">
                                 <q-card flat bordered style="width: 100%;" class="col-4 bg-grey-1" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">
                                     <q-card-section>
-                                        <div class="text-h2">Newsletter</div>
+                                        <h1 class="text-h2">Newsletter</h1>
                                     </q-card-section>
 
                                     <q-card-section>

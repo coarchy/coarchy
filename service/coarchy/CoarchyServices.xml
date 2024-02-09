@@ -3713,10 +3713,10 @@ along with this software (see the LICENSE.md file). If not, see
                                       changefreq:'weekly', priority:'1.0']);
                 </script>
             </iterate>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/TermsOfUse', changefreq:'monthly', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/PrivacyPolicy', changefreq:'monthly', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/PrivacyPolicyCaResidents', changefreq:'monthly', priority:'1.0']"/>
-            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/CopyrightPolicy', changefreq:'monthly', priority:'1.0']"/>
+<!--            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/TermsOfUse', changefreq:'monthly', priority:'1.0']"/>-->
+<!--            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/PrivacyPolicy', changefreq:'monthly', priority:'1.0']"/>-->
+<!--            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/PrivacyPolicyCAResidents', changefreq:'monthly', priority:'1.0']"/>-->
+<!--            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/CopyrightPolicy', changefreq:'monthly', priority:'1.0']"/>-->
 
             <script><![CDATA[
                 def outWriter = new StringWriter()

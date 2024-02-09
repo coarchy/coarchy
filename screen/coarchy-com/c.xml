@@ -44,7 +44,7 @@ along with this software (see the LICENSE.md file). If not, see
     <pre-actions>
         <set field="html_keywords" value="coarchy"/>
         <set field="html_title" value="Coarchy"/>
-        <set field="html_description" value="Coarchy helps entrepreneurs rewrite their business"/>
+        <set field="html_description" value="YOUR Software for YOUR Organization"/>
 
         <script><![CDATA[
         // if user not logged in save current path and params then redirect to Login

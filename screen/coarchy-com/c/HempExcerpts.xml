@@ -16,8 +16,8 @@ along with this software (see the LICENSE.md file). If not, see
         require-authentication="false" server-static="true">
     <pre-actions>
         <set field="head_keywords" value="coarchy hemp"/>
-        <set field="head_title" value="Coarchy HEMP Excerpts"/>
-        <set field="head_description" value="Coarchy HEMP Excerpts"/>
+        <set field="head_title" value="Coarchy HEMP Excerpts: An agile approach to analysis and design"/>
+        <set field="head_description" value="HEMP Excerpts detail agile analysis/design for software, focusing on distinguishing business requirements from system designs."/>
     </pre-actions>
 
     <widgets>
