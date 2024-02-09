@@ -16,6 +16,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <parameter name="productEvaluationId" required="true"/>
     <parameter name="processStoryIds" />
+    <parameter name="anchor" />
 
     <transition name="filterProcessStories">
         <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,processStoryIds:processStoryIds]"/>
@@ -45,7 +46,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call name="coarchy.ProductEvaluationServices.include#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,activityId:activityId,organizationId:activeOrgId]"/>
         </actions>
-        <default-response url="/coapp/Products/EditProductEval/EvalProcessStories" parameter-map="[productEvaluationId:productEvaluationId, processStoryIds:processStoryIds?:[]]" />
+        <default-response url="/coapp/Products/EditProductEval/EvalProcessStories" parameter-map="[productEvaluationId:productEvaluationId, processStoryIds:processStoryIds?:[],anchor:activityId]" />
     </transition>
 
     <transition name="excludeActivity" method="post">
@@ -56,7 +57,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationActivity" in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryId,activityId:activityId,organizationId:activeOrgId]"/>
         </actions>
-        <default-response url="/coapp/Products/EditProductEval/EvalProcessStories" parameter-map="[productEvaluationId:productEvaluationId, processStoryIds:processStoryIds?:[]]" />
+        <default-response url="/coapp/Products/EditProductEval/EvalProcessStories" parameter-map="[productEvaluationId:productEvaluationId, processStoryIds:processStoryIds?:[],anchor:activityId]" />
     </transition>
 
     <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
@@ -215,5 +216,23 @@ along with this software (see the LICENSE.md file). If not, see
                 </section>
             </row-col>
         </container-row>
+
+        <text type="html,vuet,qvt"><![CDATA[
+            <script>
+                let anchorId = '${anchor!''}';
+                if (anchorId){
+                    const elements = $('#'+anchorId)
+                    if (elements.length){
+                        const element = elements[0];
+                        const topPos = element.getBoundingClientRect().top + window.pageYOffset
+
+                        window.scrollTo({
+                        top: topPos - 60, Account for q-header (~58px in height)
+                        behavior: 'smooth' // smooth scroll
+                        })
+                    }
+                }
+            </script>
+        ]]></text>
     </widgets>
 </screen>

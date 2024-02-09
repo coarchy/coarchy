@@ -69,7 +69,7 @@
         <#list processStoryActivity.detailProcessStoryActivityList! as processStoryActivity>
             <#assign isActivityIncluded = productEvalActivities.activityIds?seq_contains(processStoryActivity.activityId)/>
             <#if !isActivityIncluded && !showExcludedActivities><#continue/></#if>
-            <li>
+            <li id="${processStoryActivity.activityId}">
             <@activityResponseList processStoryActivity />
             <@evaluateActivityButton processStoryActivity />
             <@toggleActivityInclusion processStoryActivity />
@@ -88,7 +88,7 @@
 <#list processStoryActivityList! as processStoryActivity>
     <#assign isActivityIncluded = productEvalActivities.activityIds?seq_contains(processStoryActivity.activityId)/>
     <#if !isActivityIncluded && !showExcludedActivities><#continue/></#if>
-    <#if processStoryActivity.action!?has_content><li></#if>
+    <#if processStoryActivity.action!?has_content><li id="${processStoryActivity.activityId}"></#if>
     <@activityResponseList processStoryActivity />
     <@evaluateActivityButton processStoryActivity />
     <@toggleActivityInclusion processStoryActivity />
