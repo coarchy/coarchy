@@ -582,6 +582,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="implementationStatusEnumId" required="true" />
             <parameter name="rating" type="Integer" />
             <parameter name="comments" />
+            <parameter name="isVendor" type="Boolean" />
         </in-parameters>
         <actions>
             <entity-find-one entity-name="coarchy.product.ProductEvaluation"
@@ -600,8 +601,20 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId" />
                 <econdition field-name="toPartyId" from="productEvaluation.organizationId" />
             </entity-find-count>
-            <set field="isUserOrgMember" from="partyRelationshipCount > 0" />
+            
+            <entity-find-count entity-name="mantle.party.PartyRelationship"
+                count-field="vendorRelationshipCount">
+                <date-filter />
+                <econdition field-name="relationshipTypeEnumId" value="PrtVendorRepresentative" />
+                <econdition field-name="toRoleTypeId" value="VendorRepresentative" />
+                <econdition field-name="fromPartyId" from="ec.user.userAccount.partyId" />
+                <econdition field-name="toPartyId" from="productEvaluation.organizationId" />
+            </entity-find-count>
 
+            <if condition="!partyRelationshipCount &amp;&amp; ! vendorRelationshipCount">
+                <return error="true" message="You are not allowed to perform this action." />
+            </if>
+            <set field="isResponseInternal" from="(isVendor &amp;&amp; vendorRelationshipCount>0)?false:(partyRelationshipCount>0)" />
             <set field="lastEditedByUserId" from="ec.user.userId" />
 
             <!-- find existing response, if exists, update, otherwise create -->
@@ -609,16 +622,16 @@ along with this software (see the LICENSE.md file). If not, see
                 list="productEvalResponseList">
                 <econdition field-name="productEvaluationId" />
                 <econdition field-name="evaluationByEnumId" value="EbInternal"
-                    ignore="!isUserOrgMember" />
+                    ignore="!isResponseInternal" />
                 <econdition field-name="evaluationByEnumId" value="EbVendor"
-                    ignore="isUserOrgMember" />
+                    ignore="isResponseInternal" />
                 <econdition field-name="activityId" ignore="!activityId" />
                 <econdition field-name="statementId" ignore="!statementId" />
             </entity-find>
 
             <if condition="!productEvalResponseList">
                 <service-call name="create#coarchy.product.ProductEvaluationResponse"
-                    in-map="[productEvaluationId:productEvaluationId, activityId:activityId, statementId:statementId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments, lastEditedByUserId: lastEditedByUserId, evaluationByEnumId: isUserOrgMember?'EbInternal':'EbVendor',organizationId:organizationId]" />
+                    in-map="[productEvaluationId:productEvaluationId, activityId:activityId, statementId:statementId, implementationStatusEnumId:implementationStatusEnumId, rating:rating, comments:comments, lastEditedByUserId: lastEditedByUserId, evaluationByEnumId: isResponseInternal?'EbInternal':'EbVendor',organizationId:organizationId]" />
                 <else>
                     <set field="productEvalResponse" from="productEvalResponseList[0]" />
                     <service-call name="update#coarchy.product.ProductEvaluationResponse"
@@ -1118,6 +1131,16 @@ along with this software (see the LICENSE.md file). If not, see
                 </then>
                 <else>
                     <set field="newUser" from="existingUaList?.getFirst()" />
+                    <entity-find entity-name="moqui.security.UserGroupMember" list="vendorGroupMemberList">
+                        <date-filter />
+                        <econdition field-name="userGroupId" value="COARCHY_VENDORS" />
+                        <econdition field-name="userId" from="newUser.userId" />
+                    </entity-find>
+                    <if condition="!vendorGroupMemberList">
+                        <service-call name="create#moqui.security.UserGroupMember"
+                        in-map="[userGroupId:'COARCHY_VENDORS',
+                            userId:newUser.userId, fromDate:ec.user.nowTimestamp]" />
+                    </if>
                 </else>
             </if>
             <set field="newPartyId" from="newUser.partyId" />
