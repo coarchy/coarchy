@@ -42,9 +42,15 @@ along with this software (see the LICENSE.md file). If not, see
     <subscreens default-item="Home" always-use-full-path="true"/>
 
     <pre-actions>
-        <set field="html_keywords" value="coarchy"/>
-        <set field="html_title" value="Coarchy"/>
-        <set field="html_description" value="YOUR Software for YOUR Organization"/>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
+
+        <set field="html_keywords" value="coarchy software organization"/>
+        <set field="html_title" value="Coarchy: YOUR Software for YOUR Organization (and more)"/>
+        <set field="html_description" value="Explore Coarchy.com for organizational design through process stories, streamlining team roles and collaboration for improved team collaboration."/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_type" value="website"/>
+        <set field="html_site_name" value="Coarchy"/>
 
         <script><![CDATA[
         // if user not logged in save current path and params then redirect to Login

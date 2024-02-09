@@ -78,9 +78,10 @@
     <q-layout view="hHh LpR fFf">
         <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px; background: #eeeeee;">
                 <q-btn stretch flat href="/">
+                    <a href="/"></a>
                     <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>
                     <#if headerLogoList?has_content>
-                        <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="42">
+                        <img src="${sri.buildUrl(headerLogoList?first).getUrl()}" alt="Home" height="42"></img>
                     </#if>
                 </q-btn>
 
