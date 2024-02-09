@@ -41,7 +41,7 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <transition name="updateValue"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,tagIdList:tagIdList,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,organizationId:activeOrgId]"/>
+        <service-call name="coarchy.CoarchyServices.update#ValueStatement" in-map="[valueStatementId:valueStatementId,activityIdList:activityIdList,tagIdList:tagIdList,value:value,typeEnumId:typeEnumId,sequenceNum:sequenceNum,ignoreCopyOnWrite:ignoreCopyOnWrite,organizationId:activeOrgId]"/>
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
@@ -60,19 +60,20 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
     <transition name="deleteValueActivity">
         <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
-        <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId,organizationId:activeOrgId]"/>
+        <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId,thruDate:ec.user.nowTimestamp, organizationId:activeOrgId]"/>
         <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
     </transition>
     <transition name="deleteAllValueActivities">
         <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
         <actions>
             <entity-find entity-name="coarchy.ValueStatementActivity" list="valueActivities">
+                <date-filter />
                 <econdition field-name="valueStatementId" from="valueStatementId" />
                 <econdition field-name="organizationId" from="activeOrgId" />
             </entity-find>
 
             <iterate list="valueActivities" entry="valueActivity">
-                <service-call name="delete#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId]"/>
+                <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId, thruDate:ec.user.nowTimestamp]"/>
             </iterate>
         </actions>
         <default-response parameter-map="[_openDialog:_openDialog]"/><error-response url="." save-parameters="true"/>
@@ -103,6 +104,8 @@ along with this software (see the LICENSE.md file). If not, see
             
             <if condition="processStoryIds?.size() > 0">
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="psadList">
+                    <date-filter />
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
                     <econdition field-name="processStoryId" operator="in" from="processStoryIds" />
                     <econdition field-name="storyActivityOrganizationId" from="activeOrgId" />
                     <econdition field-name="actorId" operator="is-not-null" />
@@ -155,12 +158,14 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="activityList" from="[]"/>
             <if condition="term == null &amp;&amp; activityIdList ? activityIdList?.size() &gt; 0 : false"><then>
                 <entity-find entity-name="coarchy.Activity" list="activityList" limit="50">
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
                     <econdition field-name="activityId" operator="in" from="activityIdList"/>
                     <econdition field-name="activityId" operator="not-in" from="excludeActivityIds" ignore-if-empty="true"/>
                     <order-by field-name="action"/></entity-find>
             </then><else>
                 <!-- TODO: Also find by actor name -->
                 <entity-find entity-name="coarchy.Activity" list="activityList" limit="50">
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
                     <econdition field-name="activityId" operator="not-in" from="excludeActivityIds" ignore-if-empty="true"/>
                     <econditions combine="or">
                         <econdition field-name="condition" operator="like" value="%${term}%" ignore-case="true"/>
@@ -187,6 +192,7 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="activityIdList">
             <entity-find entity-name="coarchy.Activity" list="headerActivityList">
                 <econdition field-name="activityId" operator="in" from="activityIdList"/>
+                <econdition field-name="replacedByActivityId" operator="is-null" />
                 <order-by field-name="action"/></entity-find>
         </if>
 
@@ -197,7 +203,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="description"/></entity-find>
         </if>
 
-        <entity-find-count entity-name="coarchy.ValueStatement" count-field="valueStatementCount"/>
+        <entity-find-count entity-name="coarchy.ValueStatement" count-field="valueStatementCount">
+            <econdition field-name="replacedByValueStatementId" operator="is-null" />
+        </entity-find-count>
 
         <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
     </actions>
@@ -254,17 +262,22 @@ along with this software (see the LICENSE.md file). If not, see
                 select-columns="true">
             <entity-find entity-name="coarchy.ValueStatementAndTag" list="valueStatementList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum,value"/>
+                <econdition field-name="disabled" value="N" or-null="true" />
                 <econdition field-name="organizationId" from="activeOrgId" />
+                <econdition field-name="replacedByValueStatementId" operator="is-null" />
                 <econdition field-name="tagId" operator="in" from="tagIdList" ignore-if-empty="true"/>
             </entity-find>
             <row-actions>
                 <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
+                    <date-filter />
                     <econdition field-name="valueStatementId"/>
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
                     <select-field field-name="valueStatementActivityId,activityId,name,condition,action"/>
                     <order-by field-name="action"/>
                 </entity-find>
                 <set field="activityIdList" from="prepValueActivityList*.activityId"/>
                 <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="allProcessStoryActivityList">
+                    <date-filter />
                     <econdition field-name="activityId" operator="in" from="activityIdList" />
                     <econdition field-name="storyOrganizationId" from="activeOrgId" />
                     <select-field field-name="processStoryId,activityId,storyOrganizationId,name" />
@@ -310,6 +323,13 @@ along with this software (see the LICENSE.md file). If not, see
                 </entity-find>
                 <set field="tagIdList" from="statementTagList*.tagId"/>
                 
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationStatementAndDetail" count-field="existingEvaluationRecordCount">
+                    <econdition field-name="statusId" operator="not-equals" value="PeRequirementsSelection"/>
+                    <econdition field-name="statementId" from="valueStatementId" />
+                    <econdition field-name="organizationId" from="activeOrgId" />
+               </entity-find-count>
+               <set field="canCopyOnWrite" from="existingEvaluationRecordCount &gt; 0" />
+
 <!--                <log level="warn" message="form-list Statements context.toString() ${context.toString()}"/>-->
             </row-actions>
 
@@ -353,7 +373,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <order-by field-name="sequenceNum"/></entity-find>
                     </entity-options>
                 </drop-down></header-field>
-                <default-field title="Statement Type"><drop-down submit-on-select="true">
+                <default-field title="Statement Type"><drop-down submit-on-select="false">
                     <entity-options key="${enumId}" text="${description}">
                         <entity-find entity-name="moqui.basic.Enumeration">
                             <econdition field-name="enumTypeId" value="ValueType"/>
@@ -372,6 +392,18 @@ along with this software (see the LICENSE.md file). If not, see
             </field>
             <field name="valueStatementId">
                 <default-field><hidden/></default-field></field>
+            <field name="ignoreCopyOnWrite">
+                <conditional-field title="" condition="canCopyOnWrite">
+                    <!-- not enought space for this -->
+                    <!-- <label text="This statement was used in at least one Product Evaluation. Do you also want these changes applied to any product evaluation? Warning! This is unreversible." style="text-negative" /> -->
+                    <check no-current-selected-key="false">
+                        <option key="true" text="Save the changes to all existing product evaluations." />
+                    </check>
+                </conditional-field>
+                <default-field title="">
+                    <hidden />
+                </default-field>
+            </field>
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
                 <default-field><submit text="Update"/></default-field>
@@ -482,7 +514,7 @@ along with this software (see the LICENSE.md file). If not, see
             </field>        
             <columns>
                 <column><field-ref name="value"/><field-ref name="tagIdList"/></column>
-                <column><field-ref name="typeEnumId"/></column>
+                <column><field-ref name="typeEnumId"/><field-ref name="ignoreCopyOnWrite" /></column>
                 <column><field-ref name="submit"/></column>
                 <column><field-ref name="actions"/></column>
             </columns>

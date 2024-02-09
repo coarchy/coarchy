@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+    default-menu-title="Find" default-menu-index="60" menu-image="fa fa-search"
+    menu-image-type="icon"> 
+
+    <parameter name="pageIndex" from="pageIndex?:0"/>
+    <parameter name="pageSize"/>
+    <parameter name="orderByField" value="productName"/>
+
+    <always-actions>
+        <!-- <if condition="!activeOrgId">
+            <message type="info">Select an Organization before moving forward.</message>
+            <script>sri.sendRedirectAndStopRender('/settings/Organizations')</script>
+        </if> -->    
+    </always-actions>
+    
+    <transition name="goToProductEvaluation">
+        <default-response url="../EditProductEval" parameter-map="[productEvaluationId:productEvaluationId]"/>
+    </transition>
+
+    <widgets>     
+
+        <label text="Product Evaluations" type="h4"/>
+        <label text="showing evaluations for organization ${organizationName}. You can switch organizations from the organization picker." style="text-grey-9"/>
+        <form-list name="ProductEvalListForm" header-dialog="true" show-page-size="true" select-columns="true" saved-finds="true"
+                   show-csv-button="true" list="evalPartyAndEvalList">
+            <entity-find entity-name="coarchy.product.ProductEvaluationPartyAndEval" list="evalPartyAndEvalList" distinct="true">
+                <date-filter />
+                <econdition field-name="organizationId" from="activeOrgId" />
+                <econdition field-name="partyId" from="ec.user.userAccount.partyId" />
+                <econdition field-name="roleTypeId" value="VendorRepresentative" />
+                <econdition field-name="statusId" operator="not-in" value="PepPlanned,PepCancelled,PepRejected" />
+                <econdition field-name="evaluationStatusId" operator="in" value="PeAwaitingVendorResponse,PeCompleted" />
+            </entity-find>           
+            <row-actions>
+                <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
+            </row-actions>               
+            <field name="productEvaluationId">
+                <default-field title="Evaluation ID">
+                    <link url="../EditProductEval" link-type="anchor" text="${productEvaluationId}"/>
+                </default-field>
+            </field>
+            <field name="productName" from="productEvaluation?.productName">
+                <default-field><display /></default-field>
+            </field>     
+            <field name="organizationPartyId" from="productEvaluation?.organizationId">
+                <default-field title="Organization">
+                    <display-entity entity-name="mantle.party.PartyDetail" text="PartyNameOnlyTemplate"  />
+                </default-field>
+            </field>        
+            <field name="evaluationStatusId">
+                <conditional-field condition="evaluationStatusId=='PeAwaitingVendorResponse'">
+                    <display text="Awaiting Response"/>
+                </conditional-field>
+                <default-field title="Status">
+                    <display-entity entity-name="moqui.basic.StatusItem" />
+                </default-field>
+            </field>
+            <!-- <field name="statusId" >
+                <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem" /></default-field>
+            </field> -->
+            <field name="actions">
+                <default-field title="">                  
+                    <link url="goToProductEvaluation" text="View"  parameter-map="[productEvaluationId:productEvaluationId]" />
+                    <!-- <link url="rejectProductEvaluation" text="Reject" confirmation="Are you sure you want to reject this product evaluation?" btn-type="danger" tooltip="Reject Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeAwaitingVendorResponse'].contains(evaluationStatusId)"/> -->
+                </default-field>
+            </field>
+        </form-list>
+    </widgets>
+</screen>

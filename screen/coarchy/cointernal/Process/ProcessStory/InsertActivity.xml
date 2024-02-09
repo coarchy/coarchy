@@ -31,6 +31,8 @@ along with this software (see the LICENSE.md file). If not, see
         <if condition="insertType=='below'">
             <set field="pageIndex" from="downPageIndex"/>
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityMaxList" limit="1">
+                <date-filter />
+                <econdition field-name="replacedByActivityId" operator="is-null" />
                 <econdition field-name="sequenceNum" operator="greater" from="sequenceNum.toInteger()"/>
                 <select-field field-name="processStoryActivityId,sequenceNum"/>
                 <order-by field-name="sequenceNum"/></entity-find>
@@ -39,6 +41,8 @@ along with this software (see the LICENSE.md file). If not, see
         </if>
 
         <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+            <date-filter />
+            <econdition field-name="replacedByActivityId" operator="is-null" />
             <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
             <select-field field-name="processStoryActivityId,sequenceNum"/>
             <order-by field-name="-sequenceNum"/></entity-find>
@@ -46,7 +50,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
         </iterate>
         <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
-        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:activeOrgId]"/>
+        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, fromDate:ec.user.nowTimestamp, organizationId:activeOrgId]"/>
 
 <!--        <log level="warn" message="insertActivity context.toString() ${context.toString()}"/>-->
     </actions><default-response url=".." parameter-map="[pageIndex:pageIndex]"/><error-response type="none"/></transition>

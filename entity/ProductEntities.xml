@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+
+    <entity entity-name="ProductEvaluation" package="coarchy.product">
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="productId" type="id" />
+        <field name="organizationId" type="id" />
+        <field name="statusId" type="id" />
+        <field name="createdDate" type="date-time" default="ec.user.nowTimestamp"/>
+        <field name="requirementsSetDate" type="date-time" />
+
+        <relationship type="one" title="ProductEvaluation" related="moqui.basic.StatusItem"
+            short-alias="statusEnum" />
+        <relationship type="one" related="moqui.basic.StatusItem" short-alias="status" />
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId" />
+        </relationship>
+
+        <seed-data>
+            <moqui.basic.StatusType description="Product Evaluation"
+                statusTypeId="ProductEvaluation" />
+
+            <moqui.basic.StatusItem description="Requirements Selection" sequenceNum="1"
+                statusId="PeRequirementsSelection" statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Invite Vendors" sequenceNum="2"
+                statusId="PeInviteVendors" statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Awaiting Vendor Responses" sequenceNum="2"
+                statusId="PeAwaitingVendorResponse" statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Completed" sequenceNum="3" statusId="PeCompleted"
+                statusTypeId="ProductEvaluation" />
+            <moqui.basic.StatusItem description="Cancelled" sequenceNum="4" statusId="PeCancelled"
+                statusTypeId="ProductEvaluation" />
+
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeRequirementsSelection"
+                toStatusId="PeInviteVendors" transitionName="Finalize Requirements Selection" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeInviteVendors"
+                toStatusId="PeRequirementsSelection" transitionName="Modify Requirements" />
+
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeInviteVendors"
+                toStatusId="PeAwaitingVendorResponse" transitionName="Request Information" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeAwaitingVendorResponse"
+                toStatusId="PeCompleted" transitionName="Complete" />
+
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeRequirementsSelection"
+                toStatusId="PeCancelled" transitionName="Cancel" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PeInviteVendors"
+                toStatusId="PeCancelled" transitionName="Cancel" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeAwaitingVendorResponse"
+                toStatusId="PeCancelled" transitionName="Withdraw Request" />
+        </seed-data>
+    </entity>
+
+    <entity entity-name="ProductEvaluationStory" package="coarchy.product">
+        <description>
+            This entity represents the process stories included in a product evaluation.          
+        </description>
+
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="processStoryId" type="id" is-pk="true" />
+
+        <field name="organizationId" type="id" />
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation"
+            short-alias="productEvaluation" />
+        <relationship type="one" related="coarchy.ProcessStory" short-alias="processStory" />
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId" />
+        </relationship>
+    </entity>
+
+    <entity entity-name="ProductEvaluationActivity" package="coarchy.product">
+        <description>
+            This entity represents the activities included in a product evaluation.
+            Use the excludeFlag to exclude a specific activity from a process story.
+        </description>
+
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="processStoryId" type="id" is-pk="true" />
+        <field name="activityId" type="id" is-pk="true" />
+        <field name="excludeFlag" type="text-indicator" />
+
+        <field name="organizationId" type="id" />
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation"
+            short-alias="productEvaluation" />
+        <relationship type="one-nofk" related="coarchy.product.ProductEvaluationStory"
+            short-alias="evaluationStory">
+            <key-map field-name="productEvaluationId" />
+            <key-map field-name="processStoryId" />
+        </relationship>
+        <relationship type="one" related="coarchy.ProcessStory" short-alias="processStory" />
+        <relationship type="one" related="coarchy.Activity" short-alias="activity" />
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId" />
+        </relationship>
+    </entity>
+
+    <entity entity-name="ProductEvaluationStatement" package="coarchy.product">
+        <description>
+            This entity represents the value statements included in a product evaluation.
+        </description>
+
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="statementId" type="id" is-pk="true" />
+
+        <field name="organizationId" type="id" />
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation"
+            short-alias="productEvaluation" />
+        <relationship type="one" related="coarchy.ValueStatement" short-alias="statement">
+            <key-map field-name="statementId" related="valueStatementId" />
+        </relationship>
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId" />
+        </relationship>
+    </entity>
+
+    <entity entity-name="ProductEvaluationParty" package="coarchy.product">
+        <description>
+            This entity represents the parties (mainly vendors for now) assigned to this request.
+        </description>
+        <field name="productEvaluationId" type="id" is-pk="true" />
+        <field name="partyId" type="id" is-pk="true" />
+        <field name="roleTypeId" type="id" is-pk="true" />
+        <field name="fromDate" type="date-time" is-pk="true" />
+        <field name="thruDate" type="date-time" />
+        <field name="statusId" type="id" enable-audit-log="update" />
+
+        <field name="organizationId" type="id" />
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation"
+            short-alias="productEvalRequest" />
+        <relationship type="one" related="mantle.party.RoleType" short-alias="roleType">
+            <key-map field-name="roleTypeId" />
+        </relationship>
+
+        <relationship type="one" title="ProductEvaluationParty" related="moqui.basic.StatusItem" />
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId" />
+        </relationship>
+
+        <seed-data>
+            <moqui.basic.StatusType description="Product Evaluation Party"
+                statusTypeId="ProductEvaluationParty" />
+
+            <moqui.basic.StatusItem description="Planned" sequenceNum="1" statusId="PepPlanned"
+                statusTypeId="ProductEvaluationParty" />
+            <moqui.basic.StatusItem description="Invited" sequenceNum="2" statusId="PepInvited"
+                statusTypeId="ProductEvaluationParty" />
+            <moqui.basic.StatusItem description="Accepted" sequenceNum="3" statusId="PepAccepted"
+                statusTypeId="ProductEvaluationParty" />
+            <moqui.basic.StatusItem description="Rejected" sequenceNum="4" statusId="PepRejected"
+                statusTypeId="ProductEvaluationParty" />
+            <moqui.basic.StatusItem description="Withdrew" sequenceNum="5" statusId="PepWithdrew"
+                statusTypeId="ProductEvaluationParty" />
+
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepPlanned"
+                toStatusId="PepInvited" transitionName="Invite" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepInvited"
+                toStatusId="PepAccepted" transitionName="Accept" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepInvited"
+                toStatusId="PepAccepted" transitionName="Accept" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepInvited"
+                toStatusId="PepRejected" transitionName="Reject" />
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepInvited"
+                toStatusId="PepWithdrew" transitionName="Withdraw Invitation" />
+
+            <!-- should be removed once the accept/reject flow is implemented -->
+            <moqui.basic.StatusFlowTransition statusFlowId="Default" statusId="PepPlanned"
+                toStatusId="PepAccepted" transitionName="Fast Accept" />
+        </seed-data>
+    </entity>
+
+    <entity entity-name="ProductEvaluationResponse" package="coarchy.product">
+        <description>
+            This entity represents the response of each party to a certain activity / statement, in a product evaluation.
+        </description>
+
+        <field name="productEvaluationResponseId" type="id" is-pk="true" />
+        <field name="productEvaluationId" type="id" />
+        <field name="statementId" type="id" />
+        <field name="activityId" type="id" />
+        <field name="evaluationByEnumId" type="id" />
+        <field name="implementationStatusEnumId" type="id" />
+        <field name="rating" type="number-integer" />
+        <field name="comments" type="text-long" />
+        <field name="lastEditedByUserId" type="id" enable-audit-log="update" />
+
+        <field name="organizationId" type="id" />
+
+        <relationship type="one" related="coarchy.product.ProductEvaluation" />
+        <relationship type="one" related="coarchy.Activity">
+            <key-map field-name="activityId" />
+        </relationship>
+        <relationship type="one" related="coarchy.ValueStatement">
+            <key-map field-name="statementId" related="valueStatementId" />
+        </relationship>
+
+        <relationship type="one" title="EvaluationBy" related="moqui.basic.Enumeration"
+            short-alias="evaluationByEnum">
+            <key-map field-name="evaluationByEnumId" related="enumId" />
+        </relationship>
+
+        <relationship type="one" title="ImplementationStatus" related="moqui.basic.Enumeration"
+            short-alias="implementationStatusEnum">
+            <key-map field-name="implementationStatusEnumId" related="enumId" />
+        </relationship>
+
+        <relationship type="one" related="mantle.party.Organization" short-alias="organization">
+            <key-map field-name="organizationId" related="partyId" />
+        </relationship>
+
+        <seed-data>
+            <moqui.basic.EnumerationType description="Evaluation By"
+                enumTypeId="EvaluationBy" />
+            <moqui.basic.EnumerationType description="Implementation Status"
+                enumTypeId="ImplementationStatus" />
+
+            <moqui.basic.Enumeration description="Vendor" sequenceNum="1"
+                enumTypeId="EvaluationBy" enumId="EbVendor" />
+            <moqui.basic.Enumeration description="Internal" sequenceNum="2"
+                enumTypeId="EvaluationBy" enumId="EbInternal" />
+
+            <moqui.basic.Enumeration description="Full Gap" sequenceNum="1"
+                enumTypeId="ImplementationStatus" enumId="IsFullGap" />
+            <moqui.basic.Enumeration description="Partial Overlap" sequenceNum="2"
+                enumTypeId="ImplementationStatus" enumId="IsPartialOverlap" />
+            <moqui.basic.Enumeration description="Full Overlap" sequenceNum="3"
+                enumTypeId="ImplementationStatus" enumId="IsFullOverlap" />
+        </seed-data>
+    </entity>
+
+
+    <view-entity entity-name="ProductEvaluationAndProduct" package="coarchy.product">
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation" />
+        <member-entity entity-alias="PR" entity-name="mantle.product.Product" join-from-alias="PE">
+            <key-map field-name="productId" />
+        </member-entity>
+
+        <alias-all entity-alias="PE" />
+        <alias name="productName" entity-alias="PR" />
+    </view-entity>
+
+    <view-entity entity-name="ProductEvaluationStoryDetail" package="coarchy.product">
+        <member-entity entity-alias="PES" entity-name="coarchy.product.ProductEvaluationStory" />
+        <member-entity entity-alias="PS" entity-name="coarchy.ProcessStory" join-from-alias="PES">
+            <key-map field-name="processStoryId" />
+        </member-entity>
+
+        <alias-all entity-alias="PES" />
+        <alias-all entity-alias="PS">
+            <exclude field="organizationId" />
+        </alias-all>
+
+        <alias name="storyOrganizationId" field="organizationId" entity-alias="PS" />
+    </view-entity>
+
+    <view-entity entity-name="ProductEvaluationActivityAndDetail" package="coarchy.product">
+        <member-entity entity-alias="PEA" entity-name="coarchy.product.ProductEvaluationActivity" />
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation"
+            join-from-alias="PEA">
+            <key-map field-name="productEvaluationId" />
+        </member-entity>
+
+        <alias-all entity-alias="PEA" />
+        <alias-all entity-alias="PE">
+            <exclude field="organizationId" />
+        </alias-all>
+        <alias name="evaluationOrganizationId" field="organizationId" entity-alias="PE" />    
+    </view-entity>
+
+    <view-entity entity-name="ProductEvaluationStatementAndDetail" package="coarchy.product">
+        <member-entity entity-alias="PES" entity-name="coarchy.product.ProductEvaluationStatement" />
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation"
+            join-from-alias="PES">
+            <key-map field-name="productEvaluationId" />
+        </member-entity>
+
+        <alias-all entity-alias="PES" />
+        <alias-all entity-alias="PE">
+            <exclude field="organizationId" />
+        </alias-all>
+        <alias name="evaluationOrganizationId" field="organizationId" entity-alias="PE" />
+    </view-entity>
+
+    <view-entity entity-name="ProductEvaluationPartyAndEval" package="coarchy.product">
+        <member-entity entity-alias="PEP" entity-name="coarchy.product.ProductEvaluationParty" />
+        <member-entity entity-alias="PE" entity-name="coarchy.product.ProductEvaluation"
+            join-from-alias="PEP">
+            <key-map field-name="productEvaluationId" />
+        </member-entity>
+
+        <alias-all entity-alias="PEP" />
+        <alias-all entity-alias="PE">
+            <exclude field="statusId" />
+            <exclude field="organizationId" />
+        </alias-all>
+        <alias name="evaluationOrganizationId" field="organizationId" entity-alias="PE" />
+        <alias name="evaluationStatusId" field="statusId" entity-alias="PE" />
+    </view-entity>
+</entities>

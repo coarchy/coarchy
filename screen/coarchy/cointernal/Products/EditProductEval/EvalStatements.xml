@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Statements" default-menu-index="10" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="false">
+
+    <parameter name="productEvaluationId" required="true"/>
+    <parameter name="typeEnumIds" />
+
+    <transition name="filterStatementType">
+        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,typeEnumIds:typeEnumIds]"/>
+    </transition>
+
+    <transition name="includeStatement">
+        <parameter name="productEvaluationId" required="true"/>
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
+        <actions>
+            <service-call name="coarchy.ProductEvaluationServices.include#ProductEvaluationStatement" in-map="[productEvaluationId:productEvaluationId,statementId:statementId,organizationId:activeOrgId]"/>
+        </actions>
+        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,typeEnumIds:typeEnumIds]"/>
+    </transition>
+
+    <transition name="excludeStatement">
+        <parameter name="productEvaluationId" required="true"/>
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
+        <actions>
+            <service-call name="coarchy.ProductEvaluationServices.exclude#ProductEvaluationStatement" in-map="[productEvaluationId:productEvaluationId,statementId:statementId,organizationId:activeOrgId]"/>
+        </actions>
+        <default-response url="." parameter-map="[productEvaluationId:productEvaluationId,typeEnumIds:typeEnumIds]"/>
+    </transition>
+
+    <actions>
+        <!-- find product eval -->
+        <entity-find-one entity-name="coarchy.product.ProductEvaluationAndProduct" value-field="productEvaluation"/>
+        <set field="statusId" from="productEvaluation.statusId"/>
+
+        <!-- find inculded activities -->
+        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationStatements" in-map="[productEvaluationId:productEvaluationId]" out-map="productEvalStatements" />
+        <service-call name="coarchy.ProductEvaluationServices.get#ProductEvaluationResponseStats" in-map="[productEvaluationId:productEvaluationId]" out-map="context" />
+
+        <set field="canModifyStatements" from="statusId == 'PeRequirementsSelection'"/>
+        <set field="showReponseListButton" from="['PeAwaitingVendorResponse','PeCompleted','PeCancelled'].contains(statusId)"/>
+        <set field="showVendorRespondButton" from="isVendorView &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
+        <set field="showInternalRespondButton" from="!isVendorView &amp;&amp; (statusId == 'PeAwaitingVendorResponse')"/>
+    </actions>
+
+    <widgets>
+        <container-row >
+            <row-col sm="12">
+                <label text="Statements" style="text-bold" type="div"/>
+                <container type="div">
+                    <label text="By default, all statements in your organization will be evaluated by the vendors. You can choose to Include/Exclude them by clicking on the buttons below." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId=='PeRequirementsSelection')"/>
+                    <label text="The following statements will be evaluated by vendors." style="text-caption text-grey-8" condition="!isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />
+                    <label text="Evaluate the following statements." style="text-caption text-grey-8" condition="isVendorView &amp;&amp; (statusId!='PeRequirementsSelection')" />                        
+                </container>
+            </row-col>
+        </container-row>
+        <container-row style="overflow-hidden">
+            <row-col sm="12">
+                <form-single name="FilterStatementType" transition="filterStatementType">
+                    <field name="productEvaluationId">
+                        <default-field>
+                            <hidden />
+                        </default-field>
+                    </field>
+                    <field name="typeEnumIds">
+                        <default-field title="Filter By Statement Type">
+                            <drop-down allow-empty="true" allow-multiple="true">
+                                <entity-options>
+                                    <entity-find entity-name="moqui.basic.Enumeration">
+                                        <econdition field-name="enumTypeId" value="ValueType" />
+                                    </entity-find>
+                                </entity-options>
+                            </drop-down>
+                        </default-field>
+                    </field>
+                    <field name="submit">
+                        <default-field title="Filter">
+                            <submit></submit>
+                        </default-field>
+                    </field>
+                    <field-layout>
+                        <field-col-row>
+                            <field-col xs="10">
+                                <field-ref name="typeEnumIds" />
+                            </field-col>
+                            <field-col xs="2">
+                                <field-ref name="submit" />
+                            </field-col>
+                        </field-col-row>
+                    </field-layout>
+                </form-single>
+            </row-col>
+        </container-row>
+        <container-row style="overflow-hidden">
+            <row-col sm="12">
+                <form-list name="EvalStatementsList" list="allValueStatementList">
+                    <entity-find entity-name="coarchy.ValueStatement" list="allValueStatementList">
+                        <search-form-inputs default-order-by="typeEnumId" />
+                        <econditions combine="or">
+                            <econdition field-name="valueStatementId" operator="in" from="productEvalStatements.valueStatementIds" />
+                            <econditions combine="and">
+                                <econdition field-name="replacedByValueStatementId" operator="is-null" />
+                                <econdition field-name="disabled" value="N" or-null="true" />
+                            </econditions>
+                        </econditions>
+                        <econdition field-name="typeEnumId" operator="in" from="typeEnumIds" ignore-if-empty="true" />
+                        <econdition field-name="organizationId" operator="in" from="productEvaluation.organizationId" />
+                        <econdition field-name="valueStatementId" operator="in" from="productEvalStatements.valueStatementIds" ignore="canModifyStatements" />
+                    </entity-find>
+                    <row-actions>
+                        <set field="isStatementIncluded" from="productEvalStatements.valueStatementIds.contains(valueStatementId)"/>
+                        <set field="responseCount" from="vendorResponseByStatement[valueStatementId]"/>
+                        <set field="internalResponseCount" from="internalResponseByStatement[valueStatementId]"/>
+                        <set field="vendorResponseComplete" from="responseCount &gt; 0"/>
+                        <set field="internalResponseComplete" from="internalResponseCount &gt; 0"/>
+                    </row-actions>
+                    <field name="toggleInclusion">
+                        <conditional-field condition="canModifyStatements &amp;&amp; isStatementIncluded" title="">
+                            <link url="excludeStatement" text="Included" btn-type="success" condition="isStatementIncluded" icon="fa fa-check" style="text-caption" parameter-map="[productEvaluationId:productEvaluationId, statementId:valueStatementId, typeEnumIds:typeEnumIds]"/>
+                        </conditional-field>
+                        <conditional-field condition="canModifyStatements &amp;&amp; !isStatementIncluded" title="">
+                            <link url="includeStatement" text="Excluded" btn-type="danger" condition="!isStatementIncluded" icon="fa fa-close" style="text-caption" parameter-map="[productEvaluationId:productEvaluationId, statementId:valueStatementId, typeEnumIds:typeEnumIds]"/>
+                        </conditional-field>
+                        <default-field title="">
+                            <hidden/>
+                        </default-field>
+                    </field>
+                    <field name="valueStatementId">
+                        <default-field >
+                            <hidden/>
+                        </default-field>
+                    </field>
+                    <field name="productEvaluationId" from="productEvaluationId">
+                        <default-field>
+                            <hidden />
+                        </default-field>
+                    </field>
+                    <field name="value">
+                        <conditional-field title="Statement" condition="isStatementIncluded">
+                            <render-mode >
+                                <text>${value}</text>
+                            </render-mode>
+                        </conditional-field>
+                        <conditional-field title="Statement" condition="!isStatementIncluded">
+                            <render-mode >
+                                <text><![CDATA[<s class="text-grey-8">${value}</s>]]></text>
+                            </render-mode>
+                        </conditional-field>
+                    </field>
+                    <field name="typeEnumId">
+                        <default-field title="Type">
+                            <display-entity entity-name="moqui.basic.Enumeration"/>
+                        </default-field>
+                    </field>                   
+                    <field name="actions">  
+                        <conditional-field condition="isVendorView" title="">
+                            <dynamic-dialog id="StatementResponseDialog" title="Evaluate Statement" button-text="${vendorResponseComplete?'Update':'Evaluate'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId,typeEnumIds:typeEnumIds]" button-style="text-caption" type="${vendorResponseComplete?'success':'danger'}" condition="showVendorRespondButton"/>
+                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showReponseListButton"/>
+                        </conditional-field> 
+                        <conditional-field condition="!isVendorView" title="">
+                            <dynamic-dialog id="StatementResponseDialog" title="Add Internal Evaluation on Statement" button-text="${internalResponseComplete?'Update Internal':'Internal Evaluation'}" transition="../EvalResponse" parameter-map="[valueStatementId:valueStatementId,typeEnumIds:typeEnumIds]" button-style="text-caption" type="${internalResponseComplete?'success':'danger'}" condition="showInternalRespondButton"/>
+                            <dynamic-dialog id="StatementResponseListDialog" title="Statement Evaluations" button-text="View (${responseCount+internalResponseCount})" transition="../EvalList" parameter-map="[valueStatementId:valueStatementId]" button-style="text-caption" condition="showReponseListButton"/>
+                        </conditional-field>                 
+                        <default-field title="">
+                            <hidden />
+                        </default-field>
+                    </field>
+                </form-list>
+            </row-col>
+        </container-row>
+    </widgets>
+</screen>
