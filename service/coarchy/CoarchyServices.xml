@@ -493,6 +493,18 @@ along with this software (see the LICENSE.md file). If not, see
                                 </else-if>                           
                             </if>
                         </iterate>
+                        <else>
+                            <!-- if we're not copying responses, reset status to PeInviteVendors -->
+                            <iterate list="productEvaluationIdMap?.values()" entry="productEvaluationId">
+                                <entity-find-one entity-name="coarchy.product.ProductEvaluation" value-field="productEval" for-update="true">
+                                    <field-map field-name="productEvaluationId" from="productEvaluationId" />
+                                    <select-field field-name="statusId" />
+                                </entity-find-one>
+                                <if condition="!['PeRequirementsSelection','PeInviteVendors'].contains(productEval.statusId)">
+                                    <service-call name="update#coarchy.product.ProductEvaluation" in-map="[productEvaluationId:productEvaluationId, statusId:'PeInviteVendors']" />
+                                </if>
+                            </iterate>
+                        </else>
                     </if>
 
                     <!-- handle ProductEvaluationVendors -->
