@@ -9,5 +9,5 @@ For the following elements, you get granular control over whether they should be
 Please note that Copying/moving product evaluations require you to copy/move products. For a high-level overview of the logical flow of the cloning process, please review the diagram below:
 
 <p align="center">
-  <img src="https://coarchy.com/costatic/media/OrgCloneProductEval_2.png" />
+  <img src="/costatic/media/OrgCloneProductEval_2.png" />
 </p>
