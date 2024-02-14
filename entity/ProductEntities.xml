@@ -58,6 +58,11 @@ along with this software (see the LICENSE.md file). If not, see
             <moqui.basic.StatusFlowTransition statusFlowId="Default"
                 statusId="PeAwaitingVendorResponse"
                 toStatusId="PeCompleted" transitionName="Complete" />
+            
+            <!-- Reopen -->
+            <moqui.basic.StatusFlowTransition statusFlowId="Default"
+                statusId="PeCompleted"
+                toStatusId="PeInviteVendors" transitionName="Re-open" />
 
             <moqui.basic.StatusFlowTransition statusFlowId="Default"
                 statusId="PeRequirementsSelection"

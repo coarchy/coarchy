@@ -118,6 +118,14 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response url="." />
     </transition>
 
+    <transition name="reopenProductEvaluation">
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
+        <service-call name="coarchy.ProductEvaluationServices.uncomplete#ProductEvaluation" in-map="[productEvaluationId:productEvaluationId]"/>
+        <default-response url="." />
+    </transition>
+
     <subscreens default-item="EvalStatements">
         <subscreens-item name="EvalStatements" menu-include="true" menu-index="10" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval/EvalStatements.xml"/>
         <subscreens-item name="EvalProcessStories" menu-include="true" menu-index="20" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval/EvalProcessStories.xml"/>

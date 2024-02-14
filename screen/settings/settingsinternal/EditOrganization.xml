@@ -160,20 +160,54 @@ along with this software (see the LICENSE.md file). If not, see
                     <field name="organizationId"><default-field><hidden/></default-field></field>
                     <field name="organizationName" from="null"><default-field title="New Organization Name"><text-line/></default-field></field>
                     <field name="copyChecklists">
-                        <default-field title="What do you want to do with your existing checklists?">
+                        <default-field title="Clone Checklists?">
                             <radio no-current-selected-key="none">
                                 <option key="none" text="Do nothing" />
-                                <option key="copy" text="Copy to new values" />
-                                <option key="move" text="Move to new organization" />
+                                <option key="copy" text="Copy checklists" />
+                                <option key="move" text="Move checklists" />
                             </radio>
                         </default-field>
                     </field>
                     <field name="copyUsers">
-                        <default-field title="Do you want to do with your existing users?">
+                        <default-field title="Clone Users?">
                             <radio no-current-selected-key="none">
                                 <option key="none" text="Do nothing" />
-                                <option key="copy" text="Copy to new values" />
-                                <option key="move" text="Move to new organization" />
+                                <option key="copy" text="Copy users" />
+                                <option key="move" text="Move users" />
+                            </radio>
+                        </default-field>
+                    </field>
+                    <field name="copyProducts">
+                        <default-field title="Clone Products?">
+                            <radio no-current-selected-key="none">
+                                <option key="none" text="Do nothing" />
+                                <option key="copy" text="Copy products" />
+                                <option key="move" text="Move products" />
+                            </radio>
+                        </default-field>
+                    </field>
+                    <field name="copyEvaluations">
+                        <default-field title="Clone Product Evaluations?">
+                            <radio no-current-selected-key="none">
+                                <option key="none" text="Do nothing" />
+                                <option key="copy" text="Copy evaluations" />
+                                <option key="move" text="Move evaluations" />
+                            </radio>
+                        </default-field>
+                    </field>
+                    <field name="copyEvaluationResponses">
+                        <default-field title="Clone Evaluation Responses?">
+                            <radio no-current-selected-key="false">
+                                <option key="false" text="Do not copy responses" />
+                                <option key="true" text="Copy responses" />
+                            </radio>
+                        </default-field>
+                    </field>
+                    <field name="copyEvaluationVendors">
+                        <default-field title="Clone Vendor Representatives?">
+                            <radio no-current-selected-key="false">
+                                <option key="false" text="Do not copy vendor reps" />
+                                <option key="true" text="Copy vendor reps" />
                             </radio>
                         </default-field>
                     </field>

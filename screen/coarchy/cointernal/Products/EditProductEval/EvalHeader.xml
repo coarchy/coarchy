@@ -55,6 +55,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     
                                     <link url="cancelProductEvaluation" text="Cancel Evaluation" confirmation="Are you sure you want to cancel this product evaluation?" btn-type="danger" tooltip="Cancel Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="['PeRequirementsSelection','PeInviteVendors'].contains(statusId)"/>
                                 
+                                    <link url="reopenProductEvaluation" text="Re-open Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="statusId=='PeCompleted'"/>
                                     <section name="CompleteSection" condition="['PeAwaitingVendorResponse'].contains(statusId)">
                                         <widgets>
                                             <link url="completeProductEvaluation" text="Complete Evaluation" confirmation="Are you sure you want to complete this product evaluation?" btn-type="success" tooltip="Complete Product Evaluation" parameter-map="[productEvaluationId:productEvaluationId]" condition="!hasWarnings"/>
