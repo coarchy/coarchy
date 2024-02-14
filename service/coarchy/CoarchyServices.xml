@@ -390,18 +390,23 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-find entity-name="coarchy.product.ProductEvaluation" list="productEvaluationList">
                         <econdition field-name="organizationId" from="oldOrganization.partyId"/>
                     </entity-find>
-                   
                     <iterate list="productEvaluationList" entry="productEvaluation">
+                        <if condition="!['PeRequirementsSelection','PeInviteVendors'].contains(productEvaluation.statusId)">
+                            <set field="targetStatusId" value="PeInviteVendors" />
+                            <else>
+                                <set field="targetStatusId" from="productEvaluation.statusId" />
+                            </else>
+                        </if>
                         <if condition="copyEvaluations == 'copy'">
                             <then>
                                 <!-- create a new copy of each product evaluation -->
-                                <service-call name="create#coarchy.product.ProductEvaluation" in-map="productEvaluation + [productEvaluationId:null, organizationId:newOrganization.partyId, productId:productIdMap[productEvaluation.productId]]" out-map="productEvaluationContext"/>
+                                <service-call name="create#coarchy.product.ProductEvaluation" in-map="productEvaluation + [productEvaluationId:null, organizationId:newOrganization.partyId, productId:productIdMap[productEvaluation.productId], statusId:targetStatusId]" out-map="productEvaluationContext"/>
                                 <script>productEvaluationIdMap.put(productEvaluation.productEvaluationId,productEvaluationContext.productEvaluationId)</script>                                
                             </then>
                             <else-if condition="copyEvaluations == 'move'">
                                 <!-- move product evaluation by changing organizationId to new org -->
                                 <service-call name="update#coarchy.product.ProductEvaluation" 
-                                    in-map="[productEvaluationId:productEvaluation.productEvaluationId, organizationId:newOrganization.partyId, productId:productIdMap[productEvaluation.productId]]" 
+                                    in-map="[productEvaluationId:productEvaluation.productEvaluationId, organizationId:newOrganization.partyId, productId:productIdMap[productEvaluation.productId], statusId:targetStatusId]" 
                                     out-map="productEvaluationContext"/>
                                 <script>productEvaluationIdMap.put(productEvaluation.productEvaluationId,productEvaluation.productEvaluationId)</script>
                             </else-if>                           
@@ -479,32 +484,18 @@ along with this software (see the LICENSE.md file). If not, see
 
                         <iterate list="productEvaluationResponseList" entry="productEvaluationResponse">
                             <!-- null out last updated by user if we're not copying/moving vendors over -->
-                            <set field="lastEditedByUserId" from="productEvaluationResponse.lastEditedByUserId"/>
-                            <set field="lastEditedByUserId" from="productEvaluationResponse.evaluationByEnumId == 'EbInternal'?lastEditedByUserId:copyEvaluationVendors?lastEditedByUserId:null"/>
                             <if condition="copyEvaluations == 'copy'">
                                 <then>
                                     <!-- create a new copy of each product evaluation response-->
-                                    <service-call name="create#coarchy.product.ProductEvaluationResponse" in-map="productEvaluationResponse + [productEvaluationResponseId:null, productEvaluationId:productEvaluationIdMap[productEvaluationResponse.productEvaluationId], activityId:productEvaluationResponse.activityId?activityIdMap[productEvaluationResponse.activityId]:null, statementId:productEvaluationResponse.statementId?valueStatementIdMap[productEvaluationResponse.statementId]:null, lastEditedByUserId:lastEditedByUserId, organizationId:newOrganization.partyId]" out-map="productEvaluationResponseContext"/>
+                                    <service-call name="create#coarchy.product.ProductEvaluationResponse" in-map="productEvaluationResponse + [productEvaluationResponseId:null, productEvaluationId:productEvaluationIdMap[productEvaluationResponse.productEvaluationId], activityId:productEvaluationResponse.activityId?activityIdMap[productEvaluationResponse.activityId]:null, statementId:productEvaluationResponse.statementId?valueStatementIdMap[productEvaluationResponse.statementId]:null, organizationId:newOrganization.partyId]" out-map="productEvaluationResponseContext"/>
                                 </then>
                                 <else-if condition="copyEvaluations == 'move'">
                                     <!-- move product response response by updating organizationId & activity/statment Ids-->                           
                                     <service-call name="update#coarchy.product.ProductEvaluationResponse" 
-                                        in-map="[productEvaluationResponseId:productEvaluationResponse.productEvaluationResponseId, productEvaluationId:productEvaluationIdMap[productEvaluationResponse.productEvaluationId],activityId:productEvaluationResponse.activityId?activityIdMap[productEvaluationResponse.activityId]:null, statementId:productEvaluationResponse.statementId?valueStatementIdMap[productEvaluationResponse.statementId]:null, lastEditedByUserId:lastEditedByUserId, organizationId:newOrganization.partyId]"/>                                
+                                        in-map="[productEvaluationResponseId:productEvaluationResponse.productEvaluationResponseId, productEvaluationId:productEvaluationIdMap[productEvaluationResponse.productEvaluationId],activityId:productEvaluationResponse.activityId?activityIdMap[productEvaluationResponse.activityId]:null, statementId:productEvaluationResponse.statementId?valueStatementIdMap[productEvaluationResponse.statementId]:null, organizationId:newOrganization.partyId]"/>                                
                                 </else-if>                           
                             </if>
                         </iterate>
-                        <else>
-                            <!-- if we're not copying responses, reset status to PeInviteVendors -->
-                            <iterate list="productEvaluationIdMap?.values()" entry="productEvaluationId">
-                                <entity-find-one entity-name="coarchy.product.ProductEvaluation" value-field="productEval" for-update="true">
-                                    <field-map field-name="productEvaluationId" from="productEvaluationId" />
-                                    <select-field field-name="statusId" />
-                                </entity-find-one>
-                                <if condition="!['PeRequirementsSelection','PeInviteVendors'].contains(productEval.statusId)">
-                                    <service-call name="update#coarchy.product.ProductEvaluation" in-map="[productEvaluationId:productEvaluationId, statusId:'PeInviteVendors']" />
-                                </if>
-                            </iterate>
-                        </else>
                     </if>
 
                     <!-- handle ProductEvaluationVendors -->
