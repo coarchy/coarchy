@@ -45,6 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
     <transition-include name="inviteVendor" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
+    <transition-include name="reopenProductEvaluation" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
     <transition-include name="finalizeActivitySelection" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
     <transition-include name="finalizeVendorInvitations" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
     <transition-include name="reopenActivitySelection" location="component://coarchy/screen/coarchy/cointernal/Products/EditProductEval.xml"/>
