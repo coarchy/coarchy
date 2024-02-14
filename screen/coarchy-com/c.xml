@@ -15,12 +15,42 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         require-authentication="false" standalone="true" allow-extra-path="true">
 
+    <transition name="robots.txt" read-only="true">
+        <!-- TODO: get fancier with this, crawl screen tree looking for screens that don't require authc, maybe some sort of setting to allow robots or not -->
+        <!-- TODO: also generate sitemap XML with paths we want crawled, based on ? -->
+        <actions><script><![CDATA[
+            List disallowList = ['settings','coapp','apps', 'vapps', 'qapps', 'rest', 'rpc', 'status', 'menuData']
+            def outWriter = new StringWriter()
+            outWriter.append("user-agent: *\n")
+            for (disPath in disallowList) outWriter.append("disallow: /${disPath}\n")
+            outWriter.append("\nSiteMap: /sitemap.xml\n")
+            ec.web.sendTextResponse(outWriter.toString())
+            ]]></script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <transition name="sitemap.xml" read-only="true" require-session-token="false">
+        <service-call name="coarchy.CoarchyServices.generate#Sitemap" out-map="context"/>
+        <actions><script><![CDATA[
+                ec.web.sendTextResponse(sitemapXml)
+            ]]></script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
     <subscreens default-item="Home" always-use-full-path="true"/>
 
     <pre-actions>
-        <set field="html_keywords" value="coarchy"/>
-        <set field="html_title" value="Coarchy"/>
-        <set field="html_description" value="Coarchy helps entrepreneurs rewrite their business"/>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
+
+        <set field="html_keywords" value="coarchy software organization"/>
+        <set field="html_title" value="Coarchy: YOUR Software for YOUR Organization (and more)"/>
+        <set field="html_description" value="Explore Coarchy.com for organizational design through process stories, streamlining team roles and collaboration for improved team collaboration."/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_type" value="website"/>
+        <set field="html_site_name" value="Coarchy"/>
 
         <script><![CDATA[
         // if user not logged in save current path and params then redirect to Login

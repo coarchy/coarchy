@@ -1,0 +1,1 @@
+<#list blogList as blog><#if !blog.blogUrl?has_content><a href="${blog.blogUrl!}"></a></#if></#list>

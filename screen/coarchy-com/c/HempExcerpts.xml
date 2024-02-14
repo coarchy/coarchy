@@ -14,12 +14,18 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         require-authentication="false">
-    <pre-actions>
+    <always-actions>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
+
         <set field="head_keywords" value="coarchy hemp"/>
-        <set field="head_title" value="Coarchy HEMP Excerpts"/>
-        <set field="head_description" value="Coarchy HEMP Excerpts"/>
-        <!-- <set field="menu_active" value="home"/> -->
-    </pre-actions>
+        <set field="head_title" value="Coarchy HEMP Excerpts: An agile approach to analysis and design"/>
+        <set field="head_description" value="HEMP Excerpts detail agile analysis/design for software, focusing on distinguishing business requirements from system designs."/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_url" from="baseLinkUrl+'/HempExcerpts'"/>
+        <set field="html_type" value="article"/>
+        <set field="html_site_name" value="Coarchy"/>
+    </always-actions>
 
     <widgets>
         <text location="component://coarchy/screen/coarchy-com/c/HempExcerpts.html"/>

@@ -15,6 +15,19 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         require-authentication="false" allow-extra-path="true">
 
+    <pre-actions>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
+
+        <set field="html_keywords" value="coarchy software organization"/>
+        <set field="html_title" value="Coarchy: YOUR Software for YOUR Organization (and more)"/>
+        <set field="html_description" value="Explore Coarchy.com for organizational design through process stories, streamlining team roles and collaboration for improved team collaboration."/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_url" from="baseLinkUrl+'/'"/>
+        <set field="html_type" value="website"/>
+        <set field="html_site_name" value="Coarchy"/>
+    </pre-actions>
+
     <widgets>
         <render-mode>
             <text type="html"><![CDATA[
@@ -23,8 +36,8 @@ along with this software (see the LICENSE.md file). If not, see
                         <q-parallax src="/cstatic/background.jpg" :height="500"/>
 
                         <q-card-section class="text-center q-pa-md shadow-10" data-aos="fade-in" data-aos-easing="ease-in-out-cubic" style="background: rgba(100,100,100,.75)">
-                            <div class="text-h1 text-white">Coarchy</div>
-                            <div class="text-h2 text-white q-mt-md">Design Your Organization</div>
+                            <h1 class="text-h1 text-white">Coarchy</h1>
+                            <div class="text-h2 text-white q-mt-md">YOUR Software for YOUR Organization</div>
                             <q-btn no-caps href="/SignUp" label="Sign Up" push color="primary" class="q-mt-lg" size="xl"/>
                         </q-card-section>
                     </q-card>
@@ -63,7 +76,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 <q-card-section class="q-mt-md" style="max-width:300px">
                                     <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Write Your Process Stories</div>
                                     <ul>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Create activities and actors to write a process story</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Create activities and actors to <a href="https://coarchy.com/Article?wikiBlogId=100102">write a process story</a></li>
                                         <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Search for text or actors to find what you need</li>
                                         <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Attach substories for managing large process stories</li>
                                     </ul></q-card-section>
@@ -75,7 +88,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 <q-card-section class="q-mt-md" style="max-width:300px">
                                     <div class="text-h4" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Write Your Process Stories</div>
                                     <ul>
-                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Create activities and actors to write a process story</li>
+                                        <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Create activities and actors to <a href="https://coarchy.com/Article?wikiBlogId=100102">write a process story</a></li>
                                         <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Search for text or actors to find what you need</li>
                                         <li class="q-mt-sm" data-aos="fade-in" data-aos-easing="ease-in-out-cubic">Attach substories for managing large process stories</li>
                                     </ul></q-card-section>
@@ -116,7 +129,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <q-card-section>The core principle of Coarchy is <strong>design</strong> based on <strong>requirements</strong>.</q-card-section>
                         </q-card>
                         <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
-                            <q-card-section>The <i>requirements</i> for an organization are its <strong>origin, vision, and values</q-card-section>
+                            <q-card-section>The <i>requirements</i> for an organization are its <strong>origin, vision, and <a href="https://www.jimcollins.com/media_topics/ItReallyMatters.html">values</a></strong></q-card-section>
                         </q-card>
                         <q-card dark bordered class="text-h4 bg-grey-9 q-mt-xl q-mb-xl" style="max-width:600px;">
                             <q-card-section>The <i>design</i> based on these are <strong>process stories</strong> with <u>activities</u> that organize roles and responsibilities.</q-card-section>
@@ -146,10 +159,9 @@ along with this software (see the LICENSE.md file). If not, see
                                 some excerpts from the book are available here.</q-card-section>
                             <q-separator class="q-mt-md" dark inset data-aos="fade-in" data-aos-easing="ease-in-out-cubic"></q-separator>
                             <q-card-section class="q-mt-md q-mb-md" data-aos="fade-in" data-aos-easing="ease-in-out-cubic" align="center">
-                                <q-btn no-caps href="/HempExcerpts" push color="primary" size="xl">HEMP Excerpts</q-btn></q-card-section>
+                                <q-btn no-caps href="/HempExcerpts" push color="primary" size="xl"><a href="/HempExcerpts"></a>HEMP Excerpts</q-btn></q-card-section>
                         </q-card>
                     </section>
-
 
                 </div>
                 ]]></text>

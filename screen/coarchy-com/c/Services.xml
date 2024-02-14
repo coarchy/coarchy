@@ -13,9 +13,20 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        require-authentication="false" allow-extra-path="true" default-menu-title="2 Hour Training - Coarchy">
+        require-authentication="false" allow-extra-path="true" default-menu-title="Coarchy Services">
 
+    <pre-actions>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
 
+        <set field="head_keywords" value="coarchy services"/>
+        <set field="head_title" value="Coarchy Services: Checkout all of our service offerings"/>
+        <set field="head_description" value="Coarchy offers training, personalized coaching, monthly support contracts, and business analyst consulting to guide development in documenting your organization"/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_url" from="baseLinkUrl+'/Newsletter'"/>
+        <set field="html_type" value="website"/>
+        <set field="html_site_name" value="Coarchy"/>
+    </pre-actions>
 
     <widgets>
         <render-mode>
@@ -24,6 +35,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2 col-sm-10 offset-sm-1 col-xs-12 offset-xs-0">
                         <div class="column justify-center">
                             <div class="col-4">
+                                <h1 class="text-h2">Coarchy Services</h1>
 
                                 <q-card flat bordered class="q-mb-md">
                                     <q-card-section>
