@@ -98,6 +98,13 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- Screen Documentation -->
     <moqui.screen.ScreenDocument screenLocation="component://coarchy/screen/settings/settingsinternal/Organizations.xml"
                                  docIndex="100" docLocation="component://coarchy/document/Organizations.md"/>
+    <moqui.screen.ScreenDocument screenLocation="component://coarchy/screen/settings/settingsinternal/Organizations.xml"
+                                 docIndex="110" docLocation="component://coarchy/document/Clone Organization.md"/>
+    <!-- The EditOrganization.xml screen requires an organizationId to be passed in. When rendering the Clone Organization the organizationId is null (doesn't get passed through)
+        and the always-actions returns an unauthorized access error. All this results in the .md file not getting rendered. Therefore commented out for the time being.    
+    -->
+    <!-- <moqui.screen.ScreenDocument screenLocation="component://coarchy/screen/settings/settingsinternal/EditOrganization.xml"
+                                 docIndex="110" docLocation="component://coarchy/document/Clone Organization.md"/> -->
     <moqui.screen.ScreenDocument screenLocation="component://coarchy/screen/coarchy/cointernal/Process/FindProcessStory.xml"
                                  docIndex="100" docLocation="component://coarchy/document/Coarchy App.md"/>
 
