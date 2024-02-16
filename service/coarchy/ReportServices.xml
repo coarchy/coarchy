@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="prepare" noun="EvaluationStatementReport">
+        <in-parameters>
+            <parameter name="organizationId" required="true" />
+            <parameter name="filterProductIds" type="List" />
+            <parameter name="filterProductEvaluationIds" type="List" />
+            <parameter name="thruDate" type="Timestamp" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productIdSet" type="Set" />
+            <parameter name="outList" type="List">
+                <parameter name="entry" type="Map">
+                    <parameter name="productEvaluationId" type="String" />
+                    <parameter name="productEvaluationResponseId" type="String" />
+                    <parameter name="valueStatementId" type="String" />
+                    <parameter name="statementValue" type="String" />
+                    <parameter name="typeEnumId" type="String" />
+                    <parameter name="tags" type="List" />
+                    <parameter name="evaluationName" type="String" />
+                    <parameter name="productName" type="String" />
+                    <parameter name="evaluationByEnumId" type="String" />
+                    <parameter name="rating" type="String" />
+                    <parameter name="implementationStatusEnumId" type="String" />
+                    <parameter name="comments" type="String" />
+                </parameter>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <!-- find all completed product evaluations -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationAndProduct"
+                list="productEvaluationList">
+                <econdition field-name="organizationId" />
+                <econdition field-name="statusId" value="PeCompleted" />
+                <econdition field-name="productId" operator="in" from="filterProductIds"
+                    ignore-if-empty="true" />
+                <econdition field-name="productEvaluationId" operator="in"
+                    from="filterProductEvaluationIds" ignore-if-empty="true" />
+                <econdition field-name="completedDate" operator="less-equals" ignore-if-empty="true" />
+            </entity-find>
+
+            <set field="productEvaluationIds" from="productEvaluationList*.productEvaluationId" />
+            <set field="productIdSet" from="new TreeSet(productEvaluationList*.productId)" />
+
+            <!-- find all statements in the relevant evals -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationStatementDetail"
+                list="evalStatementList" distinct="true">
+                <econdition field-name="productEvaluationId" operator="in"
+                    from="productEvaluationIds" />
+                <econdition field-name="organizationId" />
+                <select-field field-name="organizationId,statementId,value,typeDescription" />
+                <order-by field-name="statementId" />
+            </entity-find>
+
+            <set field="statementIdSet" from="new TreeSet(evalStatementList*.statementId)" />
+
+            <!-- group by, statement -> evaluation -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
+                list="evaluationResponseList">
+                <econdition field-name="organizationId" />
+                <econdition field-name="productEvaluationId" operator="in"
+                    from="productEvaluationIds" />
+                <econdition field-name="statementId" operator="in" from="statementIdSet" />
+                <order-by field-name="evaluationByEnumId" />
+            </entity-find>
+
+            <set field="outList" from="[]" />
+            <iterate list="evalStatementList" entry="evalStatement">
+                <set field="statementId" from="evalStatement.statementId" />
+
+                <!-- find statement tags -->
+                <entity-find entity-name="coarchy.ValueStatementTagDetail"
+                    list="valueStatementTagList">
+                    <date-filter />
+                    <econdition field-name="valueStatementId" from="statementId" />
+                </entity-find>
+
+                <!-- filter responses by statement -->
+                <filter-map-list list="evaluationResponseList" to-list="statementResponseList">
+                    <field-map field-name="statementId" from="statementId" />
+                </filter-map-list>
+                <order-map-list list="statementResponseList">
+                    <order-by field-name="productEvaluationId,evaluationByEnumId" />
+                </order-map-list>
+
+                <if condition="!statementResponseList">
+                    <script>
+                        <![CDATA[ 
+                            outList.add([
+                                productEvaluationId: null, 
+                                productEvaluationResponseId: null,
+                                valueStatementId: statementId, 
+                                statementValue: evalStatement.value,
+                                typeEnumId: evalStatement.typeDescription,
+                                tags: valueStatementTagList.collect{it.description},
+                                evaluationName: null,
+                                productName: productEvaluation?.productName,
+                                evaluationByEnumId: null,
+                                rating: null,
+                                implementationStatusEnumId: null,
+                                comments: null,
+                            ])
+                        ]]>
+                    </script>
+
+                    <continue/>
+                </if>
+                <iterate list="statementResponseList" entry="statementResponse">
+                    <set field="productEvaluation"
+                        from="productEvaluationList.find{it.productEvaluationId == statementResponse.productEvaluationId}" />
+                    <script>
+                        <![CDATA[ 
+                            outList.add([
+                                productEvaluationId: statementResponse.productEvaluationId, 
+                                productEvaluationResponseId: statementResponse.productEvaluationResponseId,
+                                valueStatementId: statementId, 
+                                statementValue: evalStatement.value,
+                                typeEnumId: evalStatement.typeDescription,
+                                tags: valueStatementTagList.collect{it.description},
+                                evaluationName: productEvaluation?.evaluationName,
+                                productName: productEvaluation?.productName,
+                                evaluationByEnumId: statementResponse.evaluationByEnum?.description,
+                                rating: statementResponse.rating,
+                                implementationStatusEnumId: statementResponse.implementationStatusEnum?.description,
+                                comments: statementResponse.comments,
+                            ])
+                        ]]>
+                    </script>
+                </iterate>
+            </iterate>
+        </actions>
+    </service>
+
+    <service verb="prepare" noun="EvaluationStoryReport">
+        <in-parameters>
+            <parameter name="organizationId" required="true" />
+            <parameter name="filterProductIds" type="List" />
+            <parameter name="filterProductEvaluationIds" type="List" />
+            <parameter name="thruDate" type="Timestamp" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processStoryIdSet" type="Set" />
+            <parameter name="outList" type="List">
+                <parameter name="entry" type="Map">
+                    <parameter name="productEvaluationId" type="String" />
+                    <parameter name="productEvaluationResponseId" type="String" />
+                    <parameter name="valueStatementId" type="String" />
+                    <parameter name="statementValue" type="String" />
+                    <parameter name="typeEnumId" type="String" />
+                    <parameter name="tags" type="List" />
+                    <parameter name="evaluationName" type="String" />
+                    <parameter name="productName" type="String" />
+                    <parameter name="evaluationByEnumId" type="String" />
+                    <parameter name="rating" type="String" />
+                    <parameter name="implementationStatusEnumId" type="String" />
+                    <parameter name="comments" type="String" />
+                </parameter>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <!-- find all completed product evaluations -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationAndProduct"
+                list="productEvaluationList">
+                <econdition field-name="organizationId" />
+                <econdition field-name="statusId" value="PeCompleted" />
+                <econdition field-name="productId" operator="in" from="filterProductIds"
+                    ignore-if-empty="true" />
+                <econdition field-name="productEvaluationId" operator="in"
+                    from="filterProductEvaluationIds" ignore-if-empty="true" />
+                <econdition field-name="completedDate" operator="less-equals" ignore-if-empty="true" />
+            </entity-find>
+
+            <set field="productEvaluationIds" from="productEvaluationList*.productEvaluationId" />
+            <set field="productIdSet" from="new TreeSet(productEvaluationList*.productId)" />
+
+            <!-- find all stories in related evaluations -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationStory" list="evalStoryList">
+                <econdition field-name="productEvaluationId" operator="in"
+                    from="productEvaluationIds" />
+                <econdition field-name="organizationId" />
+                <order-by field-name="processStoryId" />
+            </entity-find>
+
+            <set field="processStoryIdSet" from="new TreeSet(evalStoryList*.processStoryId)" />
+
+            <!-- find all activities in related evaluations -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
+                list="evalActivityList">
+                <econdition field-name="productEvaluationId" operator="in"
+                    from="productEvaluationIds" />
+                <econdition field-name="processStoryId" operator="in" from="processStoryIdSet" />
+                <econdition field-name="organizationId" />
+                <econdition field-name="excludeFlag" value="N" or-null="true" />
+                <order-by field-name="processStoryId,activityId" />
+            </entity-find>
+
+            <set field="activityIdList" from="new TreeSet(evalActivityList*.activityId)" />
+
+            <!-- group by, statement -> evaluation -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
+                list="evaluationResponseList">
+                <econdition field-name="organizationId" />
+                <econdition field-name="productEvaluationId" operator="in"
+                    from="productEvaluationIds" />
+                <econdition field-name="activityId" operator="in" from="activityIdList" />
+                <econdition field-name="organizationId" />
+                <order-by field-name="evaluationByEnumId" />
+            </entity-find>
+
+            <script>
+                <![CDATA[ 
+                        def ensureEndsWith (text, suffix) {
+                        return text?.endsWith(suffix) ? text : text + suffix
+                    }
+
+                    def formatActivity (activityDetail){
+                        def condition = activityDetail.condition?ensureEndsWith(activityDetail.condition.capitalize(), ","):''
+                        def actorNames = activityDetail.actorNames?.join(", ")?:''
+                        def action = activityDetail.action?ensureEndsWith(activityDetail.action, '.'):''
+
+                        return "${condition}${condition?' ':''}${actorNames}${actorNames?' ':''}${action}"
+                    }
+
+                    def reduceActivity (activityDetail, index, prefix='') {
+                        def sequence = "${prefix}.${index}"
+                        def activityText = formatActivity(activityDetail)
+
+                        def activityResponses = evaluationResponseList.clone().findAll{it.activityId == activityDetail.activityId}
+                        def activitiesFlat = [
+                                [sequence: sequence, activityId:activityDetail.activityId, activityText: activityText, 
+                                activityResponses: activityResponses.collect{it->[evaluationByEnumId:it.evaluationByEnum?.description, 
+                                rating:it.rating, implementationStatusEnumId:it.implementationStatusEnum?.description, comments:it.comments, 
+                                productName:it.evaluation?.product?.productName, evaluationName:it.evaluation?.evaluationName] }]
+                            ];
+
+                        if (activityDetail.detailProcessStoryActivityList){
+                            activityDetail.detailProcessStoryActivityList.eachWithIndex{ subActivity, jIndex ->
+                                activitiesFlat.addAll(reduceActivity(subActivity, jIndex+1, sequence))
+                            }
+                        }
+                        
+                        return activitiesFlat;                   
+                    }
+                ]]>
+            </script>
+
+            <set field="outList" from="[]" />
+            <iterate list="processStoryIdSet" entry="processStoryId">
+                <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory" cache="true" />
+                
+                <set field="activityList" from="[]" />                
+                <service-call name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList"
+                    in-map="[productEvaluationId:productEvaluationIds.join(','), processStoryId:processStory.processStoryId, organizationId:organizationId, onlyIncluded:true,showSubstories:true]"
+                    out-map="activityOut" out-map-add-to-existing="false" />
+                <script>activityList.addAll(activityOut.processStoryActivityList)</script>
+            
+                <script>
+                    <![CDATA[                     
+                        outList.add([
+                            processStoryId: processStoryId, 
+                            processStoryName: processStory.name, 
+                            activityList: (activityList.withIndex().collect{activityDetail,index -> reduceActivity(activityDetail, index+1,processStoryId_index+1)}).flatten(),
+                        ])
+                    ]]>
+                </script>
+            </iterate>
+        </actions>
+    </service>
+
+    <service verb="prepare" noun="EvaluationSummary">
+        <in-parameters>
+            <parameter name="organizationId" required="true" />
+            <parameter name="filterProductIds" type="List" />
+            <parameter name="filterProductEvaluationIds" type="List" />
+            <parameter name="thruDate" type="Timestamp" />
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processStoryIdSet" type="Set" />
+            <parameter name="outList" type="List" />
+            <parameter name="summaryByProduct" type="List" />
+        </out-parameters>
+        <actions>
+            <!-- find all completed product evaluations -->
+            <entity-find entity-name="coarchy.product.ProductEvaluationAndProduct"
+                list="productEvaluationList">
+                <econdition field-name="organizationId" />
+                <econdition field-name="statusId" value="PeCompleted" />
+                <econdition field-name="productId" operator="in" from="filterProductIds"
+                    ignore-if-empty="true" />
+                <econdition field-name="productEvaluationId" operator="in"
+                    from="filterProductEvaluationIds" ignore-if-empty="true" />
+                <econdition field-name="completedDate" operator="less-equals" ignore-if-empty="true" />
+            </entity-find>
+
+            <set field="productEvaluationIds" from="productEvaluationList*.productEvaluationId" />
+            <set field="productIdSet" from="new TreeSet(productEvaluationList*.productId)" />
+
+            <set field="summaryByProduct" from="[:]" />
+            <iterate list="productEvaluationList" entry="productEvaluation">
+                <if condition="!summaryByProduct.containsKey(productEvaluation.productId)">
+                    <set field="summaryByProduct[productEvaluation.productId]"
+                        from="[
+                        avgInternalRating: [],
+                        avgVendorRating: [],
+                        internalFullGapCount:0,
+                        vendorFullGapCount:0,
+                        internalPartialOverlapCount:0,
+                        vendorPartialOverlapCount:0,
+                        internalFullOverlapCount:0,
+                        vendorFullOverlapCount:0
+                    ]" />
+                </if>
+
+                <!-- group by, statement -> evaluation -->
+                <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
+                    list="responseList">
+                    <econdition field-name="organizationId" />
+                    <econdition field-name="productEvaluationId"
+                        from="productEvaluation.productEvaluationId" />
+                    <econdition field-name="organizationId" />
+                    <order-by field-name="evaluationByEnumId" />
+                </entity-find>
+
+                <filter-map-list list="responseList" to-list="internalResponseList">
+                    <field-map field-name="evaluationByEnumId" value="EbInternal" />
+                </filter-map-list>
+
+                <set field="internalRatingList" from="internalResponseList*.rating" />
+                <if condition="internalRatingList.size() > 0">
+                    <set field="avgInternalRating"
+                        from="internalRatingList.sum() / internalRatingList.size()" />
+                    <else>
+                        <set field="avgInternalRating" from="null" />
+                    </else>
+                </if>
+
+                <filter-map-list list="responseList" to-list="vendorResponseList">
+                    <field-map field-name="evaluationByEnumId" value="EbVendor" />
+                </filter-map-list>
+
+                <set field="vendorRatingList" from="vendorResponseList*.rating" />
+                <if condition="vendorRatingList.size() > 0">
+                    <set field="avgVendorRating"
+                        from="vendorRatingList.sum() / vendorRatingList.size()" />
+                    <else>
+                        <set field="avgVendorRating" from="null" />
+                    </else>
+                </if>
+
+                <set field="internalFullOverlapCount"
+                    from="internalResponseList.count{it.implementationStatusEnumId == 'IsFullOverlap'}" />
+                <set field="internalPartialOverlapCount"
+                    from="internalResponseList.count{it.implementationStatusEnumId == 'IsPartialOverlap'}" />
+                <set field="internalFullGapCount"
+                    from="internalResponseList.count{it.implementationStatusEnumId == 'IsFullGap'}" />
+
+                <set field="vendorFullOverlapCount"
+                    from="vendorResponseList.count{it.implementationStatusEnumId == 'IsFullOverlap'}" />
+                <set field="vendorPartialOverlapCount"
+                    from="vendorResponseList.count{it.implementationStatusEnumId == 'IsPartialOverlap'}" />
+                <set field="vendorFullGapCount"
+                    from="vendorResponseList.count{it.implementationStatusEnumId == 'IsFullGap'}" />
+
+                <script>
+                    <![CDATA[ 
+                        if (avgInternalRating) summaryByProduct[productEvaluation.productId].avgInternalRating.add(avgInternalRating);
+                        if (avgVendorRating) summaryByProduct[productEvaluation.productId].avgVendorRating.add(avgVendorRating);
+
+                        summaryByProduct[productEvaluation.productId].internalFullOverlapCount += internalFullOverlapCount
+                        summaryByProduct[productEvaluation.productId].internalPartialOverlapCount += internalPartialOverlapCount
+                        summaryByProduct[productEvaluation.productId].internalFullGapCount += internalFullGapCount
+
+                        summaryByProduct[productEvaluation.productId].vendorFullOverlapCount += vendorFullOverlapCount
+                        summaryByProduct[productEvaluation.productId].vendorPartialOverlapCount += vendorPartialOverlapCount
+                        summaryByProduct[productEvaluation.productId].vendorFullGapCount += vendorFullGapCount
+                    ]]>
+                </script>
+            </iterate>
+
+            <iterate list="productIdSet" entry="productId">
+                <script>
+                    <![CDATA[ 
+                    if (summaryByProduct[productId].avgInternalRating.size() > 0) 
+                        summaryByProduct[productId].avgInternalRating = summaryByProduct[productId].avgInternalRating.sum() / summaryByProduct[productId].avgInternalRating.size()
+                    else
+                        summaryByProduct[productId].avgInternalRating = null
+
+                    if (summaryByProduct[productId].avgVendorRating.size() > 0)
+                        summaryByProduct[productId].avgVendorRating = summaryByProduct[productId].avgVendorRating.sum() / summaryByProduct[productId].avgVendorRating.size()
+                    else
+                        summaryByProduct[productId].avgVendorRating = null
+                    ]]>
+                </script>
+            </iterate>
+
+            <set field="outList" from="[]" />
+            <iterate list="productIdSet" entry="productId">
+                <script>
+                    <![CDATA[ 
+                    outList.add([
+                        productId:productId, 
+                        productName: productEvaluationList.find{it.productId == productId}.productName,
+                        avgInternalRating: summaryByProduct[productId].avgInternalRating, 
+                        avgVendorRating: summaryByProduct[productId].avgVendorRating, 
+                        internalFullOverlapCount: summaryByProduct[productId].internalFullOverlapCount,
+                        internalPartialOverlapCount: summaryByProduct[productId].internalPartialOverlapCount,
+                        internalFullGapCount: summaryByProduct[productId].internalFullGapCount,
+                        vendorFullOverlapCount: summaryByProduct[productId].vendorFullOverlapCount,
+                        vendorPartialOverlapCount: summaryByProduct[productId].vendorPartialOverlapCount,
+                        vendorFullGapCount: summaryByProduct[productId].vendorFullGapCount
+                        ])
+                    ]]>
+                </script>
+            </iterate>
+        </actions>
+    </service>
+
+
+</services>

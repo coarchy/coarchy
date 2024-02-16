@@ -286,16 +286,20 @@ along with this software (see the LICENSE.md file). If not, see
     
     <view-entity entity-name="ProductEvaluationStatementDetail" package="coarchy.product">
         <member-entity entity-alias="PES" entity-name="coarchy.product.ProductEvaluationStatement" />
-        <member-entity entity-alias="PS" entity-name="coarchy.ValueStatement" join-from-alias="PES">
+        <member-entity entity-alias="VS" entity-name="coarchy.ValueStatement" join-from-alias="PES">
             <key-map field-name="statementId" related="valueStatementId" />
+        </member-entity>
+        <member-entity entity-alias="TE" entity-name="moqui.basic.Enumeration" join-from-alias="VS">
+            <key-map field-name="typeEnumId" related="enumId" />
         </member-entity>
 
         <alias-all entity-alias="PES" />
-        <alias-all entity-alias="PS">
+        <alias-all entity-alias="VS">
             <exclude field="organizationId" />
         </alias-all>
-
-        <alias name="storyOrganizationId" field="organizationId" entity-alias="PS" />
+        <alias name="typeDescription" field="description" entity-alias="TE"/>
+        
+        <alias name="statementOrganizationId" field="organizationId" entity-alias="VS" />
     </view-entity>
 
     <view-entity entity-name="ProductEvaluationActivityAndDetail" package="coarchy.product">

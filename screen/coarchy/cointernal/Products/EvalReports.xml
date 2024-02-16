@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Summary">
+
+    <transition name="generateEvaluationReport" begin-transaction="false" read-only="true">
+        <actions>
+            <entity-find-one entity-name="mantle.party.Organization" value-field="activeOrg">
+                <field-map field-name="partyId" from="activeOrgId" />
+            </entity-find-one>
+
+            <service-call name="coarchy.ReportServices.prepare#EvaluationStatementReport" in-map="context+[organizationId:activeOrgId]" out-map="statementsOut"/>
+            <service-call name="coarchy.ReportServices.prepare#EvaluationStoryReport" in-map="context+[organizationId:activeOrgId]" out-map="storyOut"/>
+            <service-call name="coarchy.ReportServices.prepare#EvaluationSummary" in-map="context+[organizationId:activeOrgId]" out-map="summaryOut"/>
+
+            <script><![CDATA[
+                import java.io.OutputStream;
+
+                import org.apache.poi.ss.usermodel.*;
+                import org.apache.poi.xssf.usermodel.XSSFSheet;
+                import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+                import org.moqui.context.ExecutionContext
+                ExecutionContext ec = context.ec
+
+                def response = ec.web.response
+                def filename = "EvaluationReport_${activeOrg?.organizationName}_${ec.l10n.format(ec.user.nowTimestamp, 'yyyyMMdd_HHmm')}"
+
+                response.setCharacterEncoding("UTF-8")
+                response.setContentType('application/vnd.ms-excel')
+                response.setHeader("Cache-Control", "no-cache, must-revalidate, private")
+                response.setHeader("Content-Disposition", "attachment; filename=\"${filename}.xlsx\";")
+
+                CellStyle makeHeaderStyle(Workbook wb) {
+                    Font headerFont = wb.createFont()
+                    headerFont.setBold(true)
+                    headerFont.setFontHeight(9);
+            
+                    CellStyle style = createNoBorderStyle(wb)
+                    style.setAlignment(HorizontalAlignment.LEFT)
+                    style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex())
+                    style.setFillPattern(FillPatternType.SOLID_FOREGROUND)
+                    style.setFont(headerFont)
+            
+                    return style
+                }        
+                CellStyle makeRowDefaultStyle(Workbook wb) {
+                    Font rowFont = wb.createFont()
+                    rowFont.setBold(false)
+                    rowFont.setFontHeight(9);
+
+                    CellStyle style = createNoBorderStyle(wb)
+                    style.setAlignment(HorizontalAlignment.LEFT)
+                    style.setFont(rowFont)
+                    style.setWrapText(true)
+            
+                    return style
+                }
+                CellStyle createBorderedStyle(Workbook wb){
+                    BorderStyle thin = BorderStyle.THIN
+                    short black = IndexedColors.BLACK.getIndex()
+            
+                    CellStyle style = wb.createCellStyle()
+                    style.setBorderRight(thin)
+                    style.setRightBorderColor(black)
+                    style.setBorderBottom(thin)
+                    style.setBottomBorderColor(black)
+                    style.setBorderLeft(thin)
+                    style.setLeftBorderColor(black)
+                    style.setBorderTop(thin)
+                    style.setTopBorderColor(black)
+                    return style
+                }
+                CellStyle createNoBorderStyle(Workbook wb) {
+                    BorderStyle noBorder = BorderStyle.NONE
+                    CellStyle style = wb.createCellStyle()
+                    style.setBorderRight(noBorder)
+                    style.setBorderBottom(noBorder)
+                    style.setBorderLeft(noBorder)
+                    style.setBorderTop(noBorder)
+                    style.setVerticalAlignment(VerticalAlignment.TOP)
+                    // logger.warn("created no border style ${style.properties}")
+                    return style
+                }
+                
+                XSSFWorkbook workbook = new XSSFWorkbook();
+                CellStyle headerStyle = makeHeaderStyle(workbook)
+                CellStyle rowDefaultStyle = makeRowDefaultStyle(workbook)
+        
+                // Prepare summary sheet
+                XSSFSheet summary = workbook.createSheet("Summary");
+                def summaryFieldMapList = [
+                    [key:'productName', 'label':'Product', sequenceNum:1],
+                    [key:'avgInternalRating', 'label':'Internal Rating (avg)', sequenceNum:2],
+                    [key:'avgVendorRating', 'label':'Vendor Rating (avg)', sequenceNum:3],
+                    [key:'internalFullGapCount', 'label':'Internal Full Gap (ct.)', sequenceNum:4],
+                    [key:'vendorFullGapCount', 'label':'Vendor Full Gap (ct.)', sequenceNum:5],
+                    [key:'internalPartialOverlapCount', 'label':'Internal Partial Overlap (ct.)', sequenceNum:6],
+                    [key:'vendorPartialOverlapCount', 'label':'Vendor Partial Overlap (ct.)', sequenceNum:7],
+                    [key:'internalFullOverlapCount', 'label':'Internal Full Overlap (ct.)', sequenceNum:8],
+                    [key:'vendorFullOverlapCount', 'label':'Vendor Full Overlap (ct.)', sequenceNum:9],
+                ];
+
+                int rowIndex = 0;
+                int columnIndex = 0;
+                Row row = summary.createRow(rowIndex++);
+
+                // Create headers
+                for (def fieldMap : summaryFieldMapList) {
+                    Cell cell = row.createCell(columnIndex++);
+                    cell.setCellStyle(headerStyle)                    
+                    cell.setCellValue(fieldMap.label);
+                }
+
+                // Create data
+                for (Map dataRow : summaryOut.outList) {
+                    row = summary.createRow(rowIndex++);
+                    columnIndex = 0;
+                    
+                    for (Map fieldMap : summaryFieldMapList) {
+                        Cell cell = row.createCell(columnIndex++);
+                        cell.setCellStyle(rowDefaultStyle)
+                        def val = dataRow[fieldMap.key];     
+                        if (val instanceof String) {
+                            cell.setCellValue((String) val);
+                        } else if (val instanceof Integer) {
+                            cell.setCellValue((Integer) val);
+                        } else if (val instanceof ArrayList) {
+                            cell.setCellValue(val.join(', '));
+                        } else {
+                            cell.setCellValue((String) val);
+                        }
+                    }                        
+                }
+
+                for (int c = 0; c < columnIndex; c++) summary.autoSizeColumn(c)
+
+                // Prepare statements sheet
+                XSSFSheet statements = workbook.createSheet("Statements");                
+                def statementsFieldMapList = [
+                    [key:'_index_', 'label':'Seq', sequenceNum:1],
+                    [key:'statementValue', 'label':'Statement', sequenceNum:2],
+                    [key:'typeEnumId', 'label':'Type', sequenceNum:3],
+                    [key:'tags', 'label':'Tags', sequenceNum:4],
+                    [key:'evaluationName', 'label':'Evaluation Name', sequenceNum:5],
+                    [key:'productName', 'label':'Product', sequenceNum:6],
+                    [key:'evaluationByEnumId', 'label':'Response Type', sequenceNum:7],
+                    [key:'rating', 'label':'Rating', sequenceNum:8],
+                    [key:'implementationStatusEnumId', 'label':'Status', sequenceNum:9],
+                    [key:'comments', 'label':'Comments', sequenceNum:10]
+                ];
+
+                rowIndex = 0;
+                columnIndex = 0;
+                row = statements.createRow(rowIndex++);
+                
+                // Create header
+                for (def fieldMap : statementsFieldMapList) {
+                    Cell cell = row.createCell(columnIndex++);
+                    cell.setCellStyle(headerStyle)
+                    cell.setCellValue(fieldMap.label);
+                }
+
+                // Create data
+                for (Map dataRow : statementsOut.outList) {
+                    row = statements.createRow(rowIndex++);                        
+                    columnIndex = 0;
+                    
+                    for (Map fieldMap : statementsFieldMapList) {
+                        Cell cell = row.createCell(columnIndex++);
+                        cell.setCellStyle(rowDefaultStyle)
+                        def val = dataRow[fieldMap.key];
+                        if (fieldMap.key == '_index_'){
+                            cell.setCellValue(rowIndex-1);
+                            continue
+                        }
+                        if (val instanceof String) {
+                            cell.setCellValue((String) val);
+                        } else if (val instanceof Integer) {
+                            cell.setCellValue((Integer) val);
+                        } else if (val instanceof ArrayList) {
+                            cell.setCellValue(val.join(', '));
+                        } else {
+                            cell.setCellValue((String) val);
+                        }
+                    }
+                }
+
+                for (int c = 0; c < columnIndex; c++) if (c!=1) statements.autoSizeColumn(c) else statements.setColumnWidth(c, 80 * 256);
+
+                // Prepare prcess story sheets
+                ArrayList<XSSFSheet> processStorySheets = new ArrayList<XSSFSheet>();
+                def storyFieldMapList = [
+                    [key:'sequence', 'label':'Sequence', sequenceNum:1],
+                    [key:'activityText', 'label':'Activity', sequenceNum:1],
+                    [key:'evaluationName', 'label':'Evaluation Name', sequenceNum:4],
+                    [key:'productName', 'label':'Product', sequenceNum:5],
+                    [key:'evaluationByEnumId', 'label':'Response Type', sequenceNum:6],
+                    [key:'rating', 'label':'Rating', sequenceNum:7],
+                    [key:'implementationStatusEnumId', 'label':'Status', sequenceNum:8],
+                    [key:'comments', 'label':'Comments', sequenceNum:9]
+                ];
+                
+                for (Map story: storyOut.outList) {
+                    XSSFSheet curSheet = workbook.createSheet('Process Story - ' + story.processStoryName)
+                    processStorySheets.add(curSheet);
+                 
+                    rowIndex = 0;
+                    columnIndex = 0;
+                    row = curSheet.createRow(rowIndex++);
+                    
+                    // Create header
+                    for (def fieldMap : storyFieldMapList) {
+                        Cell cell = row.createCell(columnIndex++);
+                        cell.setCellStyle(headerStyle)
+                        cell.setCellValue(fieldMap.label);
+                    }
+
+                    // Create data
+                    for (Map activity : story.activityList) {
+                        if (!activity.activityResponses){
+                            columnIndex = 0;
+                            row = curSheet.createRow(rowIndex++);
+
+                            for (int c = 0; c <= 3; c++) {
+                                Cell cell = row.createCell(columnIndex++);
+                                cell.setCellStyle(rowDefaultStyle)
+                                cell.setCellValue(activity[storyFieldMapList[c].key]);
+                            }
+                            for (int c = 4; c <= 7; c++) {
+                                cell = row.createCell(columnIndex++);
+                                cell.setCellStyle(rowDefaultStyle)
+                                cell.setCellValue('N/A');
+                            }                                                    
+
+                            continue;
+                        }
+
+                        for (Map activityResponse : activity.activityResponses) {
+                            row = curSheet.createRow(rowIndex++);
+                                
+                            columnIndex = 0;
+                            
+                            for (Map field : storyFieldMapList) {
+                                Cell cell = row.createCell(columnIndex++);
+                                cell.setCellStyle(rowDefaultStyle);
+                                def val = activity[field.key]?:activityResponse[field.key];
+
+                                if (val instanceof String) {
+                                    cell.setCellValue((String) val);
+                                } else if (val instanceof Integer) {
+                                    cell.setCellValue((Integer) val);
+                                } else if (val instanceof ArrayList) {
+                                    cell.setCellValue(val.join(', '));
+                                } else {
+                                    cell.setCellValue((String) val);
+                                }
+                            }     
+                        }
+                    }
+                    for (int c = 0; c < columnIndex; c++) if (c!=1) curSheet.autoSizeColumn(c) else curSheet.setColumnWidth(c, 80 * 256);
+                }
+
+                OutputStream os = response.outputStream
+                workbook.write(os);
+                os.close();                
+            ]]>            
+        </script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <actions>
+        <service-call name="coarchy.ReportServices.prepare#EvaluationSummary" in-map="[organizationId:activeOrgId]" out-map="summaryOut"/>
+    </actions>
+
+    <widgets>
+        <container-dialog id="GenerateReportDialog" button-text="Export Report">
+            <label text="You can select a subset of evaluations to report on. By default, the report runs on all completed evaluations." style="q-mb-lg" type="div"/>
+
+            <form-single name="ExportData" transition="generateEvaluationReport">
+                <field name="filterProductEvaluationIds">
+                    <default-field title="Limit evaluations">
+                        <drop-down allow-multiple="true">
+                            <entity-options text="${productName}: ${evaluationName?:'Unnamed'}">
+                                <entity-find entity-name="coarchy.product.ProductEvaluationAndProduct">
+                                    <econdition field-name="organizationId" from="activeOrgId" />
+                                    <econdition field-name="statusId" value="PeCompleted" />
+                                </entity-find>
+                            </entity-options>
+                        </drop-down>
+                    </default-field>
+                </field>
+                <field name="filterProductIds">
+                    <default-field title="Limit products">
+                        <drop-down allow-multiple="true">
+                            <entity-options text="${productName}">
+                                <entity-find entity-name="mantle.product.Product">
+                                    <econdition field-name="ownerPartyId" from="activeOrgId" />
+                                    <econdition field-name="productClassEnumId" value="PclsCoarchy" />
+                                </entity-find>
+                            </entity-options>
+                        </drop-down>
+                    </default-field>
+                </field>
+                <field name="thruDate">
+                    <default-field title="Until Date">
+                        <date-time/>
+                    </default-field>
+                </field>
+                <field name="submit">
+                    <default-field title="Generate Report">
+                        <submit/>
+                    </default-field>
+                </field>
+                <field-layout>
+                    <field-ref name="filterProductEvaluationIds" />
+                    <field-ref name="filterProductIds" />
+                    <field-ref name="thruDate" />
+                    <field-ref name="submit" />
+                </field-layout>
+            </form-single>
+        </container-dialog>
+
+        <label text="Summary" type="h4" style="q-mt-md" />
+        <label text="This is a summary of all evaluations that have been completed." type="div" />
+        <label text="For a detailed breakdown, use generate a report." type="div" />
+        <form-list name="SummaryFormList" list="summaryOut.outList">
+            <field name="productName">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="avgInternalRating">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="avgVendorRating">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="internalFullGapCount">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="vendorFullGapCount">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="internalPartialOverlapCount">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="vendorPartialOverlapCount">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="internalFullOverlapCount">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="vendorFullOverlapCount">
+                <default-field>
+                    <display/>
+                </default-field>
+            </field>
+
+        </form-list>
+    </widgets>
+</screen>
