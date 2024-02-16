@@ -109,7 +109,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 typeEnumId: evalStatement.typeDescription,
                                 tags: valueStatementTagList.collect{it.description},
                                 evaluationName: null,
-                                productName: productEvaluation?.productName,
+                                productName: null,
                                 evaluationByEnumId: null,
                                 rating: null,
                                 implementationStatusEnumId: null,
@@ -156,19 +156,10 @@ along with this software (see the LICENSE.md file). If not, see
         <out-parameters>
             <parameter name="processStoryIdSet" type="Set" />
             <parameter name="outList" type="List">
-                <parameter name="entry" type="Map">
-                    <parameter name="productEvaluationId" type="String" />
-                    <parameter name="productEvaluationResponseId" type="String" />
-                    <parameter name="valueStatementId" type="String" />
-                    <parameter name="statementValue" type="String" />
-                    <parameter name="typeEnumId" type="String" />
-                    <parameter name="tags" type="List" />
-                    <parameter name="evaluationName" type="String" />
-                    <parameter name="productName" type="String" />
-                    <parameter name="evaluationByEnumId" type="String" />
-                    <parameter name="rating" type="String" />
-                    <parameter name="implementationStatusEnumId" type="String" />
-                    <parameter name="comments" type="String" />
+                <parameter name="entry" type="Map">                
+                    <parameter name="processStoryId" type="String" />
+                    <parameter name="processStoryName" type="String" />
+                    <parameter name="activityList" type="List" />
                 </parameter>
             </parameter>
         </out-parameters>
@@ -290,9 +281,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="thruDate" type="Timestamp" />
         </in-parameters>
         <out-parameters>
-            <parameter name="processStoryIdSet" type="Set" />
             <parameter name="outList" type="List" />
-            <parameter name="summaryByProduct" type="List" />
+            <parameter name="summaryByProduct" type="Map" />
         </out-parameters>
         <actions>
             <!-- find all completed product evaluations -->
@@ -315,6 +305,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="!summaryByProduct.containsKey(productEvaluation.productId)">
                     <set field="summaryByProduct[productEvaluation.productId]"
                         from="[
+                        evalCount:0,
                         avgInternalRating: [],
                         avgVendorRating: [],
                         internalFullGapCount:0,
@@ -325,6 +316,7 @@ along with this software (see the LICENSE.md file). If not, see
                         vendorFullOverlapCount:0
                     ]" />
                 </if>
+                <script>summaryByProduct[productEvaluation.productId].evalCount++</script>
 
                 <!-- group by, statement -> evaluation -->
                 <entity-find entity-name="coarchy.product.ProductEvaluationResponse"
@@ -415,6 +407,7 @@ along with this software (see the LICENSE.md file). If not, see
                     outList.add([
                         productId:productId, 
                         productName: productEvaluationList.find{it.productId == productId}.productName,
+                        evalCount: summaryByProduct[productId].evalCount, 
                         avgInternalRating: summaryByProduct[productId].avgInternalRating, 
                         avgVendorRating: summaryByProduct[productId].avgVendorRating, 
                         internalFullOverlapCount: summaryByProduct[productId].internalFullOverlapCount,

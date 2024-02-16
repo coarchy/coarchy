@@ -102,14 +102,15 @@ along with this software (see the LICENSE.md file). If not, see
                 XSSFSheet summary = workbook.createSheet("Summary");
                 def summaryFieldMapList = [
                     [key:'productName', 'label':'Product', sequenceNum:1],
-                    [key:'avgInternalRating', 'label':'Internal Rating (avg)', sequenceNum:2],
-                    [key:'avgVendorRating', 'label':'Vendor Rating (avg)', sequenceNum:3],
-                    [key:'internalFullGapCount', 'label':'Internal Full Gap (ct.)', sequenceNum:4],
-                    [key:'vendorFullGapCount', 'label':'Vendor Full Gap (ct.)', sequenceNum:5],
-                    [key:'internalPartialOverlapCount', 'label':'Internal Partial Overlap (ct.)', sequenceNum:6],
-                    [key:'vendorPartialOverlapCount', 'label':'Vendor Partial Overlap (ct.)', sequenceNum:7],
-                    [key:'internalFullOverlapCount', 'label':'Internal Full Overlap (ct.)', sequenceNum:8],
-                    [key:'vendorFullOverlapCount', 'label':'Vendor Full Overlap (ct.)', sequenceNum:9],
+                    [key:'evalCount', 'label':'Evaluations (ct.)', sequenceNum:2],
+                    [key:'avgInternalRating', 'label':'Internal Rating (avg)', sequenceNum:3],
+                    [key:'avgVendorRating', 'label':'Vendor Rating (avg)', sequenceNum:4],
+                    [key:'internalFullGapCount', 'label':'Internal Full Gap (ct.)', sequenceNum:5],
+                    [key:'vendorFullGapCount', 'label':'Vendor Full Gap (ct.)', sequenceNum:6],
+                    [key:'internalPartialOverlapCount', 'label':'Internal Partial Overlap (ct.)', sequenceNum:7],
+                    [key:'vendorPartialOverlapCount', 'label':'Vendor Partial Overlap (ct.)', sequenceNum:8],
+                    [key:'internalFullOverlapCount', 'label':'Internal Full Overlap (ct.)', sequenceNum:9],
+                    [key:'vendorFullOverlapCount', 'label':'Vendor Full Overlap (ct.)', sequenceNum:10],
                 ];
 
                 int rowIndex = 0;
@@ -144,7 +145,7 @@ along with this software (see the LICENSE.md file). If not, see
                     }                        
                 }
 
-                for (int c = 0; c < columnIndex; c++) summary.autoSizeColumn(c)
+                for (int c = 0; c <= columnIndex; c++) summary.autoSizeColumn(c)
 
                 // Prepare statements sheet
                 XSSFSheet statements = workbook.createSheet("Statements");                
@@ -197,7 +198,7 @@ along with this software (see the LICENSE.md file). If not, see
                     }
                 }
 
-                for (int c = 0; c < columnIndex; c++) if (c!=1) statements.autoSizeColumn(c) else statements.setColumnWidth(c, 80 * 256);
+                for (int c = 0; c <= columnIndex; c++) if (c!=1) statements.autoSizeColumn(c) else statements.setColumnWidth(c, 80 * 256);
 
                 // Prepare prcess story sheets
                 ArrayList<XSSFSheet> processStorySheets = new ArrayList<XSSFSheet>();
@@ -241,7 +242,7 @@ along with this software (see the LICENSE.md file). If not, see
                             for (int c = 4; c <= 7; c++) {
                                 cell = row.createCell(columnIndex++);
                                 cell.setCellStyle(rowDefaultStyle)
-                                cell.setCellValue('N/A');
+                                cell.setCellValue('');
                             }                                                    
 
                             continue;
@@ -269,7 +270,7 @@ along with this software (see the LICENSE.md file). If not, see
                             }     
                         }
                     }
-                    for (int c = 0; c < columnIndex; c++) if (c!=1) curSheet.autoSizeColumn(c) else curSheet.setColumnWidth(c, 80 * 256);
+                    for (int c = 0; c <= columnIndex; c++) if (c!=1) curSheet.autoSizeColumn(c) else curSheet.setColumnWidth(c, 80 * 256);
                 }
 
                 OutputStream os = response.outputStream
@@ -339,6 +340,11 @@ along with this software (see the LICENSE.md file). If not, see
         <form-list name="SummaryFormList" list="summaryOut.outList">
             <field name="productName">
                 <default-field>
+                    <display/>
+                </default-field>
+            </field>
+            <field name="evalCount">
+                <default-field title="# of Evaluations">
                     <display/>
                 </default-field>
             </field>
