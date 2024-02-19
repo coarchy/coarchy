@@ -4018,6 +4018,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
             <set field="urlList" from="[]"/>
             <set field="urlList" from="urlList+[loc:baseLinkUrl+'/', changefreq:'daily', priority:'1.0']"/>
+            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/Templates', changefreq:'monthly', priority:'1.0']"/>
             <set field="urlList" from="urlList+[loc:baseLinkUrl+'/Services', changefreq:'monthly', priority:'1.0']"/>
             <set field="urlList" from="urlList+[loc:baseLinkUrl+'/Newsletter', changefreq:'monthly', priority:'1.0']"/>
             <set field="urlList" from="urlList+[loc:baseLinkUrl+'/HempExcerpts', changefreq:'monthly', priority:'1.0']"/>
@@ -4034,6 +4035,19 @@ along with this software (see the LICENSE.md file). If not, see
                     urlList.push([loc:baseLinkUrl+'/Article?wikiBlogId='+blog.wikiBlogId,
                                       lastmod:ec.l10n.format(blog.publishDate, 'yyyy-MM-dd'),
                                       changefreq:'weekly', priority:'1.0']);
+                </script>
+            </iterate>
+
+            <!-- find templates -->
+            <entity-find entity-name="mantle.party.PartyDetail" list="templateOrgList">
+                <econdition field-name="visibilityEnumId" value="PvPublic" />
+                <select-field field-name="partyId,visibilityEnumId,organizationName" />
+                <order-by field-name="organizationName" />
+            </entity-find>
+            <iterate list="templateOrgList" entry="templateOrg">
+                <script>
+                    urlList.push([loc:baseLinkUrl+'/Template?templateOrgId='+templateOrg.partyId,
+                                  changefreq:'monthly', priority:'1.0']);                   
                 </script>
             </iterate>
 <!--            <set field="urlList" from="urlList+[loc:baseLinkUrl+'/content/TermsOfUse', changefreq:'monthly', priority:'1.0']"/>-->
