@@ -87,6 +87,7 @@
 
                 <q-space></q-space>
 
+                <q-btn stretch flat label="Templates" href="/Templates"><a href="/Templates"></a></q-btn>
                 <q-btn stretch flat label="Services" href="/Services"><a href="/Services"></a></q-btn>
                 <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Blog" href="/Newsletter"><a href="/Newsletter"></a></q-btn>
