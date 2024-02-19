@@ -33,13 +33,13 @@ along with this software (see the LICENSE.md file). If not, see
         <script>
             templateOrgList = [];
 
-            publicOrgList = ec.entity.find('mantle.party.PartyDetail').disableAuthz().condition('visibilityEnumId', 'PvPublic').selectField('partyId,visibilityEnumId,organizationName').orderBy('organizationName').list();
+            publicOrgList = ec.entity.find('mantle.party.PartyDetail').condition('visibilityEnumId', 'PvPublic').selectField('partyId,visibilityEnumId,organizationName').orderBy('organizationName').disableAuthz().list();
             for (Integer i = 0; i &lt; publicOrgList.size(); i++) {
                 EntityValue publicOrg = publicOrgList.get(i);
                 
-                originStoryList = ec.entity.find('mantle.party.PartyContent').disableAuthz().condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').limit(1).list();
-                missionList = ec.entity.find('mantle.party.PartyContent').disableAuthz().condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').limit(1).list();
-                visionList = ec.entity.find('mantle.party.PartyContent').disableAuthz().condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').limit(1).list();
+                originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
+                missionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
+                visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
                 
                 templateOrgList.add([
                     partyId: publicOrg['partyId'],
