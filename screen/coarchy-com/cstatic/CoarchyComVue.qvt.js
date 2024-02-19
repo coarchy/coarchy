@@ -50,6 +50,7 @@ Vue.component('c-sign-up', {
         '    <q-input filled v-model="emailAddress" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
         '    <q-input filled v-model="firstName" label="First Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input filled v-model="lastName" label="Last Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
+        '    <q-input v-if="templateOrgId" filled v-model="organizationName" label="Organization name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input v-model="newPassword" filled label="New Password" :type="isPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\', val => val.length >= 8 || \'Please use minimum of 8 characters\', val => /\\d/.test(val) || \'Please use at least 1 number\', val => /[^0-9a-zA-Z]/.test(val) || \'Please use at least 1 special character\' ]">\n' +
         '        <template v-slot:append>\n' +
         '            <q-icon :name="isPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isPwd = !isPwd"/>\n' +
@@ -71,10 +72,15 @@ Vue.component('c-sign-up', {
             lastName: null,
             newPassword: null,
             isPwd: true,
-            agreementlist: null
+            agreementlist: null,
+            templateOrgId: null,
+            organizationName: null
         }
     },
     mounted: function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('templateOrgId')) this.templateOrgId = urlParams.get('templateOrgId')
+
         this.getData("/c/SignUp/actions").then((response) => {
             // console.log(response)
             this.agreementlist = response.agreementList
