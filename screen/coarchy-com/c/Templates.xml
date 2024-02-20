@@ -30,9 +30,6 @@ along with this software (see the LICENSE.md file). If not, see
     </pre-actions>
 
     <actions>
-        <set field="isUserLoggedIn" from="ec.user.userId" />
-        <set field="ctaUrl" from="'/'+(isUserLoggedIn?'settings':'SignUp')" />
-
         <set field="templateOrgList" from="[]" />
         <script>
             <![CDATA[ 
@@ -99,7 +96,11 @@ along with this software (see the LICENSE.md file). If not, see
                                         <q-separator inset class="q-mt-sm"></q-separator>
                                         <q-card-actions class="row justify-end q-my-xs">
                                             <q-btn no-caps :href="'/Template?templateOrgId='+publicOrg.partyId" label="See what's included" push color="secondary" class="q-ma-xs" size="md"></q-btn>
-                                            <q-btn no-caps :href="'${ctaUrl}?templateOrgId='+publicOrg.partyId" label="Use Template" push color="primary" class="q-ma-xs" size="md"></q-btn>
+                                            <#if ec.user.userId??>
+                                                <c-create-org-from-template :template-org-id="publicOrg.partyId"></c-create-org-from-template>
+                                            <#else>
+                                                <q-btn no-caps href="'/SignUp?templateOrgId='+publicOrg.partyId" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
+                                            </#if>
                                         </q-card-actions>
                                     </q-card> 
                                 </div>                     

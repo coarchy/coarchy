@@ -212,6 +212,40 @@ Vue.component('c-change-password', {
         })
     },
 });
+Vue.component('c-create-org-from-template', {
+    name: "cCreateOrganizationFromTemplate",
+    template:
+        '<q-btn push color="primary" label="Use Template">\n' +
+        '    <q-popup-proxy v-model="popupModel">\n' +
+        '       <div class="q-pa-md">\n' +
+        '         <q-form @submit="createOrg">\n' +
+        '             <q-input filled v-model="organizationName" label="Organization Name" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
+        '             <q-btn type="submit" color="primary" label="Create"/>\n' +
+        '         </q-form>' +
+        '       </div>\n' +
+        '    </q-popup-proxy>\n' +
+        '</q-btn>',
+    props: {
+        templateOrgId: String,
+    },
+    data () {
+        return {
+            organizationName: null,
+            popupModel: null
+        }
+    },
+    methods: {
+        createOrg: function() {
+            $.ajax({ type:'POST', url:'/rest/s1/coarchy/my/orgs/create', error:moqui.handleAjaxError,
+                data:{ moquiSessionToken: this.$root.moquiSessionToken, organizationName: this.organizationName, organizationId: this._props.templateOrgId },
+                success: function() {                    
+                    window.location.href = '/coapp/Home'
+                }
+            });
+        }
+    }
+});
+
 Vue.component('c-create-organization', {
     name: "cCreateOrganization",
     template:

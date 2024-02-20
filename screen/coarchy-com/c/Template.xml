@@ -72,9 +72,6 @@ along with this software (see the LICENSE.md file). If not, see
             ]]>        
         </script>
 
-        <set field="isUserLoggedIn" from="ec.user.userId" />
-        <set field="ctaUrl" from="'/'+(isUserLoggedIn?'settings':'SignUp')" />
-
         <set field="originStory" from="originStoryList.size() > 0 ? originStoryList.get(0)['description'] : ''" />
         <set field="mission" from="missionList.size() > 0 ? missionList.get(0)['description'] : ''" />
         <set field="vision" from="visionList.size() > 0 ? visionList.get(0)['description'] : ''" />
@@ -88,7 +85,7 @@ along with this software (see the LICENSE.md file). If not, see
             </script>
         </iterate>
     </actions>
-    <widgets>            
+    <widgets>       
         <render-mode>
             <text type="html,qvt,js">
                 <![CDATA[ 
@@ -102,7 +99,11 @@ along with this software (see the LICENSE.md file). If not, see
                                         <q-badge color="info">Template</q-badge>
                                     </div>
                                     <div>
-                                        <q-btn no-caps href="${ctaUrl}?templateOrgId=${templateOrgId}" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
+                                        <#if ec.user.userId??>
+                                            <c-create-org-from-template template-org-id="${templateOrgId}"></c-create-org-from-template>
+                                        <#else>
+                                            <q-btn no-caps href="/SignUp?templateOrgId=${templateOrgId}" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
+                                        </#if>
                                     </div>
                                 </div>     
                             </q-card-section>    
