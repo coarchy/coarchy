@@ -99,7 +99,7 @@ along with this software (see the LICENSE.md file). If not, see
                                             <#if ec.user.userId??>
                                                 <c-create-org-from-template :template-org-id="publicOrg.partyId"></c-create-org-from-template>
                                             <#else>
-                                                <q-btn no-caps href="'/SignUp?templateOrgId='+publicOrg.partyId" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
+                                                <q-btn no-caps :href="'/SignUp?templateOrgId='+publicOrg.partyId" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
                                             </#if>
                                         </q-card-actions>
                                     </q-card> 
