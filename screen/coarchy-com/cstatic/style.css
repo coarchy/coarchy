@@ -45,3 +45,9 @@ section {
   margin-right: 100%;
   right: 10px; /* space between number and text */
 }
+
+@media print {
+  /* For Template screen, hide side nav menu on print */
+  #org-template-nav { display: none !important; } 
+  #org-template-content { width: 80% !important; } 
+}

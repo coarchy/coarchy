@@ -20,9 +20,9 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
         <set field="imageUrl" value="/cstatic/background.jpg"/>
 
-        <set field="head_keywords" value="coarchy services"/>
-        <set field="head_title" value="Coarchy Templates: Jumpstart modeling your organization"/>
-        <set field="head_description" value="Coarchy offers pre-defined templates for different business types."/>
+        <set field="html_keywords" value="coarchy services"/>
+        <set field="html_title" value="Coarchy Templates: Jumpstart modeling your organization"/>
+        <set field="html_description" value="Coarchy offers pre-defined templates for different business types."/>
         <set field="html_image" from="baseLinkUrl + imageUrl"/>
         <set field="html_url" from="baseLinkUrl+'/Templates'"/>
         <set field="html_type" value="website"/>
@@ -68,7 +68,7 @@ along with this software (see the LICENSE.md file). If not, see
                                             <div class="text-h4 text-black">{{publicOrg.organizationName}}</div>
                                             <div class="text-subtitle2">
                                                 <span class="text-bold text-grey-6">
-                                                    About this template                  
+                                                    Origin Story                  
                                                 </span>
                                                 <div class="text-black">                  
                                                     {{publicOrg.originStory}}

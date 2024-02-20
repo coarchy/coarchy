@@ -18,9 +18,9 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
         <set field="imageUrl" value="/cstatic/background.jpg"/>
 
-        <set field="head_keywords" value="coarchy hemp"/>
-        <set field="head_title" value="Coarchy HEMP Excerpts: An agile approach to analysis and design"/>
-        <set field="head_description" value="HEMP Excerpts detail agile analysis/design for software, focusing on distinguishing business requirements from system designs."/>
+        <set field="html_keywords" value="coarchy hemp"/>
+        <set field="html_title" value="Coarchy HEMP Excerpts: An agile approach to analysis and design"/>
+        <set field="html_description" value="HEMP Excerpts detail agile analysis/design for software, focusing on distinguishing business requirements from system designs."/>
         <set field="html_image" from="baseLinkUrl + imageUrl"/>
         <set field="html_url" from="baseLinkUrl+'/HempExcerpts'"/>
         <set field="html_type" value="article"/>
