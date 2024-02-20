@@ -50,12 +50,14 @@ Vue.component('c-sign-up', {
         '    <q-input filled v-model="emailAddress" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
         '    <q-input filled v-model="firstName" label="First Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input filled v-model="lastName" label="Last Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
-        '    <q-input v-if="templateOrgId" filled v-model="organizationName" label="Organization name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input v-model="newPassword" filled label="New Password" :type="isPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\', val => val.length >= 8 || \'Please use minimum of 8 characters\', val => /\\d/.test(val) || \'Please use at least 1 number\', val => /[^0-9a-zA-Z]/.test(val) || \'Please use at least 1 special character\' ]">\n' +
         '        <template v-slot:append>\n' +
         '            <q-icon :name="isPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isPwd = !isPwd"/>\n' +
         '        </template>\n' +
         '    </q-input>\n' +
+        '    <q-separator v-if="templateOrgId" inset></q-separator>\n' +
+        '    <div v-if="templateOrgId" class="text-caption text-grey-7">You\'re quick-starting from a template! Please enter your organization\'s name to continue.</div>\n' +
+        '    <q-input v-if="templateOrgId" filled v-model="organizationName" label="Organization name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <p v-if="agreementlist!=null && agreementlist.length > 0" class="text-muted text-left">By signing up, you agree to our <template v-for="{contentContentLocation, typeDescription, index} in agreementlist">' +
         '       <a :href="contentContentLocation">{{ typeDescription }}{{ index }}</a>\n' +
         '       <template v-if="index < agreementlist.length - 2">,&nbsp;</template>\n' +
