@@ -94,8 +94,7 @@
                 <q-btn stretch flat label="Blog" href="/Newsletter"><a href="/Newsletter"></a></q-btn>
                 <q-separator dark vertical></q-separator>
                 
-                <#assign userId = ec.user.userId!'' />
-                <#if userId??>                    
+                <#if (ec.user.userId)??>                    
                     <q-btn stretch flat label="My Organizations" href="/settings"><a href="/settings"></a></q-btn>
                     <q-separator dark vertical></q-separator>
                 <#else>

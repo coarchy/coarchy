@@ -215,7 +215,7 @@ Vue.component('c-change-password', {
 Vue.component('c-create-org-from-template', {
     name: "cCreateOrganizationFromTemplate",
     template:
-        '<q-btn push color="primary" label="Use Template">\n' +
+        '<q-btn no-caps push color="primary" label="Use Template">\n' +
         '    <q-popup-proxy v-model="popupModel">\n' +
         '       <div class="q-pa-md">\n' +
         '         <q-form @submit="createOrg">\n' +
