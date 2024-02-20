@@ -30,25 +30,29 @@ along with this software (see the LICENSE.md file). If not, see
     </pre-actions>
 
     <actions>
-        <script>
-            templateOrgList = [];
+        <set field="isUserLoggedIn" from="ec.user.userId" />
+        <set field="ctaUrl" from="'/'+(isUserLoggedIn?'settings':'SignUp')" />
 
-            publicOrgList = ec.entity.find('mantle.party.PartyDetail').condition('visibilityEnumId', 'PvPublic').selectField('partyId,visibilityEnumId,organizationName').orderBy('organizationName').disableAuthz().list();
-            for (Integer i = 0; i &lt; publicOrgList.size(); i++) {
-                EntityValue publicOrg = publicOrgList.get(i);
-                
-                originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
-                missionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
-                visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
-                
-                templateOrgList.add([
-                    partyId: publicOrg['partyId'],
-                    organizationName: publicOrg['organizationName'],
-                    originStory: originStoryList.size() &gt; 0 ? originStoryList.get(0)['description'] : '',
-                    mission: missionList.size() &gt; 0 ? missionList.get(0)['description'] : '',
-                    vision: visionList.size() &gt; 0 ? visionList.get(0)['description'] : ''
-                ]);
-            }
+        <set field="templateOrgList" from="[]" />
+        <script>
+            <![CDATA[ 
+                publicOrgList = ec.entity.find('mantle.party.PartyDetail').condition('visibilityEnumId', 'PvPublic').selectField('partyId,visibilityEnumId,organizationName').orderBy('organizationName').disableAuthz().list();
+                for (Integer i = 0; i < publicOrgList.size(); i++) {
+                    EntityValue publicOrg = publicOrgList.get(i);
+                    
+                    originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
+                    missionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
+                    visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
+                    
+                    templateOrgList.add([
+                        partyId: publicOrg['partyId'],
+                        organizationName: publicOrg['organizationName'],
+                        originStory: originStoryList.size() > 0 ? originStoryList.get(0)['description'] : '',
+                        mission: missionList.size() > 0 ? missionList.get(0)['description'] : '',
+                        vision: visionList.size() > 0 ? visionList.get(0)['description'] : ''
+                    ]);
+                }            
+            ]]>
         </script>
     </actions>
     <widgets>
@@ -94,8 +98,8 @@ along with this software (see the LICENSE.md file). If not, see
                                         </q-card-section>
                                         <q-separator inset class="q-mt-sm"></q-separator>
                                         <q-card-actions class="row justify-end q-my-xs">
-                                            <q-btn no-caps :href="'/Template?templateOrgId='+publicOrg.partyId" label="See what's included" push color="secondary" class="q-ml-xs" size="md"></q-btn>
-                                            <q-btn no-caps :href="'/SignUp?templateOrgId='+publicOrg.partyId" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
+                                            <q-btn no-caps :href="'/Template?templateOrgId='+publicOrg.partyId" label="See what's included" push color="secondary" class="q-ma-xs" size="md"></q-btn>
+                                            <q-btn no-caps :href="'${ctaUrl}?templateOrgId='+publicOrg.partyId" label="Use Template" push color="primary" class="q-ma-xs" size="md"></q-btn>
                                         </q-card-actions>
                                     </q-card> 
                                 </div>                     
