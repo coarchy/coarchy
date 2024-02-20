@@ -75,8 +75,8 @@ Vue.component('c-sign-up', {
             newPassword: null,
             isPwd: true,
             agreementlist: null,
-            templateOrgId: null,
-            organizationName: null
+            templateOrgId: '',
+            organizationName: ''
         }
     },
     mounted: function() {
