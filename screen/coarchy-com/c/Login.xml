@@ -21,6 +21,8 @@ along with this software (see the LICENSE.md file). If not, see
         <parameter name="username" required="true"/>
         <parameter name="password" required="true"/>
         <parameter name="code"/>
+        <parameter name="templateOrgId" />
+        <parameter name="organizationName" />
         <actions>
             <set field="loggedIn" from="ec.user.loginUser(username, password)"/>
             <if condition="ec.message.hasError()"><script>ec.web.sendJsonResponse([loggedIn:false])</script></if>
@@ -56,6 +58,20 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="coarchy.CoarchyServices.set#PartyClassification" in-map="[partyClassificationId:'HotLead']" out-map="context"/>
                 </if>
 <!--                <log level="warn" message="login context.toString() ${context.toString()}"/>-->
+
+                <if condition="templateOrgId?.length()">
+                    <entity-find-one entity-name="mantle.party.Party" value-field="templateOrg">
+                        <field-map field-name="partyId" from="templateOrgId" />
+                    </entity-find-one>
+                    <if condition="!templateOrg || (templateOrg.visibilityEnumId!='PvPublic')">
+                        <return error="true" message="Invalid template"/>
+                    </if>
+                    <if condition="!organizationName.strip()">
+                        <return error="true" message="Please specify an organization name"/>
+                    </if>
+    
+                    <service-call name="coarchy.CoarchyServices.create#Organization" in-map="[organizationId:templateOrgId,organizationName:organizationName,copyProducts:'copy']" disable-authz="true"/>  
+                </if>
             </if>
 
         </actions>

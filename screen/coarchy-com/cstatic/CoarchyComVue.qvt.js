@@ -7,12 +7,21 @@ Vue.component('c-login', {
     template:
     // Could include type="email" for email, but then wouldn't allow john.doe to login
         '<q-form @submit="onSubmit" class="q-gutter-md" >\n' +
+        '    <div>\n' +
+        '    Don\'t have an account? \n' +
+        '        <a v-if="templateOrgId" :href="\'/SignUp?templateOrgId=\'+templateOrgId">Signup</a>\n' +
+        '        <a v-else href="/SignUp">Signup</a>\n' +
+        '    </div>\n' +
+        '    <div v-if="templateOrgId" class="text-caption text-grey-7">You need to be logged in to use this template.</div>\n' +
         '    <q-input filled v-model="username" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input v-model="password" filled label="Password" :type="isPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\']">\n' +
         '        <template v-slot:append>\n' +
         '            <q-icon :name="isPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isPwd = !isPwd"/>\n' +
         '        </template>\n' +
         '    </q-input>\n' +
+        '    <q-separator v-if="templateOrgId" inset></q-separator>\n' +
+        '    <div v-if="templateOrgId" class="text-caption text-grey-7">To setup the template, please specify an organization name.</div>\n' +
+        '    <q-input v-if="templateOrgId" filled v-model="organizationName" label="Organization name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <div>\n' +
         '        <q-btn label="Submit" type="submit" color="primary"/>\n' +
         '    </div>\n' +
@@ -22,6 +31,8 @@ Vue.component('c-login', {
             username: null,
             password: null,
             isPwd: true,
+            templateOrgId: '',
+            organizationName: ''
         }
     },
     methods: {
@@ -40,6 +51,8 @@ Vue.component('c-login', {
     mounted: function() {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('username')) this.username = urlParams.get('username')
+        if (urlParams.get('templateOrgId')) this.templateOrgId = urlParams.get('templateOrgId')
+
     },
 });
 Vue.component('c-sign-up', {
@@ -47,6 +60,11 @@ Vue.component('c-sign-up', {
     template:
     // Could include type="email" for email, but then wouldn't allow john.doe to login
         '<q-form @submit="onSubmit" class="q-gutter-md" >\n' +
+        '    <div>\n' +
+        '    Already have an account? \n' +
+        '        <a v-if="templateOrgId" :href="\'/Login?templateOrgId=\'+templateOrgId">Login</a>\n' +
+        '        <a v-else href="/Login">Login</a>\n' +
+        '    </div>\n' +
         '    <q-input filled v-model="emailAddress" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
         '    <q-input filled v-model="firstName" label="First Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input filled v-model="lastName" label="Last Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
