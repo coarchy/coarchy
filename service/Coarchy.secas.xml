@@ -18,4 +18,17 @@ along with this software (see the LICENSE.md file). If not, see
         <condition><expression>statusChanged &amp;&amp; statusId == 'OrderApproved'</expression></condition>
         <actions><service-call name="coarchy.CoarchyServices.deposit#OrderToFinancialAccount" in-map="context"/></actions>
     </seca>
+    
+    <!-- User Signup Email -->
+    <seca id="UserSignupSendWelcomeEmail" service="coarchy.CoarchyServices.signUp#User" when="tx-commit">
+        <actions>            
+            <!-- Send welcome email -->
+            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+            <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
+                contactListId:'CoarchyOnboarding',emailTemplateId:'ONBOARDING_WELCOME',
+                partyId:partyId,preferredContactMechId:null,toAddresses:username,
+                bodyParameters:[linkUrl:baseLinkUrl+'/settings/Organizations',
+                title:'Welcome to Coarchy, Build a better future!!',baseLinkUrl:baseLinkUrl]]" out-map="context" />
+        </actions>
+    </seca>
 </secas>

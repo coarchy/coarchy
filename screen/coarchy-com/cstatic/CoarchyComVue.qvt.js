@@ -56,7 +56,7 @@ Vue.component('c-sign-up', {
         '        </template>\n' +
         '    </q-input>\n' +
         '    <q-separator v-if="templateOrgId" inset></q-separator>\n' +
-        '    <div v-if="templateOrgId" class="text-caption text-grey-7">You\'re quick-starting from a template! Please enter your organization\'s name to continue.</div>\n' +
+        '    <div v-if="templateOrgId" class="text-caption text-grey-7">You\'re quick-starting from a template! Please enter an organization name to continue.</div>\n' +
         '    <q-input v-if="templateOrgId" filled v-model="organizationName" label="Organization name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <p v-if="agreementlist!=null && agreementlist.length > 0" class="text-muted text-left">By signing up, you agree to our <template v-for="{contentContentLocation, typeDescription, index} in agreementlist">' +
         '       <a :href="contentContentLocation">{{ typeDescription }}{{ index }}</a>\n' +

@@ -637,7 +637,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="send" noun="ContactListEmail">
+    <service verb="send" noun="ContactListEmail" authenticate="anonymous-all">
         <in-parameters>
             <parameter name="contactListId" required="true"/>
             <parameter name="emailTemplateId" required="true"/>
@@ -913,12 +913,13 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="firstName" required="true"/>
             <parameter name="lastName" required="true"/>
             <parameter name="newPassword" required="true"/>
-            <parameter name="templateOrgId" />
-            <parameter name="organizationName" />
+            <parameter name="templateOrgId" type="String" />
+            <parameter name="organizationName" type="String" />
         </in-parameters>
         <out-parameters>
             <parameter name="partyId"/>
             <parameter name="partyClassificationId"/>
+            <parameter name="newOrganizationId" />
         </out-parameters>
         <actions>
             <service-call name="coarchy.CoarchyServices.create#Account" out-map="context"
@@ -926,12 +927,12 @@ along with this software (see the LICENSE.md file). If not, see
                     newPassword:newPassword,newPasswordVerify:newPassword,loginAfterCreate:true]"/>
             <service-call name="update#mantle.party.Party" in-map="[partyId:partyId,visibilityEnumId:'PvOrganization']"/>
             <service-call name="create#mantle.party.PartyRole" in-map="[partyId:partyId,roleTypeId:'Customer']"/>
-            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]"/>
+            <service-call name="create#moqui.security.UserGroupMember" in-map="[userGroupId:'COARCHY_USERS', userId:userId, fromDate:ec.user.nowTimestamp]" />
 
             <!-- Sales Journey Hot Lead user -->
             <service-call name="mantle.party.PartyServices.set#PartyClassification" in-map="[partyId:partyId,partyClassificationId:'HotLead']" out-map="context"/>
 
-            <if condition="templateOrgId">
+            <if condition="templateOrgId?.length()>0">
                 <entity-find-one entity-name="mantle.party.Party" value-field="templateOrg">
                     <field-map field-name="partyId" from="templateOrgId" />
                 </entity-find-one>
@@ -943,15 +944,8 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
 
                 <service-call name="coarchy.CoarchyServices.create#Organization" in-map="[organizationId:templateOrgId,organizationName:organizationName,copyProducts:'copy']" out-map="createOrgOut"/>  
-            </if>
-            
-            <!-- Send welcome email -->
-            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
-            <!-- <service-call name="coarchy.CoarchyServices.send#ContactListEmail" in-map="[
-                contactListId:'CoarchyOnboarding',emailTemplateId:'ONBOARDING_WELCOME',
-                partyId:partyId,preferredContactMechId:null,toAddresses:username,
-                bodyParameters:[linkUrl:baseLinkUrl+'/settings/Organizations',
-                title:'Welcome to Coarchy, Build a better future!!',baseLinkUrl:baseLinkUrl]]" out-map="context"/> -->
+                <set field="newOrganizationId" from="createOrgOut?.newOrganizationId" />
+            </if>                        
         </actions>
     </service>
 
