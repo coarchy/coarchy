@@ -88,14 +88,22 @@
                 <q-space></q-space>
 
                 <q-btn stretch flat label="Templates" href="/Templates"><a href="/Templates"></a></q-btn>
+                <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Services" href="/Services"><a href="/Services"></a></q-btn>
                 <q-separator dark vertical></q-separator>
                 <q-btn stretch flat label="Blog" href="/Newsletter"><a href="/Newsletter"></a></q-btn>
                 <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Log In" href="/Login"><a href="/Login"></a></q-btn>
-                <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Sign Up" href="/SignUp"><a href="/SignUp"></a></q-btn>
-
+                
+                <#assign userId = ec.user.userId!'' />
+                <#if userId??>                    
+                    <q-btn stretch flat label="My Organizations" href="/settings"><a href="/settings"></a></q-btn>
+                    <q-separator dark vertical></q-separator>
+                <#else>
+                    <q-btn stretch flat label="Log In" href="/Login"><a href="/Login"></a></q-btn>
+                    <q-separator dark vertical></q-separator>
+                    <q-btn stretch flat label="Sign Up" href="/SignUp"><a href="/SignUp"></a></q-btn>
+                    <q-separator dark vertical></q-separator>
+                </#if>
                 <q-space></q-space>
 
                 <#--                <#assign headerTitleList = sri.getThemeValues("STRT_HEADER_TITLE")>-->
