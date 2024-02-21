@@ -30,7 +30,7 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/>
         <actions><set field="activityId" from="null"/><set field="condition" from="null"/>
             <set field="actorIdList" from="null"/><set field="action" from="null"/></actions>
-        <default-response url="." type="screen-last" /></transition>
+        <default-response url=".." /></transition>
 
     <actions>
         <set field="activityActorList" from="[]"/>
