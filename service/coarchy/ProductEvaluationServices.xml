@@ -19,6 +19,7 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="productId" required="true" />
             <parameter name="organizationId" required="true" />
+            <parameter name="evaluationName" required="true" />
             <parameter name="emailAddress" required="true" />
             <parameter name="processStoryIds" type="List" required="true" />
         </in-parameters>
@@ -30,7 +31,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <service-call name="create#coarchy.product.ProductEvaluation"
-                in-map="[productId:productId, organizationId:organizationId, statusId: 'PeRequirementsSelection', createdDate:ec.user.nowTimestamp]"
+                in-map="[productId:productId, organizationId:organizationId, statusId: 'PeRequirementsSelection', createdDate:ec.user.nowTimestamp, evaluationName:evaluationName]"
                 out-map="context" />
 
             <iterate list="processStoryIds" entry="processStoryId">
@@ -202,6 +203,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="processStoryId" required="true" />
             <parameter name="showSubstories" required="true" />
             <parameter name="organizationId" required="true" />
+            <parameter name="onlyIncluded" type="Boolean" default="false" />
         </in-parameters>
         <out-parameters>
             <parameter name="processStoryActivityList" />
@@ -210,7 +212,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- find included activity ids, so that replaced records are included -->
             <entity-find entity-name="coarchy.product.ProductEvaluationActivity"
                 list="productEvaluationActivityList">
-                <econdition field-name="productEvaluationId" />
+                <econdition field-name="productEvaluationId" operator="in"/>
                 <econdition field-name="excludeFlag" value="N" or-null="true" />
             </entity-find>
             <set field="includedActivityIds" from="productEvaluationActivityList*.activityId" />
@@ -219,7 +221,7 @@ along with this software (see the LICENSE.md file). If not, see
                 list="setupProcessStoryActivityList">
                 <econdition field-name="processStoryId" />
                 <econditions combine="or">
-                    <date-filter />
+                    <date-filter ignore="onlyIncluded" />
                     <econdition field-name="activityId" from="includedActivityIds" operator="in" />
                 </econditions>
                 <select-field
@@ -234,6 +236,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="name" />
                 </entity-find>
                 <set field="detailProcessStoryName" from="null" />
+                <set field="detail" from="null" />
                 <set field="detailProcessStoryId" from="processStoryActivity.detailProcessStoryId" />
                 <set field="detailProcessStoryActivityList" from="[]" />
                 <if
@@ -242,7 +245,7 @@ along with this software (see the LICENSE.md file). If not, see
                         name="coarchy.ProductEvaluationServices.find#ProcessStoryActivityList"
                         out-map="detail"
                         in-map="[productEvaluationId:productEvaluationId,processStoryId:processStoryActivity.detailProcessStoryId,showSubstories:showSubstories,
-                            organizationId:organizationId]" />
+                            organizationId:organizationId, onlyIncluded:onlyIncluded]" />
                     <entity-find-one entity-name="coarchy.ProcessStory"
                         value-field="detailProcessStory"
                         auto-field-map="[processStoryId:processStoryActivity.detailProcessStoryId]" />
@@ -252,7 +255,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="processStoryId"
                             from="processStoryActivity.detailProcessStoryId" />
                         <econditions combine="or">
-                            <date-filter />
+                            <date-filter ignore="onlyIncluded"/>
                             <econdition field-name="activityId" from="includedActivityIds"
                                 operator="in" />
                         </econditions>
@@ -838,6 +841,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- update status -->
             <set field="productEvaluation.statusId" value="PeCompleted" />
+            <set field="productEvaluation.completedDate" from="ec.user.nowTimestamp" />
             <entity-update value-field="productEvaluation" />
             <!-- <if condition="vendorRespondedToAll &amp;&amp; internalRespondedToAll">
                 <else>

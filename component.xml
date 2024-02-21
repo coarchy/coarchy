@@ -3,4 +3,5 @@
         name="coarchy" version="1.0.0">
     <depends-on name="mantle-usl"/>
     <depends-on name="mantle-udm"/>
+    <depends-on name="moqui-poi"/>
 </component>
