@@ -110,7 +110,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <q-separator></q-separator>                                                     
                             <q-card-section class="text-grey-8">
                                 <div class="text-subtitle2">
-                                    <span id="About" class="template-header text-bold text-grey-6">
+                                    <span id="OriginStory" class="template-header text-bold text-grey-6">
                                         Origin Story                  
                                     </span>
                                     <div class="text-black">
@@ -207,7 +207,8 @@ along with this software (see the LICENSE.md file). If not, see
                             </q-card-section>
                         </q-card>
                     </div>
-                    <div id="org-template-nav" class="col" style="
+                    
+                    <div v-if="!$q.screen.lt.sm" id="org-template-nav" class="col" style="
                         position: sticky;
                         top: 60px;
                         height: calc(100vh - 60px);
@@ -217,30 +218,30 @@ along with this software (see the LICENSE.md file). If not, see
                       >
                         <q-card flat bordered class="bg-transparent">
                             <q-list dense class="text-caption text-grey-8 q-py-md bg-grey-2">
-                                <q-item clickable v-ripple href="/Template?templateOrgId=${templateOrgId}#About">
-                                    About
+                                <q-item clickable v-ripple @click="scrollToAnchor('OriginStory')">
+                                    Origin Story
                                 </q-item>
-                                <q-item clickable v-ripple href="/Template?templateOrgId=${templateOrgId}#Mission">
+                                <q-item clickable v-ripple @click="scrollToAnchor('Mission')">
                                     Mission
                                 </q-item>
-                                <q-item clickable v-ripple href="/Template?templateOrgId=${templateOrgId}#Vision">
+                                <q-item clickable v-ripple @click="scrollToAnchor('Vision')">
                                     Vision
                                 </q-item>
-                                <q-item clickable v-ripple href="/Template?templateOrgId=${templateOrgId}#Actor">
+                                <q-item clickable v-ripple @click="scrollToAnchor('Actor')">
                                     Actors
                                 </q-item>
-                                <q-item clickable v-ripple  href="/Template?templateOrgId=${templateOrgId}#Statement">
+                                <q-item clickable v-ripple  @click="scrollToAnchor('Statement')">
                                     Statements
                                 </q-item>
-                                <q-item clickable v-ripple  href="/Template?templateOrgId=${templateOrgId}#ProcessStory">
+                                <q-item clickable v-ripple  @click="scrollToAnchor('ProcessStory')">
                                     Process Stories
                                 </q-item>
                                 <#list processStoryList as story>  
-                                    <q-item clickable v-ripple :inset-level="1" href="/Template?templateOrgId=${templateOrgId}#Story${story.processStoryId}">
+                                    <q-item clickable v-ripple :inset-level="1" @click="scrollToAnchor('Story${story.processStoryId}')">
                                         ${story?counter}. ${story.name}
                                     </q-item>                                                                                     
                                 </#list>
-                                <q-item clickable v-ripple href="/Template?templateOrgId=${templateOrgId}#Product">
+                                <q-item clickable v-ripple @click="scrollToAnchor('Product')">
                                     Products
                                 </q-item>
                             </q-list>
@@ -248,8 +249,42 @@ along with this software (see the LICENSE.md file). If not, see
                       </q-scroll-area>
                     </div>                                       
                 </div>
-
-               
+                <q-drawer v-model="drawerRightOpen" side="right">
+                    <q-scroll-area
+                        class="absolute fit"
+                      >
+                        <q-card flat bordered class="bg-transparent">
+                            <q-list dense class="text-caption text-grey-8 q-py-md bg-grey-2">
+                                <q-item clickable v-ripple @click="scrollToAnchor('OriginStory')">
+                                    Origin Story
+                                </q-item>
+                                <q-item clickable v-ripple @click="scrollToAnchor('Mission')">
+                                    Mission
+                                </q-item>
+                                <q-item clickable v-ripple @click="scrollToAnchor('Vision')">
+                                    Vision
+                                </q-item>
+                                <q-item clickable v-ripple @click="scrollToAnchor('Actor')">
+                                    Actors
+                                </q-item>
+                                <q-item clickable v-ripple  @click="scrollToAnchor('Statement')">
+                                    Statements
+                                </q-item>
+                                <q-item clickable v-ripple  @click="scrollToAnchor('ProcessStory')">
+                                    Process Stories
+                                </q-item>
+                                <#list processStoryList as story>  
+                                    <q-item clickable v-ripple :inset-level="1" @click="scrollToAnchor('Story${story.processStoryId}')">
+                                        ${story?counter}. ${story.name}
+                                    </q-item>                                                                                     
+                                </#list>
+                                <q-item clickable v-ripple  @click="scrollToAnchor('Product')">
+                                    Products
+                                </q-item>
+                            </q-list>
+                        </q-card>
+                      </q-scroll-area>
+                </q-drawer>
                 ]]>
             </text>    
                  

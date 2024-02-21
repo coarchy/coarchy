@@ -580,6 +580,12 @@ moqui.webrootVue = new Vue({
     created: function() {
         this.moquiSessionToken = $("#confMoquiSessionToken").val();
     },
+    data(){
+        return{
+            drawerOpen:false,
+            drawerRightOpen:false,
+        }
+    },
     methods: {
         async postData(url = "", data = URLSearchParams) {
             // console.log(this.moquiSessionToken)
@@ -688,6 +694,26 @@ moqui.webrootVue = new Vue({
                         message: error
                     })
                 }
+            }
+        },
+        toggleDrawerOpen: function() {
+            this.drawerOpen = !this.drawerOpen;
+        },
+        toggleDrawerRightOpen: function() {
+            this.drawerRightOpen = !this.drawerRightOpen;
+        },
+        scrollToAnchor: function(anchorId) {
+            this.drawerRightOpen = false;
+            const element = document.getElementById(anchorId)
+            if (element){
+                const topPos = element.getBoundingClientRect().top + window.pageYOffset
+                // Need setTimeout for this to work on mobile view
+                setTimeout(
+                    () => (window.scrollTo({
+                        top: topPos - 58, // Account for q-header (~58px in height)
+                        behavior: 'smooth' // smooth scroll
+                        }) )
+                ,500);
             }
         },
     }
