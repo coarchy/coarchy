@@ -64,7 +64,6 @@ along with this software (see the LICENSE.md file). If not, see
                     style.setAlignment(HorizontalAlignment.LEFT)
                     style.setFont(rowFont)
                     style.setWrapText(true)
-                    style.setWrapText(true)
             
                     return style
                 }
