@@ -77,7 +77,7 @@
     <#-- to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder -->
     <q-layout view="hHh Lpr lff">
         <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px; background: #eeeeee;">
-                <q-btn v-show="$q.screen.lt.sm" flat icon="menu" @click="toggleDrawerOpen()" size="lg"></q-btn>
+                <q-btn v-show="$q.screen.lt.sm" flat icon="menu" @click="toggleDrawerOpen()" size="md"></q-btn>
 
                 <q-btn stretch flat href="/">
                     <a href="/"></a>
@@ -112,7 +112,7 @@
                 <#--  Only render template right drawer button if we're on the template screen  -->
                 <#assign screenUrl = sri.getCurrentScreenUrl() />
                 <#if screenUrl?ends_with("/Template")>
-                    <q-btn v-if="$q.screen.lt.sm" flat icon="assignment" @click="toggleDrawerRightOpen()" size="lg"></q-btn>
+                    <q-btn v-if="$q.screen.lt.sm" flat icon="assignment" @click="toggleDrawerRightOpen()" size="md"></q-btn>
                 </#if>
 
                 <#--                <#assign headerTitleList = sri.getThemeValues("STRT_HEADER_TITLE")>-->
