@@ -7,12 +7,21 @@ Vue.component('c-login', {
     template:
     // Could include type="email" for email, but then wouldn't allow john.doe to login
         '<q-form @submit="onSubmit" class="q-gutter-md" >\n' +
+        '    <div>\n' +
+        '    Don\'t have an account? \n' +
+        '        <a v-if="templateOrgId" :href="\'/SignUp?templateOrgId=\'+templateOrgId">Signup</a>\n' +
+        '        <a v-else href="/SignUp">Signup</a>\n' +
+        '    </div>\n' +
+        '    <div v-if="templateOrgId" class="text-caption text-grey-7">You need to be logged in to use this template.</div>\n' +
         '    <q-input filled v-model="username" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input v-model="password" filled label="Password" :type="isPwd ? \'password\' : \'text\'" :rules="[ val => val && val.length > 0 || \'Please type something\']">\n' +
         '        <template v-slot:append>\n' +
         '            <q-icon :name="isPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isPwd = !isPwd"/>\n' +
         '        </template>\n' +
         '    </q-input>\n' +
+        '    <q-separator v-if="templateOrgId" inset></q-separator>\n' +
+        '    <div v-if="templateOrgId" class="text-caption text-grey-7">To setup the template, please specify an organization name.</div>\n' +
+        '    <q-input v-if="templateOrgId" filled v-model="organizationName" label="Organization name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <div>\n' +
         '        <q-btn label="Submit" type="submit" color="primary"/>\n' +
         '    </div>\n' +
@@ -22,6 +31,8 @@ Vue.component('c-login', {
             username: null,
             password: null,
             isPwd: true,
+            templateOrgId: '',
+            organizationName: ''
         }
     },
     methods: {
@@ -40,6 +51,8 @@ Vue.component('c-login', {
     mounted: function() {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('username')) this.username = urlParams.get('username')
+        if (urlParams.get('templateOrgId')) this.templateOrgId = urlParams.get('templateOrgId')
+
     },
 });
 Vue.component('c-sign-up', {
@@ -47,6 +60,11 @@ Vue.component('c-sign-up', {
     template:
     // Could include type="email" for email, but then wouldn't allow john.doe to login
         '<q-form @submit="onSubmit" class="q-gutter-md" >\n' +
+        '    <div>\n' +
+        '    Already have an account? \n' +
+        '        <a v-if="templateOrgId" :href="\'/Login?templateOrgId=\'+templateOrgId">Login</a>\n' +
+        '        <a v-else href="/Login">Login</a>\n' +
+        '    </div>\n' +
         '    <q-input filled v-model="emailAddress" type="email" label="Work Email" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
         '    <q-input filled v-model="firstName" label="First Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <q-input filled v-model="lastName" label="Last Name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
@@ -55,6 +73,9 @@ Vue.component('c-sign-up', {
         '            <q-icon :name="isPwd ? \'visibility_off\' : \'visibility\'" class="cursor-pointer" @click="isPwd = !isPwd"/>\n' +
         '        </template>\n' +
         '    </q-input>\n' +
+        '    <q-separator v-if="templateOrgId" inset></q-separator>\n' +
+        '    <div v-if="templateOrgId" class="text-caption text-grey-7">You\'re quick-starting from a template! Please enter an organization name to continue.</div>\n' +
+        '    <q-input v-if="templateOrgId" filled v-model="organizationName" label="Organization name" :rules="[ val => val && val.length > 0 || \'Please type something\']"/>\n' +
         '    <p v-if="agreementlist!=null && agreementlist.length > 0" class="text-muted text-left">By signing up, you agree to our <template v-for="{contentContentLocation, typeDescription, index} in agreementlist">' +
         '       <a :href="contentContentLocation">{{ typeDescription }}{{ index }}</a>\n' +
         '       <template v-if="index < agreementlist.length - 2">,&nbsp;</template>\n' +
@@ -71,10 +92,15 @@ Vue.component('c-sign-up', {
             lastName: null,
             newPassword: null,
             isPwd: true,
-            agreementlist: null
+            agreementlist: null,
+            templateOrgId: '',
+            organizationName: ''
         }
     },
     mounted: function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('templateOrgId')) this.templateOrgId = urlParams.get('templateOrgId')
+
         this.getData("/c/SignUp/actions").then((response) => {
             // console.log(response)
             this.agreementlist = response.agreementList
@@ -204,6 +230,40 @@ Vue.component('c-change-password', {
         })
     },
 });
+Vue.component('c-create-org-from-template', {
+    name: "cCreateOrganizationFromTemplate",
+    template:
+        '<q-btn no-caps push color="primary" label="Use Template">\n' +
+        '    <q-popup-proxy v-model="popupModel">\n' +
+        '       <div class="q-pa-md">\n' +
+        '         <q-form @submit="createOrg">\n' +
+        '             <q-input filled v-model="organizationName" label="Organization Name" :rules="[ val => val && val.length > 0 || \'Please type something\' ]"/>\n' +
+        '             <q-btn type="submit" color="primary" label="Create"/>\n' +
+        '         </q-form>' +
+        '       </div>\n' +
+        '    </q-popup-proxy>\n' +
+        '</q-btn>',
+    props: {
+        templateOrgId: String,
+    },
+    data () {
+        return {
+            organizationName: null,
+            popupModel: null
+        }
+    },
+    methods: {
+        createOrg: function() {
+            $.ajax({ type:'POST', url:'/rest/s1/coarchy/my/orgs/create', error:moqui.handleAjaxError,
+                data:{ moquiSessionToken: this.$root.moquiSessionToken, organizationName: this.organizationName, organizationId: this._props.templateOrgId },
+                success: function() {                    
+                    window.location.href = '/coapp/Home'
+                }
+            });
+        }
+    }
+});
+
 Vue.component('c-create-organization', {
     name: "cCreateOrganization",
     template:
@@ -520,6 +580,12 @@ moqui.webrootVue = new Vue({
     created: function() {
         this.moquiSessionToken = $("#confMoquiSessionToken").val();
     },
+    data(){
+        return{
+            drawerOpen:false,
+            drawerRightOpen:false,
+        }
+    },
     methods: {
         async postData(url = "", data = URLSearchParams) {
             // console.log(this.moquiSessionToken)
@@ -628,6 +694,26 @@ moqui.webrootVue = new Vue({
                         message: error
                     })
                 }
+            }
+        },
+        toggleDrawerOpen: function() {
+            this.drawerOpen = !this.drawerOpen;
+        },
+        toggleDrawerRightOpen: function() {
+            this.drawerRightOpen = !this.drawerRightOpen;
+        },
+        scrollToAnchor: function(anchorId) {
+            this.drawerRightOpen = false;
+            const element = document.getElementById(anchorId)
+            if (element){
+                const topPos = element.getBoundingClientRect().top + window.pageYOffset
+                // Need setTimeout for this to work on mobile view
+                setTimeout(
+                    () => (window.scrollTo({
+                        top: topPos - 58, // Account for q-header (~58px in height)
+                        behavior: 'smooth' // smooth scroll
+                        }) )
+                ,500);
             }
         },
     }

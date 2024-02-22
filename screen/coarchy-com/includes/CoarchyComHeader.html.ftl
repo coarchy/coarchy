@@ -75,8 +75,10 @@
 
     <#-- for layout options see: https://quasar.dev/layout/layout -->
     <#-- to build a layout use the handy Quasar tool: https://quasar.dev/layout-builder -->
-    <q-layout view="hHh LpR fFf">
+    <q-layout view="hHh Lpr lff">
         <q-header class="${headerClass}" id="top"><q-toolbar style="font-size:15px; background: #eeeeee;">
+                <q-btn v-show="$q.screen.lt.sm" flat icon="menu" @click="toggleDrawerOpen()" size="md"></q-btn>
+
                 <q-btn stretch flat href="/">
                     <a href="/"></a>
                     <#assign headerLogoList = sri.getThemeValues("STRT_HEADER_LOGO")>
@@ -86,16 +88,32 @@
                 </q-btn>
 
                 <q-space></q-space>
-
-                <q-btn stretch flat label="Services" href="/Services"><a href="/Services"></a></q-btn>
-                <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Blog" href="/Newsletter"><a href="/Newsletter"></a></q-btn>
-                <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Log In" href="/Login"><a href="/Login"></a></q-btn>
-                <q-separator dark vertical></q-separator>
-                <q-btn stretch flat label="Sign Up" href="/SignUp"><a href="/SignUp"></a></q-btn>
-
+                
+                <template v-if="!$q.screen.lt.sm">
+                    <q-btn stretch flat label="Templates" href="/Templates"><a href="/Templates"></a></q-btn>
+                    <q-separator dark vertical></q-separator>
+                    <q-btn stretch flat label="Services" href="/Services"><a href="/Services"></a></q-btn>
+                    <q-separator dark vertical></q-separator>
+                    <q-btn stretch flat label="Blog" href="/Newsletter"><a href="/Newsletter"></a></q-btn>
+                    <q-separator dark vertical></q-separator>
+                    
+                    <#if (ec.user.userId)??>                    
+                        <q-btn stretch flat label="My Organizations" href="/settings"><a href="/settings"></a></q-btn>
+                        <q-separator dark vertical></q-separator>
+                    <#else>
+                        <q-btn stretch flat label="Log In" href="/Login"><a href="/Login"></a></q-btn>
+                        <q-separator dark vertical></q-separator>
+                        <q-btn stretch flat label="Sign Up" href="/SignUp"><a href="/SignUp"></a></q-btn>
+                        <q-separator dark vertical></q-separator>
+                    </#if>
+                </template>
                 <q-space></q-space>
+
+                <#--  Only render template right drawer button if we're on the template screen  -->
+                <#assign screenUrl = sri.getCurrentScreenUrl() />
+                <#if screenUrl?ends_with("/Template")>
+                    <q-btn v-if="$q.screen.lt.sm" flat icon="assignment" @click="toggleDrawerRightOpen()" size="md"></q-btn>
+                </#if>
 
                 <#--                <#assign headerTitleList = sri.getThemeValues("STRT_HEADER_TITLE")>-->
 <#--                <#if headerTitleList?has_content>-->
@@ -165,6 +183,62 @@
 <#--                &lt;#&ndash;                    </q-card></q-menu>&ndash;&gt;-->
 <#--                &lt;#&ndash;            </q-btn>&ndash;&gt;-->
             </q-toolbar></q-header>
+
+             <q-drawer
+                v-model="drawerOpen"
+                :width="200"
+                :breakpoint="500"
+                overlay
+                bordered
+                behavior="mobile"
+                content-class="bg-grey-3"
+            >
+                <q-scroll-area class="fit">
+                    <q-list>
+                        <q-item clickable v-ripple href="/">
+                            <q-item-section>
+                            Home
+                            </q-item-section>
+                        </q-item>
+                        <q-separator></q-separator>
+                         <q-item clickable v-ripple href="/Templates">
+                            <q-item-section>
+                            Templates
+                            </q-item-section>
+                        </q-item>
+                        <q-item clickable v-ripple href="/Services">
+                            <q-item-section>
+                            Services
+                            </q-item-section>
+                        </q-item>
+                        <q-item clickable v-ripple href="/Newsletter">
+                            <q-item-section>
+                            Newsletter
+                            </q-item-section>
+                        </q-item>
+                        <q-separator></q-separator>
+                        <#if (ec.user.userId)??>                    
+                            <q-item clickable v-ripple href="/settings">
+                                <q-item-section>
+                                My Organization
+                                </q-item-section>
+                            </q-item>
+                        <#else>
+                            <q-item clickable v-ripple href="/Login">
+                                <q-item-section>
+                                Log In
+                                </q-item-section>
+                            </q-item>
+                            <q-item clickable v-ripple href="/SignUp">
+                                <q-item-section>
+                                Sign Up
+                                </q-item-section>
+                            </q-item>
+                        </#if>                                       
+                        <q-separator></q-separator>
+                    </q-list>
+                </q-scroll-area>
+            </q-drawer>
 
         <q-page-container class="q-ma-sm"><q-page>
 <#-- NOTE: Could use the Vue router for this -->

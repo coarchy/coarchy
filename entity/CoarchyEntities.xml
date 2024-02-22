@@ -90,6 +90,14 @@ along with this software (see the LICENSE.md file). If not, see
         </seed-data>
     </entity>
 
+    <view-entity entity-name="ValueStatementAndType" package="coarchy">
+        <member-entity entity-alias="VS" entity-name="coarchy.ValueStatement"/>      
+        <member-relationship entity-alias="TE" join-from-alias="VS" relationship="typeEnum" join-optional="true"/>
+
+        <alias-all entity-alias="VS"/>
+        <alias name="typeDescription" entity-alias="TE" field="description"/>
+    </view-entity>
+    
     <view-entity entity-name="ValueStatementAndTag" package="coarchy">
         <member-entity entity-alias="VS" entity-name="coarchy.ValueStatement"/>
         <member-relationship entity-alias="VT" join-from-alias="VS" relationship="tags" join-optional="true">

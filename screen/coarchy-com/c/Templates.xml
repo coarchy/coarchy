@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+    require-authentication="false" allow-extra-path="true" default-menu-title="Coarchy Templates">
+
+    <pre-actions>
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
+
+        <set field="html_keywords" value="coarchy services"/>
+        <set field="html_title" value="Coarchy Templates: Jumpstart modeling your organization"/>
+        <set field="html_description" value="Coarchy offers pre-defined templates for different business types."/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_url" from="baseLinkUrl+'/Templates'"/>
+        <set field="html_type" value="website"/>
+        <set field="html_site_name" value="Coarchy"/>
+    </pre-actions>
+
+    <actions>
+        <set field="templateOrgList" from="[]" />
+        <script>
+            <![CDATA[ 
+                publicOrgList = ec.entity.find('mantle.party.PartyDetail').condition('visibilityEnumId', 'PvPublic').selectField('partyId,visibilityEnumId,organizationName').orderBy('organizationName').disableAuthz().list();
+                for (Integer i = 0; i < publicOrgList.size(); i++) {
+                    EntityValue publicOrg = publicOrgList.get(i);
+                    
+                    originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
+                    missionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
+                    visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', publicOrg['partyId']).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').disableAuthz().limit(1).list();
+                    
+                    templateOrgList.add([
+                        partyId: publicOrg['partyId'],
+                        organizationName: publicOrg['organizationName'],
+                        originStory: originStoryList.size() > 0 ? originStoryList.get(0)['description'] : '',
+                        mission: missionList.size() > 0 ? missionList.get(0)['description'] : '',
+                        vision: visionList.size() > 0 ? visionList.get(0)['description'] : ''
+                    ]);
+                }            
+            ]]>
+        </script>
+    </actions>
+    <widgets>
+        <render-mode>
+            <text type="html,vuet,qvt"><![CDATA[
+                <div class="row">
+                    <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2 col-sm-10 offset-sm-1 col-xs-12 offset-xs-0">
+                        <div class="column justify-center">
+                            <div class="col-12">
+                                <h1 class="text-h2">Coarchy Templates</h1>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-sm-6 col-md-4 q-pa-sm" v-for="publicOrg in ${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafeCollection(templateOrgList)}" :key="publicOrg.partyId">
+                                    <q-card flat bordered>
+                                        <q-card-section class="text-grey-8">
+                                            <div class="text-h4 text-black">{{publicOrg.organizationName}}</div>
+                                            <div class="text-subtitle2">
+                                                <span class="text-bold text-grey-6">
+                                                    Origin Story                  
+                                                </span>
+                                                <div class="text-black">                  
+                                                    {{publicOrg.originStory}}
+                                                </div>  
+                                            </div>
+                                        </q-card-section>
+                                        <q-card-section class="text-grey-8 q-py-xs">   
+                                            <q-icon class="q-mr-sm" name="track_changes"></q-icon>
+                                            <span class="text-bold">
+                                                Mission                  
+                                            </span>
+                                            <div class="text-black">                  
+                                                {{publicOrg.mission}}
+                                            </div>                                          
+                                        </q-card-section>
+                                        <q-card-section class="text-grey-8 q-py-xs">   
+                                            <q-icon class="q-mr-sm" name="visibility"></q-icon>
+                                            <span class="text-bold">
+                                                Vision                  
+                                            </span>
+                                            <div class="text-black">                  
+                                                {{publicOrg.vision}}
+                                            </div>
+                                        </q-card-section>
+                                        <q-separator inset class="q-mt-sm"></q-separator>
+                                        <q-card-actions class="row justify-end q-my-xs">
+                                            <q-btn no-caps :href="'/Template?templateOrgId='+publicOrg.partyId" label="See what's included" push color="secondary" class="q-ma-xs" size="md"></q-btn>
+                                            <#if ec.user.userId??>
+                                                <c-create-org-from-template :template-org-id="publicOrg.partyId"></c-create-org-from-template>
+                                            <#else>
+                                                <q-btn no-caps :href="'/SignUp?templateOrgId='+publicOrg.partyId" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
+                                            </#if>
+                                        </q-card-actions>
+                                    </q-card> 
+                                </div>                     
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ]]></text>
+        </render-mode>
+    </widgets>
+</screen>

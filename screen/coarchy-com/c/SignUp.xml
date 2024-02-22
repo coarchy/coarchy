@@ -15,11 +15,16 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         require-authentication="anonymous-all" allow-extra-path="true">
 
+    <parameter name="templateOrgId" />
     <!-- TODO: Change these to use ec.web.sendJsonResponse instead of the default response that leaks request input parameters back to the client. -->
     <transition name="createAccount" require-session-token="false">
         <service-call name="coarchy.CoarchyServices.signUp#User" in-map="context"/>
-        <default-response url="/settings"/><error-response url="."/></transition>
-
+        <conditional-response url="/coapp/Home">
+            <condition><expression>newOrganizationId != null</expression></condition>        
+        </conditional-response>
+        <default-response url="/settings"/>
+        <error-response url="." save-parameters="true"/>
+    </transition>
     <pre-actions><script>
         // if user already logged in redirect to application
         if (ec.user.userId) sri.sendRedirectAndStopRender('/settings')
@@ -27,9 +32,9 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
         <set field="imageUrl" value="/cstatic/background.jpg"/>
 
-        <set field="head_keywords" value="coarchy sign up"/>
-        <set field="head_title" value="Coarchy Sign Up: Sign Up to Coarchy to Achieve Greatness"/>
-        <set field="head_description" value="Sign Up to Coarchy to Achieve Greatness"/>
+        <set field="html_keywords" value="coarchy sign up"/>
+        <set field="html_title" value="Coarchy Sign Up: Sign Up to Coarchy to Achieve Greatness"/>
+        <set field="html_description" value="Sign Up to Coarchy to Achieve Greatness"/>
         <set field="html_image" from="baseLinkUrl + imageUrl"/>
         <set field="html_url" from="baseLinkUrl+'/SignUp'"/>
         <set field="html_type" value="website"/>
