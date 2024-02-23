@@ -254,7 +254,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <mantle.party.RoleType description="Vendor Representative" roleTypeId="VendorRepresentative"/>
 
-    <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy" visibilityEnumId="PvPublic">
+    <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy">
         <mantle.party.Organization organizationName="Coarchy" partyId="coarchy"/>
         <roles roleTypeId="OrgInternal"/>
     </parties>

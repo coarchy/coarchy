@@ -21,8 +21,8 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="imageUrl" value="/cstatic/background.jpg"/>
 
         <set field="html_keywords" value="coarchy services"/>
-        <set field="html_title" value="Coarchy Templates: Jumpstart modeling your organization"/>
-        <set field="html_description" value="Coarchy offers pre-defined templates for different business types."/>
+        <set field="html_title" value="Coarchy Templates: Quickstart documenting your organization"/>
+        <set field="html_description" value="Each template is an example an Organization with Actors, Process Stories, Statements, and Products. The template is a jumpstart to document your processes."/>
         <set field="html_image" from="baseLinkUrl + imageUrl"/>
         <set field="html_url" from="baseLinkUrl+'/Templates'"/>
         <set field="html_type" value="website"/>
@@ -33,7 +33,7 @@ along with this software (see the LICENSE.md file). If not, see
         <set field="templateOrgList" from="[]" />
         <script>
             <![CDATA[ 
-                publicOrgList = ec.entity.find('mantle.party.PartyDetail').condition('visibilityEnumId', 'PvPublic').selectField('partyId,visibilityEnumId,organizationName').orderBy('organizationName').disableAuthz().list();
+                publicOrgList = ec.entity.find('mantle.party.PartyDetail').condition('visibilityEnumId', 'PvPublic').selectField('partyId,visibilityEnumId,organizationName').orderBy('-organizationName').disableAuthz().list();
                 for (Integer i = 0; i < publicOrgList.size(); i++) {
                     EntityValue publicOrg = publicOrgList.get(i);
                     
@@ -60,28 +60,28 @@ along with this software (see the LICENSE.md file). If not, see
                         <div class="column justify-center">
                             <div class="col-12">
                                 <h1 class="text-h2">Coarchy Templates</h1>
+                                <p class="text-subtitle1">Each template is an example an Organization with Actors, Process Stories, Statements, and Products. The template is a jumpstart to document your processes so that your organization can become more of what you want your organization to be; whether that's consistency, resilient, or other values you may have.</p>
                             </div>
                             <div class="row">
                                 <div class="col-12 q-pa-sm" v-for="publicOrg in ${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafeCollection(templateOrgList)}" :key="publicOrg.partyId">
                                     <q-card flat bordered>
                                         <q-card-section class="text-grey-8 q-py-xs">
                                             <div class="text-h4 text-black">{{publicOrg.organizationName}}</div>
-                                            <q-icon class="q-mr-sm" name="track_changes"></q-icon>
+                                            <q-icon class="q-mr-sm" name="auto_stories"></q-icon>
                                             <span class="text-bold">
                                                 Description
                                             </span>
-                                            <div class="text-black">
+                                            <div class="text-bold text-black">
                                                 {{publicOrg.mission}}
                                             </div>
                                         </q-card-section>
-                                        <q-card-section class="text-grey-8" v-if="publicOrg.originStory">
-                                            <div class="text-subtitle2">
-                                                <span class="text-bold text-grey-6">
-                                                    Origin Story
-                                                </span>
-                                                <div class="text-black">
-                                                    {{publicOrg.originStory}}
-                                                </div>
+                                        <q-card-section class="text-grey-8 q-py-xs" v-if="publicOrg.originStory">
+                                            <q-icon class="q-mr-sm" name="track_changes"></q-icon>
+                                            <span class="text-bold">
+                                                Origin Story
+                                            </span>
+                                            <div class="text-black">
+                                                {{publicOrg.originStory}}
                                             </div>
                                         </q-card-section>
                                         <q-card-section class="text-grey-8 q-py-xs" v-if="publicOrg.vision">
