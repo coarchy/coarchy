@@ -68,7 +68,7 @@ along with this software (see the LICENSE.md file). If not, see
                 visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
                 
                 // Get product list
-                productList = ec.entity.find('mantle.product.Product').condition('ownerPartyId', templateOrgId).condition('productClassEnumId','PclsCoarchy').selectField('productId,productName').orderBy('productName').disableAuthz().list();
+                productList = ec.entity.find('mantle.product.Product').condition('ownerPartyId', templateOrgId).condition(condFactory.makeCondition('hidden', EntityCondition.EQUALS, 'N', true)).condition('productClassEnumId','PclsCoarchy').selectField('productId,productName').orderBy('productName').disableAuthz().list();
             ]]>        
         </script>
 

@@ -146,6 +146,7 @@ along with this software (see the LICENSE.md file). If not, see
                 }
 
                 for (int c = 0; c <= columnIndex; c++) summary.autoSizeColumn(c)
+                for (int r = 0; r <= rowIndex; r++) if (r!=1) row.setHeight((short)-1);
 
                 // Prepare statements sheet
                 XSSFSheet statements = workbook.createSheet("Statements");                
@@ -199,6 +200,7 @@ along with this software (see the LICENSE.md file). If not, see
                 }
 
                 for (int c = 0; c <= columnIndex; c++) if (c!=1) statements.autoSizeColumn(c) else statements.setColumnWidth(c, 80 * 256);
+                for (int r = 0; r <= rowIndex; r++) if (r!=1) row.setHeight((short)-1);
 
                 // Prepare prcess story sheets
                 ArrayList<XSSFSheet> processStorySheets = new ArrayList<XSSFSheet>();
@@ -233,6 +235,7 @@ along with this software (see the LICENSE.md file). If not, see
                         if (!activity.activityResponses){
                             columnIndex = 0;
                             row = curSheet.createRow(rowIndex++);
+                            row.setHeight((short)-1);
 
                             for (int c = 0; c <= 3; c++) {
                                 Cell cell = row.createCell(columnIndex++);
@@ -308,6 +311,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <drop-down allow-multiple="true">
                             <entity-options text="${productName}">
                                 <entity-find entity-name="mantle.product.Product">
+                                    <econdition field-name="hidden" value="N" or-null="true" />
                                     <econdition field-name="ownerPartyId" from="activeOrgId" />
                                     <econdition field-name="productClassEnumId" value="PclsCoarchy" />
                                 </entity-find>

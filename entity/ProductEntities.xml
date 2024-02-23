@@ -15,6 +15,9 @@ along with this software (see the LICENSE.md file). If not, see
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
 
+    <extend-entity entity-name="Product" package="mantle.product">
+        <field name="hidden" type="text-indicator" default="'N'"/>
+    </extend-entity>
 
     <entity entity-name="ProductEvaluation" package="coarchy.product">
         <field name="productEvaluationId" type="id" is-pk="true" />
