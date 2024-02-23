@@ -44,9 +44,9 @@ along with this software (see the LICENSE.md file). If not, see
                     templateOrgList.add([
                         partyId: publicOrg['partyId'],
                         organizationName: publicOrg['organizationName'],
-                        originStory: originStoryList.size() > 0 ? originStoryList.get(0)['description'] : '',
-                        mission: missionList.size() > 0 ? missionList.get(0)['description'] : '',
-                        vision: visionList.size() > 0 ? visionList.get(0)['description'] : ''
+                        originStory: originStoryList.size() > 0 ? originStoryList?.get(0)['description']?:'' : '',
+                        mission: missionList.size() > 0 ? missionList?.get(0)['description']?:'' : '',
+                        vision: visionList.size() > 0 ? visionList?.get(0)['description']?:'' : ''
                     ]);
                 }            
             ]]>
@@ -62,7 +62,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 <h1 class="text-h2">Coarchy Templates</h1>
                             </div>
                             <div class="row">
-                                <div class="col-xs-12 col-sm-6 col-md-4 q-pa-sm" v-for="publicOrg in ${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafeCollection(templateOrgList)}" :key="publicOrg.partyId">
+                                <div class="col-12 q-pa-sm" v-for="publicOrg in ${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafeCollection(templateOrgList)}" :key="publicOrg.partyId">
                                     <q-card flat bordered>
                                         <q-card-section class="text-grey-8">
                                             <div class="text-h4 text-black">{{publicOrg.organizationName}}</div>
