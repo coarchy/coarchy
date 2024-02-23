@@ -27,7 +27,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 // Query this here so we use it in html_description 
                 originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
-                originStory = originStoryList.size() > 0 ? originStoryList.get(0)['description'] : '';
+                originStory = originStoryList.size() > 0 ? originStoryList?.get(0)['description']?:'' : '';
             ]]>
         </script>
     </always-actions>
@@ -35,32 +35,32 @@ along with this software (see the LICENSE.md file). If not, see
     <pre-actions>
         <script>
             <![CDATA[
-                import org.moqui.entity.EntityCondition
+            import org.moqui.entity.EntityCondition
 
-                def condFactory = ec.entity.getConditionFactory()
+            def condFactory = ec.entity.getConditionFactory()
 
-                // Get Value Statements
-                valueStatementList = ec.entity.find('coarchy.ValueStatementAndType').condition(condFactory.makeCondition('disabled', EntityCondition.EQUALS, 'N', true)).condition('organizationId', templateOrgId).condition('replacedByValueStatementId',null).selectField('valueStatementId,value,typeEnumId,sequenceNum,typeDescription').orderBy('sequenceNum').disableAuthz().list();
+            // Get Value Statements
+            valueStatementList = ec.entity.find('coarchy.ValueStatementAndType').condition(condFactory.makeCondition('disabled', EntityCondition.EQUALS, 'N', true)).condition('organizationId', templateOrgId).condition('replacedByValueStatementId',null).selectField('valueStatementId,value,typeEnumId,sequenceNum,typeDescription').orderBy('sequenceNum').disableAuthz().list();
 
-                // Get actors
-                actorList = ec.entity.find('coarchy.Actor').condition('organizationId', templateOrgId).selectField('actorId,name,description').orderBy('name').disableAuthz().list();
+            // Get actors
+            actorList = ec.entity.find('coarchy.Actor').condition('organizationId', templateOrgId).selectField('actorId,name,description').orderBy('name').disableAuthz().list();
 
-                // Get Process Stories
-                processStoryList = ec.entity.find('coarchy.ProcessStoryActivityAndDetail').condition(condFactory.makeCondition('disabled', EntityCondition.EQUALS, 'N', true)).condition('organizationId', templateOrgId).selectField('processStoryId,detailProcessStoryId,detail2ProcessStoryId,detail3ProcessStoryId,name,detailName,detail2Name,detail3Name').distinct(true).disableAuthz().list();
+            // Get Process Stories
+            processStoryList = ec.entity.find('coarchy.ProcessStoryActivityAndDetail').condition(condFactory.makeCondition('disabled', EntityCondition.EQUALS, 'N', true)).condition('organizationId', templateOrgId).selectField('processStoryId,detailProcessStoryId,detail2ProcessStoryId,detail3ProcessStoryId,name,detailName,detail2Name,detail3Name').distinct(true).disableAuthz().list();
 
-                // Get Origin story, mission and vision
-                originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
-                missionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
-                visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
+            // Get Origin story, mission and vision
+            originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
+            missionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
+            visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
 
-                // Get product list
-                productList = ec.entity.find('mantle.product.Product').condition('ownerPartyId', templateOrgId).condition(condFactory.makeCondition('hidden', EntityCondition.EQUALS, 'N', true)).condition('productClassEnumId','PclsCoarchy').selectField('productId,productName').orderBy('productName').disableAuthz().list();
+            // Get product list
+            productList = ec.entity.find('mantle.product.Product').condition('ownerPartyId', templateOrgId).condition(condFactory.makeCondition('hidden', EntityCondition.EQUALS, 'N', true)).condition('productClassEnumId','PclsCoarchy').selectField('productId,productName').orderBy('productName').disableAuthz().list();
             ]]>
         </script>
 
-        <set field="originStory" from="originStoryList.size() > 0 ? originStoryList.get(0)['description'] : ''" />
-        <set field="mission" from="missionList.size() > 0 ? missionList.get(0)['description'] : ''" />
-        <set field="vision" from="visionList.size() > 0 ? visionList.get(0)['description'] : ''" />
+        <set field="originStory" from="originStoryList.size() > 0 ? originStoryList?.get(0)['description']?:'' : ''" />
+        <set field="mission" from="missionList.size() > 0 ? missionList?.get(0)['description']?:'' : ''" />
+        <set field="vision" from="visionList.size() > 0 ? visionList?.get(0)['description']?:'' : ''" />
 
         <set field="showSubstoriesActual" from="true" />
         <set field="activitiesByStoryMap" from="[:]" />
@@ -93,7 +93,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <q-card-section class="text-grey-8 bg-grey-2">
                                 <div class="row items-start justify-between">
                                     <div class="text-h5 text-bold text-black">
-                                        ${organization.organizationName!}
+                                        ${organization.organizationName!''}
                                         <q-badge color="info">Template</q-badge>
                                     </div>
                                     <div>
@@ -108,9 +108,9 @@ along with this software (see the LICENSE.md file). If not, see
                             <q-separator></q-separator>
                             <q-card-section class="text-grey-8">
                                 <div class="text-subtitle2">
-                                            <span id="Mission" class="template-header text-bold text-grey-6">
-                                                Description
-                                            </span>
+                                    <span id="Mission" class="template-header text-bold text-grey-6">
+                                        Description
+                                    </span>
                                     <div class="text-black">
                                         ${mission!''}
                                     </div>

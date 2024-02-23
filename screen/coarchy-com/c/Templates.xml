@@ -44,9 +44,9 @@ along with this software (see the LICENSE.md file). If not, see
                     templateOrgList.add([
                         partyId: publicOrg['partyId'],
                         organizationName: publicOrg['organizationName'],
-                        originStory: originStoryList.size() > 0 ? originStoryList.get(0)['description'] : '',
-                        mission: missionList.size() > 0 ? missionList.get(0)['description'] : '',
-                        vision: visionList.size() > 0 ? visionList.get(0)['description'] : ''
+                        originStory: originStoryList.size() > 0 ? originStoryList?.get(0)['description']?:'' : '',
+                        mission: missionList.size() > 0 ? missionList?.get(0)['description']?:'' : '',
+                        vision: visionList.size() > 0 ? visionList?.get(0)['description']?:'' : ''
                     ]);
                 }            
             ]]>
@@ -62,10 +62,19 @@ along with this software (see the LICENSE.md file). If not, see
                                 <h1 class="text-h2">Coarchy Templates</h1>
                             </div>
                             <div class="row">
-                                <div class="col-xs-12 col-sm-6 col-md-4 q-pa-sm" v-for="publicOrg in ${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafeCollection(templateOrgList)}" :key="publicOrg.partyId">
+                                <div class="col-12 q-pa-sm" v-for="publicOrg in ${Static["org.moqui.util.WebUtilities"].encodeHtmlJsSafeCollection(templateOrgList)}" :key="publicOrg.partyId">
                                     <q-card flat bordered>
-                                        <q-card-section class="text-grey-8">
+                                        <q-card-section class="text-grey-8 q-py-xs">
                                             <div class="text-h4 text-black">{{publicOrg.organizationName}}</div>
+                                            <q-icon class="q-mr-sm" name="track_changes"></q-icon>
+                                            <span class="text-bold">
+                                                Description
+                                            </span>
+                                            <div class="text-black">
+                                                {{publicOrg.mission}}
+                                            </div>
+                                        </q-card-section>
+                                        <q-card-section class="text-grey-8" v-if="publicOrg.originStory">
                                             <div class="text-subtitle2">
                                                 <span class="text-bold text-grey-6">
                                                     Origin Story
@@ -75,16 +84,7 @@ along with this software (see the LICENSE.md file). If not, see
                                                 </div>
                                             </div>
                                         </q-card-section>
-                                        <q-card-section class="text-grey-8 q-py-xs">
-                                            <q-icon class="q-mr-sm" name="track_changes"></q-icon>
-                                            <span class="text-bold">
-                                                Mission
-                                            </span>
-                                            <div class="text-black">
-                                                {{publicOrg.mission}}
-                                            </div>
-                                        </q-card-section>
-                                        <q-card-section class="text-grey-8 q-py-xs">
+                                        <q-card-section class="text-grey-8 q-py-xs" v-if="publicOrg.vision">
                                             <q-icon class="q-mr-sm" name="visibility"></q-icon>
                                             <span class="text-bold">
                                                 Vision
