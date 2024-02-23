@@ -168,6 +168,13 @@ along with this software (see the LICENSE.md file). If not, see
     <!--            typeString="info" showAlert="Y" persistOnSend="N" receiveNotifications="Y" emailTemplateId="TASK_ASSIGNED_NOTIFICATION"-->
     <!--            linkTemplate="/coapp/Checklist?checklistId=${workEffortId}&amp;canViewProjectPositions=true" emailMessageSave="Y"/>-->
 
+    <moqui.basic.email.EmailTemplate emailTemplateId="CREDITS_EXPIRING_7DAYS" description="Credits Expiring in 7 Days" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/email/CreditsExpiringEmail.xml" webappName="webroot"
+            fromAddress="system@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+    <moqui.basic.email.EmailTemplate emailTemplateId="CREDITS_EXPIRING_1DAY" description="Credits Expiring in 1 Day" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/email/CreditsExpiringEmail.xml" webappName="webroot"
+            fromAddress="system@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+            
     <!-- Data Documents -->
     <dataDocuments dataDocumentId="MantleParty">
         <fields fieldSeqId="100" fieldPath="lastUpdatedStamp"/>
@@ -311,6 +318,21 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.service.job.ServiceJob jobName="send_OnboardingEmails__daily" description="Send Daily Onboarding Emails"
             serviceName="coarchy.CoarchyServices.send#OnboardingEmails" cronExpression="0 0 10 * * ?" paused="N"
             transactionTimeout="3600"/>
+    <moqui.service.job.ServiceJob jobName="check_CreditExpire7DayAlert__daily" description="Check and Send Credit Expire Notifications (7 days ahead)"
+            serviceName="coarchy.NotificationServices.check#CreditExpire" cronExpression="0 0 10 * * ?" paused="N"
+            transactionTimeout="3600">
+        <parameters parameterName="thresholdHigh" parameterValue="7"/>
+        <parameters parameterName="thresholdLow" parameterValue="2"/>
+        <parameters parameterName="lookForwardDays" parameterValue="7"/>
+    </moqui.service.job.ServiceJob>
+    <moqui.service.job.ServiceJob jobName="check_CreditExpire1DayAlert__daily" description="Check and Send Credit Expire Notifications (1 day ahead)"
+            serviceName="coarchy.NotificationServices.check#CreditExpire" cronExpression="0 0 10 * * ?" paused="N"
+            transactionTimeout="3600">
+            <parameters parameterName="thresholdHigh" parameterValue="1"/>
+            <parameters parameterName="thresholdLow" parameterValue="0"/>
+            <parameters parameterName="lookForwardDays" parameterValue="1"/>
+    </moqui.service.job.ServiceJob>
+
 
     <!-- ========== Agreements ========== -->
     <enums enumId="AgrPrivacyPolicy" description="Privacy Policy" enumTypeId="AgreementType"/>
