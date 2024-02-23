@@ -27,7 +27,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 // Query this here so we use it in html_description 
                 originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
-                originStory = originStoryList.size() > 0 ? originStoryList.get(0)['description'] : '';
+                originStory = originStoryList.size() > 0 ? originStoryList?.get(0)['description']?:'' : '';
             ]]>
         </script>
     </always-actions>
@@ -72,9 +72,9 @@ along with this software (see the LICENSE.md file). If not, see
             ]]>        
         </script>
 
-        <set field="originStory" from="originStoryList.size() > 0 ? originStoryList.get(0)['description'] : ''" />
-        <set field="mission" from="missionList.size() > 0 ? missionList.get(0)['description'] : ''" />
-        <set field="vision" from="visionList.size() > 0 ? visionList.get(0)['description'] : ''" />
+        <set field="originStory" from="originStoryList.size() > 0 ? originStoryList?.get(0)['description']?:'' : ''" />
+        <set field="mission" from="missionList.size() > 0 ? missionList?.get(0)['description']?:'' : ''" />
+        <set field="vision" from="visionList.size() > 0 ? visionList?.get(0)['description']?:'' : ''" />
 
         <set field="showSubstoriesActual" from="true" />
         <set field="activitiesByStoryMap" from="[:]" />
@@ -95,7 +95,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <q-card-section class="text-grey-8 bg-grey-2">
                                 <div class="row items-start justify-between">
                                     <div class="text-h5 text-bold text-black">
-                                        ${organization.organizationName}
+                                        ${organization.organizationName!''}
                                         <q-badge color="info">Template</q-badge>
                                     </div>
                                     <div>
@@ -114,7 +114,7 @@ along with this software (see the LICENSE.md file). If not, see
                                         Origin Story                  
                                     </span>
                                     <div class="text-black">
-                                        ${originStory}
+                                        ${originStory!''}
                                     </div>
                                 </div>
                             </q-card-section>
@@ -124,7 +124,7 @@ along with this software (see the LICENSE.md file). If not, see
                                         Mission                  
                                     </span>
                                     <div class="text-black">
-                                        ${mission}
+                                        ${mission!''}
                                     </div>
                                 </div>
                             </q-card-section>
@@ -134,7 +134,7 @@ along with this software (see the LICENSE.md file). If not, see
                                         Vision                  
                                     </span>
                                     <div class="text-black">
-                                        ${vision}
+                                        ${vision!''}
                                     </div>
                                 </div>
                             </q-card-section>
@@ -147,7 +147,7 @@ along with this software (see the LICENSE.md file). If not, see
                                         <#list valueStatementList as statement>
                                             <li class="text-black">                  
                                                 ${statement.value}
-                                                <q-badge>${statement.typeDescription}</q-badge>
+                                                <q-badge>${statement.typeDescription!''}</q-badge>
                                             </li>  
                                         </#list>
                                     </ol>
@@ -164,7 +164,7 @@ along with this software (see the LICENSE.md file). If not, see
                                                 ${actor.name} 
                                                 <#if actor.description?has_content>
                                                     <span class="text-grey-8">
-                                                    – ${actor.description}
+                                                    – ${actor.description!''}
                                                     </span>
                                                 </#if>
                                             </li>  
@@ -181,7 +181,7 @@ along with this software (see the LICENSE.md file). If not, see
                                         <ol>  
                                             <#list processStoryList as story>                                        
                                                 <li id="Story${story.processStoryId}" class="">
-                                                    ${story.name}    
+                                                    ${story.name!''}    
                                                 </li>             
                                                 <#assign processStoryActivityList= activitiesByStoryMap[story.processStoryId]/>                          
                                                 <#include "component://coarchy/template/ProcessStoryOutline.html.ftl"/>
@@ -199,7 +199,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     <ol>
                                         <#list productList as product>
                                             <li class="text-black">                  
-                                                ${product.productName}
+                                                ${product.productName!''}
                                             </li>  
                                         </#list>
                                     </ol>
@@ -238,7 +238,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 </q-item>
                                 <#list processStoryList as story>  
                                     <q-item clickable v-ripple :inset-level="1" @click="scrollToAnchor('Story${story.processStoryId}')">
-                                        ${story?counter}. ${story.name}
+                                        ${story?counter}. ${story.name!''}
                                     </q-item>                                                                                     
                                 </#list>
                                 <q-item clickable v-ripple @click="scrollToAnchor('Product')">
@@ -275,7 +275,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 </q-item>
                                 <#list processStoryList as story>  
                                     <q-item clickable v-ripple :inset-level="1" @click="scrollToAnchor('Story${story.processStoryId}')">
-                                        ${story?counter}. ${story.name}
+                                        ${story?counter}. ${story.name!''}
                                     </q-item>                                                                                     
                                 </#list>
                                 <q-item clickable v-ripple  @click="scrollToAnchor('Product')">
