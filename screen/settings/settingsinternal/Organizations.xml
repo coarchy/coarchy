@@ -300,21 +300,16 @@ along with this software (see the LICENSE.md file). If not, see
                         <conditional-field title="View Organization" condition="visibilityEnumId=='PvPublic'&amp;&amp;
                                 ownerPartyId != ec.user.userAccount.partyId"><link url="goToApplication" text="${organizationName}"
                                 parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/>
-                            <link url="" text="${organizationName} Response"
-                                parameter-map="[partyId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/>
                             <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip>
                             <q-chip>Read Only</q-chip>]]></text></render-mode></conditional-field>
                         <conditional-field title="View Organization" condition="visibilityEnumId=='PvPublic'&amp;&amp;
                                 ownerPartyId == ec.user.userAccount.partyId"><link url="goToApplication" text="${organizationName}"
                                 parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home"/>
-                            <link url="" text="${organizationName} Response"
-                                parameter-map="[partyId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/>
                             <render-mode><text type="qvt"><![CDATA[<q-chip color="red-11" text-color="black">Public</q-chip>
                                 ]]></text></render-mode></conditional-field>
                         <default-field title="View Organization"><link url="goToApplication" text="${organizationName}"
                                 parameter-map="[partyId:toPartyId]" tooltip="View ${organizationName} Home" condition="isMember"/>
-                            <link url="goToVendorHome" text="${organizationName} Response"
-                                parameter-map="[organizationId:toPartyId]" tooltip="Respond to ${organizationName}'s request for information" condition="isRep"/></default-field>
+                        </default-field>
                     </field>
                     <field name="organizationName"><conditional-field title="Organization Settings" condition="
                         !(isRep &amp;&amp; !isMember) &amp;&amp; visibilityEnumId!='PvPublic' || ownerPartyId == ec.user.userAccount.partyId">

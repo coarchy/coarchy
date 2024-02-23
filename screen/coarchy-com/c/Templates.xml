@@ -68,28 +68,28 @@ along with this software (see the LICENSE.md file). If not, see
                                             <div class="text-h4 text-black">{{publicOrg.organizationName}}</div>
                                             <div class="text-subtitle2">
                                                 <span class="text-bold text-grey-6">
-                                                    Origin Story                  
+                                                    Origin Story
                                                 </span>
-                                                <div class="text-black">                  
+                                                <div class="text-black">
                                                     {{publicOrg.originStory}}
-                                                </div>  
+                                                </div>
                                             </div>
                                         </q-card-section>
-                                        <q-card-section class="text-grey-8 q-py-xs">   
+                                        <q-card-section class="text-grey-8 q-py-xs">
                                             <q-icon class="q-mr-sm" name="track_changes"></q-icon>
                                             <span class="text-bold">
-                                                Mission                  
+                                                Mission
                                             </span>
-                                            <div class="text-black">                  
+                                            <div class="text-black">
                                                 {{publicOrg.mission}}
-                                            </div>                                          
+                                            </div>
                                         </q-card-section>
-                                        <q-card-section class="text-grey-8 q-py-xs">   
+                                        <q-card-section class="text-grey-8 q-py-xs">
                                             <q-icon class="q-mr-sm" name="visibility"></q-icon>
                                             <span class="text-bold">
-                                                Vision                  
+                                                Vision
                                             </span>
-                                            <div class="text-black">                  
+                                            <div class="text-black">
                                                 {{publicOrg.vision}}
                                             </div>
                                         </q-card-section>
