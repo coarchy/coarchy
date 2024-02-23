@@ -339,7 +339,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="notify" noun="ChurnedUsers">
+    <service verb="notify" noun="ChurnedUsers" authenticate="anonymous-all">
         <in-parameters>
             <parameter name="currentTimestamp" type="Timestamp" default="ec.user.nowTimestamp"></parameter>
         </in-parameters>
