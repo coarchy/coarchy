@@ -88,6 +88,31 @@ along with this software (see the LICENSE.md file). If not, see
         <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:activeOrgId]"/>
     </actions><default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
 
+    <!-- TODO: This needs a lot of work. I'm leaving it here for later. -->
+    <transition name="importText">
+        <actions>
+            <log level="info" message="Importing text ${text}"/>
+            <set field="paragraphTextList" from="text.split('(?:\\r\\n|\\r|\\n){2}').toList()"/>
+            <set field="activityMapList" from="[]"/>
+            <iterate list="paragraphTextList" entry="paragraphText">
+                <set field="intermediateActivityMapList" from="paragraphText.split('\\.').toList()"/>
+                <iterate list="intermediateActivityMapList" entry="intermediateActivityText">
+                    <if condition="intermediateActivityText.contains(',')">
+                        <set field="intermediateActivityTextCondition" from="intermediateActivityText.split(',')"/>
+                        <set field="condition" from="intermediateActivityTextCondition[0]"/>
+                        <set field="intermediateActivityText" from="intermediateActivityText.replace(intermediateActivityTextCondition[0]+',','').trim()"/>
+                    </if>
+                    <set field="actorList" from="null"/>
+                    <set field="activity" from="intermediateActivityText"/>
+                    <set field="activityMapList" from="activityMapList + ['condition':condition, 'actorList':actorList, 'activity':activity]"/>
+                </iterate>
+                <set field="activityMapList" from="activityMapList + ['condition':null, 'actorList':null, 'activity':null]"/>
+            </iterate>
+
+            <log level="warn" message="importText context.toString() ${context.toString()}"/>
+
+        </actions><default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
+
     <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions>
             <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
