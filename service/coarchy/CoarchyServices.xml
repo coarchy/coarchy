@@ -919,7 +919,12 @@ along with this software (see the LICENSE.md file). If not, see
         <out-parameters>
             <parameter name="partyId"/>
             <parameter name="partyClassificationId"/>
-            <parameter name="newOrganizationId" />
+            <parameter name="newOrganizationId"/>
+            <parameter name="username"/>
+            <parameter name="firstName"/>
+            <parameter name="lastName"/>
+            <parameter name="templateOrgId"/>
+            <parameter name="organizationName"/>
         </out-parameters>
         <actions>
             <service-call name="coarchy.CoarchyServices.create#Account" out-map="context"
@@ -3657,7 +3662,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="wikiPageId" from="wikiBlog?.wikiPageId"/>
                 <econdition field-name="publishedVersionName" operator="is-not-null"/>
             </entity-find>
-            <log level="warn" message="send#NewsletterEmail context.toString() ${context.toString()}"/>
+<!--            <log level="warn" message="send#NewsletterEmail context.toString() ${context.toString()}"/>-->
             <set field="wikiPage" from="wikiPageList?.getFirst()"/>
             <if condition="!wikiPage">
                 <log level="warn" message="No wiki page with no sent date found"/>
@@ -3719,7 +3724,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </if>
                 </else>
             </if>
-            <log level="warn" message="send#NewsletterEmail end context.toString() ${context.toString()}"/>
+<!--            <log level="warn" message="send#NewsletterEmail end context.toString() ${context.toString()}"/>-->
         </actions>
     </service>
 
