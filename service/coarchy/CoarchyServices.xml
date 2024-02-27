@@ -1056,6 +1056,78 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="new" noun="Paragraph">
+        <in-parameters>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="organizationId" required="true"/>
+            <parameter name="insertSequenceNum" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="newActivity" type="Map"/>
+            <parameter name="processStoryActivityId"/>
+        </out-parameters>
+        <actions>
+            <service-call name="create#coarchy.Activity" in-map="[organizationId:organizationId]" out-map="newActivity"/>
+
+            <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
+                <date-filter/>
+                <econdition field-name="processStoryId"/>
+                <econdition field-name="sequenceNum" from="insertSequenceNum.toInteger()"/>
+                <order-by field-name="-sequenceNum"/></entity-find>
+            <if condition="processStoryInitialActivityList?.size() &gt; 0">
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                    <date-filter/>
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
+                    <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
+                    <select-field field-name="processStoryActivityId,sequenceNum"/>
+                    <order-by field-name="-sequenceNum"/></entity-find>
+                <iterate list="processStoryActivityList" entry="processStoryActivity">
+                    <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]" out-map="context"/>
+                </iterate>
+            </if>
+
+            <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:organizationId]" out-map="context"/>
+        </actions>
+    </service>
+    <service verb="create" noun="ActivityPublic">
+        <in-parameters>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="organizationId" required="true"/>
+            <parameter name="condition"/>
+            <parameter name="actorIdList" type="List"/>
+            <parameter name="statementIdList" type="List" default="[]"/>
+            <parameter name="action"/>
+            <parameter name="insertSequenceNum"/>
+            <parameter name="implementationId"/>
+            <parameter name="ignoreNoAction" type="Boolean" default="false"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="activityId"/>
+            <parameter name="processStoryActivityId"/>
+            <parameter name="sequenceNum"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
+                <date-filter />
+                <econdition field-name="processStoryId"/>
+                <econdition field-name="sequenceNum" from="insertSequenceNum.toInteger()" />
+                <order-by field-name="-sequenceNum"/></entity-find>
+            <if condition="processStoryInitialActivityList?.size() &gt; 0">
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                    <date-filter />
+                    <econdition field-name="processStoryId"/>
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
+                    <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
+                    <select-field field-name="processStoryActivityId,sequenceNum"/>
+                    <order-by field-name="-sequenceNum"/></entity-find>
+                <iterate list="processStoryActivityList" entry="processStoryActivity">
+                    <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+                </iterate>
+            </if>
+
+            <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:organizationId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:sequenceNum,implementationId:implementationId]" out-map="newActivity"/>
+        </actions>
+    </service>
     <service verb="create" noun="Activity">
         <in-parameters>
             <parameter name="processStoryId" required="true"/>

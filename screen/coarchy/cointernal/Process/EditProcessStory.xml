@@ -190,7 +190,7 @@ along with this software (see the LICENSE.md file). If not, see
             </form-single>
         </container-dialog>
 
-        <container-dialog id="ImportTextDialogue" button-text="Import Text" type="success" condition="partyRelationshipCount &gt; 0">
+        <container-dialog id="ImportTextDialogue" button-text="Import Text" type="success" condition="partyRelationshipCount &gt; 0 &amp;&amp; ec.user.isInGroup('ADMIN')">
             <form-single name="ImportText" transition="importText">
                 <field name="pageIndex"><default-field><hidden/></default-field></field>
                 <field name="processStoryId"><default-field><hidden/></default-field></field>
