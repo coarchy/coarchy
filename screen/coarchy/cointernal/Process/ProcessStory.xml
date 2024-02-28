@@ -66,50 +66,84 @@ along with this software (see the LICENSE.md file). If not, see
         <actions><script>ec.web.sendJsonResponse(outList)</script></actions>
         <default-response type="none"/></transition>
 
-    <transition name="newParagraph"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
-        <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
+    <transition name="newParagraph"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <service-call name="coarchy.CoarchyServices.new#Paragraph" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,insertSequenceNum:insertSequenceNum]"/>
+        <default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
 
-        <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
-            <date-filter />
-            <econdition field-name="sequenceNum" from="insertSequenceNum.toInteger()"/>
-            <order-by field-name="-sequenceNum"/></entity-find>
-        <if condition="processStoryInitialActivityList?.size() &gt; 0">
-            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+    <!-- TODO: This needs a fair bit of work, handle edge cases better, do a grammar / sentence analysis, better actor recognition etc. -->
+    <transition name="importText"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; ec.user.isInGroup('ADMIN')</expression></condition>
+        <actions>
+<!--            <log level="info" message="Importing text ${text}"/>-->
+            <!-- Split by 2 newline characters to be a paragraph -->
+            <set field="paragraphTextList" from="text.split('(?:\\r\\n|\\r|\\n){2}').toList()"/>
+            <set field="activityMapList" from="[]"/>
+            <iterate list="paragraphTextList" entry="paragraphText">
+                <!-- Split by period to be a sentence -->
+                <set field="intermediateActivityMapList" from="paragraphText.trim().split('\\.').toList()"/>
+                <iterate list="intermediateActivityMapList" entry="intermediateActivityText">
+                    <set field="intermediateActivityText" from="intermediateActivityText.trim()"/>
+                    <set field="condition" value=""/>
+                    <!-- Split by comma to be a condition -->
+                    <if condition="intermediateActivityText.contains(',')">
+                        <set field="intermediateActivityTextCondition" from="intermediateActivityText.split(',')"/>
+                        <set field="condition" from="intermediateActivityTextCondition[0]"/>
+                        <set field="intermediateActivityText" from="intermediateActivityText.replace(intermediateActivityTextCondition[0]+',','').trim()"/>
+                    </if>
+                    <set field="intermediateActivityTextActor" from="intermediateActivityText.split(' ')"/>
+                    <set field="actorList" value=""/>
+                    <if condition="java.lang.Character.isUpperCase(intermediateActivityText.charAt(0))">
+                        <set field="actorList" from="intermediateActivityTextActor[0]"/>
+                        <set field="intermediateActivityText" from="intermediateActivityText.replace(actorList+' ','').trim()"/>
+                    </if>
+                    <set field="action" from="intermediateActivityText"/>
+                    <set field="activityMapList" from="activityMapList + ['condition':condition, 'actorList':actorList, 'action':action]"/>
+                </iterate>
+                <set field="activityMapList" from="activityMapList + ['condition':null, 'actorList':null, 'action':null]"/>
+            </iterate>
+
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
+                <search-form-inputs default-order-by="sequenceNum,action"/>
                 <date-filter />
                 <econdition field-name="replacedByActivityId" operator="is-null" />
-                <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
-                <select-field field-name="processStoryActivityId,sequenceNum"/>
-                <order-by field-name="-sequenceNum"/></entity-find>
-            <iterate list="processStoryActivityList" entry="processStoryActivity">
-                <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
-            </iterate>
-        </if>
+                <econdition field-name="processStoryId"/>
+                <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
+                <!-- Don't select fields from activityactor (actorId) -->
+                <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
+            </entity-find>
+            <set field="insertSequenceNum" from="processStoryActivityList?.size()&gt;0?processStoryActivityList?.last()?.sequenceNum+1:0"/>
+            <iterate list="activityMapList" entry="activityMap">
+                <if condition="activityMap.action">
+                    <if condition="activityMap.actorList">
+                        <entity-find entity-name="coarchy.Actor" list="insideActorList" distinct="true" limit="1">
+                            <econdition field-name="name" from="activityMap.actorList"/>
+                            <select-field field-name="actorId,name"/>
+                            <order-by field-name="name"/></entity-find>
+                        <set field="actorIdList" from="[]"/>
+                        <if condition="!insideActorList"><then>
+                            <service-call name="create#coarchy.Actor" in-map="[name:activityMap.actorList,
+                            organizationId:activeOrgId]" out-map="actorContext"/>
+                            <script>actorIdList.add(actorContext?.actorId)</script>
+                        </then><else>
+                            <script>actorIdList.add(insideActorList.getFirst().actorId)</script>
+                        </else></if>
 
-        <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:activeOrgId]"/>
-    </actions><default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
+                    </if>
+                    <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,
+                        condition:activityMap.condition,actorIdList:actorIdList,action:activityMap.action,insertSequenceNum:insertSequenceNum]"/>
+                <else>
+                    <service-call name="coarchy.CoarchyServices.new#Paragraph" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,insertSequenceNum:insertSequenceNum]"/>
+                </else></if>
+<!--                <log level="warn" message="importText ${insertSequenceNum} activityMap ${activityMap}"/>-->
+                <set field="insertSequenceNum" from="insertSequenceNum+1"/>
+            </iterate>
+
+<!--            <log level="warn" message="importText activityMapList.toString() ${activityMapList.toString()}"/>-->
+
+        </actions><default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
 
     <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <actions>
-            <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
-                <date-filter />
-                <econdition field-name="processStoryId"/>
-                <econdition field-name="sequenceNum" from="insertSequenceNum.toInteger()"/>
-                <order-by field-name="-sequenceNum"/></entity-find>
-            <if condition="processStoryInitialActivityList?.size() &gt; 0">
-                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
-                    <date-filter />
-                    <econdition field-name="processStoryId"/>
-                    <econdition field-name="replacedByActivityId" operator="is-null" />
-                    <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
-                    <select-field field-name="processStoryActivityId,sequenceNum"/>
-                    <order-by field-name="-sequenceNum"/></entity-find>
-                <iterate list="processStoryActivityList" entry="processStoryActivity">
-                    <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
-                </iterate>
-            </if>
-
-            <service-call name="coarchy.CoarchyServices.create#Activity" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,condition:condition,actorIdList:actorIdList,action:action,sequenceNum:insertSequenceNum,implementationId:implementationId]" out-map="newActivity"/>
-        </actions>
+        <service-call name="coarchy.CoarchyServices.create#ActivityPublic" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,
+        condition:condition,actorIdList:actorIdList,action:action,insertSequenceNum:insertSequenceNum,implementationId:implementationId]" out-map="newActivity"/>
         <default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
     <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/>

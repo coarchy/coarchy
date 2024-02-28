@@ -48,9 +48,11 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response/><error-response url="." save-parameters="true"/>
     </transition>
 
-    <transition name="deleteProduct"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition><actions>
-            <!-- TODO: check depends -->
-        <service-call name="delete#mantle.product.Product" in-map="[productId:productId, ownerPartyId:activeOrgId]"/>
+    <transition name="hideProduct"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition><actions>
+        <service-call name="update#mantle.product.Product" in-map="[productId:productId, ownerPartyId:activeOrgId, hidden:'Y']"/>
+        </actions><default-response/></transition>
+    <transition name="unhideProduct"><condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition><actions>
+        <service-call name="update#mantle.product.Product" in-map="[productId:productId, ownerPartyId:activeOrgId, hidden:'N']"/>
         </actions><default-response/></transition>
 
     <transition name="createProductEvaluation">
@@ -106,7 +108,9 @@ along with this software (see the LICENSE.md file). If not, see
         <form-list name="ProductListForm" header-dialog="true" show-page-size="true" select-columns="true" saved-finds="true"
                    show-csv-button="true" list="productList" transition="updateProduct" transition-last-row="createProduct" map-last-row="[productName:null,description:null]">
             <entity-find entity-name="mantle.product.Product" list="productList">
-                <search-form-inputs />
+                <search-form-inputs >
+                    <default-parameters hidden="N" />
+                    </search-form-inputs>
                 <econdition field-name="productClassEnumId" value="PclsCoarchy" />
                 <econdition field-name="ownerPartyId" from="activeOrgId"/>
             </entity-find>   
@@ -122,90 +126,44 @@ along with this software (see the LICENSE.md file). If not, see
                     <hidden />
                 </default-field>
             </field>
+            <field name="hidden">
+               <header-field>
+                    <drop-down>
+                        <option key="Y" text="Y" />
+                        <option key="N" text="N" />
+                    </drop-down>
+               </header-field>
+               <default-field>
+                    <hidden />
+               </default-field>
+            </field>
             <field name="productName">
                 <header-field show-order-by="case-insensitive"><text-find/></header-field>
+                <conditional-field condition="hidden=='Y'"><display/></conditional-field>
                 <default-field><text-line/></default-field>
                 <last-row-field><text-line/></last-row-field>
             </field>
             <field name="description">
                 <header-field><text-find/></header-field>
+                <conditional-field condition="hidden=='Y'"><display/></conditional-field>
                 <default-field><text-area rows="2" cols="80" autogrow="true"/></default-field>
                 <last-row-field><text-area rows="2" cols="80" autogrow="true"/></last-row-field>
             </field>           
             <field name="submit">
                 <header-field><submit text="Submit"/></header-field>
+                <conditional-field condition="hidden=='Y'"></conditional-field>
                 <default-field><submit text="Update"/></default-field>
                 <last-row-field><submit text="Add Product" type="success"/></last-row-field></field>
-            <field name="delete"><default-field title="">
-                    <!-- <section name="ProductVendorInviteSection">
-                    <widgets>
-                        <container-dialog id="ProductVendorInviteDialog" button-text="RFI Invite">
-                            <container>
-                                <label text="Send invitations to product vendor representatives with a request for information
-                    about the applicability of their product to your requirement statements and
-                    process story activities." />
-                            </container>
-                            <form-single name="ProductVendorInviteForm" transition="inviteVendor">
-                                <field name="productId">
-                                    <default-field><hidden /></default-field>
-                                </field>
-                                <field name="emailAddress"><default-field><text-line input-type="email"/></default-field></field>
-                                <field name="submit"><default-field><submit text="Invite"/></default-field></field>
-                                <field-layout>
-                                    <field-col-row>
-                                        <field-col sm="9">
-                                            <field-ref name="emailAddress" />
-                                        </field-col> 
-                                        <field-col sm="3">
-                                            <field-ref name="submit" />
-                                        </field-col>
-                                    </field-col-row>
-                                </field-layout>
-                            </form-single>
-                            <section name="ProductVendorInviteListSection" condition="vendorRepList">
-                                <widgets>
-                                    <label text="Sent RFI Invites" style="text-bold q-ml-md" />
-                                    <form-list name="ProductVendorInviteList" list="vendorRepList">
-                                        <row-actions>
-                                            <entity-find-one entity-name="mantle.party.PersonAndUserAccount" value-field="personAndAccount">
-                                                <field-map field-name="partyId" />
-                                            </entity-find-one>
-                                        </row-actions>
-                                        <field name="partyId">
-                                            <default-field>
-                                                <hidden/>
-                                            </default-field>
-                                        </field>
-                                        <field name="combinedName">
-                                            <default-field title="Representative Name">
-                                                <display text="${personAndAccount?.firstName} ${personAndAccount?.lastName}"
-                    parameter-map="personAndAccount"/>
-                                            </default-field>
-                                        </field>
-                                        <field name="emailAddress">
-                                            <default-field>
-                                                <display text="${personAndAccount.emailAddress}"/>
-                                            </default-field>
-                                        </field>
-                                        <!- - <field name="statusId">
-                                            <default-field title="Invitation Status">
-                                                <display-entity entity-name="moqui.basic.StatusItem"/>
-                                            </default-field>
-                                        </field>
-                                        <field name="actions" >
-                                            <default-field title="">
-                                                <link url="." text="Cancel Invitation" condition="statusId=='PpInvited'"/>
-                                                <link url="." text="Remove as a vendor" condition="statusId=='PpAccepted'"/>
-                                            </default-field>
-                                        </field> - ->
-                                    </form-list>
-                                </widgets>
-                            </section>
-                        </container-dialog>
-                    </widgets>
-                </section> -->
-                <link url="deleteProduct" parameter-map="[productId:productId]" icon="fa fa-trash" btn-type="danger"
-                        text=" " tooltip="Delete Product" confirmation="Delete Product '${productName}'?"/></default-field></field>
+            <field name="hide">
+                <conditional-field condition="hidden=='Y'">
+                    <link url="unhideProduct" parameter-map="[productId:productId]" icon="fa fa-eye" btn-type="success"
+                    text=" " tooltip="Unhide" confirmation="Unhide product '${productName}'?"/>
+                </conditional-field>
+                <default-field title="">                
+                    <link url="hideProduct" parameter-map="[productId:productId]" icon="fa fa-eye-slash" btn-type="danger"
+                            text=" " tooltip="Hide Product" confirmation="Hide Product '${productName}'?"/>
+                    </default-field>
+                </field>
         </form-list>
 
 
@@ -219,6 +177,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <drop-down allow-empty="false">
                             <entity-options key="${productId}" text="${productName}">
                                 <entity-find entity-name="mantle.product.Product">
+                                    <econdition field-name="hidden" value="N" or-null="true" />
                                     <econdition field-name="ownerPartyId" from="activeOrgId" />
                                     <econdition field-name="productClassEnumId" value="PclsCoarchy" />
                                 </entity-find>

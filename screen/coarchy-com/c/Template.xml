@@ -27,54 +27,40 @@ along with this software (see the LICENSE.md file). If not, see
 
                 // Query this here so we use it in html_description 
                 originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
-                originStory = originStoryList.size() > 0 ? originStoryList.get(0)['description'] : '';
+                originStory = originStoryList.size() > 0 ? originStoryList?.get(0)['description']?:'' : '';
             ]]>
         </script>
     </always-actions>
 
     <pre-actions>
-        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
-        <set field="imageUrl" value="/cstatic/background.jpg"/>
-
-        <set field="html_keywords" value="coarchy services"/>
-        <set field="html_title" value="Coarchy Template: ${organization.organizationName}"/>
-        <set field="html_description" value="${originStory}. Use this template for your organization!"/>
-        <set field="html_image" from="baseLinkUrl + imageUrl"/>
-        <set field="html_url" from="baseLinkUrl+'/Template?templateOrgId='+templateOrgId"/>
-        <set field="html_type" value="website"/>
-        <set field="html_site_name" value="Coarchy"/>
-    </pre-actions>
-
-    
-    <actions>  
         <script>
-            <![CDATA[ 
-                import org.moqui.entity.EntityCondition
-                    
-                def condFactory = ec.entity.getConditionFactory()
-            
-                // Get Value Statements
-                valueStatementList = ec.entity.find('coarchy.ValueStatementAndType').condition(condFactory.makeCondition('disabled', EntityCondition.EQUALS, 'N', true)).condition('organizationId', templateOrgId).condition('replacedByValueStatementId',null).selectField('valueStatementId,value,typeEnumId,sequenceNum,typeDescription').orderBy('sequenceNum').disableAuthz().list();
-                
-                // Get actors
-                actorList = ec.entity.find('coarchy.Actor').condition('organizationId', templateOrgId).selectField('actorId,name,description').orderBy('name').disableAuthz().list();
-                
-                // Get Process Stories
-                processStoryList = ec.entity.find('coarchy.ProcessStoryActivityAndDetail').condition(condFactory.makeCondition('disabled', EntityCondition.EQUALS, 'N', true)).condition('organizationId', templateOrgId).selectField('processStoryId,detailProcessStoryId,detail2ProcessStoryId,detail3ProcessStoryId,name,detailName,detail2Name,detail3Name').distinct(true).disableAuthz().list();
-                
-                // Get Origin story, mission and vision
-                originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
-                missionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
-                visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
-                
-                // Get product list
-                productList = ec.entity.find('mantle.product.Product').condition('ownerPartyId', templateOrgId).condition('productClassEnumId','PclsCoarchy').selectField('productId,productName').orderBy('productName').disableAuthz().list();
-            ]]>        
+            <![CDATA[
+            import org.moqui.entity.EntityCondition
+
+            def condFactory = ec.entity.getConditionFactory()
+
+            // Get Value Statements
+            valueStatementList = ec.entity.find('coarchy.ValueStatementAndType').condition(condFactory.makeCondition('disabled', EntityCondition.EQUALS, 'N', true)).condition('organizationId', templateOrgId).condition('replacedByValueStatementId',null).selectField('valueStatementId,value,typeEnumId,sequenceNum,typeDescription').orderBy('sequenceNum').disableAuthz().list();
+
+            // Get actors
+            actorList = ec.entity.find('coarchy.Actor').condition('organizationId', templateOrgId).selectField('actorId,name,description').orderBy('name').disableAuthz().list();
+
+            // Get Process Stories
+            processStoryList = ec.entity.find('coarchy.ProcessStoryActivityAndDetail').condition(condFactory.makeCondition('disabled', EntityCondition.EQUALS, 'N', true)).condition('organizationId', templateOrgId).selectField('processStoryId,detailProcessStoryId,detail2ProcessStoryId,detail3ProcessStoryId,name,detailName,detail2Name,detail3Name').distinct(true).disableAuthz().list();
+
+            // Get Origin story, mission and vision
+            originStoryList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntOriginStory').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
+            missionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntMission').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
+            visionList = ec.entity.find('mantle.party.PartyContent').condition('partyId', templateOrgId).condition('partyContentTypeEnumId','PcntVision').selectField('description').orderBy('-contentDate').limit(1).disableAuthz().list();
+
+            // Get product list
+            productList = ec.entity.find('mantle.product.Product').condition('ownerPartyId', templateOrgId).condition('hidden',EntityCondition.ComparisonOperator.NOT_EQUAL,'Y').condition('productClassEnumId','PclsCoarchy').selectField('productId,productName').orderBy('productName').disableAuthz().list();
+            ]]>
         </script>
 
-        <set field="originStory" from="originStoryList.size() > 0 ? originStoryList.get(0)['description'] : ''" />
-        <set field="mission" from="missionList.size() > 0 ? missionList.get(0)['description'] : ''" />
-        <set field="vision" from="visionList.size() > 0 ? visionList.get(0)['description'] : ''" />
+        <set field="originStory" from="originStoryList.size() > 0 ? originStoryList?.get(0)['description']?:'' : ''" />
+        <set field="mission" from="missionList.size() > 0 ? missionList?.get(0)['description']?:'' : ''" />
+        <set field="vision" from="visionList.size() > 0 ? visionList?.get(0)['description']?:'' : ''" />
 
         <set field="showSubstoriesActual" from="true" />
         <set field="activitiesByStoryMap" from="[:]" />
@@ -84,106 +70,124 @@ along with this software (see the LICENSE.md file). If not, see
                 activitiesByStoryMap.put(processStory.processStoryId, storyActivityOut.processStoryActivityList?:[])
             </script>
         </iterate>
-    </actions>
-    <widgets>       
+
+        <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+        <set field="imageUrl" value="/cstatic/background.jpg"/>
+
+        <set field="html_keywords" value="coarchy services"/>
+        <set field="html_title" value="Template for ${organization.organizationName} to get a Headstart on Documentation!"/>
+        <set field="html_description" value="${mission}"/>
+        <set field="html_image" from="baseLinkUrl + imageUrl"/>
+        <set field="html_url" from="baseLinkUrl+'/Template?templateOrgId='+templateOrgId"/>
+        <set field="html_type" value="website"/>
+        <set field="html_site_name" value="Coarchy"/>
+    </pre-actions>
+
+    <widgets>
         <render-mode>
             <text type="html,qvt,js">
-                <![CDATA[ 
-                <div class="row q-gutter-sm">                    
+                <![CDATA[
+                <div class="row q-gutter-sm">
                     <div id="org-template-content" class="col-lg-6 offset-lg-3 col-md-6 offset-md-2 col-sm-8 offset-sm-1 col-xs-12 offset-xs-0">
-                        <q-card flat bordered>  
+                        <q-card flat bordered>
                             <q-card-section class="text-grey-8 bg-grey-2">
                                 <div class="row items-start justify-between">
                                     <div class="text-h5 text-bold text-black">
-                                        ${organization.organizationName}
+                                        ${organization.organizationName!''}
                                         <q-badge color="info">Template</q-badge>
                                     </div>
                                     <div>
                                         <#if ec.user.userId??>
-                                            <c-create-org-from-template template-org-id="${templateOrgId}"></c-create-org-from-template>
+                                            <c-create-org-from-template template-org-id="${templateOrgId!''}"></c-create-org-from-template>
                                         <#else>
-                                            <q-btn no-caps href="/SignUp?templateOrgId=${templateOrgId}" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
+                                            <q-btn no-caps href="/SignUp?templateOrgId=${templateOrgId!''}" label="Use Template" push color="primary" class="q-ml-xs" size="md"></q-btn>
                                         </#if>
-                                    </div>
-                                </div>     
-                            </q-card-section>    
-                            <q-separator></q-separator>                                                     
-                            <q-card-section class="text-grey-8">
-                                <div class="text-subtitle2">
-                                    <span id="OriginStory" class="template-header text-bold text-grey-6">
-                                        Origin Story                  
-                                    </span>
-                                    <div class="text-black">
-                                        ${originStory}
                                     </div>
                                 </div>
                             </q-card-section>
+                            <q-separator></q-separator>
                             <q-card-section class="text-grey-8">
                                 <div class="text-subtitle2">
                                     <span id="Mission" class="template-header text-bold text-grey-6">
-                                        Mission                  
+                                        Description
                                     </span>
                                     <div class="text-black">
-                                        ${mission}
+                                        ${mission!''}
                                     </div>
                                 </div>
                             </q-card-section>
+                            <#if originStory?has_content>
+                            <q-card-section class="text-grey-8">
+                                <div class="text-subtitle2">
+                                    <span id="OriginStory" class="template-header text-bold text-grey-6">
+                                        Origin Story
+                                    </span>
+                                    <div class="text-black">
+                                        ${originStory!''}
+                                    </div>
+                                </div>
+                            </q-card-section>
+                            </#if>
+                            <#if vision?has_content>
                             <q-card-section class="text-grey-8">
                                 <div class="text-subtitle2">
                                     <span id="Vision" class="template-header text-bold text-grey-6">
-                                        Vision                  
+                                        Vision
                                     </span>
                                     <div class="text-black">
-                                        ${vision}
+                                        ${vision!''}
                                     </div>
                                 </div>
                             </q-card-section>
+                            </#if>
+                            <#if valueStatementList?has_content>
                             <q-card-section class="text-grey-8">
                                 <div class="text-subtitle2">
                                     <span id="Statement" class="template-header text-bold text-grey-6">
-                                        Statements                  
+                                        Statements
                                     </span>
-                                    <ol>
+                                    <ul>
                                         <#list valueStatementList as statement>
-                                            <li class="text-black">                  
-                                                ${statement.value}
-                                                <q-badge>${statement.typeDescription}</q-badge>
-                                            </li>  
+                                            <li class="text-black">
+                                                ${statement.value!''}
+                                                <q-badge>${statement.typeDescription!''}</q-badge>
+                                            </li>
                                         </#list>
-                                    </ol>
+                                    </ul>
+                                </div>
+                            </q-card-section>
+                            </#if>
+                            <q-card-section class="text-grey-8">
+                                <div class="text-subtitle2">
+                                    <span id="Actor" class="template-header text-bold text-grey-6">
+                                        Actors
+                                    </span>
+                                    <ul>
+                                        <#list actorList as actor>
+                                            <li class="text-black">
+                                                ${actor.name!''}
+                                                <#if actor.description?has_content>
+                                                    <span class="text-grey-8">
+                                                    – ${actor.description!''}
+                                                    </span>
+                                                </#if>
+                                            </li>
+                                        </#list>
+                                    </ul>
                                 </div>
                             </q-card-section>
                             <q-card-section class="text-grey-8">
                                 <div class="text-subtitle2">
-                                    <span id="Actor" class="template-header text-bold text-grey-6">
-                                        Actors                  
-                                    </span>
-                                    <ol>
-                                        <#list actorList as actor>
-                                            <li class="text-black">                  
-                                                ${actor.name} 
-                                                <#if actor.description?has_content>
-                                                    <span class="text-grey-8">
-                                                    – ${actor.description}
-                                                    </span>
-                                                </#if>
-                                            </li>  
-                                        </#list>
-                                    </ol>
-                                </div>
-                            </q-card-section>                                                        
-                            <q-card-section class="text-grey-8">
-                                <div class="text-subtitle2">
                                     <span id="ProcessStory" class="template-header text-bold text-grey-6">
-                                        Process Stories                  
+                                        Process Stories
                                     </span>
                                     <div class="numbered-list text-black">
-                                        <ol>  
-                                            <#list processStoryList as story>                                        
-                                                <li id="Story${story.processStoryId}" class="">
-                                                    ${story.name}    
-                                                </li>             
-                                                <#assign processStoryActivityList= activitiesByStoryMap[story.processStoryId]/>                          
+                                        <ol>
+                                            <#list processStoryList as story>
+                                                <li id="Story${story.processStoryId!''}" class="">
+                                                    ${story.name!''}
+                                                </li>
+                                                <#assign processStoryActivityList= activitiesByStoryMap[story.processStoryId]/>
                                                 <#include "component://coarchy/template/ProcessStoryOutline.html.ftl"/>
                                                 <br/>
                                             </#list>
@@ -191,23 +195,25 @@ along with this software (see the LICENSE.md file). If not, see
                                     </div>
                                 </div>
                             </q-card-section>
+                            <#if productList?has_content>
                              <q-card-section class="text-grey-8">
                                 <div class="text-subtitle2">
                                     <span id="Product" class="template-header text-bold text-grey-6">
-                                        Products                  
+                                        Products
                                     </span>
-                                    <ol>
+                                    <ul>
                                         <#list productList as product>
-                                            <li class="text-black">                  
-                                                ${product.productName}
-                                            </li>  
+                                            <li class="text-black">
+                                                ${product.productName!''}
+                                            </li>
                                         </#list>
-                                    </ol>
+                                    </ul>
                                 </div>
                             </q-card-section>
+                            </#if>
                         </q-card>
                     </div>
-                    
+
                     <div v-if="!$q.screen.lt.sm" id="org-template-nav" class="col" style="
                         position: sticky;
                         top: 60px;
@@ -222,7 +228,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     Origin Story
                                 </q-item>
                                 <q-item clickable v-ripple @click="scrollToAnchor('Mission')">
-                                    Mission
+                                    Description
                                 </q-item>
                                 <q-item clickable v-ripple @click="scrollToAnchor('Vision')">
                                     Vision
@@ -230,24 +236,28 @@ along with this software (see the LICENSE.md file). If not, see
                                 <q-item clickable v-ripple @click="scrollToAnchor('Actor')">
                                     Actors
                                 </q-item>
+                                <#if valueStatementList?has_content>
                                 <q-item clickable v-ripple  @click="scrollToAnchor('Statement')">
                                     Statements
                                 </q-item>
+                                </#if>
                                 <q-item clickable v-ripple  @click="scrollToAnchor('ProcessStory')">
                                     Process Stories
                                 </q-item>
-                                <#list processStoryList as story>  
-                                    <q-item clickable v-ripple :inset-level="1" @click="scrollToAnchor('Story${story.processStoryId}')">
-                                        ${story?counter}. ${story.name}
-                                    </q-item>                                                                                     
+                                <#list processStoryList as story>
+                                    <q-item clickable v-ripple :inset-level="1" @click="scrollToAnchor('Story${story.processStoryId!''}')">
+                                        ${story?counter!''}. ${story.name!''}
+                                    </q-item>
                                 </#list>
+                                <#if productList?has_content>
                                 <q-item clickable v-ripple @click="scrollToAnchor('Product')">
                                     Products
                                 </q-item>
+                                </#if>
                             </q-list>
                         </q-card>
                       </q-scroll-area>
-                    </div>                                       
+                    </div>
                 </div>
                 <q-drawer v-model="drawerRightOpen" side="right">
                     <q-scroll-area
@@ -259,7 +269,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     Origin Story
                                 </q-item>
                                 <q-item clickable v-ripple @click="scrollToAnchor('Mission')">
-                                    Mission
+                                    Description
                                 </q-item>
                                 <q-item clickable v-ripple @click="scrollToAnchor('Vision')">
                                     Vision
@@ -267,20 +277,24 @@ along with this software (see the LICENSE.md file). If not, see
                                 <q-item clickable v-ripple @click="scrollToAnchor('Actor')">
                                     Actors
                                 </q-item>
+                                <#if valueStatementList?has_content>
                                 <q-item clickable v-ripple  @click="scrollToAnchor('Statement')">
                                     Statements
                                 </q-item>
+                                </#if>
                                 <q-item clickable v-ripple  @click="scrollToAnchor('ProcessStory')">
                                     Process Stories
                                 </q-item>
-                                <#list processStoryList as story>  
-                                    <q-item clickable v-ripple :inset-level="1" @click="scrollToAnchor('Story${story.processStoryId}')">
-                                        ${story?counter}. ${story.name}
-                                    </q-item>                                                                                     
+                                <#list processStoryList as story>
+                                    <q-item clickable v-ripple :inset-level="1" @click="scrollToAnchor('Story${story.processStoryId!''}')">
+                                        ${story?counter!''}. ${story.name!''}
+                                    </q-item>
                                 </#list>
+                                <#if productList?has_content>
                                 <q-item clickable v-ripple  @click="scrollToAnchor('Product')">
                                     Products
                                 </q-item>
+                                </#if>
                             </q-list>
                         </q-card>
                       </q-scroll-area>

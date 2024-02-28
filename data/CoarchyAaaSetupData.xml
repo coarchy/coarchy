@@ -38,7 +38,6 @@ along with this software (see the LICENSE.md file). If not, see
         <filters entityFilterId="COARCHY_FILTER_C23" entityName="coarchy.product.ProductEvaluationStatement" filterMap="[organizationId:activeOrgId]"/>
         <filters entityFilterId="COARCHY_FILTER_C24" entityName="coarchy.product.ProductEvaluationParty" filterMap="[organizationId:activeOrgId]"/>
         <filters entityFilterId="COARCHY_FILTER_C25" entityName="coarchy.product.ProductEvaluationResponse" filterMap="[organizationId:activeOrgId]"/>
-
     </moqui.security.EntityFilterSet>
 
     <!-- Artifact group and authz for Coarchy Apps -->
@@ -115,6 +114,10 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.email.EmailTemplate emailTemplateId="BLOG" description="Blog" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/email/BlogEmail.xml" webappName="webroot"
             fromAddress="newsletter@coarchy.com" fromName="Coarchy Newsletter" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+
+    <moqui.basic.email.EmailTemplate emailTemplateId="SIGNUP_ADMIN_NOTIFY" description="Notify admin on signup" emailServerId="SYSTEM"
+            emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/email/SignUpAdminNotification.xml" webappName="webroot"
+            fromAddress="system@coarchy.com" fromName="Coarchy" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
 
     <moqui.basic.email.EmailTemplate emailTemplateId="ONBOARDING_WELCOME" description="Welcome" emailServerId="SYSTEM"
             emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="component://coarchy/screen/email/OnboardingWelcomeEmail.xml" webappName="webroot"
@@ -267,7 +270,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <mantle.party.RoleType description="Vendor Representative" roleTypeId="VendorRepresentative"/>
 
-    <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy" visibilityEnumId="PvPublic">
+    <parties pseudoId="coarchy" partyTypeEnumId="PtyOrganization" disabled="N" partyId="coarchy">
         <mantle.party.Organization organizationName="Coarchy" partyId="coarchy"/>
         <roles roleTypeId="OrgInternal"/>
     </parties>
