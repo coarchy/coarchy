@@ -171,7 +171,7 @@ Vue.component('c-undelete-activity-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/getDeletedActivities',
+                url: '/cointernal/Process/EditProcessStoryNew/getDeletedActivities',
                 data: {
                     processStoryId: vm.processStoryId,
                 },
@@ -195,7 +195,7 @@ Vue.component('c-undelete-activity-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/restoreActivity',
+                url: '/cointernal/Process/EditProcessStoryNew/restoreActivity',
                 data: {
                     processStoryActivityId: processStoryActivityId,
                 },
