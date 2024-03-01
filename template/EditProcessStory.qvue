@@ -413,7 +413,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'GET',
-                url: '/cointernal/Process/EditProcessStory/getProcessStoryDetail',
+                url: '/cointernal/Process/EditProcessStoryNew/getProcessStoryDetail',
                 data: {
                     processStoryId: vm.processStoryId,
                     pageSize: 200,
@@ -438,7 +438,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/moveActivityTo',
+                url: '/cointernal/Process/EditProcessStoryNew/moveActivityTo',
                 data: {
                     processStoryActivityId: processStoryActivityId,
                     newSequenceNum: newSequenceNum,
@@ -462,7 +462,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/newParagraph',
+                url: '/cointernal/Process/EditProcessStoryNew/newParagraph',
                 data: {
                     processStoryId: this.processStoryId,
                     insertSequenceNum: insertSequenceNum
@@ -498,7 +498,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/createActivity',
+                url: '/cointernal/Process/EditProcessStoryNew/createActivity',
                 data: {
                     processStoryId: this.processStoryId,
                     condition: condition,
@@ -542,7 +542,7 @@ module.exports = {
 
                 return $.ajax({
                     type: 'POST',
-                    url: '/cointernal/Process/EditProcessStory/deleteActivities',
+                    url: '/cointernal/Process/EditProcessStoryNew/deleteActivities',
                     data: {
                         ...params
                     },
@@ -572,7 +572,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/updateActivity',
+                url: '/cointernal/Process/EditProcessStoryNew/updateActivity',
                 data: {
                     activityId: activityId,
                     condition: condition,
@@ -608,7 +608,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/copyActivities',
+                url: '/cointernal/Process/EditProcessStoryNew/copyActivities',
                 data: {
                     ...params,
                     moveTypeEnumId: 'CbmtCut',
@@ -641,7 +641,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/copyActivities',
+                url: '/cointernal/Process/EditProcessStoryNew/copyActivities',
                 data: {
                     ...params,
                     moveTypeEnumId: 'CbmtCopy',
@@ -676,7 +676,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/pasteActivity',
+                url: '/cointernal/Process/EditProcessStoryNew/pasteActivity',
                 data: {
                     clipboardEntryId: clipboardEntryId,
                     processStoryId: this.processStoryId,
@@ -705,7 +705,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/getActorList',
+                url: '/cointernal/Process/EditProcessStoryNew/getActorList',
                 data: {
                     term: term,
                 },
@@ -728,7 +728,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'GET',
-                url: '/cointernal/Process/EditProcessStory/getClipboard',
+                url: '/cointernal/Process/EditProcessStoryNew/getClipboard',
                 data: {
                     term: term,
                 },
