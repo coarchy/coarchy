@@ -1,0 +1,840 @@
+<template>
+    <div class="full-width full-height" v-click-outside="clearActivitySelection"
+        @keydown.esc="() => clearActivitySelection()" tabindex="0">
+        <div class="grid-wrapper">
+            <m-dynamic-dialog ref="copyToDialog" class="hidden"
+                :url="'/cointernal/Process/EditProcessStory/CopyActivitiesTo' + dialogParams"
+                title="Copy activities to another organization or process story" button-text="Copy To"
+                button-class="text-caption" color="positive">
+            </m-dynamic-dialog>
+            <m-dynamic-dialog ref="moveToDialog" class="hidden"
+                :url="'/cointernal/Process/EditProcessStory/MoveActivitiesTo' + dialogParams"
+                title="Cut activities to another organization or process story" button-text="Move To"
+                button-class="text-caption" color="positive">
+            </m-dynamic-dialog>
+            <m-dynamic-dialog ref="attachValues" class="hidden"
+                :url="'/cointernal/Process/ProcessStory/ManageValues?activityId=' + contextActivityId" title="Statements"
+                button-text="Statements" button-class="text-caption" color="positive">
+            </m-dynamic-dialog>
+            <c-undelete-activity-dialog v-model="showUndeleteDialog"
+                :process-story-id="this.$root.currentParameters.processStoryId"
+                @refetch="fetchProcessStoryActivities"></c-undelete-activity-dialog>
+            <div>
+                <q-checkbox :value="selectAll" @input="selectOrDeselectAll" size="sm"></q-checkbox>
+                <q-btn :disable="!selectionActivityIds?.length" flat color="primary" icon="more_horiz" dense round size="sm"
+                    padding="0">
+                    <q-menu>
+                        <q-list dense style="min-width: 100px">
+                            <q-item clickable v-close-popup>
+                                <q-item-section @click="() => cutActivities(selectionActivityIds)">Cut</q-item-section>
+                            </q-item>
+                            <q-separator></q-separator>
+                            <q-item clickable v-close-popup>
+                                <q-item-section @click="() => copyActivities(selectionActivityIds)">Copy</q-item-section>
+                            </q-item>
+                            <q-item clickable v-close-popup @click="$refs.copyToDialog.isShown = true">
+                                <q-item-section>Copy to...</q-item-section>
+                            </q-item>
+                            <q-separator></q-separator>
+                            <q-item clickable v-close-popup @click="$refs.moveToDialog.isShown = true">
+                                <q-item-section>Move to...</q-item-section>
+                            </q-item>
+                            <q-separator></q-separator>
+                            <q-item clickable v-close-popup @click="() => deleteActivities(selectionActivityIds)">
+                                <q-item-section>Delete</q-item-section>
+                            </q-item>
+                            <q-separator></q-separator>
+                        </q-list>
+                    </q-menu>
+                </q-btn>
+            </div>
+            <div>
+                <span class="text-h5 text-bold">
+                    {{ processStory?.name }}
+                </span>
+            </div>
+            <div>
+                <q-btn no-caps flat size="md" color="negative" icon-right="more_horiz" @click="showUndeleteDialog = true">
+                    Un-delete
+                </q-btn>
+            </div>
+        </div>
+
+        <draggable :value="processStoryActivityList" :disabled="loading" class="list-group" ghost-class="ghost"
+            :move="checkMove" handle=".handle" @start="dragging = true" @end="onDragEnd">
+            <div :id="`PACTION-${pSA.activityId}`" class="grid-wrapper list-group-item hover-container"
+                v-for="pSA in processStoryActivityList" :key="pSA.activityId"
+                @click.stop="() => selectActivityForEdit(pSA.activityId)" @mouseover="hoverActivityId = pSA.activityId"
+                @mouseleave="hoverActivityId = null">
+                <div>
+                    <div class="row items-center">
+                        <q-checkbox v-model="selectionActivityIds" :val="pSA.activityId" size="sm"></q-checkbox>
+                        <span class="show-on-hover">
+                            <q-icon name="drag_indicator" color="grey-7" size="sm" class="handle cursor-pointer"></q-icon>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <template v-if="activeActivityId == pSA.activityId">
+                        <c-edit-activity ref="editActivity" :condition="(pSA.condition || '')"
+                            :actors="pSA.actors.map(actor => ({ value: actor.actorId, label: actor.name })) || []"
+                            :action="pSA.action || ''"
+                            @save="(data) => { updateActivity(pSA.activityId, data, 'keyboard'); }"
+                            @close="() => selectNextActivity(pSA.activityId)"></c-edit-activity>
+                    </template>
+                    <template v-else>
+                        <div v-show="activeActivityId != pSA.activityId">
+                            <span class="text-italic">
+                                {{ formatCondition(pSA.condition) }}
+                            </span>
+                            <span class="text-bold">
+                                {{ formatActorNames(pSA.actorNames) }}
+                            </span>
+                            <span class="">
+                                {{ formatAction(pSA.action) }}
+                            </span>
+                        </div>
+                    </template>
+                </div>
+                <div>
+                    <div class="row show-on-hover">
+                        <q-space></q-space>
+                        <q-btn flat dense icon="add" @click.stop="() => createParagraphBreak(pSA.sequenceNum + 1)">
+                            <q-tooltip>Insert activity below</q-tooltip>
+                        </q-btn>
+                        <q-btn flat dense icon="delete" @click.stop="() => deleteActivities([pSA.activityId])">
+                            <q-tooltip>Delete activity</q-tooltip>
+                        </q-btn>
+                        <q-btn flat dense icon="more_vert" @click.stop="() => ({})">
+                            <q-tooltip>More options</q-tooltip>
+                            <q-menu touch-position>
+                                <q-list dense style="min-width: 100px">
+                                    <q-item clickable v-close-popup @click="() => copyActivities([pSA.activityId])">
+                                        <q-item-section>Copy</q-item-section>
+                                    </q-item>
+                                    <q-separator></q-separator>
+                                    <q-item :disable="!canPaste" clickable v-close-popup
+                                        @click="() => pasteClipboardItem(pSA.activityId)">
+                                        <q-item-section>Paste</q-item-section>
+                                    </q-item>
+                                    <q-item :disable="!canPaste" clickable v-close-popup
+                                        @click="() => { contextActivityId = pSA.activityId; showPasteDetailDialog = true; }">
+                                        <q-item-section>Paste history...</q-item-section>
+                                    </q-item>
+                                    <q-separator></q-separator>
+                                    <q-item clickable v-close-popup
+                                        @click="() => { contextActivityId = pSA.activityId; $refs.attachValues.isShown = true }">
+                                        <q-item-section>Attach statement...</q-item-section>
+                                    </q-item>
+                                    <q-separator></q-separator>
+                                    <q-item clickable v-close-popup @click="() => deleteActivity(pSA.activityId)">
+                                        <q-item-section>Delete</q-item-section>
+                                    </q-item>
+                                </q-list>
+                            </q-menu>
+                        </q-btn>
+                    </div>
+
+                </div>
+            </div>
+        </draggable>
+        <div class="grid-wrapper q-mt-sm">
+            <div>
+            </div>
+            <div>
+                <q-form ref="createActivityForm" @submit.prevent="createActivity">
+                    <div class="row">
+                        <div class="col-3 q-px-xs">
+                            <q-input ref="condInput" autogrow v-model="createActivityFields.condition" dense
+                                label="Condition" @keydown.enter="$refs.selectActorInput.focus()"></q-input>
+                        </div>
+                        <div class="col-3 q-px-xs">
+                            <q-select ref="selectActorInput" v-model="createActivityFields.actors" multiple dense use-input
+                                use-chips options-dense :options="actorList" @filter="actorFilterFn"
+                                label="Actors"></q-select>
+                        </div>
+                        <div class="col-6 q-px-xs">
+                            <q-input ref="actionInput" autogrow v-model="createActivityFields.action" dense label="Action"
+                                @keydown.enter.prevent="(e) => ($refs.createActivityForm.submit(e))"></q-input>
+                        </div>
+                    </div>
+                </q-form>
+            </div>
+            <div>
+            </div>
+        </div>
+        <q-menu ref="contextMenuRef" touch-position context-menu @before-show="setContextMenuSource">
+            <q-list dense style="min-width: 100px">
+                <q-item clickable v-close-popup
+                    @click="() => copyActivities(selectionActivityIds?.length ? selectionActivityIds : [contextActivityId])">
+                    <q-item-section>Copy</q-item-section>
+                </q-item>
+                <q-separator></q-separator>
+                <q-item :disable="!canPaste" clickable v-close-popup @click="() => pasteClipboardItem(contextActivityId)">
+                    <q-item-section>Paste</q-item-section>
+                </q-item>
+                <q-item :disable="!canPaste" clickable v-close-popup @click="showPasteDetailDialog = true">
+                    <q-item-section>Paste history...</q-item-section>
+                </q-item>
+                <q-separator></q-separator>
+                <q-item clickable v-close-popup @click="$refs.attachValues.isShown = true">
+                    <q-item-section>Attach statement...</q-item-section>
+                </q-item>
+                <q-separator></q-separator>
+                <q-item clickable v-close-popup @click="() => deleteActivity(contextActivityId)">
+                    <q-item-section>Delete</q-item-section>
+                </q-item>
+            </q-list>
+        </q-menu>
+        <q-dialog ref="pasteDetailRef" v-model="showPasteDetailDialog">
+            <q-card style="min-width:250px" class="q-pa-md">
+                <q-card-section class="row items-center q-pb-none">
+                    <div class="text-h4">Paste detail</div>
+                    <q-space></q-space>
+                    <q-btn icon="close" flat round dense v-close-popup></q-btn>
+                </q-card-section>
+                <q-card-section>
+                    <div class="q-my-sm text-caption text-grey-8">
+                        Click on an activity to paste.
+                    </div>
+                    <q-list bordered separator dense>
+                        <template v-if="!clipboardEntryList?.length">
+                            <div class="row items-center-justify-center">
+                                <div class="col">
+                                    Your clipboard is empty...
+                                </div>
+                            </div>
+                        </template>
+                        <q-item clickable v-ripple v-for="clipboardEntry in clipboardEntryList"
+                            :key="clipboardEntry.clipboardEntryId"
+                            @click="() => pasteClipboardItem(contextActivityId, clipboardEntry.clipboardEntryId)"
+                            v-close-popup>
+                            <q-item-section>
+                                {{ clipboardEntry.activityText }}
+                            </q-item-section>
+                            <q-item-section side>
+                                {{ clipboardEntry.activityCount }}
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+            </q-card>
+        </q-dialog>
+    </div>
+</template>
+
+<script>
+module.exports = {
+    mounted: function () {
+        this.processStoryId = this.$root.currentParameters.processStoryId
+        Promise.all([this.fetchProcessStoryActivities(), this.getClipboard()])
+    },
+    created() {
+        window.addEventListener('keydown', this.keyDownHandler)
+    },
+    destroyed() {
+        window.removeEventListener('keydown', this.keyDownHandler)
+    },
+    directives: {
+        'click-outside': {
+            bind: function (el, binding, vnode) {
+                el.clickOutsideEvent = function (event) {
+                    // check that click was outside the el and his children
+                    if (!(el == event.target || el.contains(event.target))) {
+                        // if it did, call method provided in attribute value
+                        vnode.context[binding.expression]?.(event);
+                    }
+                };
+                document.body.addEventListener('click', el.clickOutsideEvent)
+            },
+            unbind: function (el) {
+                document.body.removeEventListener('click', el.clickOutsideEvent)
+            },
+        }
+    },
+    data() {
+        return {
+            showUndeleteDialog: false,
+            showPasteDetailDialog: false,
+            processStoryId: false,
+            loading: false,
+            activeActivityId: null,
+            contextActivityId: null,
+            hoverActivityId: null,
+            // Model
+            processStory: null,
+            processStoryActivityList: [],
+            //
+            createActivityFields: {
+                condition: '',
+                actors: [],
+                action: ''
+            },
+            actorList: [],
+            clipboardEntryList: [],
+            // UI State
+            selectionActivityIds: [],
+            dragging: false
+        }
+    },
+    computed: {
+        lastSequenceNum() {
+            console.log()
+            return Math.max(0, ...this.processStoryActivityList?.map(pSA => (parseInt(pSA.sequenceNum) || 0)))
+        },
+        activityIds() {
+            return this.processStoryActivityList.map(pSA => pSA.activityId)
+        },
+        selectAll() {
+            return this.areArraysEqualSets(this.activityIds, this.selectionActivityIds)
+        },
+        draggingInfo() {
+            return this.dragging ? "under drag" : "";
+        },
+        canPaste() {
+            return this.clipboardEntryList?.length > 0
+        },
+        dialogParams() {
+            let params = ""
+            this.selectionActivityIds?.forEach((it, idx) => {
+                if (idx == 0) {
+                    params += ('?activityId_' + idx + '=' + it);
+                } else {
+                    params += ('&activityId_' + idx + '=' + it);
+                }
+            })
+            return params;
+        }
+    },
+    watch: {
+        activeActivityId(newVal, oldVal) {
+            if (!newVal && oldVal) {
+                const editActivityIsDirty = this.$refs['editActivity']?.[0]?.dirty;
+
+                if (editActivityIsDirty) {
+                    const condition = this.$refs['editActivity'][0]?.conditionVal;
+                    const actors = this.$refs['editActivity'][0]?.actorsVal;
+                    const action = this.$refs['editActivity'][0]?.actionVal || ' ';
+                    this.updateActivity(oldVal, {
+                        condition,
+                        actors,
+                        action,
+                    }, 'click');
+                }
+            }
+        }
+    },
+    methods: {
+        keyDownHandler(event) {
+            if (event.keyCode == 67 && event.ctrlKey) {
+                if (this.hoverActivityId || this.selectionActivityIds?.length) {
+                    this.copyActivities(this.selectionActivityIds?.length ? this.selectionActivityIds : [this.hoverActivityId])
+                }
+            } else if (event.keyCode == 88 && event.ctrlKey) {
+                if (this.hoverActivityId || this.selectionActivityIds?.length) {
+                    this.cutActivities(this.selectionActivityIds?.length ? this.selectionActivityIds : [this.hoverActivityId])
+                }
+            }
+            else if (event.keyCode == 86 && event.ctrlKey && event.shiftKey) {
+                if (this.hoverActivityId) {
+                    this.showPasteDetailDialog = true
+                    this.contextActivityId = this.hoverActivityId
+                }
+            }
+            else if (event.keyCode == 86 && event.ctrlKey) {
+                if (this.hoverActivityId) {
+                    this.pasteClipboardItem(this.hoverActivityId)
+                }
+            }
+            else if (event.keyCode == 38 && event.ctrlKey) {
+                if (!this.activeActivityId) return;
+                this.selectPrevActivity(this.activeActivityId)
+            }
+            else if (event.keyCode == 40 && event.ctrlKey) {
+                if (!this.activeActivityId) return;
+                this.selectNextActivity(this.activeActivityId)
+            }
+        },
+        setContextMenuSource(event) {
+            const sourceActionEl = event.target.closest("div[id^='PACTION-']")
+            const actionId = sourceActionEl?.id?.split('-')?.[1]
+            if (!actionId) {
+                this.$refs.contextMenuRef?.hide()
+            } else {
+                this.contextActivityId = actionId;
+            }
+        },
+        selectPrevActivity(currentActivityId) {
+
+            const curIdx = this.activityIds.findIndex(el => el === currentActivityId)
+            if (curIdx > 0)
+                this.activeActivityId = this.activityIds[curIdx - 1]
+        },
+        selectNextActivity(currentActivityId) {
+            const curIdx = this.activityIds.findIndex(el => el === currentActivityId)
+            if (curIdx < (this.activityIds.length - 1))
+                this.activeActivityId = this.activityIds[curIdx + 1]
+        },
+        selectActivityForEdit(activityId, force = false) {
+            if (!force) {
+                // prevent self deselect
+                if (this.activeActivityId == activityId)
+                    return
+                // deselect on first click
+                if (this.activeActivityId) {
+                    this.activeActivityId = null
+                    return;
+                }
+            }
+
+            this.activeActivityId = activityId
+        },
+        clearActivitySelection() {
+            this.activeActivityId = null;
+        },
+        onDragEnd: function (e) {
+            const sourceProcessStoryActivity = this.processStoryActivityList[e.oldIndex]
+            this.moveActivityTo(sourceProcessStoryActivity.processStoryActivityId, e.newIndex + 1)
+            this.dragging = false
+        },
+        checkMove: function (e) {
+            window.console.log("Future index: " + e.draggedContext.futureIndex);
+        },
+        selectOrDeselectAll(isSelectAll) {
+            if (isSelectAll) {
+                this.selectionActivityIds = this.processStoryActivityList.map(pSA => pSA.activityId)
+            } else {
+                this.selectionActivityIds = []
+
+            }
+        },
+        fetchProcessStoryActivities() {
+            const vm = this
+            this.loading = true
+            return $.ajax({
+                type: 'GET',
+                url: '/cointernal/Process/EditProcessStory/getProcessStoryDetail',
+                data: {
+                    processStoryId: vm.processStoryId,
+                    pageSize: 200,
+                    pageIndex: 0
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.processStory = responseObj?.processStory || null
+                    vm.processStoryActivityList = responseObj?.processStoryActivityList || []
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        moveActivityTo(processStoryActivityId, newSequenceNum) {
+            const vm = this
+            this.loading = true
+            return $.ajax({
+                type: 'POST',
+                url: '/cointernal/Process/EditProcessStory/moveActivityTo',
+                data: {
+                    processStoryActivityId: processStoryActivityId,
+                    newSequenceNum: newSequenceNum,
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.fetchProcessStoryActivities();
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        createParagraphBreak(insertSequenceNum) {
+            const vm = this
+            this.loading = true
+            return $.ajax({
+                type: 'POST',
+                url: '/cointernal/Process/EditProcessStory/newParagraph',
+                data: {
+                    processStoryId: this.processStoryId,
+                    insertSequenceNum: insertSequenceNum
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.fetchProcessStoryActivities().then(() => {
+                        vm.selectActivityForEdit(responseObj.activityId, true)
+                    });
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        createActivity() {
+            const vm = this
+            const actorIdList = this.createActivityFields.actors?.map(actor => actor.value)
+            const condition = this.createActivityFields.condition || ''
+            const action = this.createActivityFields.action || ''
+            const insertSequenceNum = (this.lastSequenceNum) + 1
+
+            if (!action) {
+                vm.$refs.actionInput?.focus()
+                return
+            }
+
+            this.loading = true
+            return $.ajax({
+                type: 'POST',
+                url: '/cointernal/Process/EditProcessStory/createActivity',
+                data: {
+                    processStoryId: this.processStoryId,
+                    condition: condition,
+                    actorIdList: actorIdList,
+                    action: action,
+                    insertSequenceNum: insertSequenceNum
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.fetchProcessStoryActivities();
+                    // Clear field
+                    vm.createActivityFields = {
+                        condition: '',
+                        actors: [],
+                        action: ''
+                    }
+                    vm.$refs.condInput?.focus()
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        deleteActivities(activityIds) {
+            return this.$q.dialog({
+                title: 'Confirm',
+                message: activityIds.length > 1 ? 'Are you sure you want to delete these activities?' : 'Are you sure you want to delete this activity?',
+                cancel: true,
+            }).onOk(() => {
+                const vm = this
+                this.loading = true
+                const params = activityIds.reduce((acc, cur, index) => ({
+                    ...acc,
+                    ['activityId_' + index]: cur
+                }), {});
+
+                return $.ajax({
+                    type: 'POST',
+                    url: '/cointernal/Process/EditProcessStory/deleteActivities',
+                    data: {
+                        ...params
+                    },
+                    dataType: 'json',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-Token': this.$root.moquiSessionToken,
+                    },
+                    error: moqui.handleAjaxError,
+                    success: function (responseObj, status, jqXHR) {
+                        vm.clearActivitySelection()
+                        vm.fetchProcessStoryActivities();
+                    },
+                    complete: function () {
+                        vm.loading = false
+                    },
+                })
+            })
+        },
+        updateActivity(activityId, data, source) {
+            const vm = this
+            if (!activityId) return;
+            const actorIdList = data.actors?.map(actor => actor.value) || []
+            const condition = data.condition || ''
+            const action = data.action || ''
+
+            this.loading = true
+            return $.ajax({
+                type: 'POST',
+                url: '/cointernal/Process/EditProcessStory/updateActivity',
+                data: {
+                    activityId: activityId,
+                    condition: condition,
+                    actorIdList: actorIdList,
+                    action: action,
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.fetchProcessStoryActivities();
+                    if (source == 'keyboard') {
+                        vm.selectNextActivity(activityId)
+                    }
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        cutActivities(activityIds) {
+            const vm = this
+            if (!activityIds) return;
+
+            const params = activityIds.reduce((acc, cur, index) => ({
+                ...acc,
+                ['activityId_' + index]: cur
+            }), {});
+
+            this.loading = true
+            return $.ajax({
+                type: 'POST',
+                url: '/cointernal/Process/EditProcessStory/copyActivities',
+                data: {
+                    ...params,
+                    moveTypeEnumId: 'CbmtCut',
+                    activityIdNum: 1
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.fetchProcessStoryActivities();
+                    vm.getClipboard();
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        copyActivities(activityIds) {
+            const vm = this
+            if (!activityIds) return;
+
+            const params = activityIds.reduce((acc, cur, index) => ({
+                ...acc,
+                ['activityId_' + index]: cur
+            }), {});
+
+            this.loading = true
+            return $.ajax({
+                type: 'POST',
+                url: '/cointernal/Process/EditProcessStory/copyActivities',
+                data: {
+                    ...params,
+                    moveTypeEnumId: 'CbmtCopy',
+                    activityIdNum: 1
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    // vm.fetchProcessStoryActivities();                   
+                    vm.getClipboard();
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        pasteClipboardItem(afterActivityId, clipboardEntryId) {
+            const vm = this
+            if (!clipboardEntryId) {
+                if (!this.clipboardEntryList.length)
+                    return
+                var clipboardItem = this.clipboardEntryList[0]
+                clipboardEntryId = clipboardItem.clipboardEntryId
+            }
+
+            const afterActivity = this.processStoryActivityList.find(pSA => pSA.activityId === afterActivityId)
+
+            this.loading = true
+            return $.ajax({
+                type: 'POST',
+                url: '/cointernal/Process/EditProcessStory/pasteActivity',
+                data: {
+                    clipboardEntryId: clipboardEntryId,
+                    processStoryId: this.processStoryId,
+                    sequenceNum: afterActivity.sequenceNum,
+                    insertType: 'below',
+                    pageIndex: 0,
+                    downPageIndex: 0
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.fetchProcessStoryActivities();
+                    vm.getClipboard();
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        getActorList(term) {
+            const vm = this
+            this.loading = true
+            return $.ajax({
+                type: 'POST',
+                url: '/cointernal/Process/EditProcessStory/getActorList',
+                data: {
+                    term: term,
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    return responseObj
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        getClipboard(term) {
+            const vm = this
+            this.loading = true
+            return $.ajax({
+                type: 'GET',
+                url: '/cointernal/Process/EditProcessStory/getClipboard',
+                data: {
+                    term: term,
+                },
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-Token': this.$root.moquiSessionToken,
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.clipboardEntryList = responseObj || []
+                    return responseObj
+                },
+                complete: function () {
+                    vm.loading = false
+                },
+            })
+        },
+        actorFilterFn(val, update, abort) {
+            let vm = this;
+            vm.getActorList(val.toLowerCase()).then(function (resp) {
+                update(() => {
+                    vm.actorList = resp;
+                });
+            });
+        },
+        //
+        ensureEndsWith(text, suffix) {
+            return text?.endsWith(suffix) ? text : text + suffix
+        },
+        formatCondition(condition) {
+            return condition ? this.ensureEndsWith(this.toSentenceCase(condition), ",") : ''
+        },
+        formatActorNames(actorNames) {
+            return actorNames?.join(", ") || ''
+        },
+        formatAction(action) {
+            return action ? this.ensureEndsWith(action, '.') : ''
+        },
+        // formatActivity(activityDetail) {
+        //     const condition = activityDetail.condition ? this.ensureEndsWith(activityDetail.condition.toUpperCase(), ",") : ''
+        //     const actorNames = activityDetail.actorNames?.join(", ") || ''
+        //     const action = activityDetail.action ? this.ensureEndsWith(activityDetail.action, '.') : ''
+
+        //     return `${condition}${condition ? ' ' : ''}${actorNames}${actorNames ? ' ' : ''}${action}`
+        // },
+        // Helpers
+        areArraysEqualSets(a1, a2) {
+            const superSet = {};
+            for (const i of a1) {
+                const e = i + typeof i;
+                superSet[e] = 1;
+            }
+
+            for (const i of a2) {
+                const e = i + typeof i;
+                if (!superSet[e]) {
+                    return false;
+                }
+                superSet[e] = 2;
+            }
+
+            for (let e in superSet) {
+                if (superSet[e] === 1) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
+        toSentenceCase(str) {
+            return str.replace(/\.\s+([a-z])[^\.]|^(\s*[a-z])[^\.]/g, s => s.replace(/([a-z])/, s => s.toUpperCase()))
+        },
+        getExternalURL(path) {
+            return `http://${window.location.host}${moqui.webrootVue.getLinkPath(path)}`
+        },
+    },
+
+}
+</script>
+<style>
+/* Row layout */
+.grid-wrapper {
+    display: grid;
+    grid-template-columns: 65px 1fr 125px;
+}
+
+.grid-wrapper>div {
+    align-self: center;
+}
+
+/* drag & drop */
+.ghost {
+    opacity: 0.5;
+    background: #c8ebfb;
+}
+
+.show-on-hover {
+    display: none;
+}
+
+.hover-container:hover .show-on-hover {
+    display: block;
+}
+
+.list-group-item {
+    min-height: 40px;
+}
+</style>
