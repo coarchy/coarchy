@@ -90,6 +90,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions>
+            <set field="actorIdList" from="actorIdList?:ec.web.getParameters().get('actorIdList[]')?:[]"/>
             <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
                 <date-filter />
                 <econdition field-name="processStoryId"/>
@@ -112,7 +113,10 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
         <default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
     <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/>
+        <actions>
+            <set field="actorIdList" from="actorIdList?:ec.web.getParameters().get('actorIdList[]')?:[]"/>
+            <service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/>
+        </actions>
         <default-response url="."/></transition>
     <transition name="deleteActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="context"/>
