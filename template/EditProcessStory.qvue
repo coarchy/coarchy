@@ -128,7 +128,6 @@
                             </span>
                             <span class="">
                                 {{ formatAction(pSA.action) }}
-                                {{ pSA.willCopyOnWrite }}
                             </span>
                         </div>
                     </template>
