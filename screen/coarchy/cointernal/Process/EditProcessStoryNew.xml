@@ -12,12 +12,15 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Edit New" default-menu-index="20" menu-image="fa fa-file" menu-image-type="icon" render-modes="vue,qvue">
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+    default-menu-title="Edit New" default-menu-index="20" menu-image="fa fa-file"
+    menu-image-type="icon" render-modes="vue,qvue">
 
     <parameter name="processStoryId" required="true"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
     <parameter name="pageSize" from="pageSize?:50"/>
-    <parameter name="orderByField" value="sequenceNum"/>
+    <!-- <parameter name="orderByField" value="sequenceNum"/> -->
 
     <always-actions>
         <if condition="!activeOrgId">
@@ -46,20 +49,23 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="createActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="updateActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="deleteActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
-    <!-- <transition-include name="moveActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/> -->
+    <!-- <transition-include name="moveActivities"
+    location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/> -->
     <transition-include name="copyActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="deleteActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="getActorList" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
-
+    
     <transition-include name="updateProcessStory" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
-
+    
     <transition-include name="enableProcessStory" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="disableProcessStory" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
-
+    
     <transition-include name="createChecklist" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
-
+    
+    <transition-include name="getValueList" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory/ManageValues.xml"/>
+    
     <transition name="goProcessStory">
-        <default-response url="../EditProcessStoryOld" parameter-map="[processStoryId:processStoryId]"/>
+        <default-response url="../EditProcessStoryNew" parameter-map="[processStoryId:processStoryId]"/>
     </transition>
 
     <transition-include name="createActor" location="component://coarchy/screen/coarchy/cointernal/Actor.xml"/>
@@ -142,6 +148,13 @@ along with this software (see the LICENSE.md file). If not, see
                 <field-map field-name="processStoryId" />
             </entity-find-one>
 
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="detailActivityList">
+                <date-filter />
+                <econdition field-name="replacedByActivityId" operator="is-null" />
+                <econdition field-name="detailProcessStoryId" from="processStoryId"/>
+                <select-field field-name="processStoryId,name"/>
+                <order-by field-name="-lastUpdatedStamp"/></entity-find>
+                
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum,action"/>
                 <date-filter />
@@ -158,11 +171,18 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="activityId" from="processStoryActivity.activityId"/>
                     <order-by field-name="name"/>
                 </entity-find>
-                <script>processStoryActivityWithActors.add(processStoryActivity.getMap()+[actors:activityActorList,actorNames:activityActorList*.name])</script>
+                <entity-find-count entity-name="coarchy.product.ProductEvaluationActivityAndDetail" count-field="existingEvaluationRecordCount">
+                    <econdition field-name="statusId" operator="not-equals" value="PeRequirementsSelection"/>
+                    <econdition field-name="activityId" from="processStoryActivity.activityId"/>
+                    <econdition field-name="excludeFlag" value="N" or-null="true" />
+                    <econdition field-name="organizationId" from="activeOrgId"/>
+               </entity-find-count>
+                <script>processStoryActivityWithActors.add(processStoryActivity.getMap()+[actors:activityActorList,actorNames:activityActorList*.name,willCopyOnWrite:existingEvaluationRecordCount&gt;0])</script>
             </iterate>
             <script>
                 ec.web.sendJsonResponse([
                     processStory: processStory,
+                    detailActivityList:detailActivityList,
                     processStoryActivityList:processStoryActivityWithActors
                 ])
             </script>
@@ -231,9 +251,82 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response type="none"/>
     </transition>
 
+    <transition name="createActivityValue">
+        <parameter name="activityId" />
+        <parameter name="valueIdList" />
+        <actions>
+            <set field="valueIdList" from="valueIdList?:ec.web.getParameters().get('valueIdList[]')?:[]"/>
+            <service-call name="coarchy.CoarchyServices.create#ActivityValue" in-map="[activityId:activityId,valueIdList:valueIdList,organizationId:activeOrgId]"/>
+
+            <script>
+                ec.web.sendJsonResponse([
+                    success: true
+                ])
+            </script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="deleteValueStatementActivity">
+        <parameter name="valueStatementActivityId" />
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <actions>
+            <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId, thruDate:ec.user.nowTimestamp, organizationId:activeOrgId]"/>
+            <script>
+                ec.web.sendJsonResponse([
+                    success: true
+                ])
+            </script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="deleteAllValueStatementActivities">
+        <parameter name="activityId" />
+        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <actions>
+            <entity-find entity-name="coarchy.ValueStatementActivity" list="valueActivities">
+                <date-filter />
+                <econdition field-name="activityId" from="activityId" />
+                <econdition field-name="organizationId" from="activeOrgId" />
+            </entity-find>
+
+            <iterate list="valueActivities" entry="valueActivity">
+                <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueActivity.valueStatementActivityId, thruDate:ec.user.nowTimestamp, organizationId:activeOrgId]"/>
+            </iterate>
+
+            <script>
+                ec.web.sendJsonResponse([
+                    success: true
+                ])
+            </script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <transition name="getActivityStatementList" read-only="true">
+        <parameter name="activityId" />
+        <actions>
+            <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
+                <date-filter />
+                <econdition field-name="disabled" value="N" or-null="true" />
+                <econdition field-name="activityId" from="activityId"/>
+                <select-field field-name="valueStatementActivityId,valueStatementId,value"/>
+                <order-by field-name="^value"/></entity-find>
+            <set field="valueIdList" from="prepValueActivityList*.valueStatementId"/>
+            <set field="valueActivityList" from="[]"/>
+            <iterate list="prepValueActivityList" entry="valueActivity">
+                <script>valueActivityList.add([valueStatementId:valueActivity?.valueStatementId, valueStatementActivityId:valueActivity?.valueStatementActivityId, value:(valueActivity?.value&amp;&amp;valueActivity.value.size()&gt;79)?valueActivity.value.take(79)+"...":valueActivity.value, valueFull:valueActivity.value])</script>
+            </iterate>            
+            <script>
+                ec.web.sendJsonResponse(valueActivityList)
+            </script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
     <actions>
         <!-- <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
-        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script></if> -->
+        <if
+        condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script></if> -->
     </actions>
     <widgets>
         <render-mode>
