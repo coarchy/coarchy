@@ -2,10 +2,15 @@
     <div class="full-width full-height" v-click-outside="clearActivitySelection"
         @keydown.esc="() => clearActivitySelection()" tabindex="0">
         <div class="row items-center justify-end">
-            <q-btn outline v-if="detailActivityList.length == 1 && detailActivityList?.[0]?.processStoryId" no-caps
-                size="md"
+            <q-btn outline v-if="detailActivityList?.length == 1 && detailActivityList?.[0]?.processStoryId" no-caps
+                size="md" color="primary"
                 @click="() => goPath('/cointernal/Process/EditProcessStory?processStoryId=' + detailActivityList?.[0]?.processStoryId)">
                 Go to parent story: {{ detailActivityList?.[0]?.name }}
+            </q-btn>
+            <q-btn outline v-if="detailActivityList?.length > 1 && detailActivityList?.[0]?.processStoryId" no-caps
+                size="md" color="primary"
+                @click="selectParentStoryDialog=true">
+                Go to parent story
             </q-btn>
             <q-btn outline no-caps size="md" color="success" @click="createChecklistDialog" icon="open_in_new">
                 &nbsp;New Checklist
@@ -36,6 +41,11 @@
             <m-dynamic-dialog ref="moveToDialog" class="hidden"
                 :url="'/cointernal/Process/EditProcessStory/MoveActivitiesTo' + dialogParams"
                 title="Cut activities to another organization or process story" button-text="Move To"
+                button-class="text-caption" color="positive">
+            </m-dynamic-dialog>
+            <m-dynamic-dialog ref="createSubStoryDialog" class="hidden"
+                :url="'/cointernal/Process/EditProcessStory/CreateOrSelectSubstory' + subStoryDialogParams"
+                title="Substory" button-text="Substory"
                 button-class="text-caption" color="positive">
             </m-dynamic-dialog>
             <!-- <m-dynamic-dialog ref="attachValues" class="hidden"
@@ -170,6 +180,13 @@
                                             <q-item-section>Go to process story</q-item-section>
                                         </q-item>
                                     </template>
+                                    <template v-else>
+                                    <q-separator></q-separator>
+                                        <q-item clickable v-close-popup
+                                            @click="() => { contextActivityId = pSA.activityId; $refs.createSubStoryDialog.isShown=true }">
+                                            <q-item-section>Substory</q-item-section>
+                                        </q-item>
+                                    </template>
                                     <q-separator></q-separator>
                                     <q-item clickable v-close-popup @click="() => deleteActivity(pSA.activityId)">
                                         <q-item-section>Delete</q-item-section>
@@ -286,6 +303,31 @@
                 <q-btn label="Create Actor" @click="createActor" class="float-right"></q-btn>
             </q-card>
         </q-dialog>
+        <q-dialog v-model="selectParentStoryDialog">
+            <q-card :style="{ width: '760px', 'max-width': ($q.platform.is.mobile ? '100vw' : '90vw') }"
+                class="q-pa-md">
+                <q-card-section class="row items-center q-pb-none">
+                    <div class="text-h4">Go to parent story</div>
+                    <q-space></q-space>
+                    <q-btn icon="close" flat round dense v-close-popup></q-btn>
+                </q-card-section>
+                <q-card-section>
+                    <div class="q-my-sm text-caption text-grey-8">
+                        Click on a parent story to go to.
+                    </div>
+                    <q-list bordered separator dense>                   
+                        <q-item clickable v-ripple v-for="detailActivity in detailActivityList"
+                            :key="detailActivity.processStoryId"
+                             @click="goPath('/cointernal/Process/EditProcessStory?processStoryId=' + detailActivity.processStoryId)"
+                            v-close-popup>
+                            <q-item-section>
+                                Go to "{{ detailActivity.name }}"
+                            </q-item-section>                         
+                        </q-item>
+                    </q-list>
+                </q-card-section>
+            </q-card>
+        </q-dialog>
     </div>
 </template>
 
@@ -321,6 +363,7 @@ module.exports = {
     data() {
         return {
             showActivityStatementDialog: false,
+            selectParentStoryDialog:false,
             showUndeleteDialog: false,
             showCreateActorDialog: false,
             showPasteDetailDialog: false,
@@ -376,6 +419,12 @@ module.exports = {
                     params += ('&activityId_' + idx + '=' + it);
                 }
             })
+            return params;
+        },
+        subStoryDialogParams() {
+            const activity = this.processStoryActivityList?.find(el => el.activityId === this.contextActivityId)
+            let params = "?processStoryId="+this.processStoryId+"&processStoryActivityId="+activity?.processStoryActivityId
+            
             return params;
         }
     },
