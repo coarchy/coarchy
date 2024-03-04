@@ -4,7 +4,7 @@
         <div class="row items-center justify-end">
             <q-btn outline v-if="detailActivityList.length == 1 && detailActivityList?.[0]?.processStoryId" no-caps
                 size="md"
-                @click="() => goPath('/cointernal/Process/EditProcessStoryNew?processStoryId=' + detailActivityList?.[0]?.processStoryId)">
+                @click="() => goPath('/cointernal/Process/EditProcessStory?processStoryId=' + detailActivityList?.[0]?.processStoryId)">
                 Go to parent story: {{ detailActivityList?.[0]?.name }}
             </q-btn>
             <q-btn outline no-caps size="md" color="success" @click="createChecklistDialog" icon="open_in_new">
@@ -117,7 +117,7 @@
                     <template v-else>
                         <div :class="pSA.detailProcessStoryId ? 'text-primary text-bold' : ''">
                             <q-btn v-if="pSA.detailProcessStoryId" dense round flat icon="open_in_new"
-                                @click.stop="goPath('/cointernal/Process/EditProcessStoryNew?processStoryId=' + pSA.detailProcessStoryId);">
+                                @click.stop="goPath('/cointernal/Process/EditProcessStory?processStoryId=' + pSA.detailProcessStoryId);">
                                 <q-tooltip>Go to process story</q-tooltip>
                             </q-btn>
                             <span class="text-italic">
@@ -166,7 +166,7 @@
                                     <template v-if="pSA.detailProcessStoryId">
                                         <q-separator></q-separator>
                                         <q-item clickable v-close-popup
-                                            @click="() => { contextActivityId = pSA.activityId; goPath('/cointernal/Process/EditProcessStoryNew?processStoryId=' + pSA.detailProcessStoryId); }">
+                                            @click="() => { contextActivityId = pSA.activityId; goPath('/cointernal/Process/EditProcessStory?processStoryId=' + pSA.detailProcessStoryId); }">
                                             <q-item-section>Go to process story</q-item-section>
                                         </q-item>
                                     </template>
@@ -488,7 +488,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'GET',
-                url: '/cointernal/Process/EditProcessStoryNew/getProcessStoryDetail',
+                url: '/cointernal/Process/EditProcessStory/getProcessStoryDetail',
                 data: {
                     processStoryId: vm.processStoryId,
                     pageSize: 200,
@@ -515,7 +515,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/moveActivityTo',
+                url: '/cointernal/Process/EditProcessStory/moveActivityTo',
                 data: {
                     processStoryActivityId: processStoryActivityId,
                     newSequenceNum: newSequenceNum,
@@ -539,7 +539,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/enableProcessStory',
+                url: '/cointernal/Process/EditProcessStory/enableProcessStory',
                 data: {
                     processStoryId: this.processStoryId,
                 },
@@ -562,7 +562,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/disableProcessStory',
+                url: '/cointernal/Process/EditProcessStory/disableProcessStory',
                 data: {
                     processStoryId: this.processStoryId,
                 },
@@ -585,7 +585,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/updateProcessStory',
+                url: '/cointernal/Process/EditProcessStory/updateProcessStory',
                 data: {
                     processStoryId: this.processStoryId,
                     name: name
@@ -609,7 +609,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/newParagraph',
+                url: '/cointernal/Process/EditProcessStory/newParagraph',
                 data: {
                     processStoryId: this.processStoryId,
                     insertSequenceNum: insertSequenceNum
@@ -645,7 +645,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/createActivity',
+                url: '/cointernal/Process/EditProcessStory/createActivity',
                 data: {
                     processStoryId: this.processStoryId,
                     condition: condition,
@@ -689,7 +689,7 @@ module.exports = {
 
                 return $.ajax({
                     type: 'POST',
-                    url: '/cointernal/Process/EditProcessStoryNew/deleteActivities',
+                    url: '/cointernal/Process/EditProcessStory/deleteActivities',
                     data: {
                         ...params
                     },
@@ -755,7 +755,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/updateActivity',
+                url: '/cointernal/Process/EditProcessStory/updateActivity',
                 data: {
                     activityId: activityId,
                     condition: condition,
@@ -794,7 +794,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/copyActivities',
+                url: '/cointernal/Process/EditProcessStory/copyActivities',
                 data: {
                     ...params,
                     moveTypeEnumId: 'CbmtCut',
@@ -827,7 +827,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/copyActivities',
+                url: '/cointernal/Process/EditProcessStory/copyActivities',
                 data: {
                     ...params,
                     moveTypeEnumId: 'CbmtCopy',
@@ -862,7 +862,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/pasteActivity',
+                url: '/cointernal/Process/EditProcessStory/pasteActivity',
                 data: {
                     clipboardEntryId: clipboardEntryId,
                     processStoryId: this.processStoryId,
@@ -891,7 +891,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/getActorList',
+                url: '/cointernal/Process/EditProcessStory/getActorList',
                 data: {
                     term: term,
                 },
@@ -914,7 +914,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'GET',
-                url: '/cointernal/Process/EditProcessStoryNew/getClipboard',
+                url: '/cointernal/Process/EditProcessStory/getClipboard',
                 data: {
                     term: term,
                 },
@@ -947,7 +947,7 @@ module.exports = {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStoryNew/createActor',
+                url: '/cointernal/Process/EditProcessStory/createActor',
                 data: {
                     processStoryId: this.processStoryId,
                     name: this.createActorFields.name,
@@ -981,7 +981,7 @@ module.exports = {
             }).onOk(data => {
                 return $.ajax({
                     type: 'POST',
-                    url: '/cointernal/Process/EditProcessStoryNew/createChecklist',
+                    url: '/cointernal/Process/EditProcessStory/createChecklist',
                     data: {
                         processStoryId: this.processStoryId,
                         name: data
