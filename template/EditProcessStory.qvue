@@ -22,7 +22,7 @@
                 size="md" color="primary" @click="selectParentStoryDialog = true">
                 Go to parent story
             </q-btn>
-            <q-btn v-if="isUserOrgMember" outline no-caps size="md" color="success" @click="createChecklistDialog"
+            <q-btn v-if="isUserOrgMember" :disable="!isOrgPremium" outline no-caps size="md" color="success" @click="createChecklistDialog"
                 icon="open_in_new">
                 &nbsp;New Checklist
             </q-btn>
