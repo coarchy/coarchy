@@ -226,9 +226,6 @@ Vue.component('c-undelete-activity-dialog', {
             return str.replace(/\.\s+([a-z])[^\.]|^(\s*[a-z])[^\.]/g, s => s.replace(/([a-z])/, s => s.toUpperCase()))
         },
     },
-    mounted(){
-        this.getDeletedActivities();
-    }
 });
 
 
@@ -422,8 +419,5 @@ Vue.component('c-attach-statement-dialog', {
                 },
             })
         },           
-    },
-    mounted(){
-        this.getActivityStatementList();
     }
 });

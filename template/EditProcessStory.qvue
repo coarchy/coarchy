@@ -1,6 +1,17 @@
 <template>
     <div class="full-width full-height" v-click-outside="clearActivitySelection"
         @keydown.esc="() => clearActivitySelection()" tabindex="0">
+        <q-banner v-if="!isOrgPremium" inline-actions rounded dense class="bg-grey-3 text-black q-mb-md">
+            <span class="text-black">
+                To enable all the features upgrade organization {{ organizationName }} to Premium
+            </span>
+            <template #action>
+                <q-btn :disable="!isUserOrgMember" outline label="Upgrade" color="positive"
+                    @click="showUpgradeConfirmation">
+
+                </q-btn>
+            </template>
+        </q-banner>
         <div class="row items-center justify-end">
             <q-btn outline v-if="detailActivityList?.length == 1 && detailActivityList?.[0]?.processStoryId" no-caps
                 size="md" color="primary"
@@ -8,27 +19,28 @@
                 Go to parent story: {{ detailActivityList?.[0]?.name }}
             </q-btn>
             <q-btn outline v-if="detailActivityList?.length > 1 && detailActivityList?.[0]?.processStoryId" no-caps
-                size="md" color="primary"
-                @click="selectParentStoryDialog=true">
+                size="md" color="primary" @click="selectParentStoryDialog = true">
                 Go to parent story
             </q-btn>
-            <q-btn outline no-caps size="md" color="success" @click="createChecklistDialog" icon="open_in_new">
+            <q-btn v-if="isUserOrgMember" outline no-caps size="md" color="success" @click="createChecklistDialog"
+                icon="open_in_new">
                 &nbsp;New Checklist
             </q-btn>
-            <q-btn outline no-caps size="md" color="success" @click="showCreateActorDialog = true" icon="open_in_new">
+            <q-btn v-if="isUserOrgMember" outline no-caps size="md" color="success"
+                @click="showCreateActorDialog = true" icon="open_in_new">
                 &nbsp;Add Actor
             </q-btn>
             <q-space></q-space>
-            <q-btn outline v-if="processStory?.disabled == 'Y'" no-caps size="md" icon-right="visibility"
-                @click="showProcessStory">
+            <q-btn outline v-if="isUserOrgMember && processStory?.disabled == 'Y'" no-caps size="md"
+                icon-right="visibility" @click="showProcessStory">
                 Show Process Story&nbsp;
             </q-btn>
-            <q-btn outline v-if="processStory?.disabled != 'Y'" no-caps size="md" icon-right="visibility_off"
-                @click="hideProcessStory">
+            <q-btn outline v-if="isUserOrgMember && processStory?.disabled != 'Y'" no-caps size="md"
+                icon-right="visibility_off" @click="hideProcessStory">
                 Hide Process Story&nbsp;
             </q-btn>
-            <q-btn outline no-caps size="md" color="negative" icon-right="more_horiz"
-                @click="showUndeleteDialog = true">
+            <q-btn v-if="isUserOrgMember" :disable="!isOrgPremium" outline no-caps size="md" color="negative"
+                icon-right="more_horiz" @click="showUndeleteDialog = true">
                 Un-delete
             </q-btn>
         </div>
@@ -45,13 +57,8 @@
             </m-dynamic-dialog>
             <m-dynamic-dialog ref="createSubStoryDialog" class="hidden"
                 :url="'/cointernal/Process/EditProcessStory/CreateOrSelectSubstory' + subStoryDialogParams"
-                title="Substory" button-text="Substory"
-                button-class="text-caption" color="positive">
+                title="Substory" button-text="Substory" button-class="text-caption" color="positive">
             </m-dynamic-dialog>
-            <!-- <m-dynamic-dialog ref="attachValues" class="hidden"
-                :url="'/cointernal/Process/ProcessStory/ManageValues?activityId=' + contextActivityId"
-                title="Statements" button-text="Statements" button-class="text-caption" color="positive">
-            </m-dynamic-dialog> -->
             <c-undelete-activity-dialog v-model="showUndeleteDialog"
                 :process-story-id="this.$root.currentParameters.processStoryId"
                 @refetch="fetchProcessStoryActivities"></c-undelete-activity-dialog>
@@ -63,23 +70,26 @@
                     size="sm" padding="0">
                     <q-menu>
                         <q-list dense style="min-width: 100px">
-                            <q-item clickable v-close-popup>
+                            <q-item :disable="!isUserOrgMember" clickable v-close-popup>
                                 <q-item-section @click="() => cutActivities(selectionActivityIds)">Cut</q-item-section>
                             </q-item>
                             <q-separator></q-separator>
-                            <q-item clickable v-close-popup>
+                            <q-item :disable="!isUserOrgMember" clickable v-close-popup>
                                 <q-item-section
                                     @click="() => copyActivities(selectionActivityIds)">Copy</q-item-section>
                             </q-item>
-                            <q-item clickable v-close-popup @click="$refs.copyToDialog.isShown = true">
+                            <q-item :disable="!isOrgPremium" clickable v-close-popup
+                                @click="$refs.copyToDialog.isShown = true">
                                 <q-item-section>Copy to...</q-item-section>
                             </q-item>
                             <q-separator></q-separator>
-                            <q-item clickable v-close-popup @click="$refs.moveToDialog.isShown = true">
+                            <q-item :disable="!isUserOrgMember || !isOrgPremium" clickable v-close-popup
+                                @click="$refs.moveToDialog.isShown = true">
                                 <q-item-section>Move to...</q-item-section>
                             </q-item>
                             <q-separator></q-separator>
-                            <q-item clickable v-close-popup @click="() => deleteActivities(selectionActivityIds)">
+                            <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                                @click="() => deleteActivities(selectionActivityIds)">
                                 <q-item-section>Delete</q-item-section>
                             </q-item>
                             <q-separator></q-separator>
@@ -90,7 +100,7 @@
             <div>
                 <div class="cursor-pointer text-h5 text-bold">
                     {{ processStoryTitle }}
-                    <q-popup-edit v-model="processStoryTitle" auto-save v-slot="scope">
+                    <q-popup-edit v-if="isUserOrgMember" v-model="processStoryTitle" auto-save v-slot="scope">
                         <q-input v-model="scope.value" dense autofocus counter
                             @keydown.enter="() => updateProcessStory(scope.value)" />
                     </q-popup-edit>
@@ -100,8 +110,8 @@
             </div>
         </div>
 
-        <draggable :value="processStoryActivityList" :disabled="loading" class="list-group" ghost-class="ghost"
-            :move="checkMove" handle=".handle" @start="dragging = true" @end="onDragEnd">
+        <draggable :value="processStoryActivityList" :disabled="loading || !isUserOrgMember" class="list-group"
+            ghost-class="ghost" :move="checkMove" handle=".handle" @start="dragging = true" @end="onDragEnd">
             <div :id="`PACTION-${pSA.activityId}`" class="grid-wrapper list-group-item hover-container"
                 v-for="pSA in processStoryActivityList" :key="pSA.activityId"
                 @click.stop="() => selectActivityForEdit(pSA.activityId)" @mouseover="hoverActivityId = pSA.activityId"
@@ -116,6 +126,7 @@
                     </div>
                 </div>
                 <div>
+
                     <template v-if="activeActivityId == pSA.activityId">
                         <c-edit-activity ref="editActivity" :condition="(pSA.condition || '')"
                             :actors="pSA.actors.map(actor => ({ value: actor.actorId, label: actor.name })) || []"
@@ -145,30 +156,33 @@
                 <div>
                     <div class="row show-on-hover">
                         <q-space></q-space>
-                        <q-btn flat dense icon="add" @click.stop="() => createParagraphBreak(pSA.sequenceNum + 1)">
+                        <q-btn flat dense icon="add" :disable="!isUserOrgMember"
+                            @click.stop="() => createParagraphBreak(pSA.sequenceNum + 1)">
                             <q-tooltip>Insert activity below</q-tooltip>
                         </q-btn>
-                        <q-btn flat dense icon="delete" @click.stop="() => deleteActivities([pSA.activityId])">
+                        <q-btn flat dense icon="delete" :disable="!isUserOrgMember"
+                            @click.stop="() => deleteActivities([pSA.activityId])">
                             <q-tooltip>Delete activity</q-tooltip>
                         </q-btn>
                         <q-btn flat dense icon="more_vert" @click.stop="() => ({})">
                             <q-tooltip>More options</q-tooltip>
                             <q-menu touch-position>
                                 <q-list dense style="min-width: 100px">
-                                    <q-item clickable v-close-popup @click="() => copyActivities([pSA.activityId])">
+                                    <q-item clickable :disable="!isUserOrgMember" v-close-popup
+                                        @click="() => copyActivities([pSA.activityId])">
                                         <q-item-section>Copy</q-item-section>
                                     </q-item>
                                     <q-separator></q-separator>
-                                    <q-item :disable="!canPaste" clickable v-close-popup
+                                    <q-item :disable="!isUserOrgMember || !canPaste" clickable v-close-popup
                                         @click="() => pasteClipboardItem(pSA.activityId)">
                                         <q-item-section>Paste</q-item-section>
                                     </q-item>
-                                    <q-item :disable="!canPaste" clickable v-close-popup
+                                    <q-item :disable="!isUserOrgMember || !canPaste" clickable v-close-popup
                                         @click="() => { contextActivityId = pSA.activityId; showPasteDetailDialog = true; }">
                                         <q-item-section>Paste history...</q-item-section>
                                     </q-item>
                                     <q-separator></q-separator>
-                                    <q-item clickable v-close-popup
+                                    <q-item :disable="!isUserOrgMember" clickable v-close-popup
                                         @click="() => { contextActivityId = pSA.activityId; showActivityStatementDialog = true; }">
                                         <q-item-section>Attach statement...</q-item-section>
                                     </q-item>
@@ -180,15 +194,17 @@
                                             <q-item-section>Go to process story</q-item-section>
                                         </q-item>
                                     </template>
+
                                     <template v-else>
-                                    <q-separator></q-separator>
-                                        <q-item clickable v-close-popup
-                                            @click="() => { contextActivityId = pSA.activityId; $refs.createSubStoryDialog.isShown=true }">
+                                        <q-separator></q-separator>
+                                        <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                                            @click="() => { contextActivityId = pSA.activityId; $refs.createSubStoryDialog.isShown = true }">
                                             <q-item-section>Substory</q-item-section>
                                         </q-item>
                                     </template>
                                     <q-separator></q-separator>
-                                    <q-item clickable v-close-popup @click="() => deleteActivity(pSA.activityId)">
+                                    <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                                        @click="() => deleteActivities([pSA.activityId])">
                                         <q-item-section>Delete</q-item-section>
                                     </q-item>
                                 </q-list>
@@ -199,7 +215,7 @@
                 </div>
             </div>
         </draggable>
-        <div class="grid-wrapper q-mt-sm">
+        <div class="grid-wrapper q-mt-sm" v-if="isUserOrgMember">
             <div>
             </div>
             <div>
@@ -227,25 +243,27 @@
         </div>
         <q-menu ref="contextMenuRef" touch-position context-menu @before-show="setContextMenuSource">
             <q-list dense style="min-width: 100px">
-                <q-item clickable v-close-popup
+                <q-item :disable="!isUserOrgMember" clickable v-close-popup
                     @click="() => copyActivities(selectionActivityIds?.length ? selectionActivityIds : [contextActivityId])">
                     <q-item-section>Copy</q-item-section>
                 </q-item>
                 <q-separator></q-separator>
-                <q-item :disable="!canPaste" clickable v-close-popup
+                <q-item :disable="!isUserOrgMember || !canPaste" clickable v-close-popup
                     @click="() => pasteClipboardItem(contextActivityId)">
                     <q-item-section>Paste</q-item-section>
                 </q-item>
-                <q-item :disable="!canPaste" clickable v-close-popup @click="showPasteDetailDialog = true">
+                <q-item :disable="!isUserOrgMember || !canPaste" clickable v-close-popup
+                    @click="showPasteDetailDialog = true">
                     <q-item-section>Paste history...</q-item-section>
                 </q-item>
                 <q-separator></q-separator>
-                <!-- @click="$refs.attachValues.isShown = true; " -->
-                <q-item clickable v-close-popup @click="() => { showActivityStatementDialog = true; }">
+                <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                    @click="() => { showActivityStatementDialog = true; }">
                     <q-item-section>Attach statement...</q-item-section>
                 </q-item>
                 <q-separator></q-separator>
-                <q-item clickable v-close-popup @click="() => deleteActivity(contextActivityId)">
+                <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                    @click="() => deleteActivities([contextActivityId])">
                     <q-item-section>Delete</q-item-section>
                 </q-item>
             </q-list>
@@ -290,17 +308,17 @@
             <q-card :style="{ width: '760px', 'max-width': ($q.platform.is.mobile ? '100vw' : '90vw') }"
                 class="q-pa-md">
                 <q-card-section class="row items-center q-pb-none">
-                    <div class="text-h4">Create Actor</div>
+                    <div class="text-h5">Create Actor</div>
                     <q-space></q-space>
                     <q-btn icon="close" flat round dense v-close-popup></q-btn>
                 </q-card-section>
                 <q-card-section>
-                    <q-input outlined v-model="createActorFields.name" label="Name" class="q-ma-sm"
+                    <q-input dense stack-label outlined v-model="createActorFields.name" label="Name" class="q-ma-sm"
                         :rules="[val => val && val.length > 0 || 'Name is required']"></q-input>
-                    <q-input outlined v-model="createActorFields.description" label="Description"
+                    <q-input dense stack-label outlined v-model="createActorFields.description" label="Description"
                         class="q-ma-sm"></q-input>
                 </q-card-section>
-                <q-btn label="Create Actor" @click="createActor" class="float-right"></q-btn>
+                <q-btn flat label="Create Actor" @click="createActor" class="float-right"></q-btn>
             </q-card>
         </q-dialog>
         <q-dialog v-model="selectParentStoryDialog">
@@ -315,14 +333,14 @@
                     <div class="q-my-sm text-caption text-grey-8">
                         Click on a parent story to go to.
                     </div>
-                    <q-list bordered separator dense>                   
+                    <q-list bordered separator dense>
                         <q-item clickable v-ripple v-for="detailActivity in detailActivityList"
                             :key="detailActivity.processStoryId"
-                             @click="goPath('/cointernal/Process/EditProcessStory?processStoryId=' + detailActivity.processStoryId)"
+                            @click="goPath('/cointernal/Process/EditProcessStory?processStoryId=' + detailActivity.processStoryId)"
                             v-close-popup>
                             <q-item-section>
                                 Go to "{{ detailActivity.name }}"
-                            </q-item-section>                         
+                            </q-item-section>
                         </q-item>
                     </q-list>
                 </q-card-section>
@@ -335,7 +353,7 @@
 module.exports = {
     mounted: function () {
         this.processStoryId = this.$root.currentParameters.processStoryId
-        Promise.all([this.fetchProcessStoryActivities(), this.getClipboard()])
+        Promise.all([this.getUserOrgMembership(), this.fetchProcessStoryActivities(), this.getClipboard()])
     },
     created() {
         window.addEventListener('keydown', this.keyDownHandler)
@@ -362,13 +380,19 @@ module.exports = {
     },
     data() {
         return {
+            loading: false,
+            processStoryId: false,
+            // Org info
+            organizationName: '',
+            isUserOrgMember: false,
+            isOrgPremium: false,
+            // dialog states
             showActivityStatementDialog: false,
-            selectParentStoryDialog:false,
+            selectParentStoryDialog: false,
             showUndeleteDialog: false,
             showCreateActorDialog: false,
             showPasteDetailDialog: false,
-            processStoryId: false,
-            loading: false,
+            // Internal activity states
             activeActivityId: null,
             contextActivityId: null,
             hoverActivityId: null,
@@ -378,7 +402,8 @@ module.exports = {
             processStoryTitle: '',
             processStoryActivityList: [],
             detailActivityList: [],
-            //
+            clipboardEntryList: [],
+            // Form fields
             createActorFields: {
                 name: '',
                 description: '',
@@ -388,8 +413,8 @@ module.exports = {
                 actors: [],
                 action: ''
             },
+            // Filter fns
             actorList: [],
-            clipboardEntryList: [],
             // UI State
             selectionActivityIds: [],
             dragging: false
@@ -407,7 +432,8 @@ module.exports = {
         },
         draggingInfo() {
             return this.dragging ? " under drag" : "";
-        }, canPaste() {
+        },
+        canPaste() {
             return this.clipboardEntryList?.length > 0
         },
         dialogParams() {
@@ -423,8 +449,8 @@ module.exports = {
         },
         subStoryDialogParams() {
             const activity = this.processStoryActivityList?.find(el => el.activityId === this.contextActivityId)
-            let params = "?processStoryId="+this.processStoryId+"&processStoryActivityId="+activity?.processStoryActivityId
-            
+            let params = "?processStoryId=" + this.processStoryId + "&processStoryActivityId=" + activity?.processStoryActivityId
+
             return params;
         }
     },
@@ -500,6 +526,7 @@ module.exports = {
                 this.activeActivityId = this.activityIds[curIdx + 1]
         },
         selectActivityForEdit(activityId, force = false) {
+            if (!this.isUserOrgMember) return;
             if (!force) {
                 // prevent self deselect
                 if (this.activeActivityId == activityId)
@@ -510,7 +537,6 @@ module.exports = {
                     return;
                 }
             }
-
             this.activeActivityId = activityId
         },
         clearActivitySelection() {
@@ -529,8 +555,27 @@ module.exports = {
                 this.selectionActivityIds = this.processStoryActivityList.map(pSA => pSA.activityId)
             } else {
                 this.selectionActivityIds = []
-
             }
+        },
+        getUserOrgMembership() {
+            const vm = this
+            return $.ajax({
+                type: 'GET',
+                url: '/cointernal/Process/EditProcessStory/getUserOrgMembership',
+                data: {},
+                dataType: 'json',
+                headers: {
+                    Accept: 'application/json',
+                },
+                error: moqui.handleAjaxError,
+                success: function (responseObj, status, jqXHR) {
+                    vm.isUserOrgMember = responseObj?.isUserOrgMember || false
+                    vm.isOrgPremium = responseObj?.isOrgPremium || false
+                    vm.organizationName = responseObj?.organizationName || ''
+                },
+                complete: function () {
+                },
+            })
         },
         fetchProcessStoryActivities() {
             const vm = this
@@ -727,6 +772,7 @@ module.exports = {
             return this.$q.dialog({
                 title: 'Confirm',
                 message: activityIds.length > 1 ? 'Are you sure you want to delete these activities?' : 'Are you sure you want to delete this activity?',
+                class: 'q-pa-sm',
                 cancel: true,
             }).onOk(() => {
                 const vm = this
@@ -758,10 +804,10 @@ module.exports = {
                 })
             })
         },
-        lockActivityFromUpdate(activityId){
+        lockActivityFromUpdate(activityId) {
             this.lockActivityId = activityId;
         },
-        releaseActivityFromUpdate(){
+        releaseActivityFromUpdate() {
             this.lockActivityId = null;
         },
         updateActivity(activityId, data, source, willCopyOnWrite = false) {
@@ -785,7 +831,7 @@ module.exports = {
                     cancel: true,
                 }).onOk((ignoreCopyOnWrite) => {
                     this._updateActivity(activityId, data, source, ignoreCopyOnWrite)
-                }).onCancel(()=>{
+                }).onCancel(() => {
                     this.releaseActivityFromUpdate();
                     return;
                 })
@@ -1020,7 +1066,7 @@ module.exports = {
             this.$q.dialog({
                 title: 'Create Checklist',
                 message: 'Checklist Name',
-                class: 'q-pa-md',
+                class: 'q-pa-sm',
                 prompt: {
                     model: this.processStory?.name,
                     type: 'text' // optional
@@ -1048,6 +1094,33 @@ module.exports = {
                 })
             })
         },
+        showUpgradeConfirmation() {
+            const vm = this;
+            this.$q.dialog({
+                title: 'Upgrade Organization?',
+                message: `Activating will cost 1 Organization-Month Credit per month while ${this.organizationName} is upgraded. Are you sure?`,
+                class: 'q-pa-sm',
+                cancel: true,
+                persistent: false
+            }).onOk(data => {
+                return $.ajax({
+                    type: 'POST',
+                    url: '/cointernal/Process/EditProcessStory/upgradeParty',
+                    data: {},
+                    dataType: 'json',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-Token': this.$root.moquiSessionToken,
+                    },
+                    error: moqui.handleAjaxError,
+                    success: function (responseObj, status, jqXHR) {
+                        vm.getUserOrgMembership()
+                    },
+                    complete: function () {
+                    },
+                })
+            })
+        },
         //
         ensureEndsWith(text, suffix) {
             return text?.endsWith(suffix) ? text : text + suffix
@@ -1056,19 +1129,11 @@ module.exports = {
             return condition ? this.ensureEndsWith(this.toSentenceCase(condition), " ,") : ''
         },
         formatActorNames(actorNames) {
-            return
-            actorNames?.join(", ") || ''
+            return actorNames?.join(", ") || ''
         },
         formatAction(action) {
             return action ? this.ensureEndsWith(action, '.') : ''
         },
-        // formatActivity(activityDetail) {
-        //     const condition = activityDetail.condition ? this.ensureEndsWith(activityDetail.condition.toUpperCase(), " ,") : ''
-        //     const actorNames=activityDetail.actorNames?.join(", ") || ''
-        //     const action = activityDetail.action ? this.ensureEndsWith(activityDetail.action, '.') : ''
-
-        //     return `${condition}${condition ? ' ' : ''}${actorNames}${actorNames ? ' ' : ''}${action}`
-        // },
         // Helpers
         areArraysEqualSets(a1, a2) {
             const superSet = {};
@@ -1097,9 +1162,7 @@ module.exports = {
             return str.replace(/\.\s+([a-z])[^\.]|^(\s*[a-z])[^\.]/g, s => s.replace(/([a-z])/, s => s.toUpperCase()))
         },
         goPath: function goPath(path) { this.$root.setUrl(path); }
-
     },
-
 }
 </script>
 

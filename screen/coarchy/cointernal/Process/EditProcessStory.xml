@@ -49,8 +49,7 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="createActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="updateActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="deleteActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
-    <!-- <transition-include name="moveActivities"
-    location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/> -->
+    <!-- <transition-include name="moveActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/> -->
     <transition-include name="copyActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="deleteActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="getActorList" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
@@ -72,8 +71,20 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="getCloneOrganizationList" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
     <transition-include name="upgradeParty" location="component://coarchy/screen/coarchy/cointernal/Home.xml"/>
 
+    <transition name="getUserOrgMembership">
+        <actions>
+            <script>ec.web.sendJsonResponse([organizationName:activeOrg.organizationName, isUserOrgMember:partyRelationshipCount &gt; 0, isOrgPremium:partyActivationCount &gt; 0])</script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    
     <transition name="getClipboard">
         <actions>
+            <if condition="!partyRelationshipCount">
+                <script>
+                    ec.web.sendJsonResponse([])
+                </script>
+            </if>
             <entity-find entity-name="coarchy.ClipboardEntry" list="clipboardEntryList">
                 <econdition field-name="partyId" from="ec.user.userAccount?.partyId"/>
                 <order-by field-name="-entryDate" />
@@ -92,6 +103,9 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <transition name="pasteActivity">
+        <condition>
+            <expression>partyRelationshipCount &gt; 0</expression>
+        </condition>
         <service-call name="coarchy.CoarchyServices.paste#Activities" in-map="context+[organizationId:activeOrgId]"/>
         <default-response url=".." parameter-map="[pageIndex:pageIndex]"/>
     </transition>    
@@ -103,7 +117,6 @@ along with this software (see the LICENSE.md file). If not, see
             <expression>partyRelationshipCount &gt; 0</expression>
         </condition>
         <actions>
-
             <!-- find current processStoryActivity -->
             <entity-find-one entity-name="coarchy.ProcessStoryActivity" value-field="processStoryActivity">
                 <field-map field-name="processStoryActivityId" />
@@ -193,6 +206,14 @@ along with this software (see the LICENSE.md file). If not, see
     <transition name="getDeletedActivities" read-only="true">
         <parameter name="processStoryId" />
         <actions>
+            <if condition="!partyRelationshipCount || !partyActivationCount">
+                <script>
+                    ec.web.sendJsonResponse([
+                        processStory: null,
+                        processStoryActivityList: []
+                    ])
+                </script>
+            </if>
             <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory">
                 <field-map field-name="processStoryId" />
             </entity-find-one>
@@ -204,6 +225,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="processStoryId"/>
                 <econdition field-name="actorId" operator="in" from="actorIdList" ignore-if-empty="true"/>
                 <!-- Don't select fields from activityactor (actorId) -->
+                <econditions combine="or">
+                    <econdition field-name="condition" operator="is-not-null" />
+                    <econdition field-name="action" operator="is-not-null" />
+                    <econdition field-name="actorId" operator="is-not-null" />
+                </econditions>
                 <select-field field-name="processStoryActivityId,sequenceNum,detailProcessStoryId,action,condition,activityId,implementationId"/>
             </entity-find>
 
@@ -227,6 +253,9 @@ along with this software (see the LICENSE.md file). If not, see
     
     <transition name="restoreActivity">
         <parameter name="processStoryActivityId" />
+        <condition>
+            <expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression>
+        </condition>
         <actions>
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList" distinct="true">
                 <search-form-inputs default-order-by="sequenceNum,action"/>
@@ -254,10 +283,12 @@ along with this software (see the LICENSE.md file). If not, see
     <transition name="createActivityValue">
         <parameter name="activityId" />
         <parameter name="valueIdList" />
+        <condition>
+            <expression>partyRelationshipCount &gt; 0</expression>
+        </condition>
         <actions>
             <set field="valueIdList" from="valueIdList?:ec.web.getParameters().get('valueIdList[]')?:[]"/>
             <service-call name="coarchy.CoarchyServices.create#ActivityValue" in-map="[activityId:activityId,valueIdList:valueIdList,organizationId:activeOrgId]"/>
-
             <script>
                 ec.web.sendJsonResponse([
                     success: true
@@ -266,9 +297,10 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
         <default-response type="none"/>
     </transition>
+
     <transition name="deleteValueStatementActivity">
         <parameter name="valueStatementActivityId" />
-        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions>
             <service-call name="update#coarchy.ValueStatementActivity" in-map="[valueStatementActivityId:valueStatementActivityId, thruDate:ec.user.nowTimestamp, organizationId:activeOrgId]"/>
             <script>
@@ -281,7 +313,7 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
     <transition name="deleteAllValueStatementActivities">
         <parameter name="activityId" />
-        <condition><expression>partyRelationshipCount &gt; 0 &amp;&amp; partyActivationCount &gt; 0</expression></condition>
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions>
             <entity-find entity-name="coarchy.ValueStatementActivity" list="valueActivities">
                 <date-filter />
@@ -304,6 +336,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <transition name="getActivityStatementList" read-only="true">
         <parameter name="activityId" />
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions>
             <entity-find entity-name="coarchy.ValueStatementActivityDetail" list="prepValueActivityList">
                 <date-filter />
@@ -324,10 +357,10 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <actions>
-        <!-- <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
-        <if
-        condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script></if> -->
+        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
+        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script></if>
     </actions>
+    
     <widgets>
         <render-mode>
             <text type="qvue,js" location="component://coarchy/template/EditProcessStory.qvue" />
