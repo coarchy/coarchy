@@ -8,7 +8,6 @@
             <template #action>
                 <q-btn :disable="!isUserOrgMember" outline label="Upgrade" color="positive"
                     @click="showUpgradeConfirmation">
-
                 </q-btn>
             </template>
         </q-banner>
@@ -118,7 +117,7 @@
                 @mouseleave="hoverActivityId = null">
                 <div>
                     <div class="row items-center">
-                        <q-checkbox v-model="selectionActivityIds" :val="pSA.activityId" size="sm"></q-checkbox>
+                        <q-checkbox v-model="selectionActivityIds" :val="pSA.activityId" size="sm" @input="(val,evt)=>onCheckboxClick(val,evt,pSA.activityId)"></q-checkbox>
                         <span class="show-on-hover">
                             <q-icon name="drag_indicator" color="grey-7" size="sm"
                                 class="handle cursor-pointer"></q-icon>
@@ -549,6 +548,27 @@ module.exports = {
         },
         checkMove: function (e) {
             // window.console.log("Future index: " + e.draggedContext.futureIndex);
+        },
+        onCheckboxClick(value, evt, activityId){
+            if (value){
+                if (evt.shiftKey){
+                    if (this.selectionActivityIds?.length>1){
+                        const lastSelectedActivityId = this.selectionActivityIds[this.selectionActivityIds.length-2]
+                        const lastSelectedIndex = this.activityIds.findIndex(val=>val === lastSelectedActivityId)
+                        const activityIndex = this.activityIds.findIndex(val=>val === activityId)
+
+                        const newSelectionIds = [...this.selectionActivityIds]
+                        if ((lastSelectedIndex!=-1) && (activityIndex!=-1) && (activityIndex>lastSelectedIndex)){
+                            const activityIds = this.activityIds.slice(lastSelectedIndex,activityIndex-lastSelectedIndex)
+                            activityIds.forEach((activityId)=>{
+                                if (!newSelectionIds.includes(activityId)) newSelectionIds.push(activityId)
+
+                            })
+                            this.selectionActivityIds = newSelectionIds
+                        }
+                    }
+                }
+            }
         },
         selectOrDeselectAll(isSelectAll) {
             if (isSelectAll) {
