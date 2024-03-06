@@ -14,7 +14,7 @@
         <div class="row items-center justify-end">
             <q-btn outline v-if="detailActivityList?.length == 1 && detailActivityList?.[0]?.processStoryId" no-caps
                 size="md" color="primary"
-                @click="() => goPath('/cointernal/Process/EditProcessStory?processStoryId=' + detailActivityList?.[0]?.processStoryId)">
+                @click="() => goPath('/cointernal/Process/EditProcessStoryV3?processStoryId=' + detailActivityList?.[0]?.processStoryId)">
                 Go to parent story: {{ detailActivityList?.[0]?.name }}
             </q-btn>
             <q-btn outline v-if="detailActivityList?.length > 1 && detailActivityList?.[0]?.processStoryId" no-caps
@@ -108,7 +108,6 @@
             <div>
             </div>
         </div>
-
         <draggable :value="processStoryActivityList" :disabled="loading || !isUserOrgMember" class="list-group"
             ghost-class="ghost" :move="checkMove" handle=".handle" @start="dragging = true" @end="onDragEnd">
             <div :id="`PACTION-${pSA.activityId}`" class="grid-wrapper list-group-item hover-container"
@@ -182,8 +181,7 @@
                                         <q-item-section>Paste history...</q-item-section>
                                     </q-item>
                                     <q-separator></q-separator>
-                                    <q-item :disable="!isUserOrgMember" clickable
-                                        v-close-popup
+                                    <q-item :disable="!isUserOrgMember" clickable v-close-popup
                                         @click="() => { contextActivityId = pSA.activityId; showActivityStatementDialog = true; }">
                                         <q-item-section>Attach statement...</q-item-section>
                                     </q-item>
@@ -562,23 +560,26 @@ module.exports = {
             // window.console.log("Future index: " + e.draggedContext.futureIndex);
         },
         onCheckboxClick(value, evt, activityId) {
-            if (value) {
-                if (evt.shiftKey) {
-                    if (this.selectionActivityIds?.length > 1) {
-                        const lastSelectedActivityId = this.selectionActivityIds[this.selectionActivityIds.length - 2]
-                        const lastSelectedIndex = this.activityIds.findIndex(val => val === lastSelectedActivityId)
-                        const activityIndex = this.activityIds.findIndex(val => val === activityId)
-
-                        const newSelectionIds = [...this.selectionActivityIds]
-                        if ((lastSelectedIndex != -1) && (activityIndex != -1) && (activityIndex > lastSelectedIndex)) {
-                            const activityIds = this.activityIds.slice(lastSelectedIndex, activityIndex - lastSelectedIndex)
-                            activityIds.forEach((activityId) => {
-                                if (!newSelectionIds.includes(activityId)) newSelectionIds.push(activityId)
-
-                            })
-                            this.selectionActivityIds = newSelectionIds
-                        }
+            if (value && evt.shiftKey) {
+                let lastSelectedActivityId = null
+                const activityIdsReverse = this.activityIds.slice().reverse();
+                for (let i = 0; i < activityIdsReverse.length; i++) {
+                    if (activityIdsReverse[i] != activityId && this.selectionActivityIds.includes(activityIdsReverse[i])) {
+                        lastSelectedActivityId = activityIdsReverse[i];
+                        break;
                     }
+                }
+                const lastSelectedIndex = this.activityIds.findIndex(val => val === lastSelectedActivityId)
+                const activityIndex = this.activityIds.findIndex(val => val === activityId)
+
+                const newSelectionIds = [...this.selectionActivityIds]
+                if ((lastSelectedIndex != -1) && (activityIndex != -1) && (activityIndex > lastSelectedIndex)) {
+                    const activityIds = this.activityIds.slice(lastSelectedIndex, activityIndex)
+                    activityIds.forEach((activityId) => {
+                        if (!newSelectionIds.includes(activityId)) newSelectionIds.push(activityId)
+
+                    })
+                    this.selectionActivityIds = newSelectionIds
                 }
             }
         },
