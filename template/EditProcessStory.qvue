@@ -101,7 +101,7 @@
                     {{ processStoryTitle }}
                     <q-popup-edit v-if="isUserOrgMember" v-model="processStoryTitle" auto-save v-slot="scope">
                         <q-input v-model="scope.value" dense autofocus counter
-                            @keydown.enter="() => updateProcessStory(scope.value)" />
+                            @keydown.enter="() => updateProcessStory(scope.value)" ></q-input>
                     </q-popup-edit>
                 </div>
             </div>
