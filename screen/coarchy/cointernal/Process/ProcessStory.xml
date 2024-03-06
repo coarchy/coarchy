@@ -138,6 +138,7 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
 
 <!--            <log level="warn" message="importText activityMapList.toString() ${activityMapList.toString()}"/>-->
+    </actions><default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
 
     <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
         <actions>
