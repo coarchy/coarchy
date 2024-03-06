@@ -26,7 +26,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="ec.user.context.activityIdList" from="null"/>
             <set field="activityId" from="null"/>
         </actions>
-        <default-response url="."/>
+        <default-response url="../../EditProcessStoryV3"/>
     </transition>
 
     <widgets>
