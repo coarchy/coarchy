@@ -182,9 +182,9 @@
                                         <q-item-section>Paste history...</q-item-section>
                                     </q-item>
                                     <q-separator></q-separator>
-                                    <q-item :disable="!isUserOrgMember || contextActivityIsEmpty" clickable
+                                    <q-item :disable="!isUserOrgMember" clickable
                                         v-close-popup
-                                        @click="() => { if (contextActivityIsEmpty) return; contextActivityId = pSA.activityId; showActivityStatementDialog = true; }">
+                                        @click="() => { contextActivityId = pSA.activityId; showActivityStatementDialog = true; }">
                                         <q-item-section>Attach statement...</q-item-section>
                                     </q-item>
 
@@ -258,8 +258,8 @@
                     <q-item-section>Paste history...</q-item-section>
                 </q-item>
                 <q-separator></q-separator>
-                <q-item :disable="!isUserOrgMember || contextActivityIsEmpty" clickable v-close-popup
-                    @click="() => { if (contextActivityIsEmpty) return; showActivityStatementDialog = true; }">
+                <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                    @click="() => { showActivityStatementDialog = true; }">
                     <q-item-section>Attach statement...</q-item-section>
                 </q-item>
                 <q-separator></q-separator>
@@ -454,16 +454,16 @@ module.exports = {
 
             return params;
         },
-        contextActivityIsEmpty() {
-            let contextActivityId = this.contextActivityId
-            let activity = this.processStoryActivityList?.find(el => el.activityId === contextActivityId)
+        // contextActivityIsEmpty() {
+        //     let contextActivityId = this.contextActivityId
+        //     let activity = this.processStoryActivityList?.find(el => el.activityId === contextActivityId)
 
-            if (activity) {
-                return (!activity.condition?.trim() && !activity.actors && !activity.action?.trim())
-            }
+        //     if (activity) {
+        //         return (!activity.condition?.trim() && !activity.actors && !activity.action?.trim())
+        //     }
 
-            return true;
-        }
+        //     return true;
+        // }
     },
     watch: {
         activeActivityId(newVal, oldVal) {

@@ -111,7 +111,7 @@ Vue.component('c-undelete-activity-dialog', {
     '<q-dialog v-bind="$attrs" v-on="$listeners" @show="getDeletedActivities" >\n'+
     '    <q-card :style="{width:((width||760)+\'px\'),\'max-width\':($q.platform.is.mobile?\'100vw\':\'90vw\')}" class="q-pa-md">\n'+
     '        <q-card-section class="row items-center q-pb-none">\n'+
-    '            <div class="text-h4">Undelete activities</div>\n'+
+    '            <div class="text-h5">Undelete activities</div>\n'+
     '            <q-space></q-space>\n'+
     '            <q-btn icon="close" flat round dense v-close-popup></q-btn>\n'+
     '        </q-card-section>\n'+
@@ -235,7 +235,7 @@ Vue.component('c-attach-statement-dialog', {
     '<q-dialog v-bind="$attrs" v-on="$listeners" @show="getActivityStatementList" >\n'+
     '    <q-card :style="{width:((width||760)+\'px\'),\'max-width\':($q.platform.is.mobile?\'100vw\':\'90vw\')}" class="q-pa-md">\n'+
     '        <q-card-section class="row items-center q-pb-none">\n'+
-    '            <div class="text-h4">Connect Statements</div>\n'+
+    '            <div class="text-h5">Connect Statements</div>\n'+
     '            <q-space></q-space>\n'+
     '            <q-btn icon="close" flat round dense v-close-popup></q-btn>\n'+
     '        </q-card-section>\n'+
