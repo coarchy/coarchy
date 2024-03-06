@@ -1,8 +1,8 @@
 <template>
     <div class="full-width full-height" v-click-outside="clearActivitySelection"
         @keydown.esc="() => clearActivitySelection()" tabindex="0">
-        <q-banner v-if="!isOrgPremium" inline-actions rounded dense class="bg-grey-3 text-black q-mb-md">
-            <span class="text-black">
+        <q-banner v-if="!isOrgPremium" inline-actions rounded dense class="bg-grey-3 text-bold q-mb-md">
+            <span class="text-bold">
                 To enable all the features upgrade organization {{ organizationName }} to Premium
             </span>
             <template #action>
@@ -811,7 +811,7 @@ module.exports = {
             }).onOk(() => {
                 const vm = this
                 this.loading = true
-                const params = activityIds.reduce((acc, cur, index) => ({
+                const params = activityIds.filter(activityId=>this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
                     ...acc,
                     ['activityId_' + index]: cur
                 }), {});
@@ -915,7 +915,7 @@ module.exports = {
             const vm = this
             if (!activityIds) return;
 
-            const params = activityIds.reduce((acc, cur, index) => ({
+            const params = activityIds.filter(activityId=>this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
                 ...acc,
                 ['activityId_' + index]: cur
             }), {});
@@ -948,7 +948,7 @@ module.exports = {
             const vm = this
             if (!activityIds) return;
 
-            const params = activityIds.reduce((acc, cur, index) => ({
+            const params = activityIds.filter(activityId=>this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
                 ...acc,
                 ['activityId_' + index]: cur
             }), {});
