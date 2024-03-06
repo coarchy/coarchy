@@ -181,7 +181,7 @@
                                         <q-item-section>Paste history...</q-item-section>
                                     </q-item>
                                     <q-separator></q-separator>
-                                    <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                                    <q-item :disable="!isUserOrgMember || !pSA.action" clickable v-close-popup
                                         @click="() => { contextActivityId = pSA.activityId; showActivityStatementDialog = true; }">
                                         <q-item-section>Attach statement...</q-item-section>
                                     </q-item>
@@ -196,7 +196,7 @@
 
                                     <template v-else>
                                         <q-separator></q-separator>
-                                        <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                                        <q-item :disable="!isUserOrgMember || !pSA.action" clickable v-close-popup
                                             @click="() => { contextActivityId = pSA.activityId; $refs.createSubStoryDialog.isShown = true }">
                                             <q-item-section>Substory</q-item-section>
                                         </q-item>
@@ -256,7 +256,7 @@
                     <q-item-section>Paste history...</q-item-section>
                 </q-item>
                 <q-separator></q-separator>
-                <q-item :disable="!isUserOrgMember" clickable v-close-popup
+                <q-item :disable="!isUserOrgMember || !contextActivity?.action" clickable v-close-popup
                     @click="() => { showActivityStatementDialog = true; }">
                     <q-item-section>Attach statement...</q-item-section>
                 </q-item>
@@ -452,16 +452,9 @@ module.exports = {
 
             return params;
         },
-        // contextActivityIsEmpty() {
-        //     let contextActivityId = this.contextActivityId
-        //     let activity = this.processStoryActivityList?.find(el => el.activityId === contextActivityId)
-
-        //     if (activity) {
-        //         return (!activity.condition?.trim() && !activity.actors && !activity.action?.trim())
-        //     }
-
-        //     return true;
-        // }
+        contextActivity() {
+            return this.processStoryActivityList?.find(el => el.activityId === this.contextActivityId)
+        },
     },
     watch: {
         activeActivityId(newVal, oldVal) {
