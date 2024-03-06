@@ -49,7 +49,7 @@ Vue.component('c-edit-activity', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/getActorList',
+                url: '/cointernal/Process/EditProcessStoryV3/getActorList',
                 data: {
                     term: term,
                 },
@@ -164,7 +164,7 @@ Vue.component('c-undelete-activity-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/getDeletedActivities',
+                url: '/cointernal/Process/EditProcessStoryV3/getDeletedActivities',
                 data: {
                     processStoryId: vm.processStoryId,
                 },
@@ -188,7 +188,7 @@ Vue.component('c-undelete-activity-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/restoreActivity',
+                url: '/cointernal/Process/EditProcessStoryV3/restoreActivity',
                 data: {
                     processStoryActivityId: processStoryActivityId,
                 },
@@ -292,7 +292,7 @@ Vue.component('c-attach-statement-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/getValueList',
+                url: '/cointernal/Process/EditProcessStoryV3/getValueList',
                 data: {
                     term: term,
                     excludeValueIds: vm.activityStatementList?.map(it=>it.valueStatementId)?.join(',')
@@ -324,7 +324,7 @@ Vue.component('c-attach-statement-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/getActivityStatementList',
+                url: '/cointernal/Process/EditProcessStoryV3/getActivityStatementList',
                 data: {
                     activityId: vm.activityId,
                 },
@@ -348,7 +348,7 @@ Vue.component('c-attach-statement-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/deleteValueStatementActivity',
+                url: '/cointernal/Process/EditProcessStoryV3/deleteValueStatementActivity',
                 data: {
                     activityId: vm.activityId,
                     valueStatementActivityId: valueStatementActivityId,
@@ -373,7 +373,7 @@ Vue.component('c-attach-statement-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/createActivityValue',
+                url: '/cointernal/Process/EditProcessStoryV3/createActivityValue',
                 data: {
                     activityId: vm.activityId,
                     valueIdList: vm.selectedStatements.map(it=>it.value),
@@ -400,7 +400,7 @@ Vue.component('c-attach-statement-dialog', {
             this.loading = true
             return $.ajax({
                 type: 'POST',
-                url: '/cointernal/Process/EditProcessStory/deleteAllValueStatementActivities',
+                url: '/cointernal/Process/EditProcessStoryV3/deleteAllValueStatementActivities',
                 data: {
                     activityId: vm.activityId,
                 },

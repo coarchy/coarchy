@@ -69,7 +69,7 @@ along with this software (see the LICENSE.md file). If not, see
                         condition="showSubstories == 'Y' &amp;&amp; partyActivationCount &gt; 0 &amp;&amp; hasSubstories"/>
                 <link url="." text="Show Substories" parameter-map="[showSubstories:'Y']" btn-type="success"
                         condition="showSubstories != 'Y' &amp;&amp; partyActivationCount &gt; 0 &amp;&amp; hasSubstories"/>
-                <link url="../EditProcessStory" text="Go Back to Process Story" parameter-map="[processStoryId:processStoryId]"/>
+                <link url="../EditProcessStoryV3" text="Go Back to Process Story" parameter-map="[processStoryId:processStoryId]"/>
 
                 <!-- TODO: Add filter parameters for the activity -->
                 <render-mode><text><![CDATA[<h5 v-pre>]]></text></render-mode>

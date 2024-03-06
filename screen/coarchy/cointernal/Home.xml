@@ -87,7 +87,7 @@ along with this software (see the LICENSE.md file). If not, see
         </iterate>
         <iterate list="processStoryList" entry="item">
             <if condition="!activityFeedList.find{it.identifier == 'ProcessStory#'+item.processStoryId}">
-                <script>activityFeedList.add(['date':item.activityLastUpdatedStamp,'updateType':'Updated','entityType':'Process Story','name':item.name,'identifier':'ProcessStory#'+item.processStoryId,'link':'/coapp/Process/EditProcessStory?processStoryId='+item.processStoryId])</script>
+                <script>activityFeedList.add(['date':item.activityLastUpdatedStamp,'updateType':'Updated','entityType':'Process Story','name':item.name,'identifier':'ProcessStory#'+item.processStoryId,'link':'/coapp/Process/EditProcessStoryV3?processStoryId='+item.processStoryId])</script>
             </if>
         </iterate>
         <iterate list="checklistList" entry="item">
