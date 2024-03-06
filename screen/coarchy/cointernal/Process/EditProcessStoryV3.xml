@@ -44,12 +44,13 @@ along with this software (see the LICENSE.md file). If not, see
     <transition-include name="getProcessStoryList" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="getActivityList" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
 
-    <transition-include name="newParagraph" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
+    <!-- <transition-include name="newParagraph" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/> -->
 
     <transition-include name="createActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="updateActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="deleteActivity" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
-    <!-- <transition-include name="moveActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/> -->
+    <!-- <transition-include name="moveActivities"
+    location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/> -->
     <transition-include name="copyActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="deleteActivities" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
     <transition-include name="getActorList" location="component://coarchy/screen/coarchy/cointernal/Process/ProcessStory.xml"/>
@@ -102,6 +103,34 @@ along with this software (see the LICENSE.md file). If not, see
         <default-response type="none"/>
     </transition>
 
+    <transition name="newParagraph">
+        <condition><expression>partyRelationshipCount &gt; 0</expression></condition>
+        <actions>
+            <service-call name="create#coarchy.Activity" in-map="[organizationId:activeOrgId]" out-map="newActivity"/>
+
+            <entity-find entity-name="coarchy.ProcessStoryActivity" limit="1" list="processStoryInitialActivityList">
+                <date-filter />
+                <econdition field-name="sequenceNum" from="insertSequenceNum.toInteger()"/>
+                <order-by field-name="-sequenceNum"/></entity-find>
+            <if condition="processStoryInitialActivityList?.size() &gt; 0">
+                <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="processStoryActivityList">
+                    <date-filter />
+                    <econdition field-name="replacedByActivityId" operator="is-null" />
+                    <econdition field-name="sequenceNum" operator="greater-equals" from="insertSequenceNum.toInteger()"/>
+                    <select-field field-name="processStoryActivityId,sequenceNum"/>
+                    <order-by field-name="-sequenceNum"/></entity-find>
+                <iterate list="processStoryActivityList" entry="processStoryActivity">
+                    <service-call name="update#coarchy.ProcessStoryActivity" in-map="[processStoryActivityId:processStoryActivity.processStoryActivityId,sequenceNum:processStoryActivity.sequenceNum+1]"/>
+                </iterate>
+            </if>
+
+            <service-call name="create#coarchy.ProcessStoryActivity" in-map="[processStoryId:processStoryId,activityId:newActivity.activityId, sequenceNum:insertSequenceNum, organizationId:activeOrgId]" />
+
+            <script>ec.web.sendJsonResponse([activityId:newActivity.activityId])</script>
+        </actions>
+        <default-response type="none"></default-response>
+    </transition>
+    
     <transition name="pasteActivity">
         <condition>
             <expression>partyRelationshipCount &gt; 0</expression>
