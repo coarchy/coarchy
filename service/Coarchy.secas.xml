@@ -31,4 +31,27 @@ along with this software (see the LICENSE.md file). If not, see
                 title:'Welcome to Coarchy, Build a better future!!',baseLinkUrl:baseLinkUrl]]" out-map="context" />
         </actions>
     </seca>
+    <!-- User Signup Email -->
+    <seca id="CheckPartyActivationSendCreditsExpiredEmail"
+        service="coarchy.CoarchyServices.check#PartyActivationDaily" when="tx-commit">
+        <actions>
+           <service-call name="coarchy.NotificationServices.notify#PostCreditExpire" in-map="context"></service-call>
+        </actions>
+    </seca>
+    <seca id="UserSignupSendAdminEmail" service="coarchy.CoarchyServices.signUp#User" when="tx-commit">
+        <actions>
+            <!-- Send welcome email -->
+            <set field="baseLinkUrl" from="!'production'.equals(System.getProperty('instance_purpose')) ? 'http://localhost:8080' : 'https://coarchy.com'"/>
+            <set field="contactMechInfoList" from="ec.entity.find('mantle.party.contact.PartyContactMechInfo').condition('partyId', '100051').condition('contactMechPurposeId', 'EmailPrimary').disableAuthz().list()"/>
+            <log level="info" message="contactMechInfoList: ${contactMechInfoList}"/>
+            <if condition="contactMechInfoList?.getFirst()?.infoString">
+                <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" in-map="[
+                    emailTemplateId:'SIGNUP_ADMIN_NOTIFY',toAddresses:contactMechInfoList.getFirst().infoString,bodyParameters:[
+                    baseLinkUrl:baseLinkUrl,title:'New User Signup '+username,linkUrl:baseLinkUrl+'/qapps/marble/Party/EditParty?partyId='+partyId,
+                    currentYear:ec.user.nowTimestamp.format('yyyy'),firstName:firstName,lastName:lastName,emailAddress:username,
+                    templateOrgId:templateOrgId,organizationName:organizationName]]"
+                        out-map="context"/>
+            </if>
+        </actions>
+    </seca>
 </secas>
