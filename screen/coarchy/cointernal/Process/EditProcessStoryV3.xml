@@ -17,7 +17,7 @@ along with this software (see the LICENSE.md file). If not, see
     default-menu-title="Edit" default-menu-index="20" menu-image="fa fa-file"
     menu-image-type="icon" render-modes="vue,qvue">
 
-    <parameter name="processStoryId" required="true"/>
+    <parameter name="processStoryId"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
     <parameter name="pageSize" from="pageSize?:50"/>
     <!-- <parameter name="orderByField" value="sequenceNum"/> -->
@@ -189,6 +189,9 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory">
                 <field-map field-name="processStoryId" />
             </entity-find-one>
+            <if condition="!processStory">
+                <return error="true" message="Process story not found" />
+            </if>
 
             <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="detailActivityList">
                 <date-filter />
@@ -230,6 +233,7 @@ along with this software (see the LICENSE.md file). If not, see
             </script>
         </actions>
         <default-response type="none"/>
+        <error-response url=".." />
     </transition>
     
     <transition name="getDeletedActivities" read-only="true">
@@ -386,8 +390,9 @@ along with this software (see the LICENSE.md file). If not, see
     </transition>
 
     <actions>
-        <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
-        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script></if>
+        <!-- handled clientside through getProcessStoryDetail transisiton in EditProcessStory.qvue -->
+        <!-- <entity-find-one entity-name="coarchy.ProcessStory" value-field="processStory"/>
+        <if condition="!processStory"><script>sri.sendRedirectAndStopRender('/coapp/Process/FindProcessStory')</script></if> -->
     </actions>
     
     <widgets>
