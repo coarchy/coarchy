@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Edit" default-menu-index="20" menu-image="fa fa-file" menu-image-type="icon">
+        default-menu-title="Full Edit" default-menu-index="40" menu-image="fa fa-file" menu-image-type="icon">
 
     <parameter name="processStoryId" required="true"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
@@ -238,7 +238,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <form-single name="CopyToActivities" transition="moveActivities" pass-through-parameters="true">
                         <field name="moveType" from="'copy'"><default-field><hidden/></default-field></field>
                         <field name="organizationId" from="activeOrgId"><default-field title="Organization">
-                            <label text="Enable premium features to copy to your organizations"/>
                             <drop-down allow-empty="true" required-manual-select="true">
                                 <dynamic-options transition="getCloneOrganizationList" min-length="0"/></drop-down>
                         </default-field></field>
@@ -264,7 +263,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <form-single name="MoveToActivities" transition="moveActivities" pass-through-parameters="true">
                         <field name="moveType" from="'cut'"><default-field><hidden/></default-field></field>
                         <field name="organizationId" from="activeOrgId"><default-field title="Organization">
-                            <label text="Enable premium features to copy to your organizations"/>
                             <drop-down allow-empty="true" required-manual-select="true">
                                 <dynamic-options transition="getCloneOrganizationList" min-length="0"/></drop-down>
                         </default-field></field>

@@ -71,7 +71,7 @@ along with this software (see the LICENSE.md file). If not, see
             </field>
             <field name="ignoreCopyOnWrite">
                 <conditional-field title="" condition="canCopyOnWrite">
-                    <label text="This activity was used in at least one Product Evaluation. Do you also want these changes applied to any product evaluation? Warning! This is unreversible." style="text-negative" />
+                    <label text="This activity was used in at least one Product Evaluation. Do you also want these changes applied to any product evaluation? Warning! This is irreversible." style="text-negative" />
                     <check no-current-selected-key="false">
                         <option key="true" text="Yes, save the changes to all existing product evaluations." />
                     </check>

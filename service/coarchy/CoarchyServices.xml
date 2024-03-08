@@ -1183,12 +1183,15 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="activityId" required="true"/>
             <parameter name="condition"/>
             <parameter name="actorIdList" type="List"/>
-            <parameter name="action" required="true"/>
+            <parameter name="action"/>
             <parameter name="implementationId"/>
             <parameter name="organizationId" required="true"/>
             <parameter name="ignoreCopyOnWrite" type="Boolean" default="false"/>
         </in-parameters>
         <actions>
+            <if condition="(condition.trim() || (actorIdList?.size()>0)) &amp;&amp; !action.trim()">
+                <return error="true" message="Please specify an action"/>
+            </if>
              <!-- check if activity is references in product evaluation records of status other than RequirementsSelection -->
              <!-- if so, perform a copy on write on Activity & related entities, otherwise update it -->
              <entity-find entity-name="coarchy.product.ProductEvaluationActivityAndDetail" list="existingEvaluationRecords">

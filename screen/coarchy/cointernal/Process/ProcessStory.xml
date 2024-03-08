@@ -13,7 +13,7 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
-        default-menu-title="Full Edit" default-menu-index="40" menu-image="fa fa-file" menu-image-type="icon">
+        default-menu-title="Full Edit" default-menu-index="40" menu-image="fa fa-file" menu-image-type="icon" default-menu-include="false">
 
     <parameter name="processStoryId" required="true"/>
     <parameter name="pageIndex" from="pageIndex?:0"/>
@@ -138,15 +138,20 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
 
 <!--            <log level="warn" message="importText activityMapList.toString() ${activityMapList.toString()}"/>-->
-
-        </actions><default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
+    </actions><default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
 
     <transition name="createActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.create#ActivityPublic" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,
+        <actions>
+          <set field="actorIdList" from="actorIdList?:ec.web.getParameters().get('actorIdList[]')?:[]"/>
+          <service-call name="coarchy.CoarchyServices.create#ActivityPublic" in-map="[processStoryId:processStoryId,organizationId:activeOrgId,
         condition:condition,actorIdList:actorIdList,action:action,insertSequenceNum:insertSequenceNum,implementationId:implementationId]" out-map="newActivity"/>
+        </actions>        
         <default-response url="." parameter-map="[pageIndex:newPageIndex]"/></transition>
     <transition name="updateActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition>
-        <service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/>
+        <actions>
+            <set field="actorIdList" from="actorIdList?:ec.web.getParameters().get('actorIdList[]')?:[]"/>
+            <service-call name="coarchy.CoarchyServices.update#Activity" in-map="context + [organizationId:activeOrgId]"/>
+        </actions>
         <default-response url="."/></transition>
     <transition name="deleteActivity"><condition><expression>partyRelationshipCount &gt; 0</expression></condition><actions>
         <service-call name="coarchy.CoarchyServices.delete#Activity" in-map="context"/>
