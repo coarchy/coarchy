@@ -77,12 +77,12 @@
                                 <q-item-section
                                     @click="() => copyActivities(selectionActivityIds)">Copy</q-item-section>
                             </q-item>
-                            <q-item :disable="!isOrgPremium" clickable v-close-popup
+                            <q-item :disable="!isUserOrgMember" clickable v-close-popup
                                 @click="$refs.copyToDialog.isShown = true">
                                 <q-item-section>Copy to...</q-item-section>
                             </q-item>
                             <q-separator></q-separator>
-                            <q-item :disable="!isUserOrgMember || !isOrgPremium" clickable v-close-popup
+                            <q-item :disable="!isUserOrgMember" clickable v-close-popup
                                 @click="$refs.moveToDialog.isShown = true">
                                 <q-item-section>Move to...</q-item-section>
                             </q-item>
@@ -101,7 +101,7 @@
                     {{ processStoryTitle }}
                     <q-popup-edit v-if="isUserOrgMember" v-model="processStoryTitle" auto-save v-slot="scope">
                         <q-input v-model="scope.value" dense autofocus counter
-                            @keydown.enter="() => updateProcessStory(scope.value)" ></q-input>
+                            @keydown.enter="() => updateProcessStory(scope.value)"></q-input>
                     </q-popup-edit>
                 </div>
             </div>
@@ -626,9 +626,7 @@ module.exports = {
                     vm.detailActivityList = responseObj?.detailActivityList || []
                     onSuccess?.();
                 },
-                complete: function () {
-                    vm.loading = false
-                },
+                complete: this.handleMoquiResponse
             })
         },
         moveActivityTo(processStoryActivityId, newSequenceNum) {
@@ -804,7 +802,7 @@ module.exports = {
             }).onOk(() => {
                 const vm = this
                 this.loading = true
-                const params = activityIds.filter(activityId=>this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
+                const params = activityIds.filter(activityId => this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
                     ...acc,
                     ['activityId_' + index]: cur
                 }), {});
@@ -908,7 +906,7 @@ module.exports = {
             const vm = this
             if (!activityIds) return;
 
-            const params = activityIds.filter(activityId=>this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
+            const params = activityIds.filter(activityId => this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
                 ...acc,
                 ['activityId_' + index]: cur
             }), {});
@@ -941,7 +939,7 @@ module.exports = {
             const vm = this
             if (!activityIds) return;
 
-            const params = activityIds.filter(activityId=>this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
+            const params = activityIds.filter(activityId => this.activityIds.includes(activityId)).reduce((acc, cur, index) => ({
                 ...acc,
                 ['activityId_' + index]: cur
             }), {});
@@ -1143,8 +1141,7 @@ module.exports = {
                     success: function (responseObj, status, jqXHR) {
                         vm.getUserOrgMembership()
                     },
-                    complete: function () {
-                    },
+                    complete: this.handleMoquiResponse
                 })
             })
         },
@@ -1184,6 +1181,15 @@ module.exports = {
             }
 
             return true;
+        },
+        handleMoquiResponse(data) {
+            this.loading = false;
+            const responseObj = data.responseJSON;
+            if (responseObj && moqui.isPlainObject(responseObj)) {
+                notified = moqui.notifyMessages(responseObj.messageInfos, responseObj.errors);
+                if (responseObj.screenUrl && responseObj.screenUrl.length > 0) { this.$root.setUrl(responseObj.screenUrl); }
+                else if (responseObj.redirectUrl && responseObj.redirectUrl.length > 0) { window.location.href = responseObj.redirectUrl; }
+            }
         },
         toSentenceCase(str) {
             return str.replace(/\.\s+([a-z])[^\.]|^(\s*[a-z])[^\.]/g, s => s.replace(/([a-z])/, s => s.toUpperCase()))
