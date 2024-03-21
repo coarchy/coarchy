@@ -526,6 +526,8 @@ module.exports = {
             const curIdx = this.activityIds.findIndex(el => el === currentActivityId)
             if (curIdx < (this.activityIds.length - 1))
                 this.activeActivityId = this.activityIds[curIdx + 1]
+            else if (curIdx === (this.activityIds.length - 1))
+                this.activeActivityId = null
         },
         selectActivityForEdit(activityId, force = false) {
             if (!this.isUserOrgMember) return;
@@ -895,6 +897,10 @@ module.exports = {
                             vm.selectNextActivity(activityId)
                         }
                         vm.releaseActivityFromUpdate();
+                      if (vm.activeActivityId === activityId) {
+                        // console.log('vm.activeActivityId === activityId', vm.activeActivityId === activityId)
+                        vm.clearActivitySelection();
+                      }
                     });
                 },
                 complete: function () {

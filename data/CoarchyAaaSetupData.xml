@@ -409,6 +409,8 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- ========== Contact List Entities ========== -->
     <moqui.resource.wiki.WikiPageCategory wikiPageCategoryId="Newsletter" categoryName="Newsletter"/>
 
+    <moqui.basic.Enumeration description="Zelle" enumId="PiZelleAccount" enumTypeId="PaymentInstrument" relatedEnumId="PmtBankAccount"/>
+
     <mantle.marketing.contact.ContactList contactListId="CoarchyNewsletter" contactListName="Newsletter" ownerPartyId="coarchy" optOutScreen="/Unsubscribe">
         <mantle.marketing.contact.ContactListEmail fromDate="1701800219995" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="NEWSLETTER_WELCOME"/>
         <mantle.marketing.contact.ContactListEmail fromDate="1701800219998" emailTypeEnumId="CONT_EMAIL_TEMPLATE" emailTemplateId="BLOG" wikiPageCategoryId="Newsletter"/>
