@@ -221,16 +221,16 @@
                 <q-form ref="createActivityForm" @submit.prevent="createActivity">
                     <div class="row">
                         <div class="col-3 q-px-xs">
-                            <q-input ref="condInput" autogrow v-model="createActivityFields.condition" dense
+                            <q-input ref="condInput" autogrow v-model="condition" dense
                                 label="Condition" @keydown.enter="$refs.selectActorInput.focus()"></q-input>
                         </div>
                         <div class="col-3 q-px-xs">
-                            <q-select ref="selectActorInput" v-model="createActivityFields.actors" multiple dense
+                            <q-select ref="selectActorInput" v-model="actors" multiple dense
                                 use-input use-chips options-dense :options="actorList" @filter="actorFilterFn"
                                 label="Actors"></q-select>
                         </div>
                         <div class="col-6 q-px-xs">
-                            <q-input ref="actionInput" autogrow v-model="createActivityFields.action" dense
+                            <q-input ref="actionInput" autogrow v-model="action" dense
                                 label="Action"
                                 @keydown.enter.prevent="(e) => ($refs.createActivityForm.submit(e))"></q-input>
                         </div>
@@ -407,11 +407,9 @@ module.exports = {
                 name: '',
                 description: '',
             },
-            createActivityFields: {
-                condition: '',
-                actors: [],
-                action: ''
-            },
+            condition: '',
+            actors: [],
+            action: '',
             // Filter fns
             actorList: [],
             // UI State
@@ -753,9 +751,9 @@ module.exports = {
         },
         createActivity() {
             const vm = this
-            const actorIdList = this.createActivityFields.actors?.map(actor => actor.value)
-            const condition = this.createActivityFields.condition || ''
-            const action = this.createActivityFields.action || ''
+            const actorIdList = this.actors?.map(actor => actor.value)
+            const condition = this.condition || ''
+            const action = this.action || ''
             const insertSequenceNum = (this.lastSequenceNum) + 1
 
             if (!action) {
