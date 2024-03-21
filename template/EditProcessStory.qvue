@@ -1156,7 +1156,7 @@ module.exports = {
             return text?.endsWith(suffix) ? text : text + suffix
         },
         formatCondition(condition) {
-            return condition ? this.ensureEndsWith(this.toSentenceCase(condition), " ,") : ''
+            return condition ? this.ensureEndsWith(this.toSentenceCase(condition), ",") : ''
         },
         formatActorNames(actorNames) {
             return actorNames?.join(", ") || ''
