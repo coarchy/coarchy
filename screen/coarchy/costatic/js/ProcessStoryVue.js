@@ -5,41 +5,44 @@ Vue.component('c-edit-activity', {
         '@submit.prevent="onSubmit">\n'+
         '<div class="row items-center">\n'+
         '    <div class="col-3 q-px-xs">\n'+
-        '        <q-input ref="editCondInput" autogrow v-model="conditionVal" dense\n'+
+        '        <q-input ref="editCondInput" autogrow v-model="updateActivityFields.condition" dense\n'+
         '            label="Condition" @keydown.prevent.enter="$refs.editActorSelect.focus()"></q-input>\n'+
         // '            label="Condition" @keydown.prevent.enter="(e)=>$refs.editActivityForm.submit(e)"></q-input>\n'+
         '    </div>\n'+
         '    <div class="col-3 q-px-xs">\n'+
-        '        <q-select ref="editActorSelect" v-model="actorsVal" multiple dense use-input\n'+
+        '        <q-select ref="editActorSelect" v-model="updateActivityFields.actors" multiple dense use-input\n'+
         '            use-chips options-dense :options="actorList" @filter="actorFilterFn"\n'+
         '            label="Actors"></q-select>\n'+
         '    </div>\n'+
         '    <div class="col-6 q-px-xs">\n'+
-        '        <q-input ref="editActionInput" autogrow v-model="actionVal" dense\n'+
+        '        <q-input ref="editActionInput" autogrow v-model="updateActivityFields.action" dense\n'+
         '            label="Action"\n'+
         '            @keydown.enter.prevent="(e) => ($refs.editActivityForm.submit(e))" @keydown.tab.prevent="(e) => ($refs.editActivityForm.submit(e))"></q-input>\n'+
         '    </div>\n'+
         '</div>\n'+
-    '</q-form>',        
+    '</q-form>',
     props:['condition','actors','action'],
     emits:['save'],
     data: function() { 
-        return { 
-            conditionVal: this.condition,
-            actorsVal: this.actors,
-            actionVal: this.action,
+        return {
+            updateActivityFields: {
+                condition: this.condition,
+                actors: this.actors,
+                action: this.action,
+            },
             actorList: [],
         } 
     },
     computed:{
         dirty(){
-            return (this.conditionVal != this.condition) || !this.areArraysEqualSets(this.actorsVal.map(it=>it.value), this.actors.map(it=>it.value)) || (this.actionVal != this.action)
+            return (this.updateActivityFields.condition != this.condition) || !this.areArraysEqualSets(this.updateActivityFields.actors.map(it=>it.value), this.actors.map(it=>it.value)) || (this.updateActivityFields.action != this.action)
         }
     },  
     methods: {
         onSubmit(){
             if (this.dirty){
-                this.$emit('save', {condition:this.conditionVal,actors:this.actorsVal,action:this.actionVal})
+                console.log('dirty', this.updateActivityFields)
+                this.$emit('save', {condition:this.updateActivityFields.condition,actors:this.updateActivityFields.actors,action:this.updateActivityFields.action})
             }else{
                 this.$emit('close')
             }

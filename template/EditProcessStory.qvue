@@ -838,6 +838,8 @@ module.exports = {
             this.lockActivityId = null;
         },
         updateActivity(activityId, data, source, willCopyOnWrite = false) {
+            console.log('updateActivity', this.lockActivityId, activityId, data, source, willCopyOnWrite)
+
             if (this.lockActivityId == activityId) return;
             this.lockActivityFromUpdate(activityId);
 

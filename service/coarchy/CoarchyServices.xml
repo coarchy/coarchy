@@ -1205,9 +1205,11 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <set field="condition" from="condition?.trim()"/>
             <set field="action" from="action?.trim()"/>
-            <if condition="(condition || (actorIdList?.size()>0)) &amp;&amp; !action">
+<!--            <if condition="(condition || (actorIdList?.size()>0)) &amp;&amp; !action">-->
+            <if condition="!action">
                 <return error="true" message="${ec.resource.expand('CoarchyProcessActivityActionUpdateRequired', null)}"/>
             </if>
+            <log level="warn" message="action is ${action}"/>
             <!-- check if there is a word before the action -->
             <if condition="condition.length() &gt; 0 || actorIdList.size() &gt; 0">
                 <then>
