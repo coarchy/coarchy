@@ -39,6 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityNotFound" localized="Something went wrong while loading the activity."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityMultiFound" localized="This activity is part of multiple process stories."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityActionRequired" localized="Action is mandatory when creating an Activity."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityActionUpdateRequired" localized="Action is mandatory when updating an Activity."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessChecklistInvalidDate" localized="The project dates are not valid. Please correct them before continuing"/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessChecklistActivityRequired" localized="Please add at least one activity to create a checklist."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessChecklistSubActivityRequired" localized="At least one actor is required for Activity '${taskName}' in Process Story '${name}'."/>
@@ -49,6 +50,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessActivityValueDeleteError" localized="Something went wrong while deleting value."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessValueStatementDeleteError" localized="We could not delete this statement, as it is linked with one or more process story activities."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyProcessValueStatementDeleteWithActivities" localized="In order to delete this statement, you have to remove any associated activities. You can use the remove all to quickly remove all."/>
+    <moqui.basic.LocalizedMessage locale="default" original="CoarchyTaskNotFound" localized="Task not found."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyTagInvalidFormat" localized="Tags cannot include spaces or special characters (except underscores)"/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthUserNotFound" localized="Invalid username or password."/>
     <moqui.basic.LocalizedMessage locale="default" original="CoarchyAuthPasswordAlreadySet" localized="You have already set a password on this account. Please log in instead."/>
