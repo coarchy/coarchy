@@ -364,6 +364,8 @@ module.exports = {
         'click-outside': {
             bind: function (el, binding, vnode) {
                 el.clickOutsideEvent = function (event) {
+                    // sometimes selecting a dropdown option (eg: in q-select) would not pass the next condition as the options are removed from the dom, heres a workaround
+                    if ($(event.target).parents('div[role=listbox]').length > 0) return;
                     // check that click was outside the el and his children
                     if (!(el == event.target || el.contains(event.target))) {
                         // if it did, call method provided in attribute value
@@ -897,10 +899,10 @@ module.exports = {
                             vm.selectNextActivity(activityId)
                         }
                         vm.releaseActivityFromUpdate();
-                      if (vm.activeActivityId === activityId) {
-                        // console.log('vm.activeActivityId === activityId', vm.activeActivityId === activityId)
-                        vm.clearActivitySelection();
-                      }
+                        if (vm.activeActivityId === activityId) {
+                            // console.log('vm.activeActivityId === activityId', vm.activeActivityId === activityId)
+                            vm.clearActivitySelection();
+                        }
                     });
                 },
                 complete: function () {
