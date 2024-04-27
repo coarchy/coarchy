@@ -1055,6 +1055,68 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
         </actions>
     </service>
+    <service verb="find" noun="FlattenedProcessStoryActivityList">
+        <description>
+            Find a flattened list of activities of process story
+            For each activity that has a detailProcessStory, call this function with that processStoryId, return the list of activities
+            Add the necessary fields for the activity and the detail process story name, and detail process story activity list
+        </description>
+        <in-parameters>
+            <parameter name="processStoryId" required="true"/>
+            <parameter name="showSubstories" required="true"/>
+            <parameter name="organizationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="processStoryActivityList"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupProcessStoryActivityList">
+                <date-filter />
+                <econdition field-name="processStoryId"/>
+                <select-field field-name="activityId,condition,action,detailProcessStoryId,processStoryId"/>
+                <order-by field-name="sequenceNum"/></entity-find>
+            <set field="processStoryActivityList" from="[]"/>
+            <iterate list="setupProcessStoryActivityList" entry="processStoryActivity">
+                <entity-find entity-name="coarchy.ActivityActorDetail" list="activityActorList">
+                    <econdition field-name="activityId" from="processStoryActivity.activityId"/>
+                    <order-by field-name="name"/></entity-find>
+                <set field="detailProcessStoryName" from="null"/>
+                <set field="detailProcessStoryId" from="processStoryActivity.detailProcessStoryId"/>
+                <set field="detailProcessStoryActivityList" from="[]"/>
+                <if condition="processStoryActivity.detailProcessStoryId &amp;&amp; showSubstories!='N'">
+                    <log level="warn" message="Finding detail process story activities for processstoryid ${processStoryActivity.detailProcessStoryId}"/>
+                    <service-call name="coarchy.CoarchyServices.find#FlattenedProcessStoryActivityList" out-map="detail"
+                            in-map="[processStoryId:processStoryActivity.detailProcessStoryId,showSubstories:showSubstories,
+                            organizationId:organizationId]"/>
+                    <log level="warn" message="Finding detail.toString() ${detail.toString()}"/>
+
+                    <entity-find-one entity-name="coarchy.ProcessStory" value-field="detailProcessStory" auto-field-map="[processStoryId:processStoryActivity.detailProcessStoryId]"/>
+                    <set field="detailProcessStoryName" from="detailProcessStory.name"/>
+                    <entity-find entity-name="coarchy.ProcessStoryActivityDetail" list="setupDetailProcessStoryActivityList">
+                        <date-filter />
+                        <econdition field-name="processStoryId" from="processStoryActivity.detailProcessStoryId"/>
+                        <select-field field-name="activityId,condition,action"/>
+                        <order-by field-name="sequenceNum"/></entity-find>
+                    <iterate list="setupDetailProcessStoryActivityList" entry="detailProcessStoryActivity">
+                        <entity-find entity-name="coarchy.ActivityActorDetail" list="detailActivityActorList">
+                            <econdition field-name="activityId" from="detailProcessStoryActivity.activityId"/>
+                            <order-by field-name="name"/></entity-find>
+                        <script>detailProcessStoryActivityList.add([sequenceNum:detailProcessStoryActivity.sequenceNum,condition:detailProcessStoryActivity.condition,actorNames:detailActivityActorList*.name,action:detailProcessStoryActivity.action])</script>
+                    </iterate>
+                </if>
+
+                <script>processStoryActivityList.add([processStoryId:processStoryActivity.processStoryId,activityId:processStoryActivity.activityId,
+                                                      sequenceNum:processStoryActivity.sequenceNum,condition:processStoryActivity.condition,
+                                                      actorNames:activityActorList*.name,action:processStoryActivity.action,detailProcessStoryId:detailProcessStoryId,
+                                                      detailProcessStoryName:detailProcessStoryName])</script>
+                <iterate list="detail?.processStoryActivityList?.clone()" entry="detailProcessStoryActivity">
+                    <script>processStoryActivityList.add(detailProcessStoryActivity)</script>
+                </iterate>
+
+                <set field="detail" from="null"/>
+            </iterate>
+        </actions>
+    </service>
 
     <service verb="new" noun="Paragraph">
         <in-parameters>
@@ -1150,7 +1212,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="condition" from="condition?.trim()"/>
             <set field="action" from="action?.trim()"/>
             <!-- check if there is a word before the action -->
-            <if condition="condition.length() &gt; 0 || actorIdList.size() &gt; 0">
+            <if condition="condition?.length() &gt; 0 || actorIdList.size() &gt; 0">
                 <then>
                     <if condition="Character.isUpperCase(action.charAt(0))">
                         <set field="action" from="action[0].toLowerCase() + action.substring(1)"/>
