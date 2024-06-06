@@ -252,10 +252,6 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- ========== Moqui Cleanup ========== -->
     <moqui.security.user.NotificationTopic topic="MantleTask" showAlert="N" persistOnSend="N" receiveNotifications="N"/>
 
-    <!-- ========== Stripe ========== -->
-    <moqui.basic.Enumeration description="Stripe" enumId="PmtStripe" enumTypeId="PaymentMethodType"/>
-    <moqui.basic.Enumeration description="Stripe" enumId="PiStripe" enumTypeId="PaymentInstrument" relatedEnumId="PmtStripe"/>
-
     <moqui.service.message.SystemMessageType systemMessageTypeId="StripeWebhookEvent" consumeServiceName="coarchy.StripeServices.consume#StripeWebhookEvent" description="Stripe Webhook Event"/>
     <moqui.service.message.SystemMessageRemote systemMessageRemoteId="ProductionStripe" authHeaderName="Stripe-Signature" messageAuthEnumId="SmatHmacSha256Timestamp" description="Stripe"/>
     <moqui.basic.Enumeration description="Stripe" enumId="PgtStripe" enumTypeId="PaymentGatewayType"/>
