@@ -35,7 +35,7 @@
         <script src="${srcUrl}<#if !scriptLocation?starts_with("http") && !srcUrl?contains("?")>?v=${ec.web.getResourceDistinctValue()}</#if>" type="text/javascript"></script>
     </#list>
     <script defer data-domain="coarchy.com" src="https://plausible.io/js/script.js"></script>
-    <script defer src="https://umami.acetousk.com/script.js" data-website-id="3870ea78-ffac-4a20-a878-f0c08815368f"></script>
+    <script defer src="https://umami.coarchy.com/script.js" data-website-id="3870ea78-ffac-4a20-a878-f0c08815368f"></script>
     <#-- Icon -->
     <#list sri.getThemeValues("STRT_SHORTCUT_ICON") as iconLocation>
         <link rel="shortcut icon" href="${sri.buildUrl(iconLocation).url}">
