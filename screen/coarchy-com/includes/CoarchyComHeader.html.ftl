@@ -36,22 +36,6 @@
     </#list>
     <script defer data-domain="coarchy.com" src="https://plausible.io/js/script.js"></script>
     <script defer src="https://umami.coarchy.com/script.js" data-website-id="3870ea78-ffac-4a20-a878-f0c08815368f"></script>
-    <script>
-      (function(d,t) {
-        var BASE_URL="https://chat.coarchy.com";
-        var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-        g.src=BASE_URL+"/packs/js/sdk.js";
-        g.defer = true;
-        g.async = true;
-        s.parentNode.insertBefore(g,s);
-        g.onload=function(){
-          window.chatwootSDK.run({
-            websiteToken: 'oDEdsmRPCJhoPQQeMYuNHBrF',
-            baseUrl: BASE_URL
-          })
-        }
-      })(document,"script");
-    </script>
     <#-- Icon -->
     <#list sri.getThemeValues("STRT_SHORTCUT_ICON") as iconLocation>
         <link rel="shortcut icon" href="${sri.buildUrl(iconLocation).url}">
